@@ -1,15 +1,53 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#1a1a1a',
+          borderTopColor: '#333',
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarActiveTintColor: '#FFD700',
+        tabBarInactiveTintColor: '#666',
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Draws',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="entries"
+        options={{
+          title: 'My Entries',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Winners',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="login"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
+        }}
+      />
+      <Tabs.Screen name="admin" options={{ href: null }} />
+      <Tabs.Screen name="draw" options={{ href: null }} />
+      <Tabs.Screen name="winner" options={{ href: null }} />
+    </Tabs>
   );
 }
