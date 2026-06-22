@@ -18,10 +18,8 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchProducts();
     if (typeof window !== 'undefined') {
-      const phone = localStorage.getItem('userPhone') || '';
-      const name = localStorage.getItem('userName') || '';
-      setUserPhone(phone);
-      setUserName(name);
+      setUserPhone(localStorage.getItem('userPhone') || '');
+      setUserName(localStorage.getItem('userName') || '');
     }
   }, []);
 
@@ -49,22 +47,14 @@ export default function HomeScreen() {
       return;
     }
 
-    const { error } = await supabase.from('entries').insert({
-      product_id: product.id,
-      phone: userPhone,
-      name: userName,
+    router.push({
+      pathname: '/payment',
+      params: {
+        productId: product.id,
+        productName: product.name,
+        entryFee: product.entry_fee || 1,
+      }
     });
-
-    if (!error) {
-      await supabase
-        .from('products')
-        .update({ current_entries: (product.current_entries || 0) + 1 })
-        .eq('id', product.id);
-      alert('🎉 Entry confirmed! Good luck ' + userName + '!');
-      fetchProducts();
-    } else {
-      alert('Error: ' + error.message);
-    }
   }
 
   if (loading) return (

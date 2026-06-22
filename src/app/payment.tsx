@@ -1,0 +1,211 @@
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+
+const supabase = createClient(
+  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
+);
+
+const JAZZCASH_NUMBER = '03706814892';
+const JAZZCASH_NAME = 'JeetoBaz';
+
+export default function PaymentScreen() {
+  const router = useRouter();
+  const { productId, productName, entryFee } = useLocalSearchParams();
+  const [txnId, setTxnId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState('payment');
+
+  async function confirmPayment() {
+    if (!txnId || txnId.length < 6) {
+      alert('Please enter a valid transaction ID!');
+      return;
+    }
+    setLoading(true);
+
+    const userPhone = typeof window !== 'undefined' ? localStorage.getItem('userPhone') : '';
+    const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') : '';
+
+    if (!userPhone) {
+      router.push('/login');
+      return;
+    }
+
+    const { data: existing } = await supabase
+      .from('entries')
+      .select('*')
+      .eq('product_id', productId)
+      .eq('phone', userPhone)
+      .single();
+
+    if (existing) {
+      alert('You have already entered this draw!');
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from('entries').insert({
+      product_id: productId,
+      phone: userPhone,
+      name: userName,
+      transaction_id: txnId,
+    });
+
+    if (!error) {
+      await supabase
+        .from('products')
+        .update({ current_entries: supabase.rpc('increment', { x: 1 }) })
+        .eq('id', productId);
+
+      await supabase.from('transactions').insert({
+        product_id: productId,
+        phone: userPhone,
+        amount: parseInt(entryFee as string) || 1,
+        jazzcash_txn_id: txnId,
+        status: 'pending',
+      });
+
+      setStep('success');
+    } else {
+      alert('Error: ' + error.message);
+    }
+    setLoading(false);
+  }
+
+  if (step === 'success') return (
+    <View style={styles.container}>
+      <View style={styles.successBox}>
+        <Text style={styles.successEmoji}>🎉</Text>
+        <Text style={styles.successTitle}>Entry Confirmed!</Text>
+        <Text style={styles.successText}>Good luck in the draw!</Text>
+        <Text style={styles.successSub}>Your transaction is being verified</Text>
+      </View>
+      <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
+        <Text style={styles.homeBtnText}>🏠 Back to Home</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backBtn}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>💳 Payment</Text>
+        <Text style={styles.dummy}></Text>
+      </View>
+
+      <View style={styles.productBox}>
+        <Text style={styles.productName}>{productName}</Text>
+        <Text style={styles.entryFee}>Entry Fee: Rs. {entryFee || 1}</Text>
+      </View>
+
+      <View style={styles.paymentBox}>
+        <Text style={styles.payTitle}>Send Payment To:</Text>
+
+        <View style={styles.methodCard}>
+          <Text style={styles.methodIcon}>💚</Text>
+          <View>
+            <Text style={styles.methodName}>JazzCash</Text>
+            <Text style={styles.methodNumber}>{JAZZCASH_NUMBER}</Text>
+            <Text style={styles.methodAccount}>{JAZZCASH_NAME}</Text>
+          </View>
+        </View>
+
+        <View style={styles.methodCard}>
+          <Text style={styles.methodIcon}>🟠</Text>
+          <View>
+            <Text style={styles.methodName}>Easypaisa</Text>
+            <Text style={styles.methodNumber}>{JAZZCASH_NUMBER}</Text>
+            <Text style={styles.methodAccount}>{JAZZCASH_NAME}</Text>
+          </View>
+        </View>
+
+        <View style={styles.methodCard}>
+          <Text style={styles.methodIcon}>🏦</Text>
+          <View>
+            <Text style={styles.methodName}>Raast / Bank Transfer</Text>
+            <Text style={styles.methodNumber}>{JAZZCASH_NUMBER}</Text>
+            <Text style={styles.methodAccount}>{JAZZCASH_NAME}</Text>
+          </View>
+        </View>
+
+        <View style={styles.stepsBox}>
+          <Text style={styles.stepsTitle}>How to Pay:</Text>
+          <Text style={styles.step}>1️⃣ Open JazzCash / Easypaisa / Any Bank App</Text>
+          <Text style={styles.step}>2️⃣ Send Rs. {entryFee || 1} to {JAZZCASH_NUMBER}</Text>
+          <Text style={styles.step}>3️⃣ Copy the Transaction ID</Text>
+          <Text style={styles.step}>4️⃣ Paste it below and confirm!</Text>
+        </View>
+      </View>
+
+      <View style={styles.txnBox}>
+        <Text style={styles.txnLabel}>Enter Transaction ID:</Text>
+        <TextInput
+          style={styles.txnInput}
+          placeholder="e.g. TXN123456789"
+          placeholderTextColor="#666"
+          value={txnId}
+          onChangeText={setTxnId}
+          autoCapitalize="characters"
+        />
+        <TouchableOpacity
+          style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
+          onPress={confirmPayment}
+          disabled={loading}
+        >
+          <Text style={styles.confirmBtnText}>
+            {loading ? 'Confirming...' : '✅ Confirm Entry'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.noteBox}>
+        <Text style={styles.noteTitle}>⚠️ Important:</Text>
+        <Text style={styles.noteText}>• Your entry will be verified within 24 hours</Text>
+        <Text style={styles.noteText}>• Keep your transaction ID safe</Text>
+        <Text style={styles.noteText}>• One entry per person per draw</Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0a0a0a' },
+  header: { backgroundColor: '#1a1a1a', padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
+  backBtn: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
+  dummy: { width: 50 },
+  productBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333', alignItems: 'center' },
+  productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
+  entryFee: { fontSize: 16, color: '#FFD700', fontWeight: 'bold' },
+  paymentBox: { margin: 15 },
+  payTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
+  methodCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 15, borderWidth: 1, borderColor: '#333' },
+  methodIcon: { fontSize: 30 },
+  methodName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  methodNumber: { color: '#FFD700', fontSize: 16, fontFamily: 'monospace', marginTop: 2 },
+  methodAccount: { color: '#1DB954', fontSize: 13, marginTop: 2 },
+  stepsBox: { backgroundColor: '#0d2b1a', borderRadius: 12, padding: 15, marginTop: 10, borderWidth: 1, borderColor: '#1DB954' },
+  stepsTitle: { color: '#1DB954', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  step: { color: '#aaa', fontSize: 14, marginBottom: 6 },
+  txnBox: { margin: 15 },
+  txnLabel: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  txnInput: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#FFD700', color: 'white', padding: 15, fontSize: 16, marginBottom: 15 },
+  confirmBtn: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center' },
+  confirmBtnDisabled: { backgroundColor: '#555' },
+  confirmBtnText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+  noteBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 12, padding: 15, marginBottom: 40, borderWidth: 1, borderColor: '#333' },
+  noteTitle: { color: '#FFD700', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  noteText: { color: '#aaa', fontSize: 13, marginBottom: 4 },
+  successBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, marginTop: 100 },
+  successEmoji: { fontSize: 80, marginBottom: 20 },
+  successTitle: { fontSize: 28, fontWeight: 'bold', color: '#1DB954', marginBottom: 10 },
+  successText: { fontSize: 18, color: 'white', marginBottom: 8 },
+  successSub: { fontSize: 14, color: '#aaa' },
+  homeBtn: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center' },
+  homeBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+});

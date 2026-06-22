@@ -48,6 +48,7 @@ export default function RootLayout() {
       <Tabs.Screen name="admin" options={{ href: null }} />
       <Tabs.Screen name="draw" options={{ href: null }} />
       <Tabs.Screen name="winner" options={{ href: null }} />
+      <Tabs.Screen name="payment" options={{ href: null }} />
     </Tabs>
   );
 }
