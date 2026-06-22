@@ -1,9 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import '../firebase';
 
 const supabase = createClient(
   'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
@@ -12,16 +10,12 @@ const supabase = createClient(
 
 export default function ProfileScreen() {
   const [step, setStep] = useState('check');
-  const [name, setUserName] = useState('');
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
   const [inputPhone, setInputPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const recaptchaRef = useRef(null);
   const router = useRouter();
-  const auth = getAuth();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,7 +23,7 @@ export default function ProfileScreen() {
       const savedName = localStorage.getItem('userName') || '';
       if (savedPhone) {
         setPhone(savedPhone);
-        setUserName(savedName);
+        setName(savedName);
         setStep('profile');
         fetchStats(savedPhone);
       } else {
@@ -38,57 +32,35 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  async function fetchStats(phone) {
+  async function fetchStats(phone: string) {
     const { data } = await supabase.from('entries').select('*').eq('phone', phone);
     if (data) setTotalEntries(data.length);
   }
 
-  async function sendOTP() {
-    if (inputPhone.length < 10) { alert('Please enter a valid 10-digit phone number!'); return; }
-    setLoading(true);
-    try {
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {},
-        });
-      }
-      const fullPhone = '+92' + inputPhone;
-      const result = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier);
-      setConfirmationResult(result);
-      setStep('otp');
-      alert('OTP sent to ' + fullPhone);
-    } catch (error) {
-      console.error(error);
-      alert('Error sending OTP: ' + error.message);
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
+  async function handleLogin() {
+    if (inputPhone.length < 10) {
+      alert('Please enter a valid 10-digit phone number!');
+      return;
     }
-    setLoading(false);
-  }
-
-  async function verifyOTP() {
-    if (!otp || otp.length < 6) { alert('Please enter the 6-digit OTP!'); return; }
     setLoading(true);
-    try {
-      await confirmationResult.confirm(otp);
-      const fullPhone = '+92' + inputPhone;
-      const { data: existing } = await supabase.from('users').select('*').eq('phone', fullPhone).single();
-      if (existing) {
+    const fullPhone = '+92' + inputPhone;
+    const { data: existing } = await supabase
+      .from('users')
+      .select('*')
+      .eq('phone', fullPhone)
+      .single();
+
+    if (existing) {
+      if (typeof window !== 'undefined') {
         localStorage.setItem('userPhone', fullPhone);
         localStorage.setItem('userName', existing.name);
-        setPhone(fullPhone);
-        setUserName(existing.name);
-        setStep('profile');
-        fetchStats(fullPhone);
-        alert('Welcome back ' + existing.name + '!');
-      } else {
-        setStep('name');
       }
-    } catch (error) {
-      alert('Invalid OTP! Please try again.');
+      setPhone(fullPhone);
+      setName(existing.name);
+      setStep('profile');
+      fetchStats(fullPhone);
+    } else {
+      setStep('name');
     }
     setLoading(false);
   }
@@ -98,26 +70,33 @@ export default function ProfileScreen() {
     setLoading(true);
     const fullPhone = '+92' + inputPhone;
     const { error } = await supabase.from('users').insert({
-      name, phone: fullPhone, jazzcash_number: fullPhone,
+      name,
+      phone: fullPhone,
+      jazzcash_number: fullPhone,
     });
     if (!error) {
-      localStorage.setItem('userPhone', fullPhone);
-      localStorage.setItem('userName', name);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userPhone', fullPhone);
+        localStorage.setItem('userName', name);
+      }
       setPhone(fullPhone);
       setStep('profile');
-      alert('Welcome to JeetoBaz, ' + name + '!');
+      fetchStats(fullPhone);
+    } else {
+      alert('Error: ' + error.message);
     }
     setLoading(false);
   }
 
   function logout() {
-    localStorage.removeItem('userPhone');
-    localStorage.removeItem('userName');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('userPhone');
+      localStorage.removeItem('userName');
+    }
     setStep('phone');
     setPhone('');
-    setUserName('');
+    setName('');
     setInputPhone('');
-    setOtp('');
   }
 
   if (step === 'profile') return (
@@ -127,6 +106,7 @@ export default function ProfileScreen() {
         <Text style={styles.profileName}>{name}</Text>
         <Text style={styles.profilePhone}>{phone}</Text>
       </View>
+
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{totalEntries}</Text>
@@ -141,6 +121,7 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>Active</Text>
         </View>
       </View>
+
       <View style={styles.menuBox}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
           <Text style={styles.menuIcon}>🎯</Text>
@@ -160,12 +141,14 @@ export default function ProfileScreen() {
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.infoBox}>
         <Text style={styles.infoTitle}>ℹ️ About JeetoBaz</Text>
         <Text style={styles.infoText}>Pakistan's No.1 Lucky Draw Platform</Text>
         <Text style={styles.infoText}>Version 1.0.0</Text>
         <Text style={styles.infoText}>Made with ❤️ in Pakistan</Text>
       </View>
+
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <Text style={styles.logoutText}>🚪 Logout</Text>
       </TouchableOpacity>
@@ -179,12 +162,10 @@ export default function ProfileScreen() {
         <Text style={styles.tagline}>Pakistan's No.1 Lucky Draw</Text>
       </View>
       <View style={styles.form}>
-        <div id="recaptcha-container"></div>
-
         {step === 'phone' && (
           <>
             <Text style={styles.formTitle}>Login / Sign Up</Text>
-            <Text style={styles.subtitle}>Enter your phone number to receive OTP</Text>
+            <Text style={styles.subtitle}>Enter your phone number to continue</Text>
             <View style={styles.phoneRow}>
               <Text style={styles.code}>🇵🇰 +92</Text>
               <TextInput
@@ -197,47 +178,39 @@ export default function ProfileScreen() {
                 maxLength={10}
               />
             </View>
-            <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={sendOTP} disabled={loading}>
-              <Text style={styles.buttonText}>{loading ? 'Sending OTP...' : 'Send OTP 📲'}</Text>
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Please wait...' : 'Continue →'}
+              </Text>
             </TouchableOpacity>
           </>
         )}
-
-        {step === 'otp' && (
-          <>
-            <Text style={styles.formTitle}>Enter OTP</Text>
-            <Text style={styles.subtitle}>6-digit code sent to +92{inputPhone}</Text>
-            <TextInput
-              style={styles.otpInput}
-              placeholder="------"
-              placeholderTextColor="#666"
-              keyboardType="number-pad"
-              value={otp}
-              onChangeText={setOtp}
-              maxLength={6}
-            />
-            <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={verifyOTP} disabled={loading}>
-              <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify OTP ✅'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setStep('phone')}>
-              <Text style={styles.backText}>← Change number</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
         {step === 'name' && (
           <>
-            <Text style={styles.formTitle}>What's your name?</Text>
-            <Text style={styles.subtitle}>One last step!</Text>
+            <Text style={styles.formTitle}>Create Account</Text>
+            <Text style={styles.subtitle}>Welcome! What's your name?</Text>
             <TextInput
               style={styles.input}
               placeholder="e.g. Shoaib Mithal"
               placeholderTextColor="#666"
               value={name}
-              onChangeText={setUserName}
+              onChangeText={setName}
             />
-            <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={createAccount} disabled={loading}>
-              <Text style={styles.buttonText}>{loading ? 'Creating...' : '🚀 Enter JeetoBaz!'}</Text>
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={createAccount}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Creating...' : '🚀 Join JeetoBaz!'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setStep('phone')}>
+              <Text style={styles.backText}>← Change number</Text>
             </TouchableOpacity>
           </>
         )}
@@ -277,7 +250,6 @@ const styles = StyleSheet.create({
   phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', marginBottom: 20 },
   code: { color: 'white', padding: 15, fontSize: 14, borderRightWidth: 1, borderRightColor: '#333' },
   phoneInput: { flex: 1, color: 'white', padding: 15, fontSize: 18 },
-  otpInput: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#FFD700', color: 'white', padding: 15, fontSize: 32, textAlign: 'center', letterSpacing: 12, marginBottom: 20 },
   input: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', color: 'white', padding: 15, fontSize: 16, marginBottom: 20 },
   button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', marginBottom: 15 },
   buttonDisabled: { backgroundColor: '#555' },
