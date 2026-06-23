@@ -80,6 +80,7 @@ export default function ProfileScreen() {
         localStorage.setItem('userName', name);
       }
       setPhone(fullPhone);
+      setName(name);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -140,6 +141,12 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>Past Winners</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
+          <Text style={styles.menuIcon}>📋</Text>
+          <Text style={styles.menuText}>Terms & Conditions</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.infoBox}>
@@ -187,6 +194,12 @@ export default function ProfileScreen() {
                 {loading ? 'Please wait...' : 'Continue →'}
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/terms')}>
+              <Text style={styles.termsLink}>
+                By continuing you agree to our{' '}
+                <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
+              </Text>
+            </TouchableOpacity>
           </>
         )}
         {step === 'name' && (
@@ -212,9 +225,14 @@ export default function ProfileScreen() {
             <TouchableOpacity onPress={() => setStep('phone')}>
               <Text style={styles.backText}>← Change number</Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/terms')}>
+              <Text style={styles.termsLink}>
+                By joining you agree to our{' '}
+                <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
+              </Text>
+            </TouchableOpacity>
           </>
         )}
-        <Text style={styles.terms}>By continuing you agree to our Terms & Conditions</Text>
       </View>
     </View>
   );
@@ -254,6 +272,7 @@ const styles = StyleSheet.create({
   button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', marginBottom: 15 },
   buttonDisabled: { backgroundColor: '#555' },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
-  backText: { color: '#1DB954', textAlign: 'center', fontSize: 14 },
-  terms: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 20 },
+  backText: { color: '#1DB954', textAlign: 'center', fontSize: 14, marginBottom: 10 },
+  termsLink: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 10 },
+  termsLinkHighlight: { color: '#1DB954', fontWeight: 'bold' },
 });
