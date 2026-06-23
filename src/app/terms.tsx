@@ -12,32 +12,100 @@ export default function TermsScreen() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>1. About JeetoBaz</Text>
-        <Text style={styles.text}>JeetoBaz is Pakistan's premier lucky draw platform where users can enter draws for a small fee and win exciting prizes.</Text>
 
-        <Text style={styles.sectionTitle}>2. Eligibility</Text>
-        <Text style={styles.text}>• Must be 18 years or older to participate{'\n'}• Must have a valid Pakistani phone number{'\n'}• Must have a valid JazzCash/Easypaisa account for payment</Text>
+        <View style={styles.importantBox}>
+          <Text style={styles.importantTitle}>⚠️ IMPORTANT NOTICE</Text>
+          <Text style={styles.importantText}>
+            JeetoBaz is a Lucky Draw platform. Please read all terms carefully before participating.
+          </Text>
+        </View>
 
-        <Text style={styles.sectionTitle}>3. Entry & Payment</Text>
-        <Text style={styles.text}>• Each entry requires payment of the specified entry fee{'\n'}• Payment must be made via JazzCash, Easypaisa, or bank transfer{'\n'}• Entry is confirmed only after payment verification{'\n'}• One entry per person per draw</Text>
+        <Text style={styles.sectionTitle}>1. Nature of Platform</Text>
+        <Text style={styles.text}>
+          JeetoBaz is a 100% transparent and fair lucky draw platform based in Pakistan. This is NOT a gambling platform. Winners are selected through a fully automated and random computer algorithm in front of all participants.
+        </Text>
 
-        <Text style={styles.sectionTitle}>4. Draw Process</Text>
-        <Text style={styles.text}>• All draws are conducted live and transparently{'\n'}• Winner is selected randomly using a computer algorithm{'\n'}• Draw results are final and cannot be challenged{'\n'}• All participants can watch the live draw</Text>
+        <Text style={styles.sectionTitle}>2. No Refund Policy</Text>
+        <Text style={styles.text}>
+          • All entry fees paid are strictly NON-REFUNDABLE{'\n'}
+          • Once payment is made and entry is confirmed, it cannot be cancelled{'\n'}
+          • Entry fees will NOT be returned under any circumstances{'\n'}
+          • By paying the entry fee, you accept this no-refund policy{'\n'}
+          • In case of draw cancellation by JeetoBaz, a full refund will be processed within 7 business days
+        </Text>
 
-        <Text style={styles.sectionTitle}>5. Winner Announcement</Text>
-        <Text style={styles.text}>• Winner is announced live during the draw{'\n'}• Winner will be contacted via registered phone number{'\n'}• Prize must be claimed within 7 days of announcement{'\n'}• JeetoBaz reserves the right to verify winner's identity</Text>
+        <Text style={styles.sectionTitle}>3. Winner Selection</Text>
+        <Text style={styles.text}>
+          • The winner is selected ONLY through an automated computer algorithm{'\n'}
+          • JeetoBaz management has NO control over who wins{'\n'}
+          • The selection process is 100% random and fair{'\n'}
+          • The draw is conducted LIVE on the JeetoBaz app and website{'\n'}
+          • All participants can watch the live draw in real-time{'\n'}
+          • Draw results are final and cannot be challenged or disputed
+        </Text>
 
-        <Text style={styles.sectionTitle}>6. Refund Policy</Text>
-        <Text style={styles.text}>• Entry fees are non-refundable once verified{'\n'}• In case of draw cancellation, full refund will be provided{'\n'}• Refunds will be processed within 3-5 business days</Text>
+        <Text style={styles.sectionTitle}>4. Draw Schedule</Text>
+        <Text style={styles.text}>
+          • Draw is conducted when ALL participation spots are filled{'\n'}
+          • Once a product reaches maximum participants, the draw is held at 10:00 PM (PKT) the same night{'\n'}
+          • Draw is broadcast LIVE on the JeetoBaz app and website{'\n'}
+          • All registered participants will be notified before the draw
+        </Text>
 
-        <Text style={styles.sectionTitle}>7. Privacy Policy</Text>
-        <Text style={styles.text}>• Your personal information is kept confidential{'\n'}• Phone numbers are partially masked in public displays{'\n'}• We do not share your data with third parties{'\n'}• Data is used only for draw participation and winner notification</Text>
+        <Text style={styles.sectionTitle}>5. Prize Delivery</Text>
+        <Text style={styles.text}>
+          • Prize is awarded ONLY to the lucky winner selected by the system{'\n'}
+          • No other participant is entitled to any prize{'\n'}
+          • Winner will be contacted via their registered phone number{'\n'}
+          • Prize must be claimed within 7 days of the draw{'\n'}
+          • JeetoBaz will arrange prize delivery or pickup{'\n'}
+          • Prize cannot be exchanged for cash
+        </Text>
 
-        <Text style={styles.sectionTitle}>8. Fair Play</Text>
-        <Text style={styles.text}>• Multiple accounts are strictly prohibited{'\n'}• Any fraudulent activity will result in permanent ban{'\n'}• JeetoBaz reserves the right to disqualify any entry</Text>
+        <Text style={styles.sectionTitle}>6. Eligibility</Text>
+        <Text style={styles.text}>
+          • Must be 18 years or older{'\n'}
+          • Must have a valid Pakistani phone number{'\n'}
+          • One entry per person per draw{'\n'}
+          • Multiple accounts are strictly prohibited and will result in disqualification
+        </Text>
 
-        <Text style={styles.sectionTitle}>9. Contact Us</Text>
-        <Text style={styles.text}>For any queries or complaints:{'\n'}• WhatsApp: +92 370 6814892{'\n'}• Email: support@jeetobaz.pk{'\n'}• Website: jeetobaz-pk.netlify.app</Text>
+        <Text style={styles.sectionTitle}>7. Payment</Text>
+        <Text style={styles.text}>
+          • Payments accepted via JazzCash, Easypaisa, or bank transfer{'\n'}
+          • Entry is confirmed only after payment verification by JeetoBaz{'\n'}
+          • Always keep your transaction ID as proof of payment{'\n'}
+          • Fraudulent transactions will result in permanent ban
+        </Text>
+
+        <Text style={styles.sectionTitle}>8. Transparency & Fairness</Text>
+        <Text style={styles.text}>
+          • All draws are conducted publicly and live{'\n'}
+          • The complete participant list is visible to everyone during the draw{'\n'}
+          • Phone numbers are partially masked to protect privacy{'\n'}
+          • JeetoBaz is committed to 100% fair and transparent operations
+        </Text>
+
+        <Text style={styles.sectionTitle}>9. Privacy Policy</Text>
+        <Text style={styles.text}>
+          • Your personal information is kept strictly confidential{'\n'}
+          • We do not share your data with any third parties{'\n'}
+          • Phone numbers are partially masked in all public displays{'\n'}
+          • Data is used only for draw participation and winner notification
+        </Text>
+
+        <Text style={styles.sectionTitle}>10. Contact Us</Text>
+        <Text style={styles.text}>
+          For any queries:{'\n'}
+          • WhatsApp: +92 370 6814892{'\n'}
+          • Website: jeetobaz-pk.netlify.app
+        </Text>
+
+        <View style={styles.finalBox}>
+          <Text style={styles.finalText}>
+            By participating in JeetoBaz draws, you confirm that you have read, understood, and agreed to all the above Terms & Conditions.
+          </Text>
+        </View>
 
         <Text style={styles.lastUpdated}>Last updated: June 2026</Text>
       </View>
@@ -55,9 +123,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', color: 'white' },
   subtitle: { fontSize: 13, color: 'white', marginTop: 5 },
   content: { padding: 20 },
+  importantBox: { backgroundColor: '#2b1a00', borderRadius: 12, padding: 15, marginBottom: 20, borderWidth: 1, borderColor: '#FFD700' },
+  importantTitle: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  importantText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#FFD700', marginTop: 20, marginBottom: 8 },
-  text: { color: '#aaa', fontSize: 14, lineHeight: 22 },
-  lastUpdated: { color: '#555', fontSize: 12, marginTop: 30, textAlign: 'center' },
+  text: { color: '#aaa', fontSize: 14, lineHeight: 24 },
+  finalBox: { backgroundColor: '#0d2b1a', borderRadius: 12, padding: 15, marginTop: 25, borderWidth: 1, borderColor: '#1DB954' },
+  finalText: { color: '#1DB954', fontSize: 14, lineHeight: 22, textAlign: 'center' },
+  lastUpdated: { color: '#555', fontSize: 12, marginTop: 20, marginBottom: 10, textAlign: 'center' },
   backBtn: { margin: 20, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#333', marginBottom: 40 },
   backBtnText: { color: '#aaa', fontSize: 16 },
 });
