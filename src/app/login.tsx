@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 
 export default function ProfileScreen() {
   const [step, setStep] = useState('check');
@@ -42,17 +43,24 @@ export default function ProfileScreen() {
   }
 
   async function handleLogin() {
-    if (inputPhone.length < 10) {
-      alert('Please enter a valid 10-digit phone number!');
+    const normalizedPhone = normalizePakistaniMobile(inputPhone);
+    if (!isValidPakistaniMobile(normalizedPhone)) {
+      alert('Please enter a valid Pakistani mobile number, e.g. 3001234567.');
       return;
     }
     setLoading(true);
-    const fullPhone = '+92' + inputPhone;
-    const { data: existing } = await supabase
+    const fullPhone = '+92' + normalizedPhone;
+    const { data: existing, error } = await supabase
       .from('users')
       .select('*')
       .eq('phone', fullPhone)
-      .single();
+      .maybeSingle();
+
+    if (error) {
+      alert('Unable to check this number. Please try again.');
+      setLoading(false);
+      return;
+    }
 
     if (existing) {
       const existingName = existing.name || '';
@@ -71,21 +79,22 @@ export default function ProfileScreen() {
   }
 
   async function createAccount() {
-    if (!name) { alert('Please enter your name!'); return; }
+    const normalizedName = normalizePersonName(name);
+    if (normalizedName.length < 2) { alert('Please enter your full name.'); return; }
     setLoading(true);
-    const fullPhone = '+92' + inputPhone;
+    const fullPhone = '+92' + normalizePakistaniMobile(inputPhone);
     const { error } = await supabase.from('users').insert({
-      name,
+      name: normalizedName,
       phone: fullPhone,
       jazzcash_number: fullPhone,
     });
     if (!error) {
       await Promise.all([
         setStoredValue('userPhone', fullPhone),
-        setStoredValue('userName', name),
+        setStoredValue('userName', normalizedName),
       ]);
       setPhone(fullPhone);
-      setName(name);
+      setName(normalizedName);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -183,7 +192,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#666"
                 keyboardType="phone-pad"
                 value={inputPhone}
-                onChangeText={setInputPhone}
+                onChangeText={(value) => setInputPhone(normalizePakistaniMobile(value))}
                 maxLength={10}
               />
             </View>
@@ -214,6 +223,7 @@ export default function ProfileScreen() {
               placeholderTextColor="#666"
               value={name}
               onChangeText={setName}
+              maxLength={60}
             />
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}

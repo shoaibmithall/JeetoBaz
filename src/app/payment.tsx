@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
+import { isValidTransactionId, normalizeTransactionId } from '@/lib/validation';
 
 const JAZZCASH_NUMBER = '03706814892';
 const JAZZCASH_NAME = 'JeetoBaz';
@@ -16,7 +17,8 @@ export default function PaymentScreen() {
   const [step, setStep] = useState('payment');
 
   async function confirmPayment() {
-    if (!txnId || txnId.length < 6) {
+    const normalizedTxnId = normalizeTransactionId(txnId);
+    if (!isValidTransactionId(normalizedTxnId)) {
       alert('Please enter a valid transaction ID!');
       return;
     }
@@ -39,12 +41,42 @@ export default function PaymentScreen() {
       return;
     }
 
-    const { data: existing } = await supabase
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, entry_fee, status, current_entries, max_entries')
+      .eq('id', productIdValue)
+      .maybeSingle();
+
+    if (productError || !product) {
+      alert('This draw could not be verified. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    if (product.status !== 'active') {
+      alert('This draw is no longer active.');
+      setLoading(false);
+      return;
+    }
+
+    if ((product.current_entries || 0) >= product.max_entries) {
+      alert('Sorry, this draw is full.');
+      setLoading(false);
+      return;
+    }
+
+    const { data: existing, error: existingError } = await supabase
       .from('entries')
-      .select('*')
+      .select('id')
       .eq('product_id', productIdValue)
       .eq('phone', userPhone)
-      .single();
+      .maybeSingle();
+
+    if (existingError) {
+      alert('Unable to verify your entry. Please try again.');
+      setLoading(false);
+      return;
+    }
 
     if (existing) {
       alert('You have already entered this draw!');
@@ -56,16 +88,10 @@ export default function PaymentScreen() {
       product_id: productIdValue,
       phone: userPhone,
       name: userName,
-      transaction_id: txnId,
+      transaction_id: normalizedTxnId,
     });
 
     if (!error) {
-      const { data: product } = await supabase
-        .from('products')
-        .select('current_entries')
-        .eq('id', productIdValue)
-        .single();
-
       await supabase
         .from('products')
         .update({ current_entries: (product?.current_entries || 0) + 1 })
@@ -74,8 +100,8 @@ export default function PaymentScreen() {
       await supabase.from('transactions').insert({
         product_id: productIdValue,
         phone: userPhone,
-        amount: parseInt(entryFee as string) || 1,
-        jazzcash_txn_id: txnId,
+        amount: product.entry_fee || 1,
+        jazzcash_txn_id: normalizedTxnId,
         status: 'pending',
       });
 
@@ -161,8 +187,10 @@ export default function PaymentScreen() {
           placeholder="e.g. TXN123456789"
           placeholderTextColor="#666"
           value={txnId}
-          onChangeText={setTxnId}
+          onChangeText={(value) => setTxnId(normalizeTransactionId(value))}
           autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={50}
         />
         <TouchableOpacity
           style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
