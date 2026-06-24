@@ -1,21 +1,26 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 
 export default function WinnersScreen() {
   const [winners, setWinners] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => { fetchWinners(); }, []);
 
   async function fetchWinners() {
-    const { data } = await supabase
+    setLoading(true);
+    setLoadError(false);
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
     if (data) setWinners(data);
+    if (error) setLoadError(true);
     setLoading(false);
   }
 
@@ -30,6 +35,8 @@ export default function WinnersScreen() {
       <Text style={styles.loadingText}>Loading Winners...</Text>
     </View>
   );
+
+  if (loadError) return <DataErrorState onRetry={fetchWinners} />;
 
   return (
     <ScrollView style={styles.container}>

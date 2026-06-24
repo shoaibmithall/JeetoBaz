@@ -3,11 +3,14 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacit
 import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, setStoredValue } from '@/lib/storage';
+import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 
 export default function FavoritesScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const router = useRouter();
 
   useFocusEffect(
@@ -16,6 +19,7 @@ export default function FavoritesScreen() {
 
       async function loadFavorites() {
         setLoading(true);
+        setLoadError(false);
         const favoriteIds = await getStoredStringArray('favorites');
 
         if (favoriteIds.length === 0) {
@@ -26,7 +30,7 @@ export default function FavoritesScreen() {
           return;
         }
 
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('products')
           .select('*')
           .in('id', favoriteIds)
@@ -34,13 +38,14 @@ export default function FavoritesScreen() {
 
         if (active) {
           setProducts(data || []);
+          setLoadError(Boolean(error));
           setLoading(false);
         }
       }
 
       loadFavorites();
       return () => { active = false; };
-    }, [])
+    }, [retryKey])
   );
 
   async function removeFavorite(productId: string) {
@@ -56,6 +61,10 @@ export default function FavoritesScreen() {
         <Text style={styles.loadingText}>Loading favorites...</Text>
       </View>
     );
+  }
+
+  if (loadError) {
+    return <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />;
   }
 
   return (

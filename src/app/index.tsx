@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ShareModal } from './share';
+import { DataErrorState } from '@/components/data-error-state';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
@@ -33,6 +34,7 @@ function getTimeLeft(drawDate?: string | null) {
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [userPhone, setUserPhone] = useState('');
   const [userName, setUserName] = useState('');
   const [showShare, setShowShare] = useState(false);
@@ -84,8 +86,11 @@ export default function HomeScreen() {
   );
 
   async function fetchProducts() {
-    const { data } = await supabase.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false });
+    setLoading(true);
+    setLoadError(false);
+    const { data, error } = await supabase.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false });
     if (data) setProducts(data);
+    if (error) setLoadError(true);
     setLoading(false);
   }
 
@@ -122,6 +127,8 @@ export default function HomeScreen() {
       <Text style={styles.loadingText}>Loading JeetoBaz...</Text>
     </View>
   );
+
+  if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
     <ScrollView style={styles.container}>

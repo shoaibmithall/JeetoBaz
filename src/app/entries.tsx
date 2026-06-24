@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
+import { DataErrorState } from '@/components/data-error-state';
 
 export default function MyEntriesScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
@@ -31,12 +33,15 @@ export default function MyEntriesScreen() {
   }, []);
 
   async function fetchEntries(phone: string) {
-    const { data } = await supabase
+    setLoading(true);
+    setLoadError(false);
+    const { data, error } = await supabase
       .from('entries')
       .select('*, products(*)')
       .eq('phone', phone)
       .order('created_at', { ascending: false });
     if (data) setEntries(data);
+    if (error) setLoadError(true);
     setLoading(false);
   }
 
@@ -46,6 +51,8 @@ export default function MyEntriesScreen() {
       <Text style={styles.loadingText}>Loading your entries...</Text>
     </View>
   );
+
+  if (loadError) return <DataErrorState onRetry={() => fetchEntries(userPhone)} />;
 
   if (!userPhone) return (
     <View style={styles.notLoggedIn}>
