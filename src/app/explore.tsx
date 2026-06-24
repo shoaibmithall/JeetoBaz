@@ -1,14 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import type { Product } from '@/types/database';
 
 export default function WinnersScreen() {
-  const [winners, setWinners] = useState([]);
+  const [winners, setWinners] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchWinners(); }, []);
@@ -23,7 +19,7 @@ export default function WinnersScreen() {
     setLoading(false);
   }
 
-  function maskPhone(phone) {
+  function maskPhone(phone?: string | null) {
     if (!phone) return 'N/A';
     return phone.slice(0, 6) + '****' + phone.slice(-4);
   }

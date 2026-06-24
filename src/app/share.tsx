@@ -19,10 +19,17 @@ const platforms = [
   { name: 'WA Business', color: '#128C7E', textColor: 'white', icon: 'https://cdn.simpleicons.org/whatsapp/ffffff', url: `https://wa.me/?text=${encodeURIComponent(APP_MSG + APP_URL)}` },
 ];
 
-export function ShareModal({ visible, onClose }) {
+type Platform = (typeof platforms)[number];
+
+type ShareModalProps = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+export function ShareModal({ visible, onClose }: ShareModalProps) {
   if (!visible) return null;
 
-  function handleShare(platform) {
+  function handleShare(platform: Platform) {
     if (platform.url) {
       if (typeof window !== 'undefined') window.open(platform.url, '_blank');
     } else {

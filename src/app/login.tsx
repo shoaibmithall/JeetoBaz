@@ -1,12 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 
 export default function ProfileScreen() {
   const [step, setStep] = useState('check');
@@ -18,18 +14,26 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedPhone = localStorage.getItem('userPhone') || '';
-      const savedName = localStorage.getItem('userName') || '';
+    let active = true;
+
+    async function loadProfile() {
+      const [savedPhone, savedName] = await Promise.all([
+        getStoredValue('userPhone'),
+        getStoredValue('userName'),
+      ]);
+      if (!active) return;
       if (savedPhone) {
         setPhone(savedPhone);
-        setName(savedName);
+        setName(savedName || '');
         setStep('profile');
         fetchStats(savedPhone);
       } else {
         setStep('phone');
       }
     }
+
+    loadProfile();
+    return () => { active = false; };
   }, []);
 
   async function fetchStats(phone: string) {
@@ -51,12 +55,13 @@ export default function ProfileScreen() {
       .single();
 
     if (existing) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('userPhone', fullPhone);
-        localStorage.setItem('userName', existing.name);
-      }
+      const existingName = existing.name || '';
+      await Promise.all([
+        setStoredValue('userPhone', fullPhone),
+        setStoredValue('userName', existingName),
+      ]);
       setPhone(fullPhone);
-      setName(existing.name);
+      setName(existingName);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -75,10 +80,10 @@ export default function ProfileScreen() {
       jazzcash_number: fullPhone,
     });
     if (!error) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('userPhone', fullPhone);
-        localStorage.setItem('userName', name);
-      }
+      await Promise.all([
+        setStoredValue('userPhone', fullPhone),
+        setStoredValue('userName', name),
+      ]);
       setPhone(fullPhone);
       setName(name);
       setStep('profile');
@@ -89,11 +94,8 @@ export default function ProfileScreen() {
     setLoading(false);
   }
 
-  function logout() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('userPhone');
-      localStorage.removeItem('userName');
-    }
+  async function logout() {
+    await removeStoredValues(['userPhone', 'userName']);
     setStep('phone');
     setPhone('');
     setName('');

@@ -1,12 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import { getStoredValue } from '@/lib/storage';
 
 const JAZZCASH_NUMBER = '03706814892';
 const JAZZCASH_NAME = 'JeetoBaz';
@@ -14,6 +10,7 @@ const JAZZCASH_NAME = 'JeetoBaz';
 export default function PaymentScreen() {
   const router = useRouter();
   const { productId, productName, entryFee } = useLocalSearchParams();
+  const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [txnId, setTxnId] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('payment');
@@ -25,18 +22,27 @@ export default function PaymentScreen() {
     }
     setLoading(true);
 
-    const userPhone = typeof window !== 'undefined' ? localStorage.getItem('userPhone') : '';
-    const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') : '';
+    const [userPhone, userName] = await Promise.all([
+      getStoredValue('userPhone'),
+      getStoredValue('userName'),
+    ]);
+
+    if (!productIdValue) {
+      alert('Missing product for this payment!');
+      setLoading(false);
+      return;
+    }
 
     if (!userPhone) {
       router.push('/login');
+      setLoading(false);
       return;
     }
 
     const { data: existing } = await supabase
       .from('entries')
       .select('*')
-      .eq('product_id', productId)
+      .eq('product_id', productIdValue)
       .eq('phone', userPhone)
       .single();
 
@@ -47,20 +53,26 @@ export default function PaymentScreen() {
     }
 
     const { error } = await supabase.from('entries').insert({
-      product_id: productId,
+      product_id: productIdValue,
       phone: userPhone,
       name: userName,
       transaction_id: txnId,
     });
 
     if (!error) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('current_entries')
+        .eq('id', productIdValue)
+        .single();
+
       await supabase
         .from('products')
-        .update({ current_entries: supabase.rpc('increment', { x: 1 }) })
-        .eq('id', productId);
+        .update({ current_entries: (product?.current_entries || 0) + 1 })
+        .eq('id', productIdValue);
 
       await supabase.from('transactions').insert({
-        product_id: productId,
+        product_id: productIdValue,
         phone: userPhone,
         amount: parseInt(entryFee as string) || 1,
         jazzcash_txn_id: txnId,

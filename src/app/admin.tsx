@@ -1,12 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import type { Entry, Product, ProductFormData, User } from '@/types/database';
 
 const ADMIN_PASSWORD = 'JeetoBaz@2026';
 
@@ -14,9 +11,9 @@ export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('products');
-  const [products, setProducts] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [entries, setEntries] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [entryFee, setEntryFee] = useState('');
@@ -27,17 +24,19 @@ export default function AdminScreen() {
   const [liveLink, setLiveLink] = useState('');
   const [winnerPhoto, setWinnerPhoto] = useState('');
   const [loading, setLoading] = useState(false);
-  const editingIdRef = useRef(null);
-  const [editingId, setEditingId] = useState(null);
+  const editingIdRef = useRef<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [announcementSaved, setAnnouncementSaved] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('adminAuth');
+    let active = true;
+    getStoredValue('adminAuth').then((auth) => {
+      if (!active) return;
       if (auth === 'true') setAuthenticated(true);
-    }
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -45,23 +44,21 @@ export default function AdminScreen() {
       fetchProducts();
       fetchUsers();
       fetchEntries();
-      if (typeof window !== 'undefined') {
-        setAnnouncement(localStorage.getItem('announcement') || '');
-      }
+      getStoredValue('announcement').then((value) => setAnnouncement(value || ''));
     }
   }, [authenticated]);
 
-  function handleLogin() {
+  async function handleLogin() {
     if (password === ADMIN_PASSWORD) {
-      if (typeof window !== 'undefined') localStorage.setItem('adminAuth', 'true');
+      await setStoredValue('adminAuth', 'true');
       setAuthenticated(true);
     } else {
       alert('Wrong password!');
     }
   }
 
-  function handleLogout() {
-    if (typeof window !== 'undefined') localStorage.removeItem('adminAuth');
+  async function handleLogout() {
+    await removeStoredValues(['adminAuth']);
     setAuthenticated(false);
   }
 
@@ -80,7 +77,7 @@ export default function AdminScreen() {
     if (data) setEntries(data);
   }
 
-  function startEdit(p) {
+  function startEdit(p: Product) {
     editingIdRef.current = p.id;
     setEditingId(p.id);
     setProductName(p.name || '');
@@ -112,7 +109,7 @@ export default function AdminScreen() {
     setLoading(true);
     const currentEditId = editingIdRef.current;
 
-    const productData = {
+    const productData: ProductFormData = {
       name: productName,
       price: parseInt(productPrice),
       entry_fee: parseInt(entryFee),
@@ -136,24 +133,22 @@ export default function AdminScreen() {
     setLoading(false);
   }
 
-  async function deleteProduct(id) {
+  async function deleteProduct(id: string) {
     if (!window.confirm('Delete this product?')) return;
     await supabase.from('products').delete().eq('id', id);
     fetchProducts();
   }
 
-  async function toggleStatus(p) {
+  async function toggleStatus(p: Product) {
     const newStatus = p.status === 'active' ? 'completed' : 'active';
     await supabase.from('products').update({ status: newStatus }).eq('id', p.id);
     fetchProducts();
   }
 
-  function saveAnnouncement() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('announcement', announcement);
-      setAnnouncementSaved(true);
-      setTimeout(() => setAnnouncementSaved(false), 2000);
-    }
+  async function saveAnnouncement() {
+    await setStoredValue('announcement', announcement);
+    setAnnouncementSaved(true);
+    setTimeout(() => setAnnouncementSaved(false), 2000);
   }
 
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);

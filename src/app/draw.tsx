@@ -1,26 +1,27 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import type { Entry } from '@/types/database';
 
 export default function DrawScreen() {
   const router = useRouter();
   const { productId, productName } = useLocalSearchParams();
+  const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [phase, setPhase] = useState('ready');
-  const [entries, setEntries] = useState([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [highlighted, setHighlighted] = useState(-1);
-  const [winner, setWinner] = useState(null);
+  const [winner, setWinner] = useState<Entry | null>(null);
 
   async function loadEntries() {
+    if (!productIdValue) {
+      alert('Missing product for this draw!');
+      return;
+    }
     const { data, error } = await supabase
       .from('entries')
       .select('*')
-      .eq('product_id', productId);
+      .eq('product_id', productIdValue);
     if (data && data.length > 0) {
       setEntries(data);
       setPhase('showing');
@@ -46,22 +47,23 @@ export default function DrawScreen() {
     }, 100);
   }
 
-  async function saveWinner(w) {
+  async function saveWinner(w: Entry) {
+    if (!productIdValue) return;
     await supabase
       .from('products')
       .update({ status: 'completed', winner_phone: w.phone })
-      .eq('id', productId);
+      .eq('id', productIdValue);
   }
 
-  function maskPhone(phone) {
+  function maskPhone(phone?: string | null) {
     if (!phone) return '';
     return phone.slice(0, 7) + '****' + phone.slice(-4);
   }
 
-  function maskName(name) {
+  function maskName(name?: string | null) {
     if (!name) return 'Unknown';
     const parts = name.split(' ');
-    return parts.map(p => p[0] + '***').join(' ');
+    return parts.map((p: string) => p[0] + '***').join(' ');
   }
 
   return (
