@@ -19,9 +19,9 @@ export default function RootLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Draws', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text> }} />
       <Tabs.Screen name="entries" options={{ title: 'My Entries', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text> }} />
+      <Tabs.Screen name="favorites" options={{ title: 'Favorites', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>❤️</Text> }} />
       <Tabs.Screen name="explore" options={{ title: 'Winners', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text> }} />
       <Tabs.Screen name="login" options={{ title: 'Profile', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
-      <Tabs.Screen name="share" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />
       <Tabs.Screen name="draw" options={{ href: null }} />
       <Tabs.Screen name="winner" options={{ href: null }} />
