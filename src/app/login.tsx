@@ -158,6 +158,12 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>Terms & Conditions</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
+          <Text style={styles.menuIcon}>🎧</Text>
+          <Text style={styles.menuText}>Help Center</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.infoBox}>
