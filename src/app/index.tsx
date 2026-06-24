@@ -17,6 +17,7 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [showFilters, setShowFilters] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function HomeScreen() {
     if (typeof window !== 'undefined') {
       setUserPhone(localStorage.getItem('userPhone') || '');
       setUserName(localStorage.getItem('userName') || '');
+      setFavorites(JSON.parse(localStorage.getItem('favorites') || '[]'));
     }
   }, []);
 
@@ -39,62 +41,43 @@ export default function HomeScreen() {
 
   function applyFilters() {
     let result = [...products];
-
     if (search.trim()) {
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      );
+      result = result.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     }
-
-    if (sortBy === 'popular') {
-      result.sort((a, b) => (b.current_entries || 0) - (a.current_entries || 0));
-    } else if (sortBy === 'price_low') {
-      result.sort((a, b) => (a.price || 0) - (b.price || 0));
-    } else if (sortBy === 'price_high') {
-      result.sort((a, b) => (b.price || 0) - (a.price || 0));
-    } else if (sortBy === 'entry_low') {
-      result.sort((a, b) => (a.entry_fee || 1) - (b.entry_fee || 1));
-    } else if (sortBy === 'newest') {
-      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-
+    if (sortBy === 'popular') result.sort((a, b) => (b.current_entries||0) - (a.current_entries||0));
+    else if (sortBy === 'price_low') result.sort((a, b) => (a.price||0) - (b.price||0));
+    else if (sortBy === 'price_high') result.sort((a, b) => (b.price||0) - (a.price||0));
+    else if (sortBy === 'entry_low') result.sort((a, b) => (a.entry_fee||1) - (b.entry_fee||1));
+    else if (sortBy === 'newest') result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setFiltered(result);
   }
 
+  function toggleFavorite(id: string) {
+    if (typeof window === 'undefined') return;
+    const current = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let updated;
+    if (current.includes(id)) {
+      updated = current.filter((f: string) => f !== id);
+    } else {
+      updated = [...current, id];
+    }
+    localStorage.setItem('favorites', JSON.stringify(updated));
+    setFavorites(updated);
+  }
+
   async function handleEnter(product: any) {
-    if (!userPhone) {
-      router.push('/login');
-      return;
-    }
-
-    const { data: existing } = await supabase
-      .from('entries')
-      .select('*')
-      .eq('product_id', product.id)
-      .eq('phone', userPhone)
-      .single();
-
-    if (existing) {
-      alert('You have already entered this draw! Good luck 🤞');
-      return;
-    }
-
-    router.push({
-      pathname: '/payment',
-      params: {
-        productId: product.id,
-        productName: product.name,
-        entryFee: product.entry_fee || 1,
-      }
-    });
+    if (!userPhone) { router.push('/login'); return; }
+    const { data: existing } = await supabase.from('entries').select('*').eq('product_id', product.id).eq('phone', userPhone).single();
+    if (existing) { alert('You have already entered this draw! Good luck 🤞'); return; }
+    router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } });
   }
 
   const sortOptions = [
     { key: 'popular', label: '🔥 Most Popular' },
-    { key: 'newest', label: '🆕 Newest First' },
-    { key: 'price_low', label: '💰 Price: Low to High' },
-    { key: 'price_high', label: '💎 Price: High to Low' },
-    { key: 'entry_low', label: '🎯 Entry Fee: Low to High' },
+    { key: 'newest', label: '🆕 Newest' },
+    { key: 'price_low', label: '💰 Price: Low-High' },
+    { key: 'price_high', label: '💎 Price: High-Low' },
+    { key: 'entry_low', label: '🎯 Entry: Low-High' },
   ];
 
   if (loading) return (
@@ -166,12 +149,8 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.resultsRow}>
-        <Text style={styles.resultsText}>
-          {filtered.length} draw{filtered.length !== 1 ? 's' : ''} found
-        </Text>
-        <Text style={styles.sortedBy}>
-          {sortOptions.find(s => s.key === sortBy)?.label}
-        </Text>
+        <Text style={styles.resultsText}>{filtered.length} draws found</Text>
+        <Text style={styles.sortedBy}>{sortOptions.find(s => s.key === sortBy)?.label}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -179,7 +158,6 @@ export default function HomeScreen() {
           <View style={styles.emptyBox}>
             <Text style={styles.emptyEmoji}>🔍</Text>
             <Text style={styles.emptyText}>No draws found!</Text>
-            <Text style={styles.emptySubText}>Try a different search term</Text>
             <TouchableOpacity onPress={() => setSearch('')}>
               <Text style={styles.clearSearch}>Clear Search</Text>
             </TouchableOpacity>
@@ -192,7 +170,14 @@ export default function HomeScreen() {
               <Image source={{ uri: p.image_url }} style={styles.productImage} resizeMode="cover" />
             )}
             <View style={styles.cardBody}>
-              <Text style={styles.productName}>{p.name}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.productName}>{p.name}</Text>
+                <TouchableOpacity onPress={() => toggleFavorite(p.id)}>
+                  <Text style={styles.heartBtn}>
+                    {favorites.includes(p.id) ? '❤️' : '🤍'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               {p.description && <Text style={styles.description} numberOfLines={2}>{p.description}</Text>}
               <View style={styles.priceRow}>
                 <Text style={styles.originalPrice}>Rs. {p.price?.toLocaleString()}</Text>
@@ -200,17 +185,13 @@ export default function HomeScreen() {
                   <Text style={styles.entryFee}>Entry: Rs. {p.entry_fee || 1}</Text>
                 </View>
               </View>
-              <Text style={styles.participants}>👥 {(p.current_entries || 0).toLocaleString()} participants</Text>
+              <Text style={styles.participants}>👥 {(p.current_entries||0).toLocaleString()} participants</Text>
               <View style={styles.progressBar}>
                 <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
               </View>
               <View style={styles.spotsRow}>
-                <Text style={styles.spots}>
-                  🔥 {Math.max(p.max_entries - (p.current_entries||0), 0).toLocaleString()} spots left!
-                </Text>
-                <Text style={styles.percent}>
-                  {Math.min(Math.round(((p.current_entries||0)/p.max_entries)*100), 100)}%
-                </Text>
+                <Text style={styles.spots}>🔥 {Math.max(p.max_entries - (p.current_entries||0), 0).toLocaleString()} spots left!</Text>
+                <Text style={styles.percent}>{Math.min(Math.round(((p.current_entries||0)/p.max_entries)*100), 100)}%</Text>
               </View>
               <TouchableOpacity style={styles.button} onPress={() => handleEnter(p)}>
                 <Text style={styles.buttonText}>Enter for Rs.{p.entry_fee || 1} 🎯</Text>
@@ -244,7 +225,7 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, color: 'white', fontSize: 14, padding: 10 },
   clearBtn: { color: '#666', fontSize: 16, padding: 5 },
-  filterBtn: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', padding: 12, alignItems: 'center', justifyContent: 'center' },
+  filterBtn: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', padding: 12 },
   filterBtnActive: { borderColor: '#FFD700', backgroundColor: '#2b2200' },
   filterBtnText: { fontSize: 18 },
   sortContainer: { backgroundColor: '#111', paddingHorizontal: 12, paddingBottom: 12 },
@@ -258,13 +239,14 @@ const styles = StyleSheet.create({
   sortedBy: { color: '#1DB954', fontSize: 12 },
   emptyBox: { alignItems: 'center', padding: 50 },
   emptyEmoji: { fontSize: 50, marginBottom: 15 },
-  emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
-  emptySubText: { color: '#aaa', fontSize: 14, marginBottom: 15 },
+  emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
   clearSearch: { color: '#1DB954', fontSize: 14, fontWeight: 'bold' },
   card: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
   productImage: { width: '100%', height: 200 },
   cardBody: { padding: 15 },
-  productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
+  heartBtn: { fontSize: 24, marginLeft: 10 },
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
