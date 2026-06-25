@@ -1,12 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 
 export default function ProfileScreen() {
   const [step, setStep] = useState('check');
@@ -18,18 +15,26 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedPhone = localStorage.getItem('userPhone') || '';
-      const savedName = localStorage.getItem('userName') || '';
+    let active = true;
+
+    async function loadProfile() {
+      const [savedPhone, savedName] = await Promise.all([
+        getStoredValue('userPhone'),
+        getStoredValue('userName'),
+      ]);
+      if (!active) return;
       if (savedPhone) {
         setPhone(savedPhone);
-        setName(savedName);
+        setName(savedName || '');
         setStep('profile');
         fetchStats(savedPhone);
       } else {
         setStep('phone');
       }
     }
+
+    loadProfile();
+    return () => { active = false; };
   }, []);
 
   async function fetchStats(phone: string) {
@@ -38,25 +43,33 @@ export default function ProfileScreen() {
   }
 
   async function handleLogin() {
-    if (inputPhone.length < 10) {
-      alert('Please enter a valid 10-digit phone number!');
+    const normalizedPhone = normalizePakistaniMobile(inputPhone);
+    if (!isValidPakistaniMobile(normalizedPhone)) {
+      alert('Please enter a valid Pakistani mobile number, e.g. 3001234567.');
       return;
     }
     setLoading(true);
-    const fullPhone = '+92' + inputPhone;
-    const { data: existing } = await supabase
+    const fullPhone = '+92' + normalizedPhone;
+    const { data: existing, error } = await supabase
       .from('users')
       .select('*')
       .eq('phone', fullPhone)
-      .single();
+      .maybeSingle();
+
+    if (error) {
+      alert('Unable to check this number. Please try again.');
+      setLoading(false);
+      return;
+    }
 
     if (existing) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('userPhone', fullPhone);
-        localStorage.setItem('userName', existing.name);
-      }
+      const existingName = existing.name || '';
+      await Promise.all([
+        setStoredValue('userPhone', fullPhone),
+        setStoredValue('userName', existingName),
+      ]);
       setPhone(fullPhone);
-      setName(existing.name);
+      setName(existingName);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -66,21 +79,22 @@ export default function ProfileScreen() {
   }
 
   async function createAccount() {
-    if (!name) { alert('Please enter your name!'); return; }
+    const normalizedName = normalizePersonName(name);
+    if (normalizedName.length < 2) { alert('Please enter your full name.'); return; }
     setLoading(true);
-    const fullPhone = '+92' + inputPhone;
+    const fullPhone = '+92' + normalizePakistaniMobile(inputPhone);
     const { error } = await supabase.from('users').insert({
-      name,
+      name: normalizedName,
       phone: fullPhone,
       jazzcash_number: fullPhone,
     });
     if (!error) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('userPhone', fullPhone);
-        localStorage.setItem('userName', name);
-      }
+      await Promise.all([
+        setStoredValue('userPhone', fullPhone),
+        setStoredValue('userName', normalizedName),
+      ]);
       setPhone(fullPhone);
-      setName(name);
+      setName(normalizedName);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -89,11 +103,8 @@ export default function ProfileScreen() {
     setLoading(false);
   }
 
-  function logout() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('userPhone');
-      localStorage.removeItem('userName');
-    }
+  async function logout() {
+    await removeStoredValues(['userPhone', 'userName']);
     setStep('phone');
     setPhone('');
     setName('');
@@ -147,6 +158,18 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>Terms & Conditions</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
+          <Text style={styles.menuIcon}>🔒</Text>
+          <Text style={styles.menuText}>Privacy & Account Data</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
+          <Text style={styles.menuIcon}>🎧</Text>
+          <Text style={styles.menuText}>Help Center</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.infoBox}>
@@ -181,7 +204,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#666"
                 keyboardType="phone-pad"
                 value={inputPhone}
-                onChangeText={setInputPhone}
+                onChangeText={(value) => setInputPhone(normalizePakistaniMobile(value))}
                 maxLength={10}
               />
             </View>
@@ -200,6 +223,9 @@ export default function ProfileScreen() {
                 <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/privacy')}>
+              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
+            </TouchableOpacity>
           </>
         )}
         {step === 'name' && (
@@ -212,6 +238,7 @@ export default function ProfileScreen() {
               placeholderTextColor="#666"
               value={name}
               onChangeText={setName}
+              maxLength={60}
             />
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -230,6 +257,9 @@ export default function ProfileScreen() {
                 By joining you agree to our{' '}
                 <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
               </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/privacy')}>
+              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
             </TouchableOpacity>
           </>
         )}
@@ -275,4 +305,5 @@ const styles = StyleSheet.create({
   backText: { color: '#1DB954', textAlign: 'center', fontSize: 14, marginBottom: 10 },
   termsLink: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 10 },
   termsLinkHighlight: { color: '#1DB954', fontWeight: 'bold' },
+  privacyLink: { color: '#1DB954', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
 });

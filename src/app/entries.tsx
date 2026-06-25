@@ -1,38 +1,47 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
-
-const supabase = createClient(
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxanJmbmhxcWZ5bXdmc2Rrd212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTcxNDIsImV4cCI6MjA5NzU5MzE0Mn0.yuX-9QGr3w-gUQ9brELnohwgLNMDg7mhJTkRDw0L8w0'
-);
+import { supabase } from '@/lib/supabase';
+import { getStoredValue } from '@/lib/storage';
+import { DataErrorState } from '@/components/data-error-state';
 
 export default function MyEntriesScreen() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const phone = localStorage.getItem('userPhone') || '';
-      const name = localStorage.getItem('userName') || '';
-      setUserPhone(phone);
-      setUserName(name);
+    let active = true;
+
+    async function loadEntries() {
+      const [phone, name] = await Promise.all([
+        getStoredValue('userPhone'),
+        getStoredValue('userName'),
+      ]);
+      if (!active) return;
+      setUserPhone(phone || '');
+      setUserName(name || '');
       if (phone) fetchEntries(phone);
       else setLoading(false);
     }
+
+    loadEntries();
+    return () => { active = false; };
   }, []);
 
   async function fetchEntries(phone: string) {
-    const { data } = await supabase
+    setLoading(true);
+    setLoadError(false);
+    const { data, error } = await supabase
       .from('entries')
       .select('*, products(*)')
       .eq('phone', phone)
       .order('created_at', { ascending: false });
     if (data) setEntries(data);
+    if (error) setLoadError(true);
     setLoading(false);
   }
 
@@ -42,6 +51,8 @@ export default function MyEntriesScreen() {
       <Text style={styles.loadingText}>Loading your entries...</Text>
     </View>
   );
+
+  if (loadError) return <DataErrorState onRetry={() => fetchEntries(userPhone)} />;
 
   if (!userPhone) return (
     <View style={styles.notLoggedIn}>
