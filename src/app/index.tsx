@@ -18,11 +18,11 @@ const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] 
   { key: 'entry_low', labels: { en: '🎯 Entry: Low-High', ur: '🎯 انٹری: کم سے زیادہ', roman: '🎯 Entry: Low-High' } },
 ];
 
-function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode) {
+function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
   if (!drawDate) return null;
-  const now = new Date();
   const draw = new Date(drawDate);
   const diff = draw.getTime() - now.getTime();
+  if (Number.isNaN(diff)) return null;
   if (diff <= 0) return translate(language, 'drawTimeArrived');
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -30,6 +30,34 @@ function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode
   if (days > 0) return `${days}d ${hours}h ${mins}m`;
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
+}
+
+function getDrawScheduleStatus(product: Product, language: LanguageCode, now: Date) {
+  const currentEntries = product.current_entries || 0;
+  const remainingEntries = Math.max(product.max_entries - currentEntries, 0);
+
+  if (remainingEntries > 0) {
+    return {
+      label: translate(language, 'drawSchedule'),
+      value: `${remainingEntries.toLocaleString()} ${translate(language, 'spotsNeededForDraw')}`,
+      note: translate(language, 'drawAfterFull'),
+    };
+  }
+
+  const timeLeft = getTimeLeft(product.draw_date, language, now);
+  if (timeLeft) {
+    return {
+      label: translate(language, 'drawScheduled'),
+      value: timeLeft,
+      note: product.draw_date || translate(language, 'drawAfterFull'),
+    };
+  }
+
+  return {
+    label: translate(language, 'drawReadyToSchedule'),
+    value: translate(language, 'participantsComplete'),
+    note: translate(language, 'drawWithinWeek'),
+  };
 }
 
 export default function HomeScreen() {
@@ -259,7 +287,7 @@ export default function HomeScreen() {
       )}
 
       {filteredProducts.map((p) => {
-        const timeLeft = getTimeLeft(p.draw_date, language);
+        const drawSchedule = getDrawScheduleStatus(p, language, time);
         const liveLink = p.live_link;
         return (
           <View key={p.id} style={styles.card}>
@@ -283,12 +311,11 @@ export default function HomeScreen() {
               </View>
               {p.description && <Text style={styles.description}>{p.description}</Text>}
 
-              {timeLeft && (
-                <View style={styles.countdownBox}>
-                  <Text style={styles.countdownLabel}>⏰ {t('drawDate')}:</Text>
-                  <Text style={styles.countdownTime}>{timeLeft}</Text>
-                </View>
-              )}
+              <View style={styles.countdownBox}>
+                <Text style={styles.countdownLabel}>{drawSchedule.label}</Text>
+                <Text style={styles.countdownTime}>{drawSchedule.value}</Text>
+              </View>
+              <Text style={styles.drawScheduleNote}>{drawSchedule.note}</Text>
 
               {p.draw_date && (
                 <Text style={styles.drawDate}>📅 {t('drawDate')}: {p.draw_date}</Text>
@@ -393,8 +420,9 @@ const styles = StyleSheet.create({
   heartBtn: { fontSize: 24, marginLeft: 10 },
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
   countdownBox: { backgroundColor: '#2b2200', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
-  countdownLabel: { color: '#FFD700', fontSize: 13 },
-  countdownTime: { color: '#FFD700', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace' },
+  countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
+  countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
+  drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
   drawDate: { color: '#4a9eff', fontSize: 12, marginBottom: 8 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },

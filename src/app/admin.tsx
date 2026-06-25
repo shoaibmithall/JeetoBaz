@@ -365,7 +365,7 @@ export default function AdminScreen() {
               <TextInput style={[styles.input, styles.textArea]} placeholder="📝 Description (optional)" placeholderTextColor="#666" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
               <TextInput style={styles.input} placeholder="🔴 Live Link (YouTube/Facebook URL)" placeholderTextColor="#666" value={liveLink} onChangeText={setLiveLink} />
         <TextInput style={styles.input} placeholder="🏆 Winner Photo URL (optional)" placeholderTextColor="#666" value={winnerPhoto} onChangeText={setWinnerPhoto} />
-        <TextInput style={styles.input} placeholder="📅 Draw Date (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
+        <TextInput style={styles.input} placeholder="📅 Draw Date after full (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
               <TouchableOpacity style={[styles.addButton, editingId && styles.saveButton]} onPress={saveProduct} disabled={loading}>
                 <Text style={styles.addButtonText}>{loading ? 'Saving...' : editingId ? '💾 Save Changes' : '➕ Add Product'}</Text>
               </TouchableOpacity>

@@ -46,10 +46,11 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>4. Draw Schedule</Text>
         <Text style={styles.text}>
-          • Draw is conducted when ALL participation spots are filled{'\n'}
-          • Once a product reaches maximum participants, the draw is held at 10:00 PM (PKT) the same night{'\n'}
-          • Draw is broadcast LIVE on the JeetoBaz app and website{'\n'}
-          • All registered participants will be notified before the draw
+          • Draw scheduling starts after ALL participation spots are filled{'\n'}
+          • JeetoBaz will announce the exact draw date and time after the draw becomes full{'\n'}
+          • The target is usually within about 1 week, depending on verification and operations{'\n'}
+          • Draw may be broadcast LIVE on the JeetoBaz app, website, or official social channel{'\n'}
+          • Registered participants should check the app for the latest draw update
         </Text>
 
         <Text style={styles.sectionTitle}>5. Prize Delivery</Text>
