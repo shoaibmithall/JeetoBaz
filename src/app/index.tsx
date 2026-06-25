@@ -7,6 +7,7 @@ import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
+import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
 
@@ -62,6 +63,7 @@ function getDrawScheduleStatus(product: Product, language: LanguageCode, now: Da
 
 export default function HomeScreen() {
   const { language, t } = useLanguage();
+  const { theme } = useAppTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -152,16 +154,16 @@ export default function HomeScreen() {
   }
 
   if (loading) return (
-    <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>{t('loadingJeetoBaz')}</Text>
+    <View style={[styles.loading, { backgroundColor: theme.background }]}>
+      <ActivityIndicator size="large" color={theme.primary} />
+      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingJeetoBaz')}</Text>
     </View>
   );
 
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <ShareModal visible={showShare} onClose={() => setShowShare(false)} />
 
       <View style={styles.header}>
@@ -185,19 +187,19 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.trustBar}>
-        <Text style={styles.trustItem}>✅ 100% Fair</Text>
-        <Text style={styles.trustDot}>•</Text>
-        <Text style={styles.trustItem}>🔒 {t('transparent')}</Text>
-        <Text style={styles.trustDot}>•</Text>
-        <Text style={styles.trustItem}>🇵🇰 Pakistan</Text>
+      <View style={[styles.trustBar, { backgroundColor: theme.primarySoft }]}>
+        <Text style={[styles.trustItem, { color: theme.primary }]}>✅ 100% Fair</Text>
+        <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
+        <Text style={[styles.trustItem, { color: theme.primary }]}>🔒 {t('transparent')}</Text>
+        <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
+        <Text style={[styles.trustItem, { color: theme.primary }]}>🇵🇰 Pakistan</Text>
       </View>
 
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
+      <View style={[styles.searchRow, { backgroundColor: theme.surfaceAlt }]}>
+        <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: theme.text }]}
             placeholder={t('searchPrizes')}
             placeholderTextColor="#666"
             value={search}
@@ -205,12 +207,12 @@ export default function HomeScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} accessibilityLabel="Clear search">
-              <Text style={styles.clearBtn}>✕</Text>
+              <Text style={[styles.clearBtn, { color: theme.muted }]}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
-          style={[styles.filterBtn, showFilters && styles.filterBtnActive]}
+          style={[styles.filterBtn, { backgroundColor: theme.surface, borderColor: theme.border }, showFilters && { borderColor: theme.gold, backgroundColor: theme.goldSoft }]}
           onPress={() => setShowFilters((visible) => !visible)}
           accessibilityLabel={t('sortBy')}
         >
@@ -219,16 +221,16 @@ export default function HomeScreen() {
       </View>
 
       {showFilters && (
-        <View style={styles.sortContainer}>
-          <Text style={styles.sortLabel}>{t('sortBy')}</Text>
+        <View style={[styles.sortContainer, { backgroundColor: theme.surfaceAlt }]}>
+          <Text style={[styles.sortLabel, { color: theme.muted }]}>{t('sortBy')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {SORT_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.key}
-                style={[styles.sortChip, sortBy === option.key && styles.sortChipActive]}
+                style={[styles.sortChip, { backgroundColor: theme.surface, borderColor: theme.border }, sortBy === option.key && { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}
                 onPress={() => setSortBy(option.key)}
               >
-                <Text style={[styles.sortChipText, sortBy === option.key && styles.sortChipTextActive]}>
+                <Text style={[styles.sortChipText, { color: theme.muted }, sortBy === option.key && { color: theme.gold, fontWeight: 'bold' }]}>
                   {option.labels[language]}
                 </Text>
               </TouchableOpacity>
@@ -237,49 +239,49 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <View style={styles.howItWorks}>
-        <Text style={styles.howTitle}>🤔 {t('howItWorks')}</Text>
+      <View style={[styles.howItWorks, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.howTitle, { color: theme.text }]}>🤔 {t('howItWorks')}</Text>
         <View style={styles.steps}>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>1️⃣</Text>
-            <Text style={styles.stepTitle}>{t('entryStepTitle')}</Text>
-            <Text style={styles.stepDesc}>{t('entryStepDesc')}</Text>
+            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('entryStepTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('entryStepDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>2️⃣</Text>
-            <Text style={styles.stepTitle}>{t('liveDrawTitle')}</Text>
-            <Text style={styles.stepDesc}>{t('liveDrawDesc')}</Text>
+            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('liveDrawTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('liveDrawDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>3️⃣</Text>
-            <Text style={styles.stepTitle}>{t('prizeTitle')}</Text>
-            <Text style={styles.stepDesc}>{t('prizeDesc')}</Text>
+            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('prizeTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('prizeDesc')}</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.algorithmBox}>
-        <Text style={styles.algoTitle}>🔐 {t('winnerAlgorithm')}</Text>
-        <Text style={styles.algoText}>{t('winnerAlgorithmText')}</Text>
-        <View style={styles.verifiedBadge}>
+      <View style={[styles.algorithmBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
+        <Text style={[styles.algoTitle, { color: theme.primary }]}>🔐 {t('winnerAlgorithm')}</Text>
+        <Text style={[styles.algoText, { color: theme.muted }]}>{t('winnerAlgorithmText')}</Text>
+        <View style={[styles.verifiedBadge, { backgroundColor: theme.primary }]}>
           <Text style={styles.verifiedText}>✅ {t('verifiedFairDraw')}</Text>
         </View>
       </View>
 
       <View style={styles.resultsRow}>
-        <Text style={styles.sectionTitle}>🔥 {t('activeDraws')}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>🔥 {t('activeDraws')}</Text>
         <View style={styles.resultsMeta}>
-          <Text style={styles.resultsText}>{filteredProducts.length} {t('found')}</Text>
-          <Text style={styles.sortedBy}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
+          <Text style={[styles.resultsText, { color: theme.muted }]}>{filteredProducts.length} {t('found')}</Text>
+          <Text style={[styles.sortedBy, { color: theme.primary }]}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
         </View>
       </View>
 
       {filteredProducts.length === 0 && (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyText}>{t('noDrawsFound')}</Text>
+          <Text style={[styles.emptyText, { color: theme.text }]}>{t('noDrawsFound')}</Text>
           <TouchableOpacity onPress={() => setSearch('')}>
             <Text style={styles.clearSearch}>{t('clearSearch')}</Text>
           </TouchableOpacity>
@@ -290,9 +292,9 @@ export default function HomeScreen() {
         const drawSchedule = getDrawScheduleStatus(p, language, time);
         const liveLink = p.live_link;
         return (
-          <View key={p.id} style={styles.card}>
-            <View style={styles.verifiedBanner}>
-              <Text style={styles.verifiedBannerText}>✅ {t('verifiedDraw')}</Text>
+          <View key={p.id} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={[styles.verifiedBanner, { backgroundColor: theme.primarySoft }]}>
+              <Text style={[styles.verifiedBannerText, { color: theme.primary }]}>✅ {t('verifiedDraw')}</Text>
               {liveLink && (
                 <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
                   <Text style={styles.liveBtn}>🔴 {t('watchLive')}</Text>
@@ -304,18 +306,18 @@ export default function HomeScreen() {
 
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
-                <Text style={styles.productName}>{p.name}</Text>
+                <Text style={[styles.productName, { color: theme.text }]}>{p.name}</Text>
                 <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
                   <Text style={styles.heartBtn}>{favorites.includes(p.id) ? '❤️' : '🤍'}</Text>
                 </TouchableOpacity>
               </View>
-              {p.description && <Text style={styles.description}>{p.description}</Text>}
+              {p.description && <Text style={[styles.description, { color: theme.muted }]}>{p.description}</Text>}
 
-              <View style={styles.countdownBox}>
-                <Text style={styles.countdownLabel}>{drawSchedule.label}</Text>
-                <Text style={styles.countdownTime}>{drawSchedule.value}</Text>
+              <View style={[styles.countdownBox, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
+                <Text style={[styles.countdownLabel, { color: theme.gold }]}>{drawSchedule.label}</Text>
+                <Text style={[styles.countdownTime, { color: theme.gold }]}>{drawSchedule.value}</Text>
               </View>
-              <Text style={styles.drawScheduleNote}>{drawSchedule.note}</Text>
+              <Text style={[styles.drawScheduleNote, { color: theme.muted }]}>{drawSchedule.note}</Text>
 
               {p.draw_date && (
                 <Text style={styles.drawDate}>📅 {t('drawDate')}: {p.draw_date}</Text>
@@ -328,9 +330,9 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text style={styles.participants}>👥 {(p.current_entries || 0).toLocaleString()} {t('participants')}</Text>
+              <Text style={[styles.participants, { color: theme.muted }]}>👥 {(p.current_entries || 0).toLocaleString()} {t('participants')}</Text>
 
-              <View style={styles.progressBar}>
+              <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
                 <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
               </View>
 

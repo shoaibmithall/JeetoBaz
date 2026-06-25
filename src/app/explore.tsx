@@ -4,9 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product } from '@/types/database';
+import { useAppTheme } from '@/hooks/use-theme';
 
 export default function WinnersScreen() {
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [winners, setWinners] = useState<Product[]>([]);
   const [winnerEntries, setWinnerEntries] = useState<Record<string, Entry>>({});
   const [entryCounts, setEntryCounts] = useState<Record<string, number>>({});
@@ -73,67 +75,67 @@ export default function WinnersScreen() {
   }
 
   if (loading) return (
-    <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>{t('loadingWinners')}</Text>
+    <View style={[styles.loading, { backgroundColor: theme.background }]}>
+      <ActivityIndicator size="large" color={theme.primary} />
+      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
     </View>
   );
 
   if (loadError) return <DataErrorState onRetry={fetchWinners} />;
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <Text style={styles.title}>🏆 {t('pastWinners')}</Text>
-        <Text style={styles.subtitle}>100% Real and Verified</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>100% Real and Verified</Text>
       </View>
 
-      <View style={styles.trustBox}>
-        <Text style={styles.trustTitle}>{t('trustTitle')}</Text>
-        <Text style={styles.trustText}>{t('trustLine1')}</Text>
-        <Text style={styles.trustText}>{t('trustLine2')}</Text>
-        <Text style={styles.trustText}>{t('trustLine3')}</Text>
+      <View style={[styles.trustBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
+        <Text style={[styles.trustTitle, { color: theme.primary }]}>{t('trustTitle')}</Text>
+        <Text style={[styles.trustText, { color: theme.muted }]}>{t('trustLine1')}</Text>
+        <Text style={[styles.trustText, { color: theme.muted }]}>{t('trustLine2')}</Text>
+        <Text style={[styles.trustText, { color: theme.muted }]}>{t('trustLine3')}</Text>
       </View>
 
       {winners.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🎯</Text>
-          <Text style={styles.emptyText}>{t('noCompletedDraws')}</Text>
-          <Text style={styles.emptySubText}>Be the first winner — enter a draw now!</Text>
+          <Text style={[styles.emptyText, { color: theme.text }]}>{t('noCompletedDraws')}</Text>
+          <Text style={[styles.emptySubText, { color: theme.muted }]}>Be the first winner — enter a draw now!</Text>
         </View>
       ) : (
         winners.map((product) => {
           const winnerEntry = winnerEntries[product.id];
           const totalEntries = entryCounts[product.id] || product.current_entries || 0;
           return (
-            <View key={product.id} style={styles.winnerCard}>
+            <View key={product.id} style={[styles.winnerCard, { backgroundColor: theme.surface }]}>
               {product.winner_photo ? (
                 <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
               ) : (
                 <Text style={styles.trophy}>🏆</Text>
               )}
               <Text style={styles.verifiedRecord}>Verified Draw Record</Text>
-              <Text style={styles.winnerName}>{winnerEntry?.name || t('notProvided')}</Text>
-              <Text style={styles.winnerPhone}>{maskPhone(product.winner_phone)}</Text>
+              <Text style={[styles.winnerName, { color: theme.text }]}>{winnerEntry?.name || t('notProvided')}</Text>
+              <Text style={[styles.winnerPhone, { color: theme.text }]}>{maskPhone(product.winner_phone)}</Text>
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productPrice}>Prize Value: Rs. {product.price?.toLocaleString()}</Text>
 
               <View style={styles.recordGrid}>
-                <View style={styles.recordItem}>
-                  <Text style={styles.recordLabel}>Draw Date</Text>
-                  <Text style={styles.recordValue}>{getDrawDate(product)}</Text>
+                <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
+                  <Text style={[styles.recordLabel, { color: theme.subtle }]}>Draw Date</Text>
+                  <Text style={[styles.recordValue, { color: theme.text }]}>{getDrawDate(product)}</Text>
                 </View>
-                <View style={styles.recordItem}>
-                  <Text style={styles.recordLabel}>Total Entries</Text>
-                  <Text style={styles.recordValue}>{totalEntries.toLocaleString()}</Text>
+                <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
+                  <Text style={[styles.recordLabel, { color: theme.subtle }]}>Total Entries</Text>
+                  <Text style={[styles.recordValue, { color: theme.text }]}>{totalEntries.toLocaleString()}</Text>
                 </View>
-                <View style={styles.recordItem}>
-                  <Text style={styles.recordLabel}>Winner Ticket</Text>
-                  <Text style={styles.recordValue}>{getTicketNumber(winnerEntry)}</Text>
+                <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
+                  <Text style={[styles.recordLabel, { color: theme.subtle }]}>Winner Ticket</Text>
+                  <Text style={[styles.recordValue, { color: theme.text }]}>{getTicketNumber(winnerEntry)}</Text>
                 </View>
-                <View style={styles.recordItem}>
-                  <Text style={styles.recordLabel}>Selection</Text>
-                  <Text style={styles.recordValue}>Random system draw</Text>
+                <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
+                  <Text style={[styles.recordLabel, { color: theme.subtle }]}>Selection</Text>
+                  <Text style={[styles.recordValue, { color: theme.text }]}>Random system draw</Text>
                 </View>
               </View>
 

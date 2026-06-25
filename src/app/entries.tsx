@@ -6,12 +6,14 @@ import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
+import { useAppTheme } from '@/hooks/use-theme';
 
 type EntryWithProduct = Entry & { products?: Product | null };
 type PendingPaymentWithProduct = Transaction & { products?: Product | null };
 
 export default function MyEntriesScreen() {
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [entries, setEntries] = useState<EntryWithProduct[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PendingPaymentWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,18 +91,18 @@ export default function MyEntriesScreen() {
   }
 
   if (loading) return (
-    <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>{t('loadingEntries')}</Text>
+    <View style={[styles.loading, { backgroundColor: theme.background }]}>
+      <ActivityIndicator size="large" color={theme.primary} />
+      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingEntries')}</Text>
     </View>
   );
 
   if (loadError) return <DataErrorState onRetry={() => fetchEntries(userPhone)} />;
 
   if (!userPhone) return (
-    <View style={styles.notLoggedIn}>
+    <View style={[styles.notLoggedIn, { backgroundColor: theme.background }]}>
       <Text style={styles.notLoggedInEmoji}>🔐</Text>
-      <Text style={styles.notLoggedInText}>Please login to see your entries</Text>
+      <Text style={[styles.notLoggedInText, { color: theme.text }]}>Please login to see your entries</Text>
       <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
         <Text style={styles.loginBtnText}>{t('loginSignUp')}</Text>
       </TouchableOpacity>
@@ -108,29 +110,29 @@ export default function MyEntriesScreen() {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Text style={styles.title}>🎯 {t('myEntries')}</Text>
         <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
       </View>
 
-      <View style={styles.statsBox}>
+      <View style={[styles.statsBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={styles.statColumn}>
           <Text style={styles.statsNumber}>{entries.length}</Text>
-          <Text style={styles.statsLabel}>Approved Tickets</Text>
+          <Text style={[styles.statsLabel, { color: theme.muted }]}>Approved Tickets</Text>
         </View>
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
         <View style={styles.statColumn}>
           <Text style={styles.statsNumber}>{pendingPayments.length}</Text>
-          <Text style={styles.statsLabel}>Pending Payments</Text>
+          <Text style={[styles.statsLabel, { color: theme.muted }]}>Pending Payments</Text>
         </View>
       </View>
 
       {entries.length === 0 && pendingPayments.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🎯</Text>
-          <Text style={styles.emptyText}>{t('noEntriesYet')}</Text>
-          <Text style={styles.emptySubText}>{t('enterDrawHere')}</Text>
+          <Text style={[styles.emptyText, { color: theme.text }]}>{t('noEntriesYet')}</Text>
+          <Text style={[styles.emptySubText, { color: theme.muted }]}>{t('enterDrawHere')}</Text>
           <TouchableOpacity style={styles.browseBtn} onPress={() => router.push('/')}>
             <Text style={styles.browseBtnText}>{t('browseActiveDraws')}</Text>
           </TouchableOpacity>
@@ -138,23 +140,23 @@ export default function MyEntriesScreen() {
       ) : (
         <>
           {pendingPayments.map((payment) => (
-            <View key={payment.id} style={[styles.entryCard, styles.pendingCard]}>
+            <View key={payment.id} style={[styles.entryCard, styles.pendingCard, { backgroundColor: theme.surface }]}>
               <View style={styles.entryHeader}>
-                <Text style={styles.productName}>{payment.products?.name || t('unknownProduct')}</Text>
+                <Text style={[styles.productName, { color: theme.text }]}>{payment.products?.name || t('unknownProduct')}</Text>
                 <View style={[styles.statusBadge, styles.pendingBadge]}>
                   <Text style={styles.pendingStatusText}>Payment Pending</Text>
                 </View>
               </View>
               <Text style={styles.ticketNumber}>Ticket: Pending admin approval</Text>
               <Text style={styles.productPrice}>Rs. {payment.products?.price?.toLocaleString() || payment.amount}</Text>
-              <Text style={styles.entryDate}>
+              <Text style={[styles.entryDate, { color: theme.muted }]}>
                 Submitted: {new Date(payment.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Payment method</Text>
-                <Text style={styles.infoValue}>{payment.payment_method || t('notProvided')}</Text>
+              <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
+                <Text style={[styles.infoLabel, { color: theme.subtle }]}>Payment method</Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>{payment.payment_method || t('notProvided')}</Text>
               </View>
-              <Text style={styles.drawStatus}>{getDrawStatusText(payment.products)}</Text>
+              <Text style={[styles.drawStatus, { color: theme.text }]}>{getDrawStatusText(payment.products)}</Text>
               <Text style={styles.pendingNote}>Your ticket will appear here after admin approval.</Text>
             </View>
           ))}
@@ -162,26 +164,26 @@ export default function MyEntriesScreen() {
           {entries.map((entry) => {
             const entryStatus = getEntryStatus(entry);
             return (
-              <View key={entry.id} style={styles.entryCard}>
+              <View key={entry.id} style={[styles.entryCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <View style={styles.entryHeader}>
-                  <Text style={styles.productName}>{entry.products?.name || t('unknownProduct')}</Text>
+                  <Text style={[styles.productName, { color: theme.text }]}>{entry.products?.name || t('unknownProduct')}</Text>
                   <View style={[styles.statusBadge, { backgroundColor: entryStatus.background }]}>
                     <Text style={[styles.statusText, { color: entryStatus.color }]}>{entryStatus.label}</Text>
                   </View>
                 </View>
                 <Text style={styles.ticketNumber}>Ticket: {getTicketNumber(entry)}</Text>
                 <Text style={styles.productPrice}>Rs. {entry.products?.price?.toLocaleString()}</Text>
-                <Text style={styles.entryDate}>
+                <Text style={[styles.entryDate, { color: theme.muted }]}>
                   Approved: {new Date(entry.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </Text>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Draw status</Text>
-                  <Text style={styles.infoValue}>{getDrawStatusText(entry.products)}</Text>
+                <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
+                  <Text style={[styles.infoLabel, { color: theme.subtle }]}>Draw status</Text>
+                  <Text style={[styles.infoValue, { color: theme.text }]}>{getDrawStatusText(entry.products)}</Text>
                 </View>
                 {entry.transaction_id && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Payment ref</Text>
-                    <Text style={styles.infoValue}>{entry.transaction_id}</Text>
+                  <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
+                    <Text style={[styles.infoLabel, { color: theme.subtle }]}>Payment ref</Text>
+                    <Text style={[styles.infoValue, { color: theme.text }]}>{entry.transaction_id}</Text>
                   </View>
                 )}
                 {entry.products?.winner_phone === entry.phone && (
