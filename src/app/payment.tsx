@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
+import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -30,6 +31,7 @@ export default function PaymentScreen() {
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('payment');
+  const [submitError, setSubmitError] = useState('');
   const submittingRef = useRef(false);
 
   async function copyAccountNumber(number: string) {
@@ -71,6 +73,7 @@ export default function PaymentScreen() {
 
   async function confirmPayment() {
     if (loading || submittingRef.current) return;
+    setSubmitError('');
 
     if (!receipt) {
       alert('Please upload your payment receipt screenshot.');
@@ -94,6 +97,16 @@ export default function PaymentScreen() {
 
     if (!userPhone) {
       router.push('/login');
+      submittingRef.current = false;
+      setLoading(false);
+      return;
+    }
+
+    const cooldown = await checkPaymentCooldown(productIdValue, userPhone);
+    if (!cooldown.allowed) {
+      const message = `Please wait ${cooldown.waitSeconds} seconds before submitting payment again.`;
+      setSubmitError(message);
+      alert(message);
       submittingRef.current = false;
       setLoading(false);
       return;
@@ -170,6 +183,7 @@ export default function PaymentScreen() {
     }
 
     try {
+      await markPaymentSubmitAttempt(productIdValue, userPhone);
       const receiptPath = getReceiptValue();
       const { error } = await supabase.from('transactions').insert({
         product_id: productIdValue,
@@ -190,6 +204,7 @@ export default function PaymentScreen() {
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
         : 'Payment submit failed.';
+      setSubmitError(message);
       alert('Error: ' + message);
     }
     submittingRef.current = false;
@@ -262,6 +277,15 @@ export default function PaymentScreen() {
           <Text style={styles.receiptButtonText}>{receipt ? 'Change Screenshot' : 'Upload Payment Screenshot'}</Text>
         </TouchableOpacity>
         {receipt && <Image source={{ uri: receipt.uri }} style={styles.receiptPreview} resizeMode="cover" />}
+        {submitError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorTitle}>Payment submit failed</Text>
+            <Text style={styles.errorText}>{submitError}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={confirmPayment} disabled={loading}>
+              <Text style={styles.retryButtonText}>{loading ? t('confirming') : t('tryAgain')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <TouchableOpacity
           style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
           onPress={confirmPayment}
@@ -311,6 +335,11 @@ const styles = StyleSheet.create({
   receiptButton: { backgroundColor: '#1a3a5c', borderColor: '#4a9eff', borderWidth: 1, borderRadius: 10, padding: 15, alignItems: 'center', marginBottom: 12 },
   receiptButtonText: { color: '#4a9eff', fontSize: 15, fontWeight: 'bold' },
   receiptPreview: { width: '100%', height: 180, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#333' },
+  errorBox: { backgroundColor: '#2b0d0d', borderColor: '#ff4444', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12 },
+  errorTitle: { color: '#ff7777', fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
+  errorText: { color: '#ffd5d5', fontSize: 13, lineHeight: 18, marginBottom: 10 },
+  retryButton: { backgroundColor: '#ff4444', borderRadius: 8, padding: 10, alignItems: 'center' },
+  retryButtonText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
   confirmBtn: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center' },
   confirmBtnDisabled: { backgroundColor: '#555' },
   confirmBtnText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
