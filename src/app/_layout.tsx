@@ -7,15 +7,25 @@ import { useAppTheme } from '@/hooks/use-theme';
 export default function RootLayout() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
+  const siteUrl = 'https://shoaibmithall.github.io/JeetoBaz/';
+  const siteTitle = "JeetoBaz - Pakistan's No.1 Lucky Draw";
+  const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
 
   return (
     <>
       <Head>
-        <title>JeetoBaz - Pakistan's No.1 Lucky Draw</title>
-        <meta
-          name="description"
-          content="JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, and simple support."
-        />
+        <title>{siteTitle}</title>
+        <meta name="description" content={siteDescription} />
+        <meta name="theme-color" content="#1DB954" />
+        <link rel="canonical" href={siteUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="JeetoBaz" />
+        <meta property="og:title" content={siteTitle} />
+        <meta property="og:description" content={siteDescription} />
+        <meta property="og:url" content={siteUrl} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={siteTitle} />
+        <meta name="twitter:description" content={siteDescription} />
       </Head>
       <Tabs
         screenOptions={{
