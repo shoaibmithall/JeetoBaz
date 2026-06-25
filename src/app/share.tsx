@@ -1,25 +1,32 @@
 import { Alert, Image, Linking, Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
+import { useLanguage } from '@/lib/i18n';
 
-const APP_URL = 'https://jeetobaz.netlify.app';
-const APP_MSG = 'JeetoBaz pe sirf Rs.1 mein bade prizes jeeto! 🏆 Pakistan ka No.1 Lucky Draw Platform. Abhi join karo: ';
+const APP_URL = 'https://shoaibmithall.github.io/JeetoBaz/';
 
-const platforms = [
-  { name: 'WhatsApp', color: '#25D366', textColor: 'white', icon: 'https://cdn.simpleicons.org/whatsapp/ffffff', url: `https://wa.me/?text=${encodeURIComponent(APP_MSG + APP_URL)}` },
-  { name: 'Facebook', color: '#1877F2', textColor: 'white', icon: 'https://cdn.simpleicons.org/facebook/ffffff', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}` },
-  { name: 'Messenger', color: '#0099FF', textColor: 'white', icon: 'https://cdn.simpleicons.org/messenger/ffffff', url: `https://www.facebook.com/dialog/send?link=${encodeURIComponent(APP_URL)}&app_id=291494419107518` },
-  { name: 'Telegram', color: '#229ED9', textColor: 'white', icon: 'https://cdn.simpleicons.org/telegram/ffffff', url: `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(APP_MSG)}` },
-  { name: 'X (Twitter)', color: '#000000', textColor: 'white', icon: 'https://cdn.simpleicons.org/x/ffffff', url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(APP_MSG)}&url=${encodeURIComponent(APP_URL)}` },
-  { name: 'Instagram', color: '#E1306C', textColor: 'white', icon: 'https://cdn.simpleicons.org/instagram/ffffff', url: null },
-  { name: 'Snapchat', color: '#FFFC00', textColor: '#000', icon: 'https://cdn.simpleicons.org/snapchat/000000', url: null },
-  { name: 'TikTok', color: '#010101', textColor: 'white', icon: 'https://cdn.simpleicons.org/tiktok/ffffff', url: null },
-  { name: 'Threads', color: '#000000', textColor: 'white', icon: 'https://cdn.simpleicons.org/threads/ffffff', url: `https://www.threads.net/intent/post?text=${encodeURIComponent(APP_MSG + APP_URL)}` },
-  { name: 'Discord', color: '#5865F2', textColor: 'white', icon: 'https://cdn.simpleicons.org/discord/ffffff', url: null },
-  { name: 'WA Business', color: '#128C7E', textColor: 'white', icon: 'https://cdn.simpleicons.org/whatsapp/ffffff', url: `https://wa.me/?text=${encodeURIComponent(APP_MSG + APP_URL)}` },
+type ShareUrlType = 'message' | 'facebook' | 'messenger' | 'telegram' | 'x' | 'threads';
+type SharePlatform = {
+  name: string;
+  color: string;
+  textColor: string;
+  icon: string;
+  urlType?: ShareUrlType;
+};
+
+const platforms: SharePlatform[] = [
+  { name: 'WhatsApp', color: '#25D366', textColor: 'white', icon: 'https://cdn.simpleicons.org/whatsapp/ffffff', urlType: 'message' },
+  { name: 'Facebook', color: '#1877F2', textColor: 'white', icon: 'https://cdn.simpleicons.org/facebook/ffffff', urlType: 'facebook' },
+  { name: 'Messenger', color: '#0099FF', textColor: 'white', icon: 'https://cdn.simpleicons.org/messenger/ffffff', urlType: 'messenger' },
+  { name: 'Telegram', color: '#229ED9', textColor: 'white', icon: 'https://cdn.simpleicons.org/telegram/ffffff', urlType: 'telegram' },
+  { name: 'X (Twitter)', color: '#000000', textColor: 'white', icon: 'https://cdn.simpleicons.org/x/ffffff', urlType: 'x' },
+  { name: 'Instagram', color: '#E1306C', textColor: 'white', icon: 'https://cdn.simpleicons.org/instagram/ffffff' },
+  { name: 'Snapchat', color: '#FFFC00', textColor: '#000', icon: 'https://cdn.simpleicons.org/snapchat/000000' },
+  { name: 'TikTok', color: '#010101', textColor: 'white', icon: 'https://cdn.simpleicons.org/tiktok/ffffff' },
+  { name: 'Threads', color: '#000000', textColor: 'white', icon: 'https://cdn.simpleicons.org/threads/ffffff', urlType: 'threads' },
+  { name: 'Discord', color: '#5865F2', textColor: 'white', icon: 'https://cdn.simpleicons.org/discord/ffffff' },
+  { name: 'WA Business', color: '#128C7E', textColor: 'white', icon: 'https://cdn.simpleicons.org/whatsapp/ffffff', urlType: 'message' },
 ];
-
-type SharePlatform = (typeof platforms)[number];
 
 type ShareModalProps = {
   visible: boolean;
@@ -27,40 +34,55 @@ type ShareModalProps = {
 };
 
 export function ShareModal({ visible, onClose }: ShareModalProps) {
+  const { t } = useLanguage();
+  const shareMessage = t('shareMessage');
+  const fullMessage = shareMessage + APP_URL;
+
   if (!visible) return null;
+
+  function getPlatformUrl(type?: ShareUrlType) {
+    if (type === 'message') return `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
+    if (type === 'facebook') return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}`;
+    if (type === 'messenger') return `https://www.facebook.com/dialog/send?link=${encodeURIComponent(APP_URL)}&app_id=291494419107518`;
+    if (type === 'telegram') return `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(shareMessage)}`;
+    if (type === 'x') return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(APP_URL)}`;
+    if (type === 'threads') return `https://www.threads.net/intent/post?text=${encodeURIComponent(fullMessage)}`;
+    return null;
+  }
 
   async function copyText(text: string, successMessage: string) {
     try {
       await Clipboard.setStringAsync(text);
-      Alert.alert('Copied', successMessage);
+      Alert.alert(t('copied'), successMessage);
     } catch {
-      Alert.alert('Unable to copy', 'Please try again.');
+      Alert.alert(t('unableToCopy'), 'Please try again.');
     }
   }
 
   async function handleShare(platform: SharePlatform) {
     try {
-      if (platform.url) {
-        await Linking.openURL(platform.url);
+      const platformUrl = getPlatformUrl(platform.urlType);
+      if (platformUrl) {
+        await Linking.openURL(platformUrl);
         return;
       }
 
       if (Platform.OS === 'web') {
-        await copyText(APP_MSG + APP_URL, `Message copied. Paste it in ${platform.name}.`);
+        await copyText(fullMessage, `Message copied. Paste it in ${platform.name}.`);
         return;
       }
 
       await Share.share({
         title: 'Share JeetoBaz',
-        message: APP_MSG + APP_URL,
+        message: fullMessage,
       });
     } catch {
-      Alert.alert('Unable to share', 'Please try again.');
+      Alert.alert(t('unableToShare'), 'Please try again.');
     }
   }
 
   async function copyLink() {
-    await copyText(APP_URL, 'JeetoBaz link copied.');
+    await copyText(APP_URL, t('linkCopied'));
   }
 
   return (
@@ -69,7 +91,7 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>📤 Share JeetoBaz</Text>
+          <Text style={styles.sheetTitle}>📤 {t('shareJeetoBaz')}</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={styles.closeBtn}>✕</Text>
           </TouchableOpacity>
@@ -78,7 +100,7 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
         <View style={styles.linkRow}>
           <Text style={styles.linkText} numberOfLines={1}>{APP_URL}</Text>
           <TouchableOpacity style={styles.copyBtn} onPress={copyLink}>
-            <Text style={styles.copyBtnText}>Copy</Text>
+            <Text style={styles.copyBtnText}>{t('copy')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -97,9 +119,9 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
 
         <TouchableOpacity
           style={styles.copyMsgBtn}
-          onPress={() => copyText(APP_MSG + APP_URL, 'Full JeetoBaz message copied.')}
+          onPress={() => copyText(fullMessage, 'Full JeetoBaz message copied.')}
         >
-          <Text style={styles.copyMsgBtnText}>📋 Copy Full Message</Text>
+          <Text style={styles.copyMsgBtnText}>📋 {t('copyFullMessage')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -108,10 +130,11 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
 
 export default function ShareScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   return (
     <View style={{ flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' }}>
       <TouchableOpacity onPress={() => router.push('/')} style={{ backgroundColor: '#1DB954', padding: 15, borderRadius: 10 }}>
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>← Go Home</Text>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>← {t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
   );

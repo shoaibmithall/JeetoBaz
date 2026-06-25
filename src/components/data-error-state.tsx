@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '@/lib/i18n';
 
 type DataErrorStateProps = {
   message?: string;
@@ -6,13 +7,15 @@ type DataErrorStateProps = {
 };
 
 export function DataErrorState({ message = 'Something went wrong. Please try again.', onRetry }: DataErrorStateProps) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.container}>
       <Text style={styles.icon}>⚠️</Text>
-      <Text style={styles.title}>Unable to load data</Text>
+      <Text style={styles.title}>{t('unableToLoadData')}</Text>
       <Text style={styles.message}>{message}</Text>
       <TouchableOpacity style={styles.button} onPress={onRetry}>
-        <Text style={styles.buttonText}>Try Again</Text>
+        <Text style={styles.buttonText}>{t('tryAgain')}</Text>
       </TouchableOpacity>
     </View>
   );

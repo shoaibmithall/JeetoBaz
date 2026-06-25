@@ -2,11 +2,13 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n';
 import { getStoredStringArray, setStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 
 export default function FavoritesScreen() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -58,7 +60,7 @@ export default function FavoritesScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>Loading favorites...</Text>
+        <Text style={styles.loadingText}>{t('loadingFavorites')}</Text>
       </View>
     );
   }
@@ -70,17 +72,17 @@ export default function FavoritesScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>❤️ Favorites</Text>
-        <Text style={styles.subtitle}>Your saved draws</Text>
+        <Text style={styles.title}>❤️ {t('favorites')}</Text>
+        <Text style={styles.subtitle}>{t('yourSavedDraws')}</Text>
       </View>
 
       {products.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyIcon}>🤍</Text>
-          <Text style={styles.emptyTitle}>No favorites yet</Text>
+          <Text style={styles.emptyTitle}>{t('noFavoritesYet')}</Text>
           <Text style={styles.emptyText}>Tap the heart on a draw to save it here.</Text>
           <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/')}>
-            <Text style={styles.browseButtonText}>Browse Active Draws</Text>
+            <Text style={styles.browseButtonText}>{t('browseActiveDraws')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -90,7 +92,7 @@ export default function FavoritesScreen() {
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
                 <Text style={styles.productName}>{product.name}</Text>
-                <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`Remove ${product.name} from favorites`}>
+                <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}>
                   <Text style={styles.heart}>❤️</Text>
                 </TouchableOpacity>
               </View>
@@ -100,7 +102,7 @@ export default function FavoritesScreen() {
                 style={styles.enterButton}
                 onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } })}
               >
-                <Text style={styles.enterButtonText}>Enter for Rs.{product.entry_fee || 1}</Text>
+                <Text style={styles.enterButtonText}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
               </TouchableOpacity>
             </View>
           </View>

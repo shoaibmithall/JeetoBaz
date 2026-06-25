@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 
 export default function WinnersScreen() {
+  const { t } = useLanguage();
   const [winners, setWinners] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -32,7 +34,7 @@ export default function WinnersScreen() {
   if (loading) return (
     <View style={styles.loading}>
       <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>Loading Winners...</Text>
+      <Text style={styles.loadingText}>{t('loadingWinners')}</Text>
     </View>
   );
 
@@ -41,21 +43,21 @@ export default function WinnersScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🏆 Past Winners</Text>
+        <Text style={styles.title}>🏆 {t('pastWinners')}</Text>
         <Text style={styles.subtitle}>100% Real and Verified</Text>
       </View>
 
       <View style={styles.trustBox}>
-        <Text style={styles.trustTitle}>Why Trust JeetoBaz?</Text>
-        <Text style={styles.trustText}>All draws are 100% random and transparent</Text>
-        <Text style={styles.trustText}>Winners verified via phone number</Text>
-        <Text style={styles.trustText}>Made in Pakistan for Pakistan</Text>
+        <Text style={styles.trustTitle}>{t('trustTitle')}</Text>
+        <Text style={styles.trustText}>{t('trustLine1')}</Text>
+        <Text style={styles.trustText}>{t('trustLine2')}</Text>
+        <Text style={styles.trustText}>{t('trustLine3')}</Text>
       </View>
 
       {winners.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🎯</Text>
-          <Text style={styles.emptyText}>No completed draws yet!</Text>
+          <Text style={styles.emptyText}>{t('noCompletedDraws')}</Text>
           <Text style={styles.emptySubText}>Be the first winner — enter a draw now!</Text>
         </View>
       ) : (
@@ -71,7 +73,7 @@ export default function WinnersScreen() {
       )}
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>All draws are fair and transparent</Text>
+        <Text style={styles.footerText}>{t('allDrawsFair')}</Text>
       </View>
     </ScrollView>
   );

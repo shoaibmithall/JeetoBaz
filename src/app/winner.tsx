@@ -1,35 +1,37 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '@/lib/i18n';
 
 export default function WinnerScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.trophy}>🏆</Text>
-        <Text style={styles.congrats}>MUBARAK HO!</Text>
-        <Text style={styles.subtitle}>Draw Ka Nateeja Aa Gaya!</Text>
+        <Text style={styles.congrats}>CONGRATULATIONS!</Text>
+        <Text style={styles.subtitle}>{t('drawResultReady')}</Text>
       </View>
 
       <View style={styles.winnerCard}>
-        <Text style={styles.winnerLabel}>🎯 Lucky Winner</Text>
+        <Text style={styles.winnerLabel}>🎯 {t('winnerOf')}</Text>
         <Text style={styles.winnerName}>Shoaib Mithal</Text>
         <Text style={styles.winnerPhone}>+92 300 ****567</Text>
         <View style={styles.divider} />
-        <Text style={styles.productLabel}>Jeeti Hui Cheez</Text>
+        <Text style={styles.productLabel}>{t('prizeWon')}</Text>
         <Text style={styles.productName}>🏍️ Honda 70 Bike</Text>
-        <Text style={styles.productPrice}>Qeemat: Rs. 2,20,000</Text>
+        <Text style={styles.productPrice}>Price: Rs. 2,20,000</Text>
       </View>
 
       <View style={styles.detailCard}>
-        <Text style={styles.detailTitle}>📊 Draw Ki Details</Text>
+        <Text style={styles.detailTitle}>📊 {t('drawDetails')}</Text>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Total Entries</Text>
           <Text style={styles.detailValue}>5,00,000</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Draw Ki Tarikh</Text>
+          <Text style={styles.detailLabel}>{t('drawDate')}</Text>
           <Text style={styles.detailValue}>21 June 2026</Text>
         </View>
         <View style={styles.detailRow}>
@@ -39,17 +41,17 @@ export default function WinnerScreen() {
       </View>
 
       <View style={styles.verifyCard}>
-        <Text style={styles.verifyTitle}>✅ Draw 100% Fair Tha</Text>
+        <Text style={styles.verifyTitle}>✅ {t('verifiedFairDraw')}</Text>
         <Text style={styles.verifyText}>
-          Ye draw computer se random nikala gaya. Koi bhi is result ko verify kar sakta hai.
+          {t('winnerAlgorithmText')}
         </Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
-        <Text style={styles.buttonText}>🎯 Nayi Draw Mein Shamil Ho!</Text>
+        <Text style={styles.buttonText}>🎯 {t('newDrawJoin')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.footer}>JeetoBaz — Pakistan Ka No.1 Lucky Draw 🇵🇰</Text>
+      <Text style={styles.footer}>JeetoBaz - {t('appTagline')}</Text>
     </ScrollView>
   );
 }
