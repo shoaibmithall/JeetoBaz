@@ -41,6 +41,11 @@ export type Transaction = {
   jazzcash_txn_id: string;
   status: string;
   created_at: string;
+  payment_method?: string | null;
+  sender_name?: string | null;
+  sender_phone?: string | null;
+  user_name?: string | null;
+  receipt_path?: string | null;
 };
 
 export type ProductFormData = {
@@ -85,7 +90,7 @@ export type Database = {
       transactions: Table<
         Transaction,
         Pick<Transaction, 'product_id' | 'phone' | 'amount' | 'jazzcash_txn_id'> &
-          Partial<Pick<Transaction, 'status'>>
+          Partial<Pick<Transaction, 'status' | 'payment_method' | 'sender_name' | 'sender_phone' | 'user_name' | 'receipt_path'>>
       >;
     };
     Views: {};
