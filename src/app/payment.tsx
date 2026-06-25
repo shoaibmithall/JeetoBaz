@@ -6,7 +6,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
-import { isValidTransactionId, normalizeTransactionId } from '@/lib/validation';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -27,9 +26,6 @@ export default function PaymentScreen() {
   const { productId, productName, entryFee } = useLocalSearchParams();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
-  const [senderName, setSenderName] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [txnId, setTxnId] = useState('');
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('payment');
@@ -82,22 +78,6 @@ export default function PaymentScreen() {
   }
 
   async function confirmPayment() {
-    const normalizedTxnId = normalizeTransactionId(txnId);
-    if (!isValidTransactionId(normalizedTxnId)) {
-      alert('Please enter a valid transaction ID!');
-      return;
-    }
-
-    const cleanSenderName = senderName.trim().replace(/\s+/g, ' ');
-    const cleanSenderPhone = senderPhone.trim().replace(/\s+/g, '');
-    if (cleanSenderName.length < 2) {
-      alert('Please enter the payment account title/name.');
-      return;
-    }
-    if (cleanSenderPhone.length < 8) {
-      alert('Please enter the sender payment number/account.');
-      return;
-    }
     if (!receipt) {
       alert('Please upload your payment receipt screenshot.');
       return;
@@ -172,10 +152,10 @@ export default function PaymentScreen() {
         phone: userPhone,
         user_name: userName,
         amount: product.entry_fee || 1,
-        jazzcash_txn_id: normalizedTxnId,
+        jazzcash_txn_id: `RECEIPT-${Date.now()}`,
         payment_method: selectedMethod,
-        sender_name: cleanSenderName,
-        sender_phone: cleanSenderPhone,
+        sender_name: userName,
+        sender_phone: userPhone,
         receipt_path: receiptPath,
         status: 'pending',
       });
@@ -250,36 +230,6 @@ export default function PaymentScreen() {
       </View>
 
       <View style={styles.txnBox}>
-        <Text style={styles.txnLabel}>Payment Account Title / Name:</Text>
-        <TextInput
-          style={styles.txnInput}
-          placeholder="e.g. Shoaib Ahmed"
-          placeholderTextColor="#666"
-          value={senderName}
-          onChangeText={setSenderName}
-          maxLength={80}
-        />
-        <Text style={styles.txnLabel}>Payment Number / Account:</Text>
-        <TextInput
-          style={styles.txnInput}
-          placeholder="e.g. 03XXXXXXXXX"
-          placeholderTextColor="#666"
-          value={senderPhone}
-          onChangeText={setSenderPhone}
-          keyboardType="phone-pad"
-          maxLength={40}
-        />
-        <Text style={styles.txnLabel}>Enter Transaction ID:</Text>
-        <TextInput
-          style={styles.txnInput}
-          placeholder="e.g. TXN123456789"
-          placeholderTextColor="#666"
-          value={txnId}
-          onChangeText={(value) => setTxnId(normalizeTransactionId(value))}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          maxLength={50}
-        />
         <Text style={styles.txnLabel}>Enter Screenshot:</Text>
         <TouchableOpacity style={styles.receiptButton} onPress={pickReceipt}>
           <Text style={styles.receiptButtonText}>{receipt ? 'Change Screenshot' : 'Upload Payment Screenshot'}</Text>
