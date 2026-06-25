@@ -1,56 +1,70 @@
-# Welcome to your Expo app 👋
+# JeetoBaz
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+JeetoBaz is a Pakistan-focused lucky draw app built with Expo Router, React Native, and Supabase.
 
-## Get started
+## Current App Areas
 
-1. Install dependencies
+- Draws and active prize listings
+- My Entries
+- Favorites
+- Past Winners
+- Profile/login
+- Payment entry form
+- Help Center with WhatsApp, email, and ticket flow
+- Terms & Conditions
+- Privacy Policy and account deletion request
+- Hidden admin panel
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run Locally
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Web Build
 
-### Other setup steps
+```bash
+npx expo export -p web
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The web build is exported to `dist/`.
 
-## Learn more
+## Checks Before Deploy
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx tsc --noEmit
+npx expo install --check
+npx expo export -p web
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Deployment
 
-## Join the community
+Netlify is configured to build the web app with:
 
-Join our community of developers creating universal apps.
+```bash
+npx expo export -p web
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+and publish:
+
+```text
+dist
+```
+
+## Launch Notes
+
+- Support WhatsApp: `+92 337 2561482`
+- Support email: `complaintsjeetobaz@gmail.com`
+- Website: `jeetobaz-pk.netlify.app`
+
+## End-Phase Paid/Security Work
+
+The following items are intentionally left for the final paid/security phase:
+
+- Phone OTP login
+- Production admin authentication
+- Supabase RLS policy review
+- Server-side payment verification
+- Server-side draw completion/winner writes
+
