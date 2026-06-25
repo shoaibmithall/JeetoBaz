@@ -52,11 +52,14 @@ and publish:
 dist
 ```
 
+When Netlify production deploys are paused, GitHub Pages can publish the same static app from the `main` branch. The Pages workflow builds with `EXPO_BASE_URL=/JeetoBaz` so the app can run from the repository subpath.
+
 ## Launch Notes
 
 - Support WhatsApp: `+92 337 2561482`
 - Support email: `complaintsjeetobaz@gmail.com`
 - Website: `jeetobaz-pk.netlify.app`
+- Backup/free web URL after GitHub Pages is enabled: `https://shoaibmithall.github.io/JeetoBaz/`
 
 ## End-Phase Paid/Security Work
 
@@ -67,4 +70,3 @@ The following items are intentionally left for the final paid/security phase:
 - Supabase RLS policy review
 - Server-side payment verification
 - Server-side draw completion/winner writes
-
