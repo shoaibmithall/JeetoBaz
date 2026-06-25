@@ -213,12 +213,15 @@ export default function AdminScreen() {
       if (receiptDeleteError) throw receiptDeleteError;
     }
 
-    const { error: paymentUpdateError } = await supabase
+    const { data: updatedPayment, error: paymentUpdateError } = await supabase
       .from('transactions')
       .update({ status: 'approved', receipt_path: null })
-      .eq('id', txn.id);
+      .eq('id', txn.id)
+      .select('id')
+      .maybeSingle();
 
     if (paymentUpdateError) throw paymentUpdateError;
+    if (!updatedPayment) throw new Error('Database permission missing for payment approval update.');
   }
 
   async function approvePayment(txn: Transaction) {
