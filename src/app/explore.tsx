@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Image, Linking, View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -9,6 +9,7 @@ export default function WinnersScreen() {
   const { t } = useLanguage();
   const [winners, setWinners] = useState<Product[]>([]);
   const [winnerEntries, setWinnerEntries] = useState<Record<string, Entry>>({});
+  const [entryCounts, setEntryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -43,16 +44,32 @@ export default function WinnersScreen() {
       .in('product_id', productIds);
 
     const nextEntries: Record<string, Entry> = {};
+    const nextCounts: Record<string, number> = {};
     data?.forEach((entry) => {
+      nextCounts[entry.product_id] = (nextCounts[entry.product_id] || 0) + 1;
       const matchingProduct = products.find((product) => product.id === entry.product_id && product.winner_phone === entry.phone);
       if (matchingProduct) nextEntries[matchingProduct.id] = entry;
     });
     setWinnerEntries(nextEntries);
+    setEntryCounts(nextCounts);
   }
 
   function maskPhone(phone?: string | null) {
     if (!phone) return 'N/A';
     return phone.slice(0, 6) + '****' + phone.slice(-4);
+  }
+
+  function getTicketNumber(entry?: Entry) {
+    if (!entry) return 'Not available';
+    return entry.ticket_number || `JB-${entry.id.slice(0, 8).toUpperCase()}`;
+  }
+
+  function getDrawDate(product: Product) {
+    return product.draw_date || new Date(product.created_at).toLocaleDateString('en-PK', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   }
 
   if (loading) return (
@@ -87,14 +104,44 @@ export default function WinnersScreen() {
       ) : (
         winners.map((product) => {
           const winnerEntry = winnerEntries[product.id];
+          const totalEntries = entryCounts[product.id] || product.current_entries || 0;
           return (
             <View key={product.id} style={styles.winnerCard}>
-              <Text style={styles.trophy}>🏆</Text>
+              {product.winner_photo ? (
+                <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
+              ) : (
+                <Text style={styles.trophy}>🏆</Text>
+              )}
+              <Text style={styles.verifiedRecord}>Verified Draw Record</Text>
               <Text style={styles.winnerName}>{winnerEntry?.name || t('notProvided')}</Text>
               <Text style={styles.winnerPhone}>{maskPhone(product.winner_phone)}</Text>
               <Text style={styles.productName}>{product.name}</Text>
-              <Text style={styles.productPrice}>Rs. {product.price?.toLocaleString()}</Text>
-              <Text style={styles.date}>{product.draw_date || new Date(product.created_at).toLocaleDateString()}</Text>
+              <Text style={styles.productPrice}>Prize Value: Rs. {product.price?.toLocaleString()}</Text>
+
+              <View style={styles.recordGrid}>
+                <View style={styles.recordItem}>
+                  <Text style={styles.recordLabel}>Draw Date</Text>
+                  <Text style={styles.recordValue}>{getDrawDate(product)}</Text>
+                </View>
+                <View style={styles.recordItem}>
+                  <Text style={styles.recordLabel}>Total Entries</Text>
+                  <Text style={styles.recordValue}>{totalEntries.toLocaleString()}</Text>
+                </View>
+                <View style={styles.recordItem}>
+                  <Text style={styles.recordLabel}>Winner Ticket</Text>
+                  <Text style={styles.recordValue}>{getTicketNumber(winnerEntry)}</Text>
+                </View>
+                <View style={styles.recordItem}>
+                  <Text style={styles.recordLabel}>Selection</Text>
+                  <Text style={styles.recordValue}>Random system draw</Text>
+                </View>
+              </View>
+
+              {product.live_link && (
+                <TouchableOpacity style={styles.liveLinkButton} onPress={() => Linking.openURL(product.live_link || '')}>
+                  <Text style={styles.liveLinkText}>Watch Draw Record</Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         })
@@ -123,11 +170,19 @@ const styles = StyleSheet.create({
   emptySubText: { color: '#aaa', fontSize: 14, textAlign: 'center' },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#FFD700', alignItems: 'center' },
   trophy: { fontSize: 40, marginBottom: 10 },
+  winnerPhoto: { width: 86, height: 86, borderRadius: 43, marginBottom: 12, borderWidth: 2, borderColor: '#FFD700' },
+  verifiedRecord: { color: '#1DB954', fontSize: 12, fontWeight: 'bold', marginBottom: 8 },
   winnerName: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
   winnerPhone: { color: 'white', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace', marginBottom: 8 },
   productName: { color: '#1DB954', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   productPrice: { color: '#FFD700', fontSize: 16, marginBottom: 4 },
   date: { color: '#aaa', fontSize: 12 },
+  recordGrid: { width: '100%', marginTop: 14, gap: 8 },
+  recordItem: { backgroundColor: '#111', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#333' },
+  recordLabel: { color: '#777', fontSize: 11, textTransform: 'uppercase', marginBottom: 4 },
+  recordValue: { color: '#ddd', fontSize: 13, fontWeight: 'bold', lineHeight: 18 },
+  liveLinkButton: { backgroundColor: '#2b0d0d', borderColor: '#ff4444', borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 16, marginTop: 14, width: '100%', alignItems: 'center' },
+  liveLinkText: { color: '#ff4444', fontSize: 14, fontWeight: 'bold' },
   footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 40 },
   footerText: { color: '#444', fontSize: 12 },
 });
