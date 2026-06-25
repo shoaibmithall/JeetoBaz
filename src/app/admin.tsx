@@ -84,9 +84,37 @@ export default function AdminScreen() {
   async function fetchTransactions() {
     const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
     if (data) {
-      setTransactions(data);
-      loadReceiptUrls(data);
+      const clearedPaymentIds = await clearPendingPaymentsWithExistingEntries(data);
+      const visibleTransactions = data.filter((item) => !clearedPaymentIds.has(item.id));
+      setTransactions(visibleTransactions);
+      loadReceiptUrls(visibleTransactions);
     }
+  }
+
+  async function clearPendingPaymentsWithExistingEntries(items: Transaction[]) {
+    const clearedPaymentIds = new Set<string>();
+
+    for (const item of items) {
+      if (item.status !== 'pending') continue;
+
+      const { data: existingEntry, error: existingError } = await supabase
+        .from('entries')
+        .select('id')
+        .eq('product_id', item.product_id)
+        .eq('phone', item.phone)
+        .maybeSingle();
+
+      if (existingError || !existingEntry) continue;
+
+      try {
+        await clearApprovedPayment(item);
+        clearedPaymentIds.add(item.id);
+      } catch (error) {
+        console.warn('Unable to clear already-entered payment:', error);
+      }
+    }
+
+    return clearedPaymentIds;
   }
 
   async function loadReceiptUrls(items: Transaction[]) {
@@ -181,13 +209,16 @@ export default function AdminScreen() {
 
   async function clearApprovedPayment(txn: Transaction) {
     if (txn.receipt_path && !txn.receipt_path.startsWith('data:')) {
-      await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
+      const { error: receiptDeleteError } = await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
+      if (receiptDeleteError) throw receiptDeleteError;
     }
 
-    await supabase
+    const { error: paymentUpdateError } = await supabase
       .from('transactions')
       .update({ status: 'approved', receipt_path: null })
       .eq('id', txn.id);
+
+    if (paymentUpdateError) throw paymentUpdateError;
   }
 
   async function approvePayment(txn: Transaction) {
@@ -204,7 +235,15 @@ export default function AdminScreen() {
       .maybeSingle();
 
     if (existing) {
-      await clearApprovedPayment(txn);
+      try {
+        await clearApprovedPayment(txn);
+      } catch (error) {
+        const message = error && typeof error === 'object' && 'message' in error
+          ? String(error.message)
+          : 'Payment cleanup failed.';
+        alert('Payment cleanup failed: ' + message);
+        return;
+      }
       alert('✅ Entry already exists. Payment approved and receipt cleared.');
       fetchProducts();
       fetchEntries();
@@ -245,7 +284,18 @@ export default function AdminScreen() {
       .update({ current_entries: (product.current_entries || 0) + 1 })
       .eq('id', txn.product_id);
 
-    await clearApprovedPayment(txn);
+    try {
+      await clearApprovedPayment(txn);
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Payment cleanup failed.';
+      alert('Entry added, but payment cleanup failed: ' + message);
+      fetchProducts();
+      fetchEntries();
+      fetchTransactions();
+      return;
+    }
 
     alert('✅ Payment approved and receipt deleted.');
     fetchProducts();
