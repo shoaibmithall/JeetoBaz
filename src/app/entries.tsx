@@ -4,12 +4,21 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
+import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type EntryWithProduct = Entry & { products?: Product | null };
 type PendingPaymentWithProduct = Transaction & { products?: Product | null };
+type EntriesCache = {
+  entries: EntryWithProduct[];
+  pendingPayments: PendingPaymentWithProduct[];
+};
+
+function getEntriesCacheKey(phone: string) {
+  return `offlineCache:entries:${phone}`;
+}
 
 export default function MyEntriesScreen() {
   const { t } = useLanguage();
@@ -18,6 +27,7 @@ export default function MyEntriesScreen() {
   const [pendingPayments, setPendingPayments] = useState<PendingPaymentWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState('');
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
@@ -44,6 +54,7 @@ export default function MyEntriesScreen() {
   async function fetchEntries(phone: string) {
     setLoading(true);
     setLoadError(false);
+    setCacheInfo('');
     const [{ data: entryData, error: entryError }, { data: paymentData, error: paymentError }] = await Promise.all([
       supabase
       .from('entries')
@@ -58,9 +69,24 @@ export default function MyEntriesScreen() {
         .order('created_at', { ascending: false }),
     ]);
 
-    if (entryData) setEntries(entryData as unknown as EntryWithProduct[]);
-    if (paymentData) setPendingPayments(paymentData as unknown as PendingPaymentWithProduct[]);
-    if (entryError || paymentError) setLoadError(true);
+    if (entryData || paymentData) {
+      const nextEntries = (entryData || []) as unknown as EntryWithProduct[];
+      const nextPendingPayments = (paymentData || []) as unknown as PendingPaymentWithProduct[];
+      setEntries(nextEntries);
+      setPendingPayments(nextPendingPayments);
+      await saveOfflineCache(getEntriesCacheKey(phone), [{ entries: nextEntries, pendingPayments: nextPendingPayments }]);
+    }
+    if (entryError || paymentError) {
+      const cached = await loadOfflineCache<EntriesCache[]>(getEntriesCacheKey(phone));
+      const cachedData = cached?.data[0];
+      if (cachedData) {
+        setEntries(cachedData.entries || []);
+        setPendingPayments(cachedData.pendingPayments || []);
+        setCacheInfo(`Showing saved entries from ${new Date(cached.savedAt).toLocaleString()}.`);
+      } else {
+        setLoadError(true);
+      }
+    }
     setLoading(false);
   }
 
@@ -115,6 +141,15 @@ export default function MyEntriesScreen() {
         <Text style={styles.title}>🎯 {t('myEntries')}</Text>
         <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
       </View>
+
+      {cacheInfo ? (
+        <View style={[styles.cacheBanner, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
+          <Text style={[styles.cacheText, { color: theme.gold }]}>⚠️ {cacheInfo}</Text>
+          <TouchableOpacity onPress={() => fetchEntries(userPhone)}>
+            <Text style={[styles.cacheRetry, { color: theme.primary }]}>{t('tryAgain')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={[styles.statsBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={styles.statColumn}>
@@ -216,6 +251,9 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
   title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   subtitle: { fontSize: 14, color: 'white', marginTop: 5 },
+  cacheBanner: { marginHorizontal: 15, marginTop: 15, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
+  cacheRetry: { fontSize: 12, fontWeight: 'bold' },
   statsBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#333', flexDirection: 'row' },
   statColumn: { flex: 1, alignItems: 'center' },
   statDivider: { width: 1, height: 48, backgroundColor: '#333', marginHorizontal: 12 },

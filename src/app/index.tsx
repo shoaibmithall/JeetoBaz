@@ -6,10 +6,12 @@ import { DataErrorState } from '@/components/data-error-state';
 import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
+import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
+const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: '🔥 Most Popular', ur: '🔥 سب سے مقبول', roman: '🔥 Most Popular' } },
@@ -75,6 +77,7 @@ export default function HomeScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [showFilters, setShowFilters] = useState(false);
   const [time, setTime] = useState(new Date());
+  const [cacheInfo, setCacheInfo] = useState('');
   const router = useRouter();
 
   const filteredProducts = useMemo(() => {
@@ -120,9 +123,21 @@ export default function HomeScreen() {
   async function fetchProducts() {
     setLoading(true);
     setLoadError(false);
+    setCacheInfo('');
     const { data, error } = await supabase.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false });
-    if (data) setProducts(data);
-    if (error) setLoadError(true);
+    if (data) {
+      setProducts(data);
+      await saveOfflineCache(ACTIVE_DRAWS_CACHE_KEY, data);
+    }
+    if (error) {
+      const cached = await loadOfflineCache<Product[]>(ACTIVE_DRAWS_CACHE_KEY);
+      if (cached) {
+        setProducts(cached.data);
+        setCacheInfo(`Showing saved draws from ${new Date(cached.savedAt).toLocaleString()}.`);
+      } else {
+        setLoadError(true);
+      }
+    }
     setLoading(false);
   }
 
@@ -194,6 +209,15 @@ export default function HomeScreen() {
         <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
         <Text style={[styles.trustItem, { color: theme.primary }]}>🇵🇰 Pakistan</Text>
       </View>
+
+      {cacheInfo ? (
+        <View style={[styles.cacheBanner, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
+          <Text style={[styles.cacheText, { color: theme.gold }]}>⚠️ {cacheInfo}</Text>
+          <TouchableOpacity onPress={fetchProducts}>
+            <Text style={[styles.cacheRetry, { color: theme.primary }]}>{t('tryAgain')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={[styles.searchRow, { backgroundColor: theme.surfaceAlt }]}>
         <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -374,6 +398,9 @@ const styles = StyleSheet.create({
   trustBar: { backgroundColor: '#0d2b1a', padding: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
   trustItem: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
   trustDot: { color: '#1DB954', fontSize: 12 },
+  cacheBanner: { marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
+  cacheRetry: { fontSize: 12, fontWeight: 'bold' },
   searchRow: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#111' },
   searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', paddingHorizontal: 12 },
   searchIcon: { fontSize: 16, marginRight: 8 },
