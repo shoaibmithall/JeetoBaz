@@ -178,8 +178,8 @@ export default function AdminScreen() {
   async function approvePayment(txn: Transaction) {
     if (!window.confirm('Approve this payment and add entry? Receipt screenshot will be deleted after approval.')) return;
 
-    const entryPhone = txn.sender_phone || txn.phone;
-    const entryName = txn.sender_name || txn.user_name || null;
+    const entryPhone = txn.phone;
+    const entryName = txn.user_name || null;
 
     const { data: existing } = await supabase
       .from('entries')
@@ -361,9 +361,7 @@ export default function AdminScreen() {
                   </View>
                   <Text style={styles.paymentLine}>Method: {txn.payment_method || 'Not provided'}</Text>
                   <Text style={styles.paymentLine}>Amount: Rs. {txn.amount}</Text>
-                  <Text style={styles.paymentLine}>Txn ID: {txn.jazzcash_txn_id}</Text>
                   <Text style={styles.paymentLine}>App User: {txn.user_name || 'Unknown'} ({txn.phone})</Text>
-                  <Text style={styles.paymentLine}>Payment From: {txn.sender_name || 'Unknown'} ({txn.sender_phone || 'Unknown'})</Text>
                   {receiptUrls[txn.id] ? (
                     <Image source={{ uri: receiptUrls[txn.id] }} style={styles.receiptImage} resizeMode="cover" />
                   ) : (
