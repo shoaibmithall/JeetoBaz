@@ -179,6 +179,17 @@ export default function AdminScreen() {
     setTimeout(() => setAnnouncementSaved(false), 2000);
   }
 
+  async function clearApprovedPayment(txn: Transaction) {
+    if (txn.receipt_path && !txn.receipt_path.startsWith('data:')) {
+      await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
+    }
+
+    await supabase
+      .from('transactions')
+      .update({ status: 'approved', receipt_path: null })
+      .eq('id', txn.id);
+  }
+
   async function approvePayment(txn: Transaction) {
     if (!window.confirm('Approve this payment and add entry? Receipt screenshot will be deleted after approval.')) return;
 
@@ -193,7 +204,11 @@ export default function AdminScreen() {
       .maybeSingle();
 
     if (existing) {
-      alert('This user already has an entry for this draw.');
+      await clearApprovedPayment(txn);
+      alert('✅ Entry already exists. Payment approved and receipt cleared.');
+      fetchProducts();
+      fetchEntries();
+      fetchTransactions();
       return;
     }
 
@@ -230,14 +245,7 @@ export default function AdminScreen() {
       .update({ current_entries: (product.current_entries || 0) + 1 })
       .eq('id', txn.product_id);
 
-    if (txn.receipt_path && !txn.receipt_path.startsWith('data:')) {
-      await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
-    }
-
-    await supabase
-      .from('transactions')
-      .update({ status: 'approved', receipt_path: null })
-      .eq('id', txn.id);
+    await clearApprovedPayment(txn);
 
     alert('✅ Payment approved and receipt deleted.');
     fetchProducts();
