@@ -10,6 +10,7 @@ export default function DrawScreen() {
   const { productId, productName } = useLocalSearchParams();
   const { t } = useLanguage();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
+  const productNameValue = Array.isArray(productName) ? productName[0] : productName;
   const [phase, setPhase] = useState('ready');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [highlighted, setHighlighted] = useState(-1);
@@ -20,6 +21,23 @@ export default function DrawScreen() {
       alert('Missing product for this draw!');
       return;
     }
+
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, status, winner_phone')
+      .eq('id', productIdValue)
+      .maybeSingle();
+
+    if (productError || !product) {
+      alert('This draw could not be verified.');
+      return;
+    }
+
+    if (product.status === 'completed' && product.winner_phone) {
+      router.push({ pathname: '/winner', params: { productId: productIdValue } });
+      return;
+    }
+
     const { data, error } = await supabase
       .from('entries')
       .select('*')
@@ -33,6 +51,11 @@ export default function DrawScreen() {
   }
 
   function startSpin() {
+    if (entries.length === 0) {
+      alert('No approved entries found for this draw.');
+      return;
+    }
+
     setPhase('spinning');
     let count = 0;
     const interval = setInterval(() => {
@@ -51,10 +74,12 @@ export default function DrawScreen() {
 
   async function saveWinner(w: Entry) {
     if (!productIdValue) return;
-    await supabase
+    const { error } = await supabase
       .from('products')
       .update({ status: 'completed', winner_phone: w.phone })
       .eq('id', productIdValue);
+
+    if (error) alert('Winner save failed: ' + error.message);
   }
 
   function maskPhone(phone?: string | null) {
@@ -80,7 +105,7 @@ export default function DrawScreen() {
         </View>
       </View>
 
-      <Text style={styles.productTitle}>{productName || t('liveDrawTitle')}</Text>
+      <Text style={styles.productTitle}>{productNameValue || t('liveDrawTitle')}</Text>
 
       {phase === 'ready' && (
         <View style={styles.center}>
@@ -136,7 +161,7 @@ export default function DrawScreen() {
             <Text style={styles.congratsText}>CONGRATULATIONS!</Text>
             <Text style={styles.winnerName}>{winner.name || t('winnerOf')}</Text>
             <Text style={styles.winnerPhone}>{maskPhone(winner.phone)}</Text>
-            <Text style={styles.winnerSub}>{t('winnerOf')} {productName}!</Text>
+            <Text style={styles.winnerSub}>{t('winnerOf')} {productNameValue}!</Text>
           </View>
           <Text style={styles.allTitle}>📋 {t('showParticipants')}:</Text>
           {entries.map((entry, index) => (
@@ -160,6 +185,9 @@ export default function DrawScreen() {
           ))}
           <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/')}>
             <Text style={styles.homeButtonText}>🏠 {t('backToHome')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resultButton} onPress={() => router.push({ pathname: '/winner', params: { productId: productIdValue } })}>
+            <Text style={styles.resultButtonText}>🏆 View Result</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -205,4 +233,6 @@ const styles = StyleSheet.create({
   winnerBadge: { color: '#FFD700', fontSize: 12, fontWeight: 'bold' },
   homeButton: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 40 },
   homeButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  resultButton: { backgroundColor: '#FFD700', marginHorizontal: 15, marginBottom: 40, padding: 15, borderRadius: 12, alignItems: 'center' },
+  resultButtonText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
 });

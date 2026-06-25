@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
-import type { Product } from '@/types/database';
+import type { Entry, Product } from '@/types/database';
 
 export default function WinnersScreen() {
   const { t } = useLanguage();
   const [winners, setWinners] = useState<Product[]>([]);
+  const [winnerEntries, setWinnerEntries] = useState<Record<string, Entry>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -21,9 +22,32 @@ export default function WinnersScreen() {
       .select('*')
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
-    if (data) setWinners(data);
+    if (data) {
+      setWinners(data);
+      await fetchWinnerEntries(data);
+    }
     if (error) setLoadError(true);
     setLoading(false);
+  }
+
+  async function fetchWinnerEntries(products: Product[]) {
+    const productIds = products.map((product) => product.id);
+    if (productIds.length === 0) {
+      setWinnerEntries({});
+      return;
+    }
+
+    const { data } = await supabase
+      .from('entries')
+      .select('*')
+      .in('product_id', productIds);
+
+    const nextEntries: Record<string, Entry> = {};
+    data?.forEach((entry) => {
+      const matchingProduct = products.find((product) => product.id === entry.product_id && product.winner_phone === entry.phone);
+      if (matchingProduct) nextEntries[matchingProduct.id] = entry;
+    });
+    setWinnerEntries(nextEntries);
   }
 
   function maskPhone(phone?: string | null) {
@@ -61,15 +85,19 @@ export default function WinnersScreen() {
           <Text style={styles.emptySubText}>Be the first winner — enter a draw now!</Text>
         </View>
       ) : (
-        winners.map((product) => (
-          <View key={product.id} style={styles.winnerCard}>
-            <Text style={styles.trophy}>🏆</Text>
-            <Text style={styles.winnerPhone}>{maskPhone(product.winner_phone)}</Text>
-            <Text style={styles.productName}>{product.name}</Text>
-            <Text style={styles.productPrice}>Rs. {product.price?.toLocaleString()}</Text>
-            <Text style={styles.date}>{new Date(product.created_at).toLocaleDateString()}</Text>
-          </View>
-        ))
+        winners.map((product) => {
+          const winnerEntry = winnerEntries[product.id];
+          return (
+            <View key={product.id} style={styles.winnerCard}>
+              <Text style={styles.trophy}>🏆</Text>
+              <Text style={styles.winnerName}>{winnerEntry?.name || t('notProvided')}</Text>
+              <Text style={styles.winnerPhone}>{maskPhone(product.winner_phone)}</Text>
+              <Text style={styles.productName}>{product.name}</Text>
+              <Text style={styles.productPrice}>Rs. {product.price?.toLocaleString()}</Text>
+              <Text style={styles.date}>{product.draw_date || new Date(product.created_at).toLocaleDateString()}</Text>
+            </View>
+          );
+        })
       )}
 
       <View style={styles.footer}>
@@ -95,6 +123,7 @@ const styles = StyleSheet.create({
   emptySubText: { color: '#aaa', fontSize: 14, textAlign: 'center' },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#FFD700', alignItems: 'center' },
   trophy: { fontSize: 40, marginBottom: 10 },
+  winnerName: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
   winnerPhone: { color: 'white', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace', marginBottom: 8 },
   productName: { color: '#1DB954', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   productPrice: { color: '#FFD700', fontSize: 16, marginBottom: 4 },
