@@ -132,15 +132,31 @@ export default function ShareScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   return (
-    <View style={{ flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' }}>
-      <TouchableOpacity onPress={() => router.push('/')} style={{ backgroundColor: '#1DB954', padding: 15, borderRadius: 10 }}>
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>← {t('backToHome')}</Text>
+    <View style={styles.screen}>
+      <ShareModal visible onClose={() => router.push('/')} />
+      <TouchableOpacity onPress={() => router.push('/')} style={styles.backHomeButton}>
+        <Text style={styles.backHomeText}>← {t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backHomeButton: {
+    backgroundColor: '#1DB954',
+    padding: 15,
+    borderRadius: 10,
+  },
+  backHomeText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   overlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
