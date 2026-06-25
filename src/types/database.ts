@@ -48,6 +48,16 @@ export type Transaction = {
   receipt_path?: string | null;
 };
 
+export type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  target_phone: string | null;
+  link: string | null;
+  kind: string | null;
+  created_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -91,6 +101,11 @@ export type Database = {
         Transaction,
         Pick<Transaction, 'product_id' | 'phone' | 'amount' | 'jazzcash_txn_id'> &
           Partial<Pick<Transaction, 'status' | 'payment_method' | 'sender_name' | 'sender_phone' | 'user_name' | 'receipt_path'>>
+      >;
+      notifications: Table<
+        AppNotification,
+        Pick<AppNotification, 'title' | 'body'> &
+          Partial<Pick<AppNotification, 'target_phone' | 'link' | 'kind'>>
       >;
     };
     Views: {};
