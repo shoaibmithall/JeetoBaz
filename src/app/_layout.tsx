@@ -36,6 +36,7 @@ export default function RootLayout() {
         <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>❤️</Text> }} />
         <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text> }} />
         <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
+        <Tabs.Screen name="share" options={{ title: t('share'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📤</Text> }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="draw" options={{ href: null }} />
         <Tabs.Screen name="winner" options={{ href: null }} />
