@@ -68,7 +68,8 @@ export default function NotificationsScreen() {
       setReadIds(nextReadIds);
       await setStoredValue(READ_KEY, JSON.stringify(nextReadIds));
     }
-    if (item.link) Linking.openURL(item.link);
+    if (item.link?.startsWith('/')) router.push(item.link as never);
+    else if (item.link) Linking.openURL(item.link);
   }
 
   if (loading) {
