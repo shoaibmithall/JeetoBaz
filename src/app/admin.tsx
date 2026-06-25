@@ -93,6 +93,10 @@ export default function AdminScreen() {
     const nextUrls: Record<string, string> = {};
     for (const item of items) {
       if (!item.receipt_path) continue;
+      if (item.receipt_path.startsWith('data:')) {
+        nextUrls[item.id] = item.receipt_path;
+        continue;
+      }
       const { data } = await supabase.storage
         .from(RECEIPT_BUCKET)
         .createSignedUrl(item.receipt_path, 60 * 60);
@@ -226,7 +230,7 @@ export default function AdminScreen() {
       .update({ current_entries: (product.current_entries || 0) + 1 })
       .eq('id', txn.product_id);
 
-    if (txn.receipt_path) {
+    if (txn.receipt_path && !txn.receipt_path.startsWith('data:')) {
       await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
     }
 

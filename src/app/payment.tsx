@@ -18,6 +18,7 @@ type ReceiptAsset = {
   uri: string;
   fileName?: string | null;
   mimeType?: string | null;
+  dataUrl?: string | null;
 };
 
 export default function PaymentScreen() {
@@ -45,36 +46,26 @@ export default function PaymentScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.7,
+      quality: 0.45,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
+      const mimeType = result.assets[0].mimeType || 'image/jpeg';
       setReceipt({
         uri: result.assets[0].uri,
         fileName: result.assets[0].fileName,
-        mimeType: result.assets[0].mimeType,
+        mimeType,
+        dataUrl: result.assets[0].base64 ? `data:${mimeType};base64,${result.assets[0].base64}` : null,
       });
     }
   }
 
-  async function uploadReceipt(userPhone: string) {
-    if (!receipt || !productIdValue) return null;
-
-    const response = await fetch(receipt.uri);
-    const arrayBuffer = await response.arrayBuffer();
-    const extension = receipt.fileName?.split('.').pop() || 'jpg';
-    const cleanPhone = userPhone.replace(/\D/g, '') || 'unknown';
-    const path = `${productIdValue}/${cleanPhone}-${Date.now()}.${extension}`;
-
-    const { error } = await supabase.storage
-      .from(RECEIPT_BUCKET)
-      .upload(path, arrayBuffer, {
-        contentType: receipt.mimeType || 'image/jpeg',
-        upsert: false,
-      });
-
-    if (error) throw error;
-    return path;
+  function getReceiptValue() {
+    if (!receipt) return null;
+    if (receipt.dataUrl) return receipt.dataUrl;
+    if (receipt.uri.startsWith('data:')) return receipt.uri;
+    throw new Error('Please choose the receipt screenshot again.');
   }
 
   async function confirmPayment() {
@@ -146,7 +137,7 @@ export default function PaymentScreen() {
     }
 
     try {
-      const receiptPath = await uploadReceipt(userPhone);
+      const receiptPath = getReceiptValue();
       const { error } = await supabase.from('transactions').insert({
         product_id: productIdValue,
         phone: userPhone,
@@ -163,7 +154,9 @@ export default function PaymentScreen() {
       if (error) throw error;
       setStep('success');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Payment submit failed.';
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Payment submit failed.';
       alert('Error: ' + message);
     }
     setLoading(false);
