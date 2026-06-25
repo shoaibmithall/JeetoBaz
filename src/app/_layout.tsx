@@ -2,9 +2,11 @@ import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
 import { Text } from 'react-native';
 import { useLanguage } from '@/lib/i18n';
+import { useAppTheme } from '@/hooks/use-theme';
 
 export default function RootLayout() {
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
 
   return (
     <>
@@ -19,14 +21,14 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: '#1a1a1a',
-            borderTopColor: '#333',
+            backgroundColor: theme.surface,
+            borderTopColor: theme.border,
             borderTopWidth: 1,
             height: 60,
             paddingBottom: 8,
           },
-          tabBarActiveTintColor: '#FFD700',
-          tabBarInactiveTintColor: '#666',
+          tabBarActiveTintColor: theme.gold,
+          tabBarInactiveTintColor: theme.subtle,
         }}
       >
         <Tabs.Screen name="index" options={{ title: t('activeDraws'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text> }} />

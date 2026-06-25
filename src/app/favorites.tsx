@@ -6,9 +6,11 @@ import { useLanguage } from '@/lib/i18n';
 import { getStoredStringArray, setStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
+import { useAppTheme } from '@/hooks/use-theme';
 
 export default function FavoritesScreen() {
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -58,9 +60,9 @@ export default function FavoritesScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>{t('loadingFavorites')}</Text>
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
       </View>
     );
   }
@@ -70,34 +72,34 @@ export default function FavoritesScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <Text style={styles.title}>❤️ {t('favorites')}</Text>
-        <Text style={styles.subtitle}>{t('yourSavedDraws')}</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
       </View>
 
       {products.length === 0 ? (
-        <View style={styles.center}>
+        <View style={[styles.center, { backgroundColor: theme.background }]}>
           <Text style={styles.emptyIcon}>🤍</Text>
-          <Text style={styles.emptyTitle}>{t('noFavoritesYet')}</Text>
-          <Text style={styles.emptyText}>Tap the heart on a draw to save it here.</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('noFavoritesYet')}</Text>
+          <Text style={[styles.emptyText, { color: theme.muted }]}>Tap the heart on a draw to save it here.</Text>
           <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/')}>
             <Text style={styles.browseButtonText}>{t('browseActiveDraws')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         products.map((product) => (
-          <View key={product.id} style={styles.card}>
+          <View key={product.id} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
-                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
                 <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}>
                   <Text style={styles.heart}>❤️</Text>
                 </TouchableOpacity>
               </View>
               <Text style={styles.price}>Rs. {product.price?.toLocaleString()}</Text>
-              <Text style={styles.entries}>{(product.current_entries || 0).toLocaleString()} / {product.max_entries.toLocaleString()} entries</Text>
+              <Text style={[styles.entries, { color: theme.muted }]}>{(product.current_entries || 0).toLocaleString()} / {product.max_entries.toLocaleString()} entries</Text>
               <TouchableOpacity
                 style={styles.enterButton}
                 onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } })}

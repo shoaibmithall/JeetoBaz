@@ -5,9 +5,11 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
+import { useAppTheme } from '@/hooks/use-theme';
 
 export default function ProfileScreen() {
   const { t } = useLanguage();
+  const { mode, theme, toggleThemeMode } = useAppTheme();
   const [step, setStep] = useState('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -114,7 +116,7 @@ export default function ProfileScreen() {
   }
 
   if (step === 'profile') return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
         <Text style={styles.avatar}>👤</Text>
         <Text style={styles.profileName}>{name}</Text>
@@ -122,69 +124,75 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={styles.statNumber}>{totalEntries}</Text>
-          <Text style={styles.statLabel}>{t('drawsEntered')}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsEntered')}</Text>
         </View>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>{t('drawsWon')}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={styles.statNumber}>🟢</Text>
-          <Text style={styles.statLabel}>{t('active')}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
       </View>
 
-      <View style={styles.menuBox}>
+      <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
           <Text style={styles.menuIcon}>🎯</Text>
-          <Text style={styles.menuText}>{t('myEntries')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('myEntries')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/')}>
           <Text style={styles.menuIcon}>🏆</Text>
-          <Text style={styles.menuText}>{t('activeDraws')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('activeDraws')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/explore')}>
           <Text style={styles.menuIcon}>🥇</Text>
-          <Text style={styles.menuText}>{t('pastWinners')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('pastWinners')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
           <Text style={styles.menuIcon}>📋</Text>
-          <Text style={styles.menuText}>{t('terms')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('terms')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
           <Text style={styles.menuIcon}>🔒</Text>
-          <Text style={styles.menuText}>{t('privacyAccountData')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/language' as never)}>
           <Text style={styles.menuIcon}>🌐</Text>
-          <Text style={styles.menuText}>{t('language')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('language')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={toggleThemeMode}>
+          <Text style={styles.menuIcon}>{mode === 'dark' ? '☀️' : '🌙'}</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
           <Text style={styles.menuIcon}>🎧</Text>
-          <Text style={styles.menuText}>{t('helpCenter')}</Text>
-          <Text style={styles.menuArrow}>›</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('helpCenter')}</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>ℹ️ About JeetoBaz</Text>
-        <Text style={styles.infoText}>{t('appTagline')} Platform</Text>
-        <Text style={styles.infoText}>Version 1.0.0</Text>
-        <Text style={styles.infoText}>{t('madeInPakistan')}</Text>
+      <View style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.infoTitle, { color: theme.text }]}>ℹ️ About JeetoBaz</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
@@ -194,7 +202,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Text style={styles.logo}>🏆 JeetoBaz</Text>
         <Text style={styles.tagline}>{t('appTagline')}</Text>
@@ -202,12 +210,12 @@ export default function ProfileScreen() {
       <View style={styles.form}>
         {step === 'phone' && (
           <>
-            <Text style={styles.formTitle}>{t('loginSignUp')}</Text>
-            <Text style={styles.subtitle}>{t('enterPhone')}</Text>
-            <View style={styles.phoneRow}>
-              <Text style={styles.code}>🇵🇰 +92</Text>
+            <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
+            <Text style={[styles.subtitle, { color: theme.muted }]}>{t('enterPhone')}</Text>
+            <View style={[styles.phoneRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Text style={[styles.code, { color: theme.text, borderRightColor: theme.border }]}>🇵🇰 +92</Text>
               <TextInput
-                style={styles.phoneInput}
+                style={[styles.phoneInput, { color: theme.text }]}
                 placeholder="3001234567"
                 placeholderTextColor="#666"
                 keyboardType="phone-pad"
@@ -238,10 +246,10 @@ export default function ProfileScreen() {
         )}
         {step === 'name' && (
           <>
-            <Text style={styles.formTitle}>{t('createAccount')}</Text>
-            <Text style={styles.subtitle}>{t('welcome')}! What's your name?</Text>
+            <Text style={[styles.formTitle, { color: theme.text }]}>{t('createAccount')}</Text>
+            <Text style={[styles.subtitle, { color: theme.muted }]}>{t('welcome')}! What's your name?</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
               placeholder="e.g. Shoaib Mithal"
               placeholderTextColor="#666"
               value={name}
