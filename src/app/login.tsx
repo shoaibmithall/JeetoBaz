@@ -159,6 +159,12 @@ export default function ProfileScreen() {
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
+          <Text style={styles.menuIcon}>🔒</Text>
+          <Text style={styles.menuText}>Privacy & Account Data</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
           <Text style={styles.menuIcon}>🎧</Text>
           <Text style={styles.menuText}>Help Center</Text>
@@ -217,6 +223,9 @@ export default function ProfileScreen() {
                 <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/privacy')}>
+              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
+            </TouchableOpacity>
           </>
         )}
         {step === 'name' && (
@@ -248,6 +257,9 @@ export default function ProfileScreen() {
                 By joining you agree to our{' '}
                 <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
               </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/privacy')}>
+              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
             </TouchableOpacity>
           </>
         )}
@@ -293,4 +305,5 @@ const styles = StyleSheet.create({
   backText: { color: '#1DB954', textAlign: 'center', fontSize: 14, marginBottom: 10 },
   termsLink: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 10 },
   termsLinkHighlight: { color: '#1DB954', fontWeight: 'bold' },
+  privacyLink: { color: '#1DB954', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
 });

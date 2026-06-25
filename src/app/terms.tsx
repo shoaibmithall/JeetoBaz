@@ -88,16 +88,18 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>9. Privacy Policy</Text>
         <Text style={styles.text}>
-          • Your personal information is kept strictly confidential{'\n'}
-          • We do not share your data with any third parties{'\n'}
+          • Your personal information is handled according to the JeetoBaz Privacy Policy{'\n'}
+          • JeetoBaz does not sell your personal information{'\n'}
+          • Trusted providers may be used only as needed to operate JeetoBaz, verify payments, host the app, provide support, or comply with law{'\n'}
           • Phone numbers are partially masked in all public displays{'\n'}
-          • Data is used only for draw participation and winner notification
+          • Data is used for draw participation, payment verification, winner notification, support, and fraud prevention
         </Text>
 
         <Text style={styles.sectionTitle}>10. Contact Us</Text>
         <Text style={styles.text}>
           For any queries:{'\n'}
-          • WhatsApp: +92 370 6814892{'\n'}
+          • WhatsApp: +92 337 2561482{'\n'}
+          • Email: complaintsjeetobaz@gmail.com{'\n'}
           • Website: jeetobaz-pk.netlify.app
         </Text>
 
