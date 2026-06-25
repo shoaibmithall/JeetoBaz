@@ -21,7 +21,8 @@ export async function createNotification(input: CreateNotificationInput) {
 
 export async function createUserNotification(input: CreateNotificationInput) {
   try {
-    await createNotification(input);
+    const { error } = await createNotification(input);
+    if (error) console.warn('Notification save failed:', error.message);
   } catch {
     // Notifications must never block payment approval or draw flows.
   }

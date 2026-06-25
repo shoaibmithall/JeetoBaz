@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
+import { createUserNotification } from '@/lib/notifications';
 
 export default function DrawScreen() {
   const router = useRouter();
@@ -80,6 +81,22 @@ export default function DrawScreen() {
       .eq('id', productIdValue);
 
     if (error) alert('Winner save failed: ' + error.message);
+    else {
+      const productTitle = productNameValue || 'JeetoBaz draw';
+      await createUserNotification({
+        title: 'You won!',
+        body: `Congratulations! Aap ${productTitle} ke lucky winner select hue hain. JeetoBaz support aap se contact karega.`,
+        targetPhone: w.phone,
+        kind: 'winner-alert',
+        link: '/entries',
+      });
+      await createUserNotification({
+        title: 'Winner announced',
+        body: `${productTitle} ka winner announce ho gaya hai. Past Winners page par result check karein.`,
+        kind: 'winner-announced',
+        link: '/explore',
+      });
+    }
   }
 
   function maskPhone(phone?: string | null) {

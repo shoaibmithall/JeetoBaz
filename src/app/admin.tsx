@@ -188,7 +188,17 @@ export default function AdminScreen() {
     } else {
       const { error } = await supabase.from('products').insert({ ...productData, current_entries: 0, status: 'active' });
       if (error) alert('Add failed: ' + error.message);
-      else { alert('✅ Product added!'); cancelEdit(); fetchProducts(); }
+      else {
+        await createUserNotification({
+          title: 'New contest added',
+          body: `${productName} draw live ho gaya hai. Abhi entry karein!`,
+          kind: 'new-contest',
+          link: '/',
+        });
+        alert('✅ Product added!');
+        cancelEdit();
+        fetchProducts();
+      }
     }
     setLoading(false);
   }
@@ -203,6 +213,16 @@ export default function AdminScreen() {
     const newStatus = p.status === 'active' ? 'completed' : 'active';
     await supabase.from('products').update({ status: newStatus }).eq('id', p.id);
     fetchProducts();
+  }
+
+  async function sendDrawReminder(p: Product) {
+    await createUserNotification({
+      title: 'Draw reminder',
+      body: `${p.name} draw ke participants ${p.current_entries || 0}/${p.max_entries} hain. Draw ready/scheduled update check karein.`,
+      kind: 'draw-reminder',
+      link: '/',
+    });
+    alert('✅ Draw reminder notification send ho gayi.');
   }
 
   async function saveAnnouncement() {
@@ -278,6 +298,14 @@ export default function AdminScreen() {
         alert('Payment cleanup failed: ' + message);
         return;
       }
+      const existingProductName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
+      await createUserNotification({
+        title: 'Payment confirmed',
+        body: `Aapki ${existingProductName} wali payment confirm ho gayi. Aapki entry already active hai.`,
+        targetPhone: entryPhone,
+        kind: 'payment-confirmed',
+        link: '/entries',
+      });
       alert('✅ Entry already exists. Payment approved and receipt cleared.');
       fetchProducts();
       fetchEntries();
@@ -333,12 +361,21 @@ export default function AdminScreen() {
 
     const productName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
     await createUserNotification({
-      title: 'Entry approved',
+      title: 'Payment confirmed',
       body: `Aapki ${productName} wali entry approve ho gayi hai. Good luck!`,
       targetPhone: entryPhone,
-      kind: 'payment-approved',
+      kind: 'payment-confirmed',
       link: '/entries',
     });
+
+    if ((product.current_entries || 0) + 1 >= product.max_entries) {
+      await createUserNotification({
+        title: 'Draw ready',
+        body: `${productName} ke participants complete ho gaye hain. JeetoBaz draw date/time announce karega.`,
+        kind: 'draw-ready',
+        link: '/',
+      });
+    }
 
     alert('✅ Payment approved and receipt deleted.');
     fetchProducts();
@@ -441,6 +478,9 @@ export default function AdminScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.drawButton} onPress={() => router.push({ pathname: '/draw', params: { productId: p.id, productName: p.name } })}>
                       <Text style={styles.drawButtonText}>🎰 Draw</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.reminderButton} onPress={() => sendDrawReminder(p)}>
+                      <Text style={styles.reminderButtonText}>🔔</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.deleteButton} onPress={() => deleteProduct(p.id)}>
                       <Text style={styles.deleteButtonText}>🗑️</Text>
@@ -665,6 +705,8 @@ const styles = StyleSheet.create({
   editButtonText: { color: '#4a9eff', fontWeight: 'bold', fontSize: 13 },
   drawButton: { flex: 1, backgroundColor: '#FFD700', padding: 10, borderRadius: 8, alignItems: 'center' },
   drawButtonText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
+  reminderButton: { backgroundColor: '#1DB954', padding: 10, borderRadius: 8, alignItems: 'center', width: 42 },
+  reminderButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
   deleteButton: { backgroundColor: '#2b0d0d', padding: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#ff4444', width: 42 },
   deleteButtonText: { color: '#ff4444', fontWeight: 'bold', fontSize: 14 },
   userCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 15, marginBottom: 10, borderWidth: 1, borderColor: '#333' },
