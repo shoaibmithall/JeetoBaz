@@ -5,10 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
+import type { Entry, Product, Transaction } from '@/types/database';
+
+type EntryWithProduct = Entry & { products?: Product | null };
+type PendingPaymentWithProduct = Transaction & { products?: Product | null };
 
 export default function MyEntriesScreen() {
   const { t } = useLanguage();
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<EntryWithProduct[]>([]);
+  const [pendingPayments, setPendingPayments] = useState<PendingPaymentWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [userName, setUserName] = useState('');
@@ -37,14 +42,50 @@ export default function MyEntriesScreen() {
   async function fetchEntries(phone: string) {
     setLoading(true);
     setLoadError(false);
-    const { data, error } = await supabase
+    const [{ data: entryData, error: entryError }, { data: paymentData, error: paymentError }] = await Promise.all([
+      supabase
       .from('entries')
       .select('*, products(*)')
       .eq('phone', phone)
-      .order('created_at', { ascending: false });
-    if (data) setEntries(data);
-    if (error) setLoadError(true);
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('transactions')
+        .select('*, products(*)')
+        .eq('phone', phone)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    if (entryData) setEntries(entryData as unknown as EntryWithProduct[]);
+    if (paymentData) setPendingPayments(paymentData as unknown as PendingPaymentWithProduct[]);
+    if (entryError || paymentError) setLoadError(true);
     setLoading(false);
+  }
+
+  function getTicketNumber(entry: EntryWithProduct) {
+    return entry.ticket_number || `JB-${entry.id.slice(0, 8).toUpperCase()}`;
+  }
+
+  function getEntryStatus(entry: EntryWithProduct) {
+    const product = entry.products;
+    if (!product) return { label: 'Entry Approved', color: '#1DB954', background: '#0d2b1a' };
+    if (product.status === 'completed') {
+      if (product.winner_phone === entry.phone) return { label: 'Winner', color: '#FFD700', background: '#2b2200' };
+      return { label: 'Draw Completed', color: '#aaa', background: '#222' };
+    }
+    if ((product.current_entries || 0) >= product.max_entries) {
+      return { label: product.draw_date ? 'Draw Scheduled' : 'Ready to Schedule', color: '#FFD700', background: '#2b2200' };
+    }
+    return { label: 'Waiting for Participants', color: '#1DB954', background: '#0d2b1a' };
+  }
+
+  function getDrawStatusText(product?: Product | null) {
+    if (!product) return 'Draw details unavailable';
+    if (product.status === 'completed') return 'Draw completed';
+    const spotsLeft = Math.max(product.max_entries - (product.current_entries || 0), 0);
+    if (spotsLeft > 0) return `${spotsLeft.toLocaleString()} spots left before draw scheduling`;
+    if (product.draw_date) return `Draw scheduled: ${product.draw_date}`;
+    return 'Participants complete. JeetoBaz will announce the date, usually within about 1 week at 10:00 PM PKT.';
   }
 
   if (loading) return (
@@ -74,11 +115,18 @@ export default function MyEntriesScreen() {
       </View>
 
       <View style={styles.statsBox}>
-        <Text style={styles.statsNumber}>{entries.length}</Text>
-        <Text style={styles.statsLabel}>{t('totalDrawsEntered')}</Text>
+        <View style={styles.statColumn}>
+          <Text style={styles.statsNumber}>{entries.length}</Text>
+          <Text style={styles.statsLabel}>Approved Tickets</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statColumn}>
+          <Text style={styles.statsNumber}>{pendingPayments.length}</Text>
+          <Text style={styles.statsLabel}>Pending Payments</Text>
+        </View>
       </View>
 
-      {entries.length === 0 ? (
+      {entries.length === 0 && pendingPayments.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🎯</Text>
           <Text style={styles.emptyText}>{t('noEntriesYet')}</Text>
@@ -88,27 +136,63 @@ export default function MyEntriesScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        entries.map((entry: any) => (
-          <View key={entry.id} style={styles.entryCard}>
-            <View style={styles.entryHeader}>
-              <Text style={styles.productName}>{entry.products?.name || t('unknownProduct')}</Text>
-              <View style={[styles.statusBadge, entry.products?.status === 'active' ? styles.activeBadge : styles.completedBadge]}>
-                <Text style={styles.statusText}>
-                  {entry.products?.status === 'active' ? `🟢 ${t('active')}` : `🏆 ${t('completed')}`}
-                </Text>
+        <>
+          {pendingPayments.map((payment) => (
+            <View key={payment.id} style={[styles.entryCard, styles.pendingCard]}>
+              <View style={styles.entryHeader}>
+                <Text style={styles.productName}>{payment.products?.name || t('unknownProduct')}</Text>
+                <View style={[styles.statusBadge, styles.pendingBadge]}>
+                  <Text style={styles.pendingStatusText}>Payment Pending</Text>
+                </View>
               </View>
+              <Text style={styles.ticketNumber}>Ticket: Pending admin approval</Text>
+              <Text style={styles.productPrice}>Rs. {payment.products?.price?.toLocaleString() || payment.amount}</Text>
+              <Text style={styles.entryDate}>
+                Submitted: {new Date(payment.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Payment method</Text>
+                <Text style={styles.infoValue}>{payment.payment_method || t('notProvided')}</Text>
+              </View>
+              <Text style={styles.drawStatus}>{getDrawStatusText(payment.products)}</Text>
+              <Text style={styles.pendingNote}>Your ticket will appear here after admin approval.</Text>
             </View>
-            <Text style={styles.productPrice}>Rs. {entry.products?.price?.toLocaleString()}</Text>
-            <Text style={styles.entryDate}>
-              Entered: {new Date(entry.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </Text>
-            {entry.products?.winner_phone === entry.phone && (
-              <View style={styles.winnerBanner}>
-                <Text style={styles.winnerText}>🏆 {t('wonThisDraw')}</Text>
+          ))}
+
+          {entries.map((entry) => {
+            const entryStatus = getEntryStatus(entry);
+            return (
+              <View key={entry.id} style={styles.entryCard}>
+                <View style={styles.entryHeader}>
+                  <Text style={styles.productName}>{entry.products?.name || t('unknownProduct')}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: entryStatus.background }]}>
+                    <Text style={[styles.statusText, { color: entryStatus.color }]}>{entryStatus.label}</Text>
+                  </View>
+                </View>
+                <Text style={styles.ticketNumber}>Ticket: {getTicketNumber(entry)}</Text>
+                <Text style={styles.productPrice}>Rs. {entry.products?.price?.toLocaleString()}</Text>
+                <Text style={styles.entryDate}>
+                  Approved: {new Date(entry.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Draw status</Text>
+                  <Text style={styles.infoValue}>{getDrawStatusText(entry.products)}</Text>
+                </View>
+                {entry.transaction_id && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Payment ref</Text>
+                    <Text style={styles.infoValue}>{entry.transaction_id}</Text>
+                  </View>
+                )}
+                {entry.products?.winner_phone === entry.phone && (
+                  <View style={styles.winnerBanner}>
+                    <Text style={styles.winnerText}>🏆 {t('wonThisDraw')}</Text>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        ))
+            );
+          })}
+        </>
       )}
 
       <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
@@ -130,8 +214,10 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
   title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   subtitle: { fontSize: 14, color: 'white', marginTop: 5 },
-  statsBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 25, alignItems: 'center', borderWidth: 1, borderColor: '#333' },
-  statsNumber: { fontSize: 48, fontWeight: 'bold', color: '#FFD700' },
+  statsBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#333', flexDirection: 'row' },
+  statColumn: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 48, backgroundColor: '#333', marginHorizontal: 12 },
+  statsNumber: { fontSize: 38, fontWeight: 'bold', color: '#FFD700' },
   statsLabel: { fontSize: 14, color: '#aaa', marginTop: 5 },
   emptyBox: { alignItems: 'center', padding: 40 },
   emptyEmoji: { fontSize: 60, marginBottom: 15 },
@@ -140,14 +226,23 @@ const styles = StyleSheet.create({
   browseBtn: { backgroundColor: '#1DB954', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   browseBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
   entryCard: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
+  pendingCard: { borderColor: '#FFD700' },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   productName: { fontSize: 18, fontWeight: 'bold', color: 'white', flex: 1 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   activeBadge: { backgroundColor: '#0d2b1a' },
   completedBadge: { backgroundColor: '#2b2b0d' },
+  pendingBadge: { backgroundColor: '#2b2200' },
   statusText: { fontSize: 12, fontWeight: 'bold', color: '#1DB954' },
+  pendingStatusText: { fontSize: 12, fontWeight: 'bold', color: '#FFD700' },
+  ticketNumber: { color: '#4a9eff', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
   productPrice: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   entryDate: { color: '#aaa', fontSize: 13 },
+  infoRow: { backgroundColor: '#111', borderRadius: 8, padding: 10, marginTop: 10 },
+  infoLabel: { color: '#777', fontSize: 11, marginBottom: 3, textTransform: 'uppercase' },
+  infoValue: { color: '#ddd', fontSize: 13, lineHeight: 18 },
+  drawStatus: { color: '#ddd', fontSize: 13, lineHeight: 18, marginTop: 10 },
+  pendingNote: { color: '#FFD700', fontSize: 12, marginTop: 10 },
   winnerBanner: { backgroundColor: '#2b2200', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center' },
   winnerText: { color: '#FFD700', fontWeight: 'bold', fontSize: 16 },
   backBtn: { margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#333', marginTop: 20, marginBottom: 40 },
