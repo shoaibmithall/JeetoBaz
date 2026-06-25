@@ -49,6 +49,7 @@ export default function TermsScreen() {
           • Draw scheduling starts after ALL participation spots are filled{'\n'}
           • JeetoBaz will announce the exact draw date and time after the draw becomes full{'\n'}
           • The target is usually within about 1 week, depending on verification and operations{'\n'}
+          • Scheduled draws are held at 10:00 PM (PKT){'\n'}
           • Draw may be broadcast LIVE on the JeetoBaz app, website, or official social channel{'\n'}
           • Registered participants should check the app for the latest draw update
         </Text>
