@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
-import type { Entry, Product, ProductFormData, User } from '@/types/database';
+import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 
 const ADMIN_PASSWORD = 'JeetoBaz@2026';
+const RECEIPT_BUCKET = 'payment-receipts';
 
 export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -14,6 +15,8 @@ export default function AdminScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [receiptUrls, setReceiptUrls] = useState<Record<string, string>>({});
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [entryFee, setEntryFee] = useState('');
@@ -44,6 +47,7 @@ export default function AdminScreen() {
       fetchProducts();
       fetchUsers();
       fetchEntries();
+      fetchTransactions();
       getStoredValue('announcement').then((value) => setAnnouncement(value || ''));
     }
   }, [authenticated]);
@@ -75,6 +79,26 @@ export default function AdminScreen() {
   async function fetchEntries() {
     const { data } = await supabase.from('entries').select('*');
     if (data) setEntries(data);
+  }
+
+  async function fetchTransactions() {
+    const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+    if (data) {
+      setTransactions(data);
+      loadReceiptUrls(data);
+    }
+  }
+
+  async function loadReceiptUrls(items: Transaction[]) {
+    const nextUrls: Record<string, string> = {};
+    for (const item of items) {
+      if (!item.receipt_path) continue;
+      const { data } = await supabase.storage
+        .from(RECEIPT_BUCKET)
+        .createSignedUrl(item.receipt_path, 60 * 60);
+      if (data?.signedUrl) nextUrls[item.id] = data.signedUrl;
+    }
+    setReceiptUrls(nextUrls);
   }
 
   function startEdit(p: Product) {
@@ -151,9 +175,82 @@ export default function AdminScreen() {
     setTimeout(() => setAnnouncementSaved(false), 2000);
   }
 
+  async function approvePayment(txn: Transaction) {
+    if (!window.confirm('Approve this payment and add entry? Receipt screenshot will be deleted after approval.')) return;
+
+    const entryPhone = txn.sender_phone || txn.phone;
+    const entryName = txn.sender_name || txn.user_name || null;
+
+    const { data: existing } = await supabase
+      .from('entries')
+      .select('id')
+      .eq('product_id', txn.product_id)
+      .eq('phone', entryPhone)
+      .maybeSingle();
+
+    if (existing) {
+      alert('This user already has an entry for this draw.');
+      return;
+    }
+
+    const { data: product } = await supabase
+      .from('products')
+      .select('id, current_entries, max_entries, status')
+      .eq('id', txn.product_id)
+      .maybeSingle();
+
+    if (!product || product.status !== 'active') {
+      alert('This draw is not active.');
+      return;
+    }
+
+    if ((product.current_entries || 0) >= product.max_entries) {
+      alert('This draw is full.');
+      return;
+    }
+
+    const { error: entryError } = await supabase.from('entries').insert({
+      product_id: txn.product_id,
+      phone: entryPhone,
+      name: entryName,
+      transaction_id: txn.jazzcash_txn_id,
+    });
+
+    if (entryError) {
+      alert('Entry approval failed: ' + entryError.message);
+      return;
+    }
+
+    await supabase
+      .from('products')
+      .update({ current_entries: (product.current_entries || 0) + 1 })
+      .eq('id', txn.product_id);
+
+    if (txn.receipt_path) {
+      await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
+    }
+
+    await supabase
+      .from('transactions')
+      .update({ status: 'approved', receipt_path: null })
+      .eq('id', txn.id);
+
+    alert('✅ Payment approved and receipt deleted.');
+    fetchProducts();
+    fetchEntries();
+    fetchTransactions();
+  }
+
+  async function rejectPayment(txn: Transaction) {
+    if (!window.confirm('Reject this payment request?')) return;
+    await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
+    fetchTransactions();
+  }
+
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
+  const pendingPayments = transactions.filter((txn) => txn.status === 'pending');
 
   if (!authenticated) return (
     <View style={styles.loginContainer}>
@@ -176,10 +273,10 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'users', 'revenue', 'settings'].map(tab => (
+        {['products', 'payments', 'users', 'revenue', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab === 'products' ? '📦' : tab === 'users' ? '👥' : tab === 'revenue' ? '💰' : '⚙️'}
+              {tab === 'products' ? '📦' : tab === 'payments' ? '🧾' : tab === 'users' ? '👥' : tab === 'revenue' ? '💰' : '⚙️'}
             </Text>
             <Text style={[styles.tabLabel, activeTab === tab && styles.activeTabText]}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -247,6 +344,42 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+          </View>
+        )}
+
+        {activeTab === 'payments' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🧾 Pending Payments ({pendingPayments.length})</Text>
+            {pendingPayments.length === 0 && <Text style={styles.emptyText}>No pending payments.</Text>}
+            {pendingPayments.map((txn) => {
+              const product = products.find((p) => p.id === txn.product_id);
+              return (
+                <View key={txn.id} style={styles.paymentCard}>
+                  <View style={styles.productHeader}>
+                    <Text style={styles.productName}>{product?.name || 'Unknown Draw'}</Text>
+                    <Text style={styles.paymentStatus}>Pending</Text>
+                  </View>
+                  <Text style={styles.paymentLine}>Method: {txn.payment_method || 'Not provided'}</Text>
+                  <Text style={styles.paymentLine}>Amount: Rs. {txn.amount}</Text>
+                  <Text style={styles.paymentLine}>Txn ID: {txn.jazzcash_txn_id}</Text>
+                  <Text style={styles.paymentLine}>App User: {txn.user_name || 'Unknown'} ({txn.phone})</Text>
+                  <Text style={styles.paymentLine}>Payment From: {txn.sender_name || 'Unknown'} ({txn.sender_phone || 'Unknown'})</Text>
+                  {receiptUrls[txn.id] ? (
+                    <Image source={{ uri: receiptUrls[txn.id] }} style={styles.receiptImage} resizeMode="cover" />
+                  ) : (
+                    <Text style={styles.emptyText}>Receipt preview unavailable.</Text>
+                  )}
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.approveButton} onPress={() => approvePayment(txn)}>
+                      <Text style={styles.approveButtonText}>✅ Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.rejectButton} onPress={() => rejectPayment(txn)}>
+                      <Text style={styles.rejectButtonText}>✖ Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -336,6 +469,7 @@ export default function AdminScreen() {
               <Text style={styles.quickStat}>📦 Products: {products.length}</Text>
               <Text style={styles.quickStat}>👥 Users: {users.length}</Text>
               <Text style={styles.quickStat}>🎯 Entries: {entries.length}</Text>
+              <Text style={styles.quickStat}>🧾 Pending Payments: {pendingPayments.length}</Text>
               <Text style={styles.quickStat}>💰 Revenue: Rs. {totalRevenue.toLocaleString()}</Text>
             </View>
           </View>
@@ -392,6 +526,14 @@ const styles = StyleSheet.create({
   revenue: { color: '#aaa', fontSize: 12, marginBottom: 8 },
   winner: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', marginBottom: 8 },
   actionRow: { flexDirection: 'row', gap: 8 },
+  paymentCard: { backgroundColor: '#1a1a1a', borderRadius: 15, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#FFD700' },
+  paymentStatus: { color: '#FFD700', fontSize: 12, fontWeight: 'bold' },
+  paymentLine: { color: '#aaa', fontSize: 13, marginBottom: 5 },
+  receiptImage: { width: '100%', height: 260, borderRadius: 10, marginVertical: 12, borderWidth: 1, borderColor: '#333' },
+  approveButton: { flex: 1, backgroundColor: '#1DB954', padding: 12, borderRadius: 8, alignItems: 'center' },
+  approveButtonText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
+  rejectButton: { flex: 1, backgroundColor: '#2b0d0d', padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#ff4444' },
+  rejectButtonText: { color: '#ff4444', fontWeight: 'bold', fontSize: 13 },
   editButton: { flex: 1, backgroundColor: '#1a3a5c', padding: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#4a9eff' },
   editButtonText: { color: '#4a9eff', fontWeight: 'bold', fontSize: 13 },
   drawButton: { flex: 1, backgroundColor: '#FFD700', padding: 10, borderRadius: 8, alignItems: 'center' },
