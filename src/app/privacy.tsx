@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { getStoredValue } from '@/lib/storage';
 
 const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const SUPPORT_WHATSAPP = '+92 337 2561482';
+const SUPPORT_WHATSAPP_LINK = 'https://wa.me/923372561482';
 
 export default function PrivacyScreen() {
   const [userName, setUserName] = useState('Not provided');
@@ -30,6 +32,18 @@ export default function PrivacyScreen() {
     }
   }
 
+  async function openWhatsAppDeletionRequest() {
+    const message = encodeURIComponent(
+      `JeetoBaz account deletion request\n\nName: ${userName}\nRegistered phone: ${userPhone}\n\nPlease verify my account and guide me for deletion.`
+    );
+
+    try {
+      await Linking.openURL(`${SUPPORT_WHATSAPP_LINK}?text=${message}`);
+    } catch {
+      Alert.alert('Unable to open WhatsApp', `Please contact JeetoBaz at ${SUPPORT_WHATSAPP}.`);
+    }
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -50,7 +64,7 @@ export default function PrivacyScreen() {
         <Text style={styles.text}>
           • Your name and Pakistani mobile number{`\n`}
           • Draw entries and participation history{`\n`}
-          • Payment details needed for verification, including the payment number, amount, and transaction reference{`\n`}
+          • Payment details needed for verification, including amount, payment method, receipt screenshot, and transaction reference where available{`\n`}
           • Support requests you choose to send, including the subject and message
         </Text>
 
@@ -71,7 +85,7 @@ export default function PrivacyScreen() {
 
         <Text style={styles.sectionTitle}>Data Retention</Text>
         <Text style={styles.text}>
-          We retain information while your account is active and as reasonably needed for payment verification, disputes, fraud prevention, record keeping, or legal obligations. Information that is no longer required is deleted or anonymized where practical.
+          We retain information while your account is active and as reasonably needed for payment verification, disputes, fraud prevention, record keeping, or legal obligations. Payment receipt screenshots may be cleared after review. Information that is no longer required is deleted or anonymized where practical.
         </Text>
 
         <Text style={styles.sectionTitle}>Your Choices</Text>
@@ -85,14 +99,18 @@ export default function PrivacyScreen() {
             Send a deletion request from your email app. Our support team will verify the account and confirm when the request is completed.
           </Text>
           <TouchableOpacity style={styles.deleteButton} onPress={requestAccountDeletion}>
-            <Text style={styles.deleteButtonText}>Request Account Deletion</Text>
+            <Text style={styles.deleteButtonText}>Request by Email</Text>
           </TouchableOpacity>
-          <Text style={styles.emailText}>You can also email: {SUPPORT_EMAIL}</Text>
+          <TouchableOpacity style={styles.whatsAppButton} onPress={openWhatsAppDeletionRequest}>
+            <Text style={styles.whatsAppButtonText}>Request by WhatsApp</Text>
+          </TouchableOpacity>
+          <Text style={styles.emailText}>Email: {SUPPORT_EMAIL}</Text>
+          <Text style={styles.emailText}>WhatsApp: {SUPPORT_WHATSAPP}</Text>
         </View>
 
         <Text style={styles.sectionTitle}>Contact Us</Text>
         <Text style={styles.text}>
-          Questions about privacy or personal data can be sent to {SUPPORT_EMAIL}.
+          Questions about privacy or personal data can be sent to {SUPPORT_EMAIL} or {SUPPORT_WHATSAPP}.
         </Text>
       </View>
     </ScrollView>
@@ -115,5 +133,7 @@ const styles = StyleSheet.create({
   deletionText: { color: '#aaa', fontSize: 14, lineHeight: 21 },
   deleteButton: { backgroundColor: '#ff4444', borderRadius: 8, padding: 15, alignItems: 'center', marginTop: 16 },
   deleteButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+  whatsAppButton: { backgroundColor: '#0d2b1a', borderColor: '#1DB954', borderWidth: 1, borderRadius: 8, padding: 15, alignItems: 'center', marginTop: 10 },
+  whatsAppButtonText: { color: '#1DB954', fontSize: 15, fontWeight: 'bold' },
   emailText: { color: '#888', fontSize: 12, textAlign: 'center', marginTop: 12 },
 });

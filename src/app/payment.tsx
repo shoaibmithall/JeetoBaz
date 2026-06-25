@@ -1,5 +1,5 @@
 import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -30,6 +30,7 @@ export default function PaymentScreen() {
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('payment');
+  const submittingRef = useRef(false);
 
   async function copyAccountNumber(number: string) {
     await Clipboard.setStringAsync(number);
@@ -69,11 +70,14 @@ export default function PaymentScreen() {
   }
 
   async function confirmPayment() {
+    if (loading || submittingRef.current) return;
+
     if (!receipt) {
       alert('Please upload your payment receipt screenshot.');
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
 
     const [userPhone, userName] = await Promise.all([
@@ -83,12 +87,14 @@ export default function PaymentScreen() {
 
     if (!productIdValue) {
       alert('Missing product for this payment!');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
 
     if (!userPhone) {
       router.push('/login');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
@@ -101,18 +107,21 @@ export default function PaymentScreen() {
 
     if (productError || !product) {
       alert('This draw could not be verified. Please try again.');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
 
     if (product.status !== 'active') {
       alert('This draw is no longer active.');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
 
     if ((product.current_entries || 0) >= product.max_entries) {
       alert('Sorry, this draw is full.');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
@@ -126,12 +135,36 @@ export default function PaymentScreen() {
 
     if (existingError) {
       alert('Unable to verify your entry. Please try again.');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
 
     if (existing) {
       alert('You have already entered this draw!');
+      submittingRef.current = false;
+      setLoading(false);
+      return;
+    }
+
+    const { data: pendingPayment, error: pendingError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('product_id', productIdValue)
+      .eq('phone', userPhone)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (pendingError) {
+      alert('Unable to verify your payment status. Please try again.');
+      submittingRef.current = false;
+      setLoading(false);
+      return;
+    }
+
+    if (pendingPayment) {
+      alert('Your payment request is already pending admin approval.');
+      submittingRef.current = false;
       setLoading(false);
       return;
     }
@@ -159,6 +192,7 @@ export default function PaymentScreen() {
         : 'Payment submit failed.';
       alert('Error: ' + message);
     }
+    submittingRef.current = false;
     setLoading(false);
   }
 
