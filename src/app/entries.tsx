@@ -2,10 +2,12 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 
 export default function MyEntriesScreen() {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -48,7 +50,7 @@ export default function MyEntriesScreen() {
   if (loading) return (
     <View style={styles.loading}>
       <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>Loading your entries...</Text>
+      <Text style={styles.loadingText}>{t('loadingEntries')}</Text>
     </View>
   );
 
@@ -59,7 +61,7 @@ export default function MyEntriesScreen() {
       <Text style={styles.notLoggedInEmoji}>🔐</Text>
       <Text style={styles.notLoggedInText}>Please login to see your entries</Text>
       <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
-        <Text style={styles.loginBtnText}>Login / Sign Up</Text>
+        <Text style={styles.loginBtnText}>{t('loginSignUp')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -67,32 +69,32 @@ export default function MyEntriesScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🎯 My Entries</Text>
-        <Text style={styles.subtitle}>Welcome, {userName}!</Text>
+        <Text style={styles.title}>🎯 {t('myEntries')}</Text>
+        <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
       </View>
 
       <View style={styles.statsBox}>
         <Text style={styles.statsNumber}>{entries.length}</Text>
-        <Text style={styles.statsLabel}>Total Draws Entered</Text>
+        <Text style={styles.statsLabel}>{t('totalDrawsEntered')}</Text>
       </View>
 
       {entries.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🎯</Text>
-          <Text style={styles.emptyText}>No entries yet!</Text>
-          <Text style={styles.emptySubText}>Enter a draw to see it here</Text>
+          <Text style={styles.emptyText}>{t('noEntriesYet')}</Text>
+          <Text style={styles.emptySubText}>{t('enterDrawHere')}</Text>
           <TouchableOpacity style={styles.browseBtn} onPress={() => router.push('/')}>
-            <Text style={styles.browseBtnText}>Browse Active Draws</Text>
+            <Text style={styles.browseBtnText}>{t('browseActiveDraws')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         entries.map((entry: any) => (
           <View key={entry.id} style={styles.entryCard}>
             <View style={styles.entryHeader}>
-              <Text style={styles.productName}>{entry.products?.name || 'Unknown Product'}</Text>
+              <Text style={styles.productName}>{entry.products?.name || t('unknownProduct')}</Text>
               <View style={[styles.statusBadge, entry.products?.status === 'active' ? styles.activeBadge : styles.completedBadge]}>
                 <Text style={styles.statusText}>
-                  {entry.products?.status === 'active' ? '🟢 Active' : '🏆 Completed'}
+                  {entry.products?.status === 'active' ? `🟢 ${t('active')}` : `🏆 ${t('completed')}`}
                 </Text>
               </View>
             </View>
@@ -102,7 +104,7 @@ export default function MyEntriesScreen() {
             </Text>
             {entry.products?.winner_phone === entry.phone && (
               <View style={styles.winnerBanner}>
-                <Text style={styles.winnerText}>🏆 YOU WON THIS DRAW!</Text>
+                <Text style={styles.winnerText}>🏆 {t('wonThisDraw')}</Text>
               </View>
             )}
           </View>
@@ -110,7 +112,7 @@ export default function MyEntriesScreen() {
       )}
 
       <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
-        <Text style={styles.backBtnText}>← Back to Draws</Text>
+        <Text style={styles.backBtnText}>← {t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

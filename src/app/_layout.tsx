@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
 import { Text } from 'react-native';
+import { useLanguage } from '@/lib/i18n';
 
 export default function RootLayout() {
+  const { t } = useLanguage();
+
   return (
     <>
       <Head>
@@ -26,11 +29,11 @@ export default function RootLayout() {
           tabBarInactiveTintColor: '#666',
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Draws', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text> }} />
-        <Tabs.Screen name="entries" options={{ title: 'My Entries', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text> }} />
-        <Tabs.Screen name="favorites" options={{ title: 'Favorites', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>❤️</Text> }} />
-        <Tabs.Screen name="explore" options={{ title: 'Winners', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text> }} />
-        <Tabs.Screen name="login" options={{ title: 'Profile', tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
+        <Tabs.Screen name="index" options={{ title: t('activeDraws'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text> }} />
+        <Tabs.Screen name="entries" options={{ title: t('myEntries'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text> }} />
+        <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>❤️</Text> }} />
+        <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text> }} />
+        <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="draw" options={{ href: null }} />
         <Tabs.Screen name="winner" options={{ href: null }} />
@@ -38,6 +41,7 @@ export default function RootLayout() {
         <Tabs.Screen name="terms" options={{ href: null }} />
         <Tabs.Screen name="help" options={{ href: null }} />
         <Tabs.Screen name="privacy" options={{ href: null }} />
+        <Tabs.Screen name="language" options={{ href: null }} />
       </Tabs>
     </>
   );

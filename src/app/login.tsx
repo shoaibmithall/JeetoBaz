@@ -2,10 +2,12 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 
 export default function ProfileScreen() {
+  const { t } = useLanguage();
   const [step, setStep] = useState('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -122,61 +124,67 @@ export default function ProfileScreen() {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{totalEntries}</Text>
-          <Text style={styles.statLabel}>Draws Entered</Text>
+          <Text style={styles.statLabel}>{t('drawsEntered')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>Draws Won</Text>
+          <Text style={styles.statLabel}>{t('drawsWon')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>🟢</Text>
-          <Text style={styles.statLabel}>Active</Text>
+          <Text style={styles.statLabel}>{t('active')}</Text>
         </View>
       </View>
 
       <View style={styles.menuBox}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
           <Text style={styles.menuIcon}>🎯</Text>
-          <Text style={styles.menuText}>My Entries</Text>
+          <Text style={styles.menuText}>{t('myEntries')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/')}>
           <Text style={styles.menuIcon}>🏆</Text>
-          <Text style={styles.menuText}>Active Draws</Text>
+          <Text style={styles.menuText}>{t('activeDraws')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/explore')}>
           <Text style={styles.menuIcon}>🥇</Text>
-          <Text style={styles.menuText}>Past Winners</Text>
+          <Text style={styles.menuText}>{t('pastWinners')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
           <Text style={styles.menuIcon}>📋</Text>
-          <Text style={styles.menuText}>Terms & Conditions</Text>
+          <Text style={styles.menuText}>{t('terms')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
           <Text style={styles.menuIcon}>🔒</Text>
-          <Text style={styles.menuText}>Privacy & Account Data</Text>
+          <Text style={styles.menuText}>{t('privacyAccountData')}</Text>
+          <Text style={styles.menuArrow}>›</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/language' as never)}>
+          <Text style={styles.menuIcon}>🌐</Text>
+          <Text style={styles.menuText}>{t('language')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
           <Text style={styles.menuIcon}>🎧</Text>
-          <Text style={styles.menuText}>Help Center</Text>
+          <Text style={styles.menuText}>{t('helpCenter')}</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.infoBox}>
         <Text style={styles.infoTitle}>ℹ️ About JeetoBaz</Text>
-        <Text style={styles.infoText}>Pakistan's No.1 Lucky Draw Platform</Text>
+        <Text style={styles.infoText}>{t('appTagline')} Platform</Text>
         <Text style={styles.infoText}>Version 1.0.0</Text>
-        <Text style={styles.infoText}>Made with ❤️ in Pakistan</Text>
+        <Text style={styles.infoText}>{t('madeInPakistan')}</Text>
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
@@ -189,13 +197,13 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logo}>🏆 JeetoBaz</Text>
-        <Text style={styles.tagline}>Pakistan's No.1 Lucky Draw</Text>
+        <Text style={styles.tagline}>{t('appTagline')}</Text>
       </View>
       <View style={styles.form}>
         {step === 'phone' && (
           <>
-            <Text style={styles.formTitle}>Login / Sign Up</Text>
-            <Text style={styles.subtitle}>Enter your phone number to continue</Text>
+            <Text style={styles.formTitle}>{t('loginSignUp')}</Text>
+            <Text style={styles.subtitle}>{t('enterPhone')}</Text>
             <View style={styles.phoneRow}>
               <Text style={styles.code}>🇵🇰 +92</Text>
               <TextInput
@@ -214,24 +222,24 @@ export default function ProfileScreen() {
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Please wait...' : 'Continue →'}
+                {loading ? 'Please wait...' : `${t('continue')} →`}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/terms')}>
               <Text style={styles.termsLink}>
-                By continuing you agree to our{' '}
-                <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
+                {t('youAgreeContinue')}{' '}
+                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
+              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
             </TouchableOpacity>
           </>
         )}
         {step === 'name' && (
           <>
-            <Text style={styles.formTitle}>Create Account</Text>
-            <Text style={styles.subtitle}>Welcome! What's your name?</Text>
+            <Text style={styles.formTitle}>{t('createAccount')}</Text>
+            <Text style={styles.subtitle}>{t('welcome')}! What's your name?</Text>
             <TextInput
               style={styles.input}
               placeholder="e.g. Shoaib Mithal"
@@ -250,16 +258,16 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setStep('phone')}>
-              <Text style={styles.backText}>← Change number</Text>
+              <Text style={styles.backText}>← {t('changeNumber')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/terms')}>
               <Text style={styles.termsLink}>
-                By joining you agree to our{' '}
-                <Text style={styles.termsLinkHighlight}>Terms & Conditions</Text>
+                {t('youAgreeJoin')}{' '}
+                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={styles.privacyLink}>Read our Privacy Policy</Text>
+              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
             </TouchableOpacity>
           </>
         )}

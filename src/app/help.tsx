@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getStoredValue } from '@/lib/storage';
+import { useLanguage } from '@/lib/i18n';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -13,13 +14,14 @@ export default function HelpCenterScreen() {
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     Promise.all([getStoredValue('userName'), getStoredValue('userPhone')]).then(([name, phone]) => {
-      setUserName(name || 'Not provided');
-      setUserPhone(phone || 'Not provided');
+      setUserName(name || t('notProvided'));
+      setUserPhone(phone || t('notProvided'));
     });
-  }, []);
+  }, [language]);
 
   async function openLink(url: string, errorMessage: string) {
     try {
@@ -30,7 +32,12 @@ export default function HelpCenterScreen() {
   }
 
   function openWhatsApp() {
-    const text = encodeURIComponent('Assalam-o-Alaikum, I need help with JeetoBaz.');
+    const messages = {
+      en: 'Hello, I need help with JeetoBaz.',
+      ur: 'السلام علیکم، مجھے JeetoBaz کے بارے میں مدد چاہیے۔',
+      roman: 'Assalam-o-Alaikum, mujhe JeetoBaz mein help chahiye.',
+    };
+    const text = encodeURIComponent(messages[language]);
     openLink(`https://wa.me/${SUPPORT_PHONE}?text=${text}`, `Please contact us at ${SUPPORT_PHONE_DISPLAY}.`);
   }
 
@@ -69,15 +76,15 @@ export default function HelpCenterScreen() {
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← Back</Text>
+          <Text style={styles.backButton}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Help Center</Text>
+        <Text style={styles.title}>{t('helpCenter')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.intro}>
-        <Text style={styles.introTitle}>How can we help?</Text>
-        <Text style={styles.introText}>Contact JeetoBaz support or create a complaint ticket.</Text>
+        <Text style={styles.introTitle}>{t('helpIntroTitle')}</Text>
+        <Text style={styles.introText}>{t('supportIntro')}</Text>
       </View>
 
       <View style={styles.contactSection}>
@@ -101,10 +108,10 @@ export default function HelpCenterScreen() {
       </View>
 
       <View style={styles.ticketSection}>
-        <Text style={styles.sectionTitle}>Create Support Ticket</Text>
+        <Text style={styles.sectionTitle}>{t('supportTicket')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Issue subject"
+          placeholder={t('issueSubject')}
           placeholderTextColor="#666"
           value={subject}
           onChangeText={setSubject}
@@ -112,7 +119,7 @@ export default function HelpCenterScreen() {
         />
         <TextInput
           style={[styles.input, styles.messageInput]}
-          placeholder="Describe your issue in detail"
+          placeholder={t('describeIssue')}
           placeholderTextColor="#666"
           value={message}
           onChangeText={setMessage}
@@ -121,9 +128,9 @@ export default function HelpCenterScreen() {
           textAlignVertical="top"
         />
         <TouchableOpacity style={styles.ticketButton} onPress={createTicket}>
-          <Text style={styles.ticketButtonText}>Submit Ticket</Text>
+          <Text style={styles.ticketButtonText}>{t('submitTicket')}</Text>
         </TouchableOpacity>
-        <Text style={styles.ticketNote}>Your email app will open with the ticket details ready to send.</Text>
+        <Text style={styles.ticketNote}>{t('emailAppTicket')}</Text>
       </View>
     </ScrollView>
   );

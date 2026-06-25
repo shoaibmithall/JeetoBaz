@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
+import { useLanguage } from '@/lib/i18n';
 
 export default function DrawScreen() {
   const router = useRouter();
   const { productId, productName } = useLocalSearchParams();
+  const { t } = useLanguage();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [phase, setPhase] = useState('ready');
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -61,7 +63,7 @@ export default function DrawScreen() {
   }
 
   function maskName(name?: string | null) {
-    if (!name) return 'Unknown';
+    if (!name) return t('notProvided');
     const parts = name.split(' ');
     return parts.map((p: string) => p[0] + '***').join(' ');
   }
@@ -70,23 +72,23 @@ export default function DrawScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
+          <Text style={styles.backBtn}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>🎰 Live Draw</Text>
+        <Text style={styles.title}>🎰 {t('liveDrawTitle')}</Text>
         <View style={styles.liveBox}>
           <Text style={styles.liveText}>🔴 LIVE</Text>
         </View>
       </View>
 
-      <Text style={styles.productTitle}>{productName || 'Lucky Draw'}</Text>
+      <Text style={styles.productTitle}>{productName || t('liveDrawTitle')}</Text>
 
       {phase === 'ready' && (
         <View style={styles.center}>
           <Text style={styles.readyEmoji}>🎯</Text>
-          <Text style={styles.readyTitle}>Ready to Draw!</Text>
-          <Text style={styles.readySubtitle}>All participants are watching live</Text>
+          <Text style={styles.readyTitle}>{t('readyToDraw')}</Text>
+          <Text style={styles.readySubtitle}>{t('allDrawsLive')}</Text>
           <TouchableOpacity style={styles.loadButton} onPress={loadEntries}>
-            <Text style={styles.loadButtonText}>📋 Show All Participants</Text>
+            <Text style={styles.loadButtonText}>📋 {t('showParticipants')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -95,8 +97,8 @@ export default function DrawScreen() {
         <View style={styles.flex}>
           <Text style={styles.listTitle}>
             {phase === 'showing'
-              ? `👥 ${entries.length} Participants:`
-              : '🎰 Selecting Lucky Winner...'}
+              ? `👥 ${entries.length} ${t('participants')}:`
+              : `🎰 ${t('selectingWinner')}`}
           </Text>
           <ScrollView style={styles.list}>
             {entries.map((entry, index) => (
@@ -109,7 +111,7 @@ export default function DrawScreen() {
                 </Text>
                 <View style={styles.entryInfo}>
                   <Text style={[styles.entryName, highlighted === index && styles.whiteText]}>
-                    {entry.name ? maskName(entry.name) : 'Unknown'}
+                    {entry.name ? maskName(entry.name) : t('notProvided')}
                   </Text>
                   <Text style={[styles.entryPhone, highlighted === index && styles.whiteText]}>
                     {maskPhone(entry.phone)}
@@ -121,7 +123,7 @@ export default function DrawScreen() {
           </ScrollView>
           {phase === 'showing' && (
             <TouchableOpacity style={styles.spinButton} onPress={startSpin}>
-              <Text style={styles.spinButtonText}>🎰 Pick Lucky Winner!</Text>
+              <Text style={styles.spinButtonText}>🎰 {t('pickWinner')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -132,11 +134,11 @@ export default function DrawScreen() {
           <View style={styles.winnerCard}>
             <Text style={styles.trophyEmoji}>🏆</Text>
             <Text style={styles.congratsText}>CONGRATULATIONS!</Text>
-            <Text style={styles.winnerName}>{winner.name || 'Lucky Winner'}</Text>
+            <Text style={styles.winnerName}>{winner.name || t('winnerOf')}</Text>
             <Text style={styles.winnerPhone}>{maskPhone(winner.phone)}</Text>
-            <Text style={styles.winnerSub}>Lucky Winner of {productName}!</Text>
+            <Text style={styles.winnerSub}>{t('winnerOf')} {productName}!</Text>
           </View>
-          <Text style={styles.allTitle}>📋 All Participants:</Text>
+          <Text style={styles.allTitle}>📋 {t('showParticipants')}:</Text>
           {entries.map((entry, index) => (
             <View key={entry.id} style={[
               styles.entryRow,
@@ -147,7 +149,7 @@ export default function DrawScreen() {
               </Text>
               <View style={styles.entryInfo}>
                 <Text style={[styles.entryName, entry.id === winner.id && styles.goldText]}>
-                  {entry.name ? maskName(entry.name) : 'Unknown'}
+                  {entry.name ? maskName(entry.name) : t('notProvided')}
                 </Text>
                 <Text style={[styles.entryPhone, entry.id === winner.id && styles.goldText]}>
                   {maskPhone(entry.phone)}
@@ -157,7 +159,7 @@ export default function DrawScreen() {
             </View>
           ))}
           <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/')}>
-            <Text style={styles.homeButtonText}>🏠 Back to Home</Text>
+            <Text style={styles.homeButtonText}>🏠 {t('backToHome')}</Text>
           </TouchableOpacity>
         </ScrollView>
       )}

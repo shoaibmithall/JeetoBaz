@@ -3,26 +3,27 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ShareModal } from './share';
 import { DataErrorState } from '@/components/data-error-state';
+import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
 
-const SORT_OPTIONS: { key: SortOption; label: string }[] = [
-  { key: 'popular', label: '🔥 Most Popular' },
-  { key: 'newest', label: '🆕 Newest' },
-  { key: 'price_low', label: '💰 Price: Low-High' },
-  { key: 'price_high', label: '💎 Price: High-Low' },
-  { key: 'entry_low', label: '🎯 Entry: Low-High' },
+const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
+  { key: 'popular', labels: { en: '🔥 Most Popular', ur: '🔥 سب سے مقبول', roman: '🔥 Most Popular' } },
+  { key: 'newest', labels: { en: '🆕 Newest', ur: '🆕 تازہ ترین', roman: '🆕 Newest' } },
+  { key: 'price_low', labels: { en: '💰 Price: Low-High', ur: '💰 قیمت: کم سے زیادہ', roman: '💰 Price: Low-High' } },
+  { key: 'price_high', labels: { en: '💎 Price: High-Low', ur: '💎 قیمت: زیادہ سے کم', roman: '💎 Price: High-Low' } },
+  { key: 'entry_low', labels: { en: '🎯 Entry: Low-High', ur: '🎯 انٹری: کم سے زیادہ', roman: '🎯 Entry: Low-High' } },
 ];
 
-function getTimeLeft(drawDate?: string | null) {
+function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode) {
   if (!drawDate) return null;
   const now = new Date();
   const draw = new Date(drawDate);
   const diff = draw.getTime() - now.getTime();
-  if (diff <= 0) return 'Draw time aa gaya!';
+  if (diff <= 0) return translate(language, 'drawTimeArrived');
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -32,6 +33,7 @@ function getTimeLeft(drawDate?: string | null) {
 }
 
 export default function HomeScreen() {
+  const { language, t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -102,7 +104,7 @@ export default function HomeScreen() {
       .eq('product_id', product.id)
       .eq('phone', userPhone)
       .maybeSingle();
-    if (existing) { alert('Already entered! Good luck 🤞'); return; }
+    if (existing) { alert(t('alreadyEntered')); return; }
     router.push({
       pathname: '/payment',
       params: {
@@ -124,7 +126,7 @@ export default function HomeScreen() {
   if (loading) return (
     <View style={styles.loading}>
       <ActivityIndicator size="large" color="#1DB954" />
-      <Text style={styles.loadingText}>Loading JeetoBaz...</Text>
+      <Text style={styles.loadingText}>{t('loadingJeetoBaz')}</Text>
     </View>
   );
 
@@ -137,11 +139,11 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>🏆 JeetoBaz</Text>
-          <Text style={styles.tagline}>Win Big for Just Rs.1!</Text>
+          <Text style={styles.tagline}>{t('winBig')}</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.shareBtn} onPress={() => setShowShare(true)}>
-            <Text style={styles.shareBtnText}>📤 Share</Text>
+            <Text style={styles.shareBtnText}>📤 {t('share')}</Text>
           </TouchableOpacity>
           {userPhone ? (
             <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/login')}>
@@ -149,7 +151,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
-              <Text style={styles.loginBtnText}>Login</Text>
+              <Text style={styles.loginBtnText}>{t('login')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -158,7 +160,7 @@ export default function HomeScreen() {
       <View style={styles.trustBar}>
         <Text style={styles.trustItem}>✅ 100% Fair</Text>
         <Text style={styles.trustDot}>•</Text>
-        <Text style={styles.trustItem}>🔒 Transparent</Text>
+        <Text style={styles.trustItem}>🔒 {t('transparent')}</Text>
         <Text style={styles.trustDot}>•</Text>
         <Text style={styles.trustItem}>🇵🇰 Pakistan</Text>
       </View>
@@ -168,7 +170,7 @@ export default function HomeScreen() {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search prizes..."
+            placeholder={t('searchPrizes')}
             placeholderTextColor="#666"
             value={search}
             onChangeText={setSearch}
@@ -182,7 +184,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={[styles.filterBtn, showFilters && styles.filterBtnActive]}
           onPress={() => setShowFilters((visible) => !visible)}
-          accessibilityLabel="Show sort options"
+          accessibilityLabel={t('sortBy')}
         >
           <Text style={styles.filterBtnText}>⚙️</Text>
         </TouchableOpacity>
@@ -190,7 +192,7 @@ export default function HomeScreen() {
 
       {showFilters && (
         <View style={styles.sortContainer}>
-          <Text style={styles.sortLabel}>Sort by:</Text>
+          <Text style={styles.sortLabel}>{t('sortBy')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {SORT_OPTIONS.map((option) => (
               <TouchableOpacity
@@ -199,7 +201,7 @@ export default function HomeScreen() {
                 onPress={() => setSortBy(option.key)}
               >
                 <Text style={[styles.sortChipText, sortBy === option.key && styles.sortChipTextActive]}>
-                  {option.label}
+                  {option.labels[language]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -208,68 +210,64 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.howItWorks}>
-        <Text style={styles.howTitle}>🤔 Kaise Kaam Karta Hai?</Text>
+        <Text style={styles.howTitle}>🤔 {t('howItWorks')}</Text>
         <View style={styles.steps}>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>1️⃣</Text>
-            <Text style={styles.stepTitle}>Entry Lo</Text>
-            <Text style={styles.stepDesc}>Sirf Rs.1 mein lucky draw mein shamil ho</Text>
+            <Text style={styles.stepTitle}>{t('entryStepTitle')}</Text>
+            <Text style={styles.stepDesc}>{t('entryStepDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>2️⃣</Text>
-            <Text style={styles.stepTitle}>Live Draw</Text>
-            <Text style={styles.stepDesc}>Raat 10 baje LIVE draw hota hai sab ke saamne</Text>
+            <Text style={styles.stepTitle}>{t('liveDrawTitle')}</Text>
+            <Text style={styles.stepDesc}>{t('liveDrawDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
           <View style={styles.step}>
             <Text style={styles.stepEmoji}>3️⃣</Text>
-            <Text style={styles.stepTitle}>Prize Lo</Text>
-            <Text style={styles.stepDesc}>Lucky winner ko ghar pe prize deliver hota hai</Text>
+            <Text style={styles.stepTitle}>{t('prizeTitle')}</Text>
+            <Text style={styles.stepDesc}>{t('prizeDesc')}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.algorithmBox}>
-        <Text style={styles.algoTitle}>🔐 Winner Selection Algorithm</Text>
-        <Text style={styles.algoText}>
-          Jab participants poore hojate hain, hamara system automatically random number generate karta hai.
-          Koi bhi — admin bhi — is process ko change nahi kar sakta.
-          Draw LIVE hota hai taake sab dekh sakein. 100% fair!
-        </Text>
+        <Text style={styles.algoTitle}>🔐 {t('winnerAlgorithm')}</Text>
+        <Text style={styles.algoText}>{t('winnerAlgorithmText')}</Text>
         <View style={styles.verifiedBadge}>
-          <Text style={styles.verifiedText}>✅ Verified Fair Draw System</Text>
+          <Text style={styles.verifiedText}>✅ {t('verifiedFairDraw')}</Text>
         </View>
       </View>
 
       <View style={styles.resultsRow}>
-        <Text style={styles.sectionTitle}>🔥 Active Draws</Text>
+        <Text style={styles.sectionTitle}>🔥 {t('activeDraws')}</Text>
         <View style={styles.resultsMeta}>
-          <Text style={styles.resultsText}>{filteredProducts.length} found</Text>
-          <Text style={styles.sortedBy}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.label}</Text>
+          <Text style={styles.resultsText}>{filteredProducts.length} {t('found')}</Text>
+          <Text style={styles.sortedBy}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
         </View>
       </View>
 
       {filteredProducts.length === 0 && (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyText}>No draws found</Text>
+          <Text style={styles.emptyText}>{t('noDrawsFound')}</Text>
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Text style={styles.clearSearch}>Clear Search</Text>
+            <Text style={styles.clearSearch}>{t('clearSearch')}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {filteredProducts.map((p) => {
-        const timeLeft = getTimeLeft(p.draw_date);
+        const timeLeft = getTimeLeft(p.draw_date, language);
         const liveLink = p.live_link;
         return (
           <View key={p.id} style={styles.card}>
             <View style={styles.verifiedBanner}>
-              <Text style={styles.verifiedBannerText}>✅ Verified Draw</Text>
+              <Text style={styles.verifiedBannerText}>✅ {t('verifiedDraw')}</Text>
               {liveLink && (
                 <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
-                  <Text style={styles.liveBtn}>🔴 Watch Live</Text>
+                  <Text style={styles.liveBtn}>🔴 {t('watchLive')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -279,7 +277,7 @@ export default function HomeScreen() {
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
                 <Text style={styles.productName}>{p.name}</Text>
-                <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? 'Remove' : 'Add'} ${p.name} ${favorites.includes(p.id) ? 'from' : 'to'} favorites`}>
+                <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
                   <Text style={styles.heartBtn}>{favorites.includes(p.id) ? '❤️' : '🤍'}</Text>
                 </TouchableOpacity>
               </View>
@@ -287,35 +285,35 @@ export default function HomeScreen() {
 
               {timeLeft && (
                 <View style={styles.countdownBox}>
-                  <Text style={styles.countdownLabel}>⏰ Draw mein:</Text>
+                  <Text style={styles.countdownLabel}>⏰ {t('drawDate')}:</Text>
                   <Text style={styles.countdownTime}>{timeLeft}</Text>
                 </View>
               )}
 
               {p.draw_date && (
-                <Text style={styles.drawDate}>📅 Draw: {p.draw_date}</Text>
+                <Text style={styles.drawDate}>📅 {t('drawDate')}: {p.draw_date}</Text>
               )}
 
               <View style={styles.priceRow}>
                 <Text style={styles.originalPrice}>Rs. {p.price?.toLocaleString()}</Text>
                 <View style={styles.entryBadge}>
-                  <Text style={styles.entryFee}>Entry: Rs. {p.entry_fee || 1}</Text>
+                  <Text style={styles.entryFee}>{t('entryFee')}: Rs. {p.entry_fee || 1}</Text>
                 </View>
               </View>
 
-              <Text style={styles.participants}>👥 {(p.current_entries || 0).toLocaleString()} participants</Text>
+              <Text style={styles.participants}>👥 {(p.current_entries || 0).toLocaleString()} {t('participants')}</Text>
 
               <View style={styles.progressBar}>
                 <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
               </View>
 
               <View style={styles.spotsRow}>
-                <Text style={styles.spots}>🔥 {(p.max_entries - (p.current_entries||0)).toLocaleString()} spots left!</Text>
+                <Text style={styles.spots}>🔥 {(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text>
                 <Text style={styles.percent}>{Math.round(((p.current_entries||0)/p.max_entries)*100)}%</Text>
               </View>
 
               <TouchableOpacity style={styles.button} onPress={() => handleEnter(p)}>
-                <Text style={styles.buttonText}>🎯 Enter for Rs.{p.entry_fee || 1}</Text>
+                <Text style={styles.buttonText}>🎯 {t('enterFor')} Rs.{p.entry_fee || 1}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -323,8 +321,8 @@ export default function HomeScreen() {
       })}
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>🔒 100% Fair & Transparent Draws</Text>
-        <Text style={styles.footerText}>🇵🇰 Made in Pakistan</Text>
+        <Text style={styles.footerText}>🔒 {t('fairTransparent')}</Text>
+        <Text style={styles.footerText}>🇵🇰 {t('footerPakistan')}</Text>
       </View>
     </ScrollView>
   );

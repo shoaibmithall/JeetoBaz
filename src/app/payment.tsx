@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { isValidTransactionId, normalizeTransactionId } from '@/lib/validation';
 
@@ -9,6 +10,7 @@ const JAZZCASH_NUMBER = '03706814892';
 const JAZZCASH_NAME = 'JeetoBaz';
 
 export default function PaymentScreen() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { productId, productName, entryFee } = useLocalSearchParams();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
@@ -117,11 +119,11 @@ export default function PaymentScreen() {
       <View style={styles.successBox}>
         <Text style={styles.successEmoji}>🎉</Text>
         <Text style={styles.successTitle}>Entry Confirmed!</Text>
-        <Text style={styles.successText}>Good luck in the draw!</Text>
+        <Text style={styles.successText}>{t('goodLuck')}</Text>
         <Text style={styles.successSub}>Your transaction is being verified</Text>
       </View>
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
-        <Text style={styles.homeBtnText}>🏠 Back to Home</Text>
+        <Text style={styles.homeBtnText}>🏠 {t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -130,19 +132,19 @@ export default function PaymentScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← Back</Text>
+          <Text style={styles.backBtn}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>💳 Payment</Text>
+        <Text style={styles.title}>💳 {t('payment')}</Text>
         <Text style={styles.dummy}></Text>
       </View>
 
       <View style={styles.productBox}>
         <Text style={styles.productName}>{productName}</Text>
-        <Text style={styles.entryFee}>Entry Fee: Rs. {entryFee || 1}</Text>
+        <Text style={styles.entryFee}>{t('entryFee')}: Rs. {entryFee || 1}</Text>
       </View>
 
       <View style={styles.paymentBox}>
-        <Text style={styles.payTitle}>Send Payment To:</Text>
+        <Text style={styles.payTitle}>{t('sendPaymentTo')}:</Text>
 
         <View style={styles.methodCard}>
           <Text style={styles.methodIcon}>💚</Text>
@@ -172,8 +174,8 @@ export default function PaymentScreen() {
         </View>
 
         <View style={styles.stepsBox}>
-          <Text style={styles.stepsTitle}>How to Pay:</Text>
-          <Text style={styles.step}>1️⃣ Open JazzCash / Easypaisa / Any Bank App</Text>
+          <Text style={styles.stepsTitle}>{t('howToPay')}:</Text>
+          <Text style={styles.step}>1️⃣ {t('openPaymentApp')}</Text>
           <Text style={styles.step}>2️⃣ Send Rs. {entryFee || 1} to {JAZZCASH_NUMBER}</Text>
           <Text style={styles.step}>3️⃣ Copy the Transaction ID</Text>
           <Text style={styles.step}>4️⃣ Paste it below and confirm!</Text>
@@ -198,16 +200,16 @@ export default function PaymentScreen() {
           disabled={loading}
         >
           <Text style={styles.confirmBtnText}>
-            {loading ? 'Confirming...' : '✅ Confirm Entry'}
+            {loading ? t('confirming') : `✅ ${t('confirmEntry')}`}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.noteBox}>
-        <Text style={styles.noteTitle}>⚠️ Important:</Text>
-        <Text style={styles.noteText}>• Your entry will be verified within 24 hours</Text>
-        <Text style={styles.noteText}>• Keep your transaction ID safe</Text>
-        <Text style={styles.noteText}>• One entry per person per draw</Text>
+        <Text style={styles.noteTitle}>⚠️ {t('important')}:</Text>
+        <Text style={styles.noteText}>• {t('paymentVerify')}</Text>
+        <Text style={styles.noteText}>• {t('transactionSafe')}</Text>
+        <Text style={styles.noteText}>• {t('oneEntry')}</Text>
       </View>
     </ScrollView>
   );
