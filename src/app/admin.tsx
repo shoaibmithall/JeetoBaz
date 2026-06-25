@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { createNotification, createUserNotification } from '@/lib/notifications';
 import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 
 const ADMIN_PASSWORD = 'JeetoBaz@2026';
@@ -31,6 +32,9 @@ export default function AdminScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [announcementSaved, setAnnouncementSaved] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationBody, setNotificationBody] = useState('');
+  const [notificationSending, setNotificationSending] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -207,6 +211,33 @@ export default function AdminScreen() {
     setTimeout(() => setAnnouncementSaved(false), 2000);
   }
 
+  async function sendGlobalNotification() {
+    const title = notificationTitle.trim();
+    const body = notificationBody.trim();
+    if (!title || !body) {
+      alert('Notification title aur message required hain.');
+      return;
+    }
+
+    setNotificationSending(true);
+    const { error } = await createNotification({
+      title,
+      body,
+      kind: 'admin',
+      link: '/',
+    });
+    setNotificationSending(false);
+
+    if (error) {
+      alert('Notification send failed. Pehle Supabase SQL setup run karein. Error: ' + error.message);
+      return;
+    }
+
+    setNotificationTitle('');
+    setNotificationBody('');
+    alert('✅ Notification users ko send ho gayi.');
+  }
+
   async function clearApprovedPayment(txn: Transaction) {
     if (txn.receipt_path && !txn.receipt_path.startsWith('data:')) {
       const { error: receiptDeleteError } = await supabase.storage.from(RECEIPT_BUCKET).remove([txn.receipt_path]);
@@ -299,6 +330,15 @@ export default function AdminScreen() {
       fetchTransactions();
       return;
     }
+
+    const productName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
+    await createUserNotification({
+      title: 'Entry approved',
+      body: `Aapki ${productName} wali entry approve ho gayi hai. Good luck!`,
+      targetPhone: entryPhone,
+      kind: 'payment-approved',
+      link: '/entries',
+    });
 
     alert('✅ Payment approved and receipt deleted.');
     fetchProducts();
@@ -516,6 +556,30 @@ export default function AdminScreen() {
             />
             <TouchableOpacity style={styles.addButton} onPress={saveAnnouncement}>
               <Text style={styles.addButtonText}>{announcementSaved ? '✅ Saved!' : '💾 Save Announcement'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.settingLabel}>🔔 Send Notification</Text>
+            <Text style={styles.settingHint}>Ye notification sab users ke Notifications page me dikh jayegi</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Title e.g. New draw added!"
+              placeholderTextColor="#666"
+              value={notificationTitle}
+              onChangeText={setNotificationTitle}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Message e.g. Powerbank draw live ho gaya hai. Abhi entry karein!"
+              placeholderTextColor="#666"
+              value={notificationBody}
+              onChangeText={setNotificationBody}
+              multiline
+              numberOfLines={3}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={sendGlobalNotification} disabled={notificationSending}>
+              <Text style={styles.addButtonText}>{notificationSending ? 'Sending...' : '📨 Send to All Users'}</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />

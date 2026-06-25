@@ -157,6 +157,12 @@ export default function ProfileScreen() {
           <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications' as never)}>
+          <Text style={styles.menuIcon}>🔔</Text>
+          <Text style={[styles.menuText, { color: theme.text }]}>Notifications</Text>
+          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
           <Text style={styles.menuIcon}>📋</Text>
           <Text style={[styles.menuText, { color: theme.text }]}>{t('terms')}</Text>
