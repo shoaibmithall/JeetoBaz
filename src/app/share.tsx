@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
 
-const APP_URL = 'https://shoaibmithall.github.io/JeetoBaz/';
+const APP_URL = 'https://jeetobaz.pk/';
 
 type ShareUrlType = 'message' | 'facebook' | 'messenger' | 'telegram' | 'x' | 'threads';
 type SharePlatform = {
