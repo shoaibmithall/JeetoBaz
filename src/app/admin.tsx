@@ -2,15 +2,16 @@ import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { createNotification, createUserNotification } from '@/lib/notifications';
 import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 
-const ADMIN_PASSWORD = 'JeetoBaz@2026';
+const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
 
 export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,11 +40,23 @@ export default function AdminScreen() {
 
   useEffect(() => {
     let active = true;
-    getStoredValue('adminAuth').then((auth) => {
+
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (auth === 'true') setAuthenticated(true);
+      setAuthenticated(data.session?.user.email?.toLowerCase() === ADMIN_EMAIL);
+      setAuthLoading(false);
     });
-    return () => { active = false; };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setAuthenticated(session?.user.email?.toLowerCase() === ADMIN_EMAIL);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -57,16 +70,37 @@ export default function AdminScreen() {
   }, [authenticated]);
 
   async function handleLogin() {
-    if (password === ADMIN_PASSWORD) {
-      await setStoredValue('adminAuth', 'true');
-      setAuthenticated(true);
-    } else {
-      alert('Wrong password!');
+    if (!password) {
+      alert('Please enter your admin password.');
+      return;
     }
+
+    setAuthLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: ADMIN_EMAIL,
+      password,
+    });
+
+    if (error) {
+      setAuthLoading(false);
+      alert('Admin login failed: ' + error.message);
+      return;
+    }
+
+    if (data.user.email?.toLowerCase() !== ADMIN_EMAIL) {
+      await supabase.auth.signOut();
+      setAuthLoading(false);
+      alert('This account is not authorized for the admin panel.');
+      return;
+    }
+
+    setPassword('');
+    setAuthenticated(true);
+    setAuthLoading(false);
   }
 
   async function handleLogout() {
-    await removeStoredValues(['adminAuth']);
+    await supabase.auth.signOut();
     setAuthenticated(false);
   }
 
@@ -394,13 +428,21 @@ export default function AdminScreen() {
   const completedDraws = products.filter(p => p.status === 'completed').length;
   const pendingPayments = transactions.filter((txn) => txn.status === 'pending');
 
+  if (authLoading && !authenticated) return (
+    <View style={styles.loginContainer}>
+      <Text style={styles.loginEmoji}>🔐</Text>
+      <Text style={styles.loginSubtitle}>Checking secure session...</Text>
+    </View>
+  );
+
   if (!authenticated) return (
     <View style={styles.loginContainer}>
       <Text style={styles.loginEmoji}>🔐</Text>
       <Text style={styles.loginSubtitle}>Admin Panel</Text>
+      <Text style={styles.adminEmail}>{ADMIN_EMAIL}</Text>
       <TextInput style={styles.passwordInput} placeholder="Enter admin password" placeholderTextColor="#666" secureTextEntry value={password} onChangeText={setPassword} />
-      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-        <Text style={styles.loginBtnText}>🚀 Login</Text>
+      <TouchableOpacity style={[styles.loginBtn, authLoading && styles.loginBtnDisabled]} onPress={handleLogin} disabled={authLoading}>
+        <Text style={styles.loginBtnText}>{authLoading ? 'Signing in...' : '🚀 Secure Login'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -624,9 +666,9 @@ export default function AdminScreen() {
 
             <View style={styles.divider} />
 
-            <Text style={styles.settingLabel}>🔑 Admin Password</Text>
-            <Text style={styles.settingHint}>Current: JeetoBaz@2026</Text>
-            <Text style={styles.settingNote}>Password change ke liye code update karna hoga</Text>
+            <Text style={styles.settingLabel}>🔐 Secure Admin Login</Text>
+            <Text style={styles.settingHint}>Admin: {ADMIN_EMAIL}</Text>
+            <Text style={styles.settingNote}>Password Supabase Authentication se securely manage hota hai.</Text>
 
             <View style={styles.divider} />
 
@@ -652,8 +694,10 @@ const styles = StyleSheet.create({
   loginContainer: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', padding: 30 },
   loginEmoji: { fontSize: 50, marginBottom: 10 },
   loginSubtitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 30 },
+  adminEmail: { color: '#1DB954', fontSize: 14, marginBottom: 12 },
   passwordInput: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', color: 'white', padding: 15, fontSize: 16, width: '100%', marginBottom: 20 },
   loginBtn: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', width: '100%' },
+  loginBtnDisabled: { backgroundColor: '#777' },
   loginBtnText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   header: { backgroundColor: '#1a1a1a', padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#FFD700' },
