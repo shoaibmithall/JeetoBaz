@@ -1,4 +1,4 @@
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { ActivityIndicator, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLanguage } from '@/lib/i18n';
@@ -83,6 +83,9 @@ export default function WinnerScreen() {
       </View>
 
       <View style={styles.winnerCard}>
+        {product?.winner_photo ? (
+          <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
+        ) : null}
         <Text style={styles.winnerLabel}>🎯 {t('winnerOf')}</Text>
         <Text style={styles.winnerName}>{result?.winner_name || legacyWinnerName || t('notProvided')}</Text>
         <Text style={styles.winnerPhone}>{result?.masked_phone || maskPhone(product?.winner_phone)}</Text>
@@ -140,6 +143,7 @@ const styles = StyleSheet.create({
   congrats: { fontSize: 32, fontWeight: 'bold', color: '#FFD700', marginTop: 10 },
   subtitle: { fontSize: 16, color: 'white', marginTop: 5 },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 25, borderWidth: 2, borderColor: '#FFD700', alignItems: 'center' },
+  winnerPhoto: { width: 180, height: 180, borderRadius: 8, marginBottom: 16, borderWidth: 2, borderColor: '#FFD700' },
   winnerLabel: { fontSize: 14, color: '#FFD700', marginBottom: 10 },
   winnerName: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   winnerPhone: { fontSize: 16, color: '#aaa', marginTop: 5 },

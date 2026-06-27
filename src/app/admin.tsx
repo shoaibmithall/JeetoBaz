@@ -1,6 +1,7 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { createNotification, createUserNotification } from '@/lib/notifications';
@@ -8,6 +9,7 @@ import type { Entry, Product, ProductFormData, Transaction, User } from '@/types
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
+const WINNER_MEDIA_BUCKET = 'winner-media';
 
 export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -28,6 +30,7 @@ export default function AdminScreen() {
   const [drawDate, setDrawDate] = useState('');
   const [liveLink, setLiveLink] = useState('');
   const [winnerPhoto, setWinnerPhoto] = useState('');
+  const [winnerPhotoUploading, setWinnerPhotoUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const editingIdRef = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -194,6 +197,63 @@ export default function AdminScreen() {
     setMaxEntries(''); setImageUrl(''); setDescription(''); setDrawDate('');
     setLiveLink('');
     setWinnerPhoto('');
+  }
+
+  async function uploadWinnerPhoto() {
+    if (!editingId) {
+      alert('Please edit an existing product before uploading its winner photo.');
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload the winner photo.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setWinnerPhotoUploading(true);
+    try {
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png'
+        ? 'png'
+        : mimeType === 'image/webp'
+          ? 'webp'
+          : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `${editingId}/${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(WINNER_MEDIA_BUCKET)
+        .upload(filePath, fileData, {
+          contentType: mimeType,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage
+        .from(WINNER_MEDIA_BUCKET)
+        .getPublicUrl(filePath);
+      setWinnerPhoto(data.publicUrl);
+      alert('Winner photo uploaded. Save Changes to publish it.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Winner photo upload failed.';
+      alert(message);
+    } finally {
+      setWinnerPhotoUploading(false);
+    }
   }
 
   async function saveProduct() {
@@ -483,7 +543,21 @@ export default function AdminScreen() {
               <TextInput style={styles.input} placeholder="📸 Image URL (optional)" placeholderTextColor="#666" value={imageUrl} onChangeText={setImageUrl} />
               <TextInput style={[styles.input, styles.textArea]} placeholder="📝 Description (optional)" placeholderTextColor="#666" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
               <TextInput style={styles.input} placeholder="🔴 Live Link (YouTube/Facebook URL)" placeholderTextColor="#666" value={liveLink} onChangeText={setLiveLink} />
-        <TextInput style={styles.input} placeholder="🏆 Winner Photo URL (optional)" placeholderTextColor="#666" value={winnerPhoto} onChangeText={setWinnerPhoto} />
+              <TextInput style={styles.input} placeholder="🏆 Winner Photo URL (optional)" placeholderTextColor="#666" value={winnerPhoto} onChangeText={setWinnerPhoto} />
+              {editingId && (
+                <TouchableOpacity
+                  style={[styles.photoUploadButton, winnerPhotoUploading && styles.photoUploadDisabled]}
+                  onPress={uploadWinnerPhoto}
+                  disabled={winnerPhotoUploading}
+                >
+                  <Text style={styles.photoUploadText}>
+                    {winnerPhotoUploading ? 'Uploading...' : '📷 Upload Winner Photo'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {winnerPhoto ? (
+                <Image source={{ uri: winnerPhoto }} style={styles.winnerPhotoPreview} resizeMode="cover" />
+              ) : null}
         <TextInput style={styles.input} placeholder="📅 Draw Date after full (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
               <TouchableOpacity style={[styles.addButton, editingId && styles.saveButton]} onPress={saveProduct} disabled={loading}>
                 <Text style={styles.addButtonText}>{loading ? 'Saving...' : editingId ? '💾 Save Changes' : '➕ Add Product'}</Text>
@@ -715,6 +789,10 @@ const styles = StyleSheet.create({
   editBannerText: { color: '#FFD700', fontSize: 13, textAlign: 'center' },
   input: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', color: 'white', padding: 15, marginBottom: 12, fontSize: 14 },
   textArea: { height: 80, textAlignVertical: 'top' },
+  photoUploadButton: { backgroundColor: '#1a3a5c', borderWidth: 1, borderColor: '#4a9eff', padding: 13, borderRadius: 10, alignItems: 'center', marginBottom: 12 },
+  photoUploadDisabled: { opacity: 0.55 },
+  photoUploadText: { color: '#4a9eff', fontWeight: 'bold', fontSize: 14 },
+  winnerPhotoPreview: { width: 120, height: 120, borderRadius: 8, alignSelf: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#FFD700' },
   addButton: { backgroundColor: '#1DB954', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
   saveButton: { backgroundColor: '#FFD700' },
   addButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
