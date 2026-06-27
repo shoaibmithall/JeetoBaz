@@ -3,7 +3,15 @@ import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
-import type { Entry, Product } from '@/types/database';
+import type { Product } from '@/types/database';
+
+type PublicDrawResult = {
+  winner_name: string;
+  masked_phone: string;
+  winner_ticket_number: string;
+  total_entries: number;
+  drawn_at: string;
+};
 
 export default function WinnerScreen() {
   const router = useRouter();
@@ -11,7 +19,8 @@ export default function WinnerScreen() {
   const { t } = useLanguage();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [product, setProduct] = useState<Product | null>(null);
-  const [winner, setWinner] = useState<Entry | null>(null);
+  const [result, setResult] = useState<PublicDrawResult | null>(null);
+  const [legacyWinnerName, setLegacyWinnerName] = useState('');
   const [entryCount, setEntryCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -32,14 +41,24 @@ export default function WinnerScreen() {
       .eq('id', productIdValue)
       .maybeSingle();
 
-    const { data: entriesData } = await supabase
-      .from('entries')
-      .select('*')
-      .eq('product_id', productIdValue);
+    const { data: resultData } = await supabase.rpc('get_public_draw_result', {
+      requested_product_id: productIdValue,
+    });
 
     setProduct(productData || null);
-    setEntryCount(entriesData?.length || 0);
-    setWinner(entriesData?.find((entry) => entry.phone === productData?.winner_phone) || null);
+
+    if (resultData?.[0]) {
+      setResult(resultData[0]);
+      setEntryCount(resultData[0].total_entries);
+    } else {
+      const { data: entriesData } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('product_id', productIdValue);
+      const legacyWinner = entriesData?.find((entry) => entry.phone === productData?.winner_phone);
+      setLegacyWinnerName(legacyWinner?.name || '');
+      setEntryCount(entriesData?.length || 0);
+    }
     setLoading(false);
   }
 
@@ -65,8 +84,11 @@ export default function WinnerScreen() {
 
       <View style={styles.winnerCard}>
         <Text style={styles.winnerLabel}>🎯 {t('winnerOf')}</Text>
-        <Text style={styles.winnerName}>{winner?.name || t('notProvided')}</Text>
-        <Text style={styles.winnerPhone}>{maskPhone(product?.winner_phone)}</Text>
+        <Text style={styles.winnerName}>{result?.winner_name || legacyWinnerName || t('notProvided')}</Text>
+        <Text style={styles.winnerPhone}>{result?.masked_phone || maskPhone(product?.winner_phone)}</Text>
+        {result?.winner_ticket_number && (
+          <Text style={styles.winnerTicket}>Ticket: {result.winner_ticket_number}</Text>
+        )}
         <View style={styles.divider} />
         <Text style={styles.productLabel}>{t('prizeWon')}</Text>
         <Text style={styles.productName}>{product?.name || t('unknownProduct')}</Text>
@@ -81,7 +103,11 @@ export default function WinnerScreen() {
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>{t('drawDate')}</Text>
-          <Text style={styles.detailValue}>{product?.draw_date || new Date(product?.created_at || Date.now()).toLocaleDateString()}</Text>
+          <Text style={styles.detailValue}>
+            {result?.drawn_at
+              ? new Date(result.drawn_at).toLocaleString()
+              : product?.draw_date || new Date(product?.created_at || Date.now()).toLocaleDateString()}
+          </Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Draw Number</Text>
@@ -117,6 +143,7 @@ const styles = StyleSheet.create({
   winnerLabel: { fontSize: 14, color: '#FFD700', marginBottom: 10 },
   winnerName: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   winnerPhone: { fontSize: 16, color: '#aaa', marginTop: 5 },
+  winnerTicket: { fontSize: 14, color: '#FFD700', marginTop: 6 },
   divider: { height: 1, backgroundColor: '#333', width: '100%', marginVertical: 15 },
   productLabel: { fontSize: 14, color: '#aaa' },
   productName: { fontSize: 24, fontWeight: 'bold', color: '#1DB954', marginTop: 5 },

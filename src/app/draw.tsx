@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
 import { createUserNotification } from '@/lib/notifications';
+
+const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 
 export default function DrawScreen() {
   const router = useRouter();
@@ -16,6 +18,20 @@ export default function DrawScreen() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [highlighted, setHighlighted] = useState(-1);
   const [winner, setWinner] = useState<Entry | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setIsAdmin(data.session?.user.email?.toLowerCase() === ADMIN_EMAIL);
+      setAuthLoading(false);
+    });
+
+    return () => { active = false; };
+  }, []);
 
   async function loadEntries() {
     if (!productIdValue) {
@@ -51,52 +67,63 @@ export default function DrawScreen() {
     }
   }
 
-  function startSpin() {
+  async function startSpin() {
     if (entries.length === 0) {
       alert('No approved entries found for this draw.');
       return;
     }
 
     setPhase('spinning');
+    const { data, error } = await supabase.rpc('run_jeetobaz_draw', {
+      requested_product_id: productIdValue!,
+    });
+
+    if (error || !data?.[0]) {
+      setPhase('showing');
+      alert('Draw could not run: ' + (error?.message || 'No locked result was returned.'));
+      return;
+    }
+
+    const result = data[0];
+    const selectedWinner = entries.find((entry) => entry.id === result.winner_entry_id) || {
+      id: result.winner_entry_id,
+      product_id: productIdValue!,
+      phone: result.winner_phone,
+      name: result.winner_name,
+      ticket_number: result.winner_ticket_number,
+      created_at: result.drawn_at,
+    };
+
     let count = 0;
     const interval = setInterval(() => {
       setHighlighted(Math.floor(Math.random() * entries.length));
       count++;
       if (count > 40) {
         clearInterval(interval);
-        const winnerIndex = Math.floor(Math.random() * entries.length);
+        const winnerIndex = entries.findIndex((entry) => entry.id === selectedWinner.id);
         setHighlighted(winnerIndex);
-        setWinner(entries[winnerIndex]);
+        setWinner(selectedWinner);
         setPhase('winner');
-        saveWinner(entries[winnerIndex]);
+        sendWinnerNotifications(selectedWinner);
       }
     }, 100);
   }
 
-  async function saveWinner(w: Entry) {
-    if (!productIdValue) return;
-    const { error } = await supabase
-      .from('products')
-      .update({ status: 'completed', winner_phone: w.phone })
-      .eq('id', productIdValue);
-
-    if (error) alert('Winner save failed: ' + error.message);
-    else {
-      const productTitle = productNameValue || 'JeetoBaz draw';
-      await createUserNotification({
-        title: 'You won!',
-        body: `Congratulations! Aap ${productTitle} ke lucky winner select hue hain. JeetoBaz support aap se contact karega.`,
-        targetPhone: w.phone,
-        kind: 'winner-alert',
-        link: '/entries',
-      });
-      await createUserNotification({
-        title: 'Winner announced',
-        body: `${productTitle} ka winner announce ho gaya hai. Past Winners page par result check karein.`,
-        kind: 'winner-announced',
-        link: '/explore',
-      });
-    }
+  async function sendWinnerNotifications(w: Entry) {
+    const productTitle = productNameValue || 'JeetoBaz draw';
+    await createUserNotification({
+      title: 'You won!',
+      body: `Congratulations! Aap ${productTitle} ke lucky winner select hue hain. JeetoBaz support aap se contact karega.`,
+      targetPhone: w.phone,
+      kind: 'winner-alert',
+      link: '/entries',
+    });
+    await createUserNotification({
+      title: 'Winner announced',
+      body: `${productTitle} ka winner announce ho gaya hai. Past Winners page par result check karein.`,
+      kind: 'winner-announced',
+      link: '/explore',
+    });
   }
 
   function maskPhone(phone?: string | null) {
@@ -109,6 +136,22 @@ export default function DrawScreen() {
     const parts = name.split(' ');
     return parts.map((p: string) => p[0] + '***').join(' ');
   }
+
+  if (authLoading) return (
+    <View style={[styles.container, styles.center]}>
+      <Text style={styles.readyTitle}>Verifying admin access...</Text>
+    </View>
+  );
+
+  if (!isAdmin) return (
+    <View style={[styles.container, styles.center]}>
+      <Text style={styles.readyEmoji}>🔒</Text>
+      <Text style={styles.readyTitle}>Admin access required</Text>
+      <TouchableOpacity style={styles.loadButton} onPress={() => router.replace('/admin')}>
+        <Text style={styles.loadButtonText}>Go to Admin Login</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
