@@ -21,8 +21,22 @@ export type Entry = {
   phone: string;
   created_at: string;
   name?: string | null;
+  user_id?: string | null;
   ticket_number?: string | null;
   transaction_id?: string | null;
+};
+
+export type DrawResult = {
+  id: string;
+  product_id: string;
+  winner_entry_id: string;
+  winner_user_id: string | null;
+  winner_name: string;
+  winner_phone: string;
+  winner_ticket_number: string;
+  total_entries: number;
+  drawn_at: string;
+  drawn_by: string;
 };
 
 export type User = {
@@ -91,7 +105,12 @@ export type Database = {
       entries: Table<
         Entry,
         Pick<Entry, 'product_id' | 'phone'> &
-          Partial<Pick<Entry, 'name' | 'ticket_number' | 'transaction_id'>>
+          Partial<Pick<Entry, 'name' | 'user_id' | 'ticket_number' | 'transaction_id'>>
+      >;
+      draw_results: Table<
+        DrawResult,
+        Omit<DrawResult, 'id' | 'drawn_at'>,
+        never
       >;
       users: Table<
         User,
@@ -110,9 +129,31 @@ export type Database = {
     };
     Views: {};
     Functions: {
+      get_public_draw_result: {
+        Args: { requested_product_id: string };
+        Returns: Array<{
+          winner_name: string;
+          masked_phone: string;
+          winner_ticket_number: string;
+          total_entries: number;
+          drawn_at: string;
+        }>;
+      };
       increment: {
         Args: { x: number };
         Returns: number;
+      };
+      run_jeetobaz_draw: {
+        Args: { requested_product_id: string };
+        Returns: Array<{
+          result_id: string;
+          winner_entry_id: string;
+          winner_name: string;
+          winner_phone: string;
+          winner_ticket_number: string;
+          total_entries: number;
+          drawn_at: string;
+        }>;
       };
     };
     Enums: {};
