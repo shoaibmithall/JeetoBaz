@@ -748,7 +748,7 @@ export default function AdminScreen() {
 
             <Text style={styles.settingLabel}>📊 Quick Stats</Text>
             <View style={styles.quickStats}>
-              <Text style={styles.quickStat}>🌐 Live URL: jeetobaz.netlify.app</Text>
+              <Text style={styles.quickStat}>🌐 Live URL: jeetobaz.pk</Text>
               <Text style={styles.quickStat}>📦 Products: {products.length}</Text>
               <Text style={styles.quickStat}>👥 Users: {users.length}</Text>
               <Text style={styles.quickStat}>🎯 Entries: {entries.length}</Text>
