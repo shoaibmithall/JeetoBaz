@@ -85,7 +85,7 @@ export default function ProfileScreen() {
 
   async function createAccount() {
     if (!ageAccepted) {
-      alert('You must confirm that you are 18 years or older and accept the Terms.');
+      alert('You must confirm that you are 18 years or older and accept the Terms and Privacy Policy.');
       return;
     }
     const normalizedName = normalizePersonName(name);
@@ -277,7 +277,7 @@ export default function ProfileScreen() {
                 {ageAccepted ? <Text style={styles.checkmark}>✓</Text> : null}
               </View>
               <Text style={[styles.consentText, { color: theme.text }]}>
-                I confirm that I am 18 years or older.
+                I confirm that I am 18 years or older and accept the Terms and Privacy Policy.
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
