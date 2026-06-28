@@ -8,7 +8,7 @@ export default function RootLayout() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const siteUrl = 'https://jeetobaz.pk/';
-  const siteTitle = "JeetoBaz - Pakistan's No.1 Lucky Draw";
+  const siteTitle = 'JeetoBaz - Pakistan Lucky Draw Platform';
   const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
 
   return (
