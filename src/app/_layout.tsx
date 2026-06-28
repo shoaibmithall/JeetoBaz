@@ -18,6 +18,8 @@ export default function RootLayout() {
         <meta name="description" content={siteDescription} />
         <meta name="theme-color" content="#1DB954" />
         <link rel="canonical" href={siteUrl} />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/jeetobaz-icon.png" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="JeetoBaz" />
         <meta property="og:title" content={siteTitle} />
