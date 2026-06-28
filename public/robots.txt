@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /draw
+Disallow: /payment
+Disallow: /winner
+
+Sitemap: https://jeetobaz.pk/sitemap.xml
