@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, TextInput, useWindowDimensions } from 'react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ShareModal } from './share';
@@ -66,6 +66,9 @@ function getDrawScheduleStatus(product: Product, language: LanguageCode, now: Da
 export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+  const desktopCardWidth = Math.min(620, Math.max(400, (width - 60) / 2));
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -312,11 +315,19 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {filteredProducts.map((p) => {
-        const drawSchedule = getDrawScheduleStatus(p, language, time);
-        const liveLink = p.live_link;
-        return (
-          <View key={p.id} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <View style={[styles.productGrid, isDesktop && styles.productGridDesktop]}>
+        {filteredProducts.map((p) => {
+          const drawSchedule = getDrawScheduleStatus(p, language, time);
+          const liveLink = p.live_link;
+          return (
+            <View
+              key={p.id}
+              style={[
+                styles.card,
+                isDesktop && { width: desktopCardWidth, margin: 10 },
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
             <View style={[styles.verifiedBanner, { backgroundColor: theme.primarySoft }]}>
               <Text style={[styles.verifiedBannerText, { color: theme.primary }]}>✅ {t('verifiedDraw')}</Text>
               {liveLink && (
@@ -326,7 +337,13 @@ export default function HomeScreen() {
               )}
             </View>
 
-            {p.image_url && <Image source={{ uri: p.image_url }} style={styles.productImage} resizeMode="cover" />}
+            {p.image_url && (
+              <Image
+                source={{ uri: p.image_url }}
+                style={[styles.productImage, isDesktop && styles.productImageDesktop]}
+                resizeMode={isDesktop ? 'contain' : 'cover'}
+              />
+            )}
 
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
@@ -370,8 +387,9 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        );
-      })}
+          );
+        })}
+      </View>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>🔒 {t('fairTransparent')}</Text>
@@ -438,11 +456,14 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 50, marginBottom: 15 },
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
   clearSearch: { color: '#1DB954', fontSize: 14, fontWeight: 'bold' },
+  productGrid: { width: '100%' },
+  productGridDesktop: { maxWidth: 1280, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' },
   card: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
   verifiedBanner: { backgroundColor: '#0d2b1a', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verifiedBannerText: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
   liveBtn: { color: '#ff4444', fontSize: 12, fontWeight: 'bold', backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   productImage: { width: '100%', height: 200 },
+  productImageDesktop: { height: 280 },
   cardBody: { padding: 15 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
