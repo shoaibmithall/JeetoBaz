@@ -22,6 +22,17 @@ type ReceiptAsset = {
   dataUrl?: string | null;
 };
 
+function dataUrlToArrayBuffer(dataUrl: string) {
+  const base64 = dataUrl.split(',')[1];
+  if (!base64) throw new Error('Receipt image could not be prepared.');
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
+
 export default function PaymentScreen() {
   const { t } = useLanguage();
   const router = useRouter();
@@ -64,11 +75,27 @@ export default function PaymentScreen() {
     }
   }
 
-  function getReceiptValue() {
-    if (!receipt) return null;
-    if (receipt.dataUrl) return receipt.dataUrl;
-    if (receipt.uri.startsWith('data:')) return receipt.uri;
-    throw new Error('Please choose the receipt screenshot again.');
+  async function uploadReceipt(productId: string) {
+    if (!receipt?.dataUrl) {
+      throw new Error('Please choose the receipt screenshot again.');
+    }
+
+    const mimeType = receipt.mimeType || 'image/jpeg';
+    const extension = mimeType === 'image/png'
+      ? 'png'
+      : mimeType === 'image/webp'
+        ? 'webp'
+        : 'jpg';
+    const filePath = `${productId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
+    const { error } = await supabase.storage
+      .from(RECEIPT_BUCKET)
+      .upload(filePath, dataUrlToArrayBuffer(receipt.dataUrl), {
+        contentType: mimeType,
+        upsert: false,
+      });
+
+    if (error) throw error;
+    return filePath;
   }
 
   async function confirmPayment() {
@@ -184,7 +211,7 @@ export default function PaymentScreen() {
 
     try {
       await markPaymentSubmitAttempt(productIdValue, userPhone);
-      const receiptPath = getReceiptValue();
+      const receiptPath = await uploadReceipt(productIdValue);
       const { error } = await supabase.from('transactions').insert({
         product_id: productIdValue,
         phone: userPhone,
