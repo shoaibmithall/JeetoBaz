@@ -1,11 +1,7 @@
--- Run this once in Supabase SQL editor before using receipt uploads.
+-- Move new payment receipts to private Storage with admin-only read/delete.
+-- Existing transaction, entry and approval records are preserved.
 
-alter table public.transactions
-  add column if not exists payment_method text,
-  add column if not exists sender_name text,
-  add column if not exists sender_phone text,
-  add column if not exists user_name text,
-  add column if not exists receipt_path text;
+begin;
 
 insert into storage.buckets (
   id,
@@ -56,3 +52,18 @@ create policy "JeetoBaz admin deletes payment receipts"
     bucket_id = 'payment-receipts'
     and auth.uid() = '65d46154-c62b-415c-852c-c923b0b3cd1a'::uuid
   );
+
+commit;
+
+select
+  policyname,
+  roles,
+  cmd
+from pg_policies
+where schemaname = 'storage'
+  and tablename = 'objects'
+  and (
+    policyname like '%payment_receipts%'
+    or policyname like '%payment receipts%'
+  )
+order by policyname;
