@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "jeetobaz",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1DB954"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jeetobaz.app"
@@ -29,7 +24,15 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1DB954"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
