@@ -203,7 +203,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={[styles.trustBar, { backgroundColor: theme.primarySoft }]}>
-        <Text style={[styles.trustItem, { color: theme.primary }]}>✅ 100% Fair</Text>
+        <Text style={[styles.trustItem, { color: theme.primary }]}>✅ Locked Results</Text>
         <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
         <Text style={[styles.trustItem, { color: theme.primary }]}>🔒 {t('transparent')}</Text>
         <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>

@@ -8,7 +8,7 @@ export default function TermsScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>📋 Terms & Conditions</Text>
-        <Text style={styles.subtitle}>JeetoBaz — Pakistan's No.1 Lucky Draw</Text>
+        <Text style={styles.subtitle}>JeetoBaz — Lucky Draw Platform</Text>
       </View>
 
       <View style={styles.content}>
@@ -22,7 +22,7 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>1. Nature of Platform</Text>
         <Text style={styles.text}>
-          JeetoBaz is a 100% transparent and fair lucky draw platform based in Pakistan. This is NOT a gambling platform. Winners are selected through a fully automated and random computer algorithm in front of all participants.
+          JeetoBaz operates prize draws for eligible participants in Pakistan. Availability and operation are subject to applicable laws, regulatory requirements, and platform rules. JeetoBaz may pause or restrict participation where required. Winners are selected randomly by the JeetoBaz system after the published participation conditions are met and an authorized admin starts the scheduled draw.
         </Text>
 
         <Text style={styles.sectionTitle}>2. No Refund Policy</Text>
@@ -36,11 +36,10 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>3. Winner Selection</Text>
         <Text style={styles.text}>
-          • The winner is selected ONLY through an automated computer algorithm{'\n'}
-          • JeetoBaz management has NO control over who wins{'\n'}
-          • The selection process is 100% random and fair{'\n'}
-          • The draw is conducted LIVE on the JeetoBaz app and website{'\n'}
-          • All participants can watch the live draw in real-time{'\n'}
+          • The winner is selected from eligible approved entry tickets by the JeetoBaz random draw system{'\n'}
+          • An authorized admin controls when an eligible scheduled draw starts, but does not choose the winning ticket{'\n'}
+          • Each completed draw result is locked and recorded by the system{'\n'}
+          • A draw may be shown live or published through the JeetoBaz app, website, or official social channel{'\n'}
           • Draw results are final and cannot be challenged or disputed
         </Text>
 
@@ -82,10 +81,10 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>8. Transparency & Fairness</Text>
         <Text style={styles.text}>
-          • All draws are conducted publicly and live{'\n'}
-          • The complete participant list is visible to everyone during the draw{'\n'}
+          • Draw records and winner results are published for transparency{'\n'}
+          • Participant information shown publicly is limited and masked where appropriate{'\n'}
           • Phone numbers are partially masked to protect privacy{'\n'}
-          • JeetoBaz is committed to 100% fair and transparent operations
+          • JeetoBaz records the selected winner entry and draw time
         </Text>
 
         <Text style={styles.sectionTitle}>9. Privacy Policy</Text>
@@ -102,7 +101,14 @@ export default function TermsScreen() {
           For any queries:{'\n'}
           • WhatsApp: +92 337 2561482{'\n'}
           • Email: complaintsjeetobaz@gmail.com{'\n'}
-          • Website: jeetobaz-pk.netlify.app
+          • Website: jeetobaz.pk
+        </Text>
+
+        <Text style={styles.sectionTitle}>11. Platform Disclaimer</Text>
+        <Text style={styles.text}>
+          • JeetoBaz draws are sponsored and administered by JeetoBaz{'\n'}
+          • Apple, Google, Meta, and their related platforms are not sponsors of, administrators of, or involved with JeetoBaz draws{'\n'}
+          • Participation is permitted only where lawful and subject to these official rules
         </Text>
 
         <View style={styles.finalBox}>

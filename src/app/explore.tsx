@@ -87,7 +87,7 @@ export default function WinnersScreen() {
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <Text style={styles.title}>🏆 {t('pastWinners')}</Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}>100% Real and Verified</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>Verified Draw Records</Text>
       </View>
 
       <View style={[styles.trustBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
