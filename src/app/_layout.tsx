@@ -16,6 +16,7 @@ export default function RootLayout() {
       <Head>
         <title>{siteTitle}</title>
         <meta name="description" content={siteDescription} />
+        <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
         <meta name="theme-color" content="#1DB954" />
         <link rel="canonical" href={siteUrl} />
         <link rel="manifest" href="/manifest.json" />
