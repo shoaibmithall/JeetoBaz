@@ -1,6 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, TextInput, useWindowDimensions } from 'react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import {
+  ArrowRight, CalendarDays, CheckCircle2, CircleAlert, CircleUserRound,
+  Flame, Heart, ListFilter, LockKeyhole, Play, Search, Share2,
+  ShieldCheck, Target, Ticket, UserRound, UsersRound, X,
+} from 'lucide-react-native';
 import { ShareModal } from './share';
 import { DataErrorState } from '@/components/data-error-state';
 import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
@@ -14,11 +19,11 @@ type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
-  { key: 'popular', labels: { en: '🔥 Most Popular', ur: '🔥 سب سے مقبول', roman: '🔥 Most Popular' } },
-  { key: 'newest', labels: { en: '🆕 Newest', ur: '🆕 تازہ ترین', roman: '🆕 Newest' } },
-  { key: 'price_low', labels: { en: '💰 Price: Low-High', ur: '💰 قیمت: کم سے زیادہ', roman: '💰 Price: Low-High' } },
-  { key: 'price_high', labels: { en: '💎 Price: High-Low', ur: '💎 قیمت: زیادہ سے کم', roman: '💎 Price: High-Low' } },
-  { key: 'entry_low', labels: { en: '🎯 Entry: Low-High', ur: '🎯 انٹری: کم سے زیادہ', roman: '🎯 Entry: Low-High' } },
+  { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
+  { key: 'newest', labels: { en: 'Newest', ur: 'تازہ ترین', roman: 'Newest' } },
+  { key: 'price_low', labels: { en: 'Price: Low-High', ur: 'قیمت: کم سے زیادہ', roman: 'Price: Low-High' } },
+  { key: 'price_high', labels: { en: 'Price: High-Low', ur: 'قیمت: زیادہ سے کم', roman: 'Price: High-Low' } },
+  { key: 'entry_low', labels: { en: 'Entry: Low-High', ur: 'انٹری: کم سے زیادہ', roman: 'Entry: Low-High' } },
 ];
 
 function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
@@ -82,6 +87,7 @@ export default function HomeScreen() {
   const [time, setTime] = useState(new Date());
   const [cacheInfo, setCacheInfo] = useState('');
   const router = useRouter();
+  const isCompact = width < 480;
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -181,41 +187,46 @@ export default function HomeScreen() {
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentInsetAdjustmentBehavior="automatic">
       <ShareModal visible={showShare} onClose={() => setShowShare(false)} />
 
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>🏆 JeetoBaz</Text>
+      <View style={[styles.header, isCompact && styles.headerCompact]}>
+        <View style={styles.brand}>
+          <Image source={require('../../assets/images/icon.png')} style={styles.brandLogo} />
+          <View>
+          <Text style={styles.title}>JeetoBaz</Text>
           <Text style={styles.tagline}>{t('winBig')}</Text>
+          </View>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.shareBtn} onPress={() => setShowShare(true)}>
-            <Text style={styles.shareBtnText}>📤 {t('share')}</Text>
+        <View style={[styles.headerRight, isCompact && styles.headerRightCompact]}>
+          <TouchableOpacity style={styles.shareBtn} onPress={() => setShowShare(true)} accessibilityLabel={t('share')}>
+            <Share2 color="white" size={17} strokeWidth={2.3} />
+            {!isCompact && <Text style={styles.shareBtnText}>{t('share')}</Text>}
           </TouchableOpacity>
           {userPhone ? (
-            <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/login')}>
-              <Text style={styles.userText}>👤 {userName || 'User'}</Text>
+            <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/login')} accessibilityLabel={userName || t('profile')}>
+              <CircleUserRound color="white" size={16} />
+              {!isCompact && <Text style={styles.userText}>{userName || 'User'}</Text>}
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
+              <UserRound color="white" size={16} />
               <Text style={styles.loginBtnText}>{t('login')}</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      <View style={[styles.trustBar, { backgroundColor: theme.primarySoft }]}>
-        <Text style={[styles.trustItem, { color: theme.primary }]}>✅ Locked Results</Text>
-        <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
-        <Text style={[styles.trustItem, { color: theme.primary }]}>🔒 {t('transparent')}</Text>
-        <Text style={[styles.trustDot, { color: theme.primary }]}>•</Text>
+      <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: theme.primarySoft }]}>
+        <View style={styles.iconText}><ShieldCheck color={theme.primary} size={15} /><Text style={[styles.trustItem, { color: theme.primary }]}>Locked Results</Text></View>
+        <View style={styles.iconText}><LockKeyhole color={theme.primary} size={14} /><Text style={[styles.trustItem, { color: theme.primary }]}>{t('transparent')}</Text></View>
         <Text style={[styles.trustItem, { color: theme.primary }]}>🇵🇰 Pakistan</Text>
       </View>
 
       {cacheInfo ? (
         <View style={[styles.cacheBanner, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
-          <Text style={[styles.cacheText, { color: theme.gold }]}>⚠️ {cacheInfo}</Text>
+          <CircleAlert color={theme.gold} size={17} />
+          <Text style={[styles.cacheText, { color: theme.gold }]}>{cacheInfo}</Text>
           <TouchableOpacity onPress={fetchProducts}>
             <Text style={[styles.cacheRetry, { color: theme.primary }]}>{t('tryAgain')}</Text>
           </TouchableOpacity>
@@ -224,7 +235,7 @@ export default function HomeScreen() {
 
       <View style={[styles.searchRow, { backgroundColor: theme.surfaceAlt }]}>
         <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Search color={theme.muted} size={18} />
           <TextInput
             style={[styles.searchInput, { color: theme.text }]}
             placeholder={t('searchPrizes')}
@@ -234,7 +245,7 @@ export default function HomeScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} accessibilityLabel="Clear search">
-              <Text style={[styles.clearBtn, { color: theme.muted }]}>✕</Text>
+              <X color={theme.muted} size={18} />
             </TouchableOpacity>
           )}
         </View>
@@ -243,7 +254,7 @@ export default function HomeScreen() {
           onPress={() => setShowFilters((visible) => !visible)}
           accessibilityLabel={t('sortBy')}
         >
-          <Text style={styles.filterBtnText}>⚙️</Text>
+          <ListFilter color={showFilters ? theme.gold : theme.muted} size={20} />
         </TouchableOpacity>
       </View>
 
@@ -267,22 +278,22 @@ export default function HomeScreen() {
       )}
 
       <View style={[styles.howItWorks, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={[styles.howTitle, { color: theme.text }]}>🤔 {t('howItWorks')}</Text>
+        <View style={styles.sectionHeading}><Ticket color={theme.gold} size={20} /><Text style={[styles.howTitle, { color: theme.text }]}>{t('howItWorks')}</Text></View>
         <View style={styles.steps}>
           <View style={styles.step}>
-            <Text style={styles.stepEmoji}>1️⃣</Text>
+            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>1</Text></View>
             <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('entryStepTitle')}</Text>
             <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('entryStepDesc')}</Text>
           </View>
-          <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
+          <View style={styles.stepArrow}><ArrowRight color={theme.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
-            <Text style={styles.stepEmoji}>2️⃣</Text>
+            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>2</Text></View>
             <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('liveDrawTitle')}</Text>
             <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('liveDrawDesc')}</Text>
           </View>
-          <View style={styles.stepArrow}><Text style={styles.arrow}>→</Text></View>
+          <View style={styles.stepArrow}><ArrowRight color={theme.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
-            <Text style={styles.stepEmoji}>3️⃣</Text>
+            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>3</Text></View>
             <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('prizeTitle')}</Text>
             <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('prizeDesc')}</Text>
           </View>
@@ -290,15 +301,15 @@ export default function HomeScreen() {
       </View>
 
       <View style={[styles.algorithmBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
-        <Text style={[styles.algoTitle, { color: theme.primary }]}>🔐 {t('winnerAlgorithm')}</Text>
+        <View style={styles.iconText}><LockKeyhole color={theme.primary} size={18} /><Text style={[styles.algoTitle, { color: theme.primary }]}>{t('winnerAlgorithm')}</Text></View>
         <Text style={[styles.algoText, { color: theme.muted }]}>{t('winnerAlgorithmText')}</Text>
         <View style={[styles.verifiedBadge, { backgroundColor: theme.primary }]}>
-          <Text style={styles.verifiedText}>✅ {t('verifiedFairDraw')}</Text>
+          <ShieldCheck color="white" size={15} /><Text style={styles.verifiedText}>{t('verifiedFairDraw')}</Text>
         </View>
       </View>
 
       <View style={styles.resultsRow}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>🔥 {t('activeDraws')}</Text>
+        <View style={[styles.iconText, { flex: 1 }]}><Flame color={theme.gold} size={21} /><Text style={[styles.sectionTitle, { color: theme.text }]}>{t('activeDraws')}</Text></View>
         <View style={styles.resultsMeta}>
           <Text style={[styles.resultsText, { color: theme.muted }]}>{filteredProducts.length} {t('found')}</Text>
           <Text style={[styles.sortedBy, { color: theme.primary }]}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
@@ -307,7 +318,7 @@ export default function HomeScreen() {
 
       {filteredProducts.length === 0 && (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
+          <Search color={theme.muted} size={46} />
           <Text style={[styles.emptyText, { color: theme.text }]}>{t('noDrawsFound')}</Text>
           <TouchableOpacity onPress={() => setSearch('')}>
             <Text style={styles.clearSearch}>{t('clearSearch')}</Text>
@@ -329,10 +340,10 @@ export default function HomeScreen() {
               ]}
             >
             <View style={[styles.verifiedBanner, { backgroundColor: theme.primarySoft }]}>
-              <Text style={[styles.verifiedBannerText, { color: theme.primary }]}>✅ {t('verifiedDraw')}</Text>
+              <View style={styles.iconText}><CheckCircle2 color={theme.primary} size={15} /><Text style={[styles.verifiedBannerText, { color: theme.primary }]}>{t('verifiedDraw')}</Text></View>
               {liveLink && (
                 <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
-                  <Text style={styles.liveBtn}>🔴 {t('watchLive')}</Text>
+                  <View style={styles.liveBtn}><Play color="#ff4444" size={13} fill="#ff4444" /><Text style={styles.liveBtnText}>{t('watchLive')}</Text></View>
                 </TouchableOpacity>
               )}
             </View>
@@ -349,7 +360,7 @@ export default function HomeScreen() {
               <View style={styles.cardHeader}>
                 <Text style={[styles.productName, { color: theme.text }]}>{p.name}</Text>
                 <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
-                  <Text style={styles.heartBtn}>{favorites.includes(p.id) ? '❤️' : '🤍'}</Text>
+                  <Heart color={favorites.includes(p.id) ? '#ff4d67' : theme.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={25} />
                 </TouchableOpacity>
               </View>
               {p.description && <Text style={[styles.description, { color: theme.muted }]}>{p.description}</Text>}
@@ -361,7 +372,7 @@ export default function HomeScreen() {
               <Text style={[styles.drawScheduleNote, { color: theme.muted }]}>{drawSchedule.note}</Text>
 
               {p.draw_date && (
-                <Text style={styles.drawDate}>📅 {t('drawDate')}: {p.draw_date}</Text>
+                <View style={styles.iconText}><CalendarDays color="#4a9eff" size={15} /><Text style={styles.drawDate}>{t('drawDate')}: {p.draw_date}</Text></View>
               )}
 
               <View style={styles.priceRow}>
@@ -371,19 +382,19 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text style={[styles.participants, { color: theme.muted }]}>👥 {(p.current_entries || 0).toLocaleString()} {t('participants')}</Text>
+              <View style={styles.iconText}><UsersRound color={theme.muted} size={15} /><Text style={[styles.participants, { color: theme.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
 
               <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
                 <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
               </View>
 
               <View style={styles.spotsRow}>
-                <Text style={styles.spots}>🔥 {(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text>
+                <View style={styles.iconText}><Flame color="#ff6b6b" size={14} /><Text style={styles.spots}>{(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text></View>
                 <Text style={styles.percent}>{Math.round(((p.current_entries||0)/p.max_entries)*100)}%</Text>
               </View>
 
               <TouchableOpacity style={styles.button} onPress={() => handleEnter(p)}>
-                <Text style={styles.buttonText}>🎯 {t('enterFor')} Rs.{p.entry_fee || 1}</Text>
+                <Target color="#000" size={19} /><Text style={styles.buttonText}>{t('enterFor')} Rs.{p.entry_fee || 1}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -392,7 +403,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>🔒 {t('fairTransparent')}</Text>
+        <View style={styles.iconText}><LockKeyhole color="#666" size={14} /><Text style={styles.footerText}>{t('fairTransparent')}</Text></View>
         <Text style={styles.footerText}>🇵🇰 {t('footerPakistan')}</Text>
       </View>
     </ScrollView>
@@ -404,16 +415,22 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
   header: { backgroundColor: '#1DB954', padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerCompact: { paddingHorizontal: 12, paddingVertical: 14 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
+  brandLogo: { width: 38, height: 38, borderRadius: 9 },
   title: { fontSize: 26, fontWeight: 'bold', color: 'white' },
   tagline: { fontSize: 12, color: 'white', marginTop: 2 },
   headerRight: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  shareBtn: { backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 15 },
+  headerRightCompact: { gap: 5 },
+  shareBtn: { backgroundColor: 'rgba(0,0,0,0.2)', minWidth: 34, minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   shareBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  loginBtn: { backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15 },
+  loginBtn: { backgroundColor: 'rgba(0,0,0,0.2)', minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center' },
   loginBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  userBadge: { backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15 },
+  userBadge: { backgroundColor: 'rgba(0,0,0,0.2)', minWidth: 34, minHeight: 34, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   userText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   trustBar: { backgroundColor: '#0d2b1a', padding: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  trustBarCompact: { flexWrap: 'wrap', rowGap: 6 },
+  iconText: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   trustItem: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
   trustDot: { color: '#1DB954', fontSize: 12 },
   cacheBanner: { marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -434,18 +451,20 @@ const styles = StyleSheet.create({
   sortChipText: { color: '#aaa', fontSize: 12 },
   sortChipTextActive: { color: '#FFD700', fontWeight: 'bold' },
   howItWorks: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
-  howTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+  sectionHeading: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, marginBottom: 15 },
+  howTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   step: { flex: 1, alignItems: 'center' },
-  stepEmoji: { fontSize: 28, marginBottom: 6 },
+  stepNumber: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  stepNumberText: { fontSize: 15, fontWeight: 'bold' },
   stepTitle: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
   stepDesc: { color: '#aaa', fontSize: 11, textAlign: 'center', lineHeight: 16 },
   stepArrow: { paddingHorizontal: 5 },
   arrow: { color: '#1DB954', fontSize: 20 },
   algorithmBox: { backgroundColor: '#0d1a0d', margin: 15, marginTop: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#1DB954' },
-  algoTitle: { color: '#1DB954', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  algoTitle: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
   algoText: { color: '#aaa', fontSize: 13, lineHeight: 20, marginBottom: 12 },
-  verifiedBadge: { backgroundColor: '#1DB954', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start' },
+  verifiedBadge: { backgroundColor: '#1DB954', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', flexDirection: 'row', gap: 5, alignItems: 'center' },
   verifiedText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 },
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
@@ -461,7 +480,8 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
   verifiedBanner: { backgroundColor: '#0d2b1a', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verifiedBannerText: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
-  liveBtn: { color: '#ff4444', fontSize: 12, fontWeight: 'bold', backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  liveBtn: { backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', gap: 4, alignItems: 'center' },
+  liveBtnText: { color: '#ff4444', fontSize: 12, fontWeight: 'bold' },
   productImage: { width: '100%', height: 200 },
   productImageDesktop: { height: 280 },
   cardBody: { padding: 15 },
@@ -473,18 +493,18 @@ const styles = StyleSheet.create({
   countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
   countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
   drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
-  drawDate: { color: '#4a9eff', fontSize: 12, marginBottom: 8 },
+  drawDate: { color: '#4a9eff', fontSize: 12 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
   entryBadge: { backgroundColor: '#0d2b1a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   entryFee: { fontSize: 13, color: '#1DB954', fontWeight: 'bold' },
-  participants: { fontSize: 13, color: '#aaa', marginBottom: 8 },
+  participants: { fontSize: 13, color: '#aaa' },
   progressBar: { backgroundColor: '#333', height: 8, borderRadius: 4, marginBottom: 6 },
   progress: { backgroundColor: '#1DB954', height: 8, borderRadius: 4 },
   spotsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   spots: { color: '#ff6b6b', fontSize: 12 },
   percent: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
-  button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center' },
+  button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 30 },
   footerText: { color: '#444', fontSize: 12, marginBottom: 5 },
