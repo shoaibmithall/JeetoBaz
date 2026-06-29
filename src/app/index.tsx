@@ -72,8 +72,13 @@ export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 900;
-  const desktopCardWidth = Math.min(620, Math.max(400, (width - 60) / 2));
+  const columnCount = width >= 1400 ? 3 : width >= 700 ? 2 : 1;
+  const isMultiColumn = columnCount > 1;
+  const gridGap = 16;
+  const gridPadding = 16;
+  const productCardWidth = isMultiColumn
+    ? (width - (gridPadding * 2) - (gridGap * (columnCount - 1))) / columnCount
+    : undefined;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -326,7 +331,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <View style={[styles.productGrid, isDesktop && styles.productGridDesktop]}>
+      <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn]}>
         {filteredProducts.map((p) => {
           const drawSchedule = getDrawScheduleStatus(p, language, time);
           const liveLink = p.live_link;
@@ -335,7 +340,7 @@ export default function HomeScreen() {
               key={p.id}
               style={[
                 styles.card,
-                isDesktop && { width: desktopCardWidth, margin: 10 },
+                isMultiColumn && { width: productCardWidth, margin: 0 },
                 { backgroundColor: theme.surface, borderColor: theme.border },
               ]}
             >
@@ -351,8 +356,8 @@ export default function HomeScreen() {
             {p.image_url && (
               <Image
                 source={{ uri: p.image_url }}
-                style={[styles.productImage, isDesktop && styles.productImageDesktop]}
-                resizeMode={isDesktop ? 'contain' : 'cover'}
+                style={[styles.productImage, isMultiColumn && styles.productImageMultiColumn]}
+                resizeMode={isMultiColumn ? 'contain' : 'cover'}
               />
             )}
 
@@ -476,14 +481,14 @@ const styles = StyleSheet.create({
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
   clearSearch: { color: '#1DB954', fontSize: 14, fontWeight: 'bold' },
   productGrid: { width: '100%' },
-  productGridDesktop: { maxWidth: 1280, alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' },
+  productGridMultiColumn: { paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' },
   card: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
   verifiedBanner: { backgroundColor: '#0d2b1a', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verifiedBannerText: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
   liveBtn: { backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', gap: 4, alignItems: 'center' },
   liveBtnText: { color: '#ff4444', fontSize: 12, fontWeight: 'bold' },
   productImage: { width: '100%', height: 200 },
-  productImageDesktop: { height: 280 },
+  productImageMultiColumn: { height: 250 },
   cardBody: { padding: 15 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
