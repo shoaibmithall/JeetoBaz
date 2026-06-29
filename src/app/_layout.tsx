@@ -1,12 +1,15 @@
 import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
-import { Text } from 'react-native';
+import { useWindowDimensions } from 'react-native';
+import { Heart, Medal, Share2, Target, Trophy, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 
 export default function RootLayout() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 480;
   const siteUrl = 'https://jeetobaz.pk/';
   const siteTitle = 'JeetoBaz - Pakistan Lucky Draw Platform';
   const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
@@ -38,18 +41,20 @@ export default function RootLayout() {
             borderTopColor: theme.border,
             borderTopWidth: 1,
             height: 60,
-            paddingBottom: 8,
+            paddingBottom: isCompact ? 5 : 8,
           },
+          tabBarShowLabel: !isCompact,
+          tabBarIconStyle: isCompact ? { marginTop: 5 } : undefined,
           tabBarActiveTintColor: theme.gold,
           tabBarInactiveTintColor: theme.subtle,
         }}
       >
-        <Tabs.Screen name="index" options={{ title: t('activeDraws'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏆</Text> }} />
-        <Tabs.Screen name="entries" options={{ title: t('myEntries'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text> }} />
-        <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>❤️</Text> }} />
-        <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🥇</Text> }} />
-        <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
-        <Tabs.Screen name="share" options={{ title: t('share'), tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📤</Text> }} />
+        <Tabs.Screen name="index" options={{ title: t('activeDraws'), tabBarIcon: ({ color }) => <Trophy color={color} size={21} /> }} />
+        <Tabs.Screen name="entries" options={{ title: t('myEntries'), tabBarIcon: ({ color }) => <Target color={color} size={21} /> }} />
+        <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }} />
+        <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }} />
+        <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <UserRound color={color} size={21} /> }} />
+        <Tabs.Screen name="share" options={{ title: t('share'), tabBarIcon: ({ color }) => <Share2 color={color} size={21} /> }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="draw" options={{ href: null }} />
         <Tabs.Screen name="winner" options={{ href: null }} />
