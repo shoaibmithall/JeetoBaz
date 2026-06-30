@@ -6,6 +6,11 @@ import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
+import {
+  Bell, Check, ChevronRight, Circle, CircleUserRound, ClipboardList,
+  Globe2, Headphones, Info, LockKeyhole, LogOut, Medal, Moon,
+  Rocket, Sun, Target, Trophy,
+} from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { t } = useLanguage();
@@ -123,7 +128,7 @@ export default function ProfileScreen() {
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
-        <Text style={styles.avatar}>👤</Text>
+        <CircleUserRound color="white" size={60} />
         <Text style={styles.profileName}>{name}</Text>
         <Text style={styles.profilePhone}>{phone}</Text>
       </View>
@@ -138,76 +143,76 @@ export default function ProfileScreen() {
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={styles.statNumber}>🟢</Text>
+          <Circle color="#1DB954" fill="#1DB954" size={22} />
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
       </View>
 
       <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
-          <Text style={styles.menuIcon}>🎯</Text>
+          <Target color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('myEntries')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/')}>
-          <Text style={styles.menuIcon}>🏆</Text>
+          <Trophy color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('activeDraws')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/explore')}>
-          <Text style={styles.menuIcon}>🥇</Text>
+          <Medal color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('pastWinners')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications' as never)}>
-          <Text style={styles.menuIcon}>🔔</Text>
+          <Bell color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>Notifications</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
-          <Text style={styles.menuIcon}>📋</Text>
+          <ClipboardList color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('terms')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
-          <Text style={styles.menuIcon}>🔒</Text>
+          <LockKeyhole color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/language' as never)}>
-          <Text style={styles.menuIcon}>🌐</Text>
+          <Globe2 color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('language')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={toggleThemeMode}>
-          <Text style={styles.menuIcon}>{mode === 'dark' ? '☀️' : '🌙'}</Text>
+          {mode === 'dark' ? <Sun color={theme.gold} size={21} /> : <Moon color={theme.gold} size={21} />}
           <Text style={[styles.menuText, { color: theme.text }]}>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
-          <Text style={styles.menuIcon}>🎧</Text>
+          <Headphones color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('helpCenter')}</Text>
-          <Text style={[styles.menuArrow, { color: theme.subtle }]}>›</Text>
+          <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
       </View>
 
       <View style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={[styles.infoTitle, { color: theme.text }]}>ℹ️ About JeetoBaz</Text>
+        <View style={styles.infoTitleRow}><Info color={theme.gold} size={18} /><Text style={[styles.infoTitle, { color: theme.text }]}>About JeetoBaz</Text></View>
         <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
         <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
         <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-        <Text style={styles.logoutText}>🚪 Logout</Text>
+        <LogOut color="#ff4444" size={19} /><Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -215,7 +220,7 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={styles.logo}>🏆 JeetoBaz</Text>
+        <View style={styles.logoRow}><Trophy color="white" size={34} /><Text style={styles.logo}>JeetoBaz</Text></View>
         <Text style={styles.tagline}>{t('appTagline')}</Text>
       </View>
       <View style={styles.form}>
@@ -224,7 +229,7 @@ export default function ProfileScreen() {
             <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
             <Text style={[styles.subtitle, { color: theme.muted }]}>{t('enterPhone')}</Text>
             <View style={[styles.phoneRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.code, { color: theme.text, borderRightColor: theme.border }]}>🇵🇰 +92</Text>
+              <Text style={[styles.code, { color: theme.text, borderRightColor: theme.border }]}>PK +92</Text>
               <TextInput
                 style={[styles.phoneInput, { color: theme.text }]}
                 placeholder="3001234567"
@@ -274,7 +279,7 @@ export default function ProfileScreen() {
               accessibilityState={{ checked: ageAccepted }}
             >
               <View style={[styles.checkbox, ageAccepted && styles.checkboxChecked]}>
-                {ageAccepted ? <Text style={styles.checkmark}>✓</Text> : null}
+                {ageAccepted ? <Check color="white" size={15} strokeWidth={3} /> : null}
               </View>
               <Text style={[styles.consentText, { color: theme.text }]}>
                 I confirm that I am 18 years or older and accept the Terms and Privacy Policy.
@@ -285,9 +290,8 @@ export default function ProfileScreen() {
               onPress={createAccount}
               disabled={loading || !ageAccepted}
             >
-              <Text style={styles.buttonText}>
-                {loading ? 'Creating...' : '🚀 Join JeetoBaz!'}
-              </Text>
+              {!loading && <Rocket color="#000" size={19} />}
+              <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Join JeetoBaz!'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setStep('phone')}>
               <Text style={styles.backText}>← {t('changeNumber')}</Text>
@@ -311,7 +315,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a' },
   profileHeader: { backgroundColor: '#1DB954', padding: 40, alignItems: 'center' },
-  avatar: { fontSize: 60, marginBottom: 10 },
   profileName: { fontSize: 26, fontWeight: 'bold', color: 'white' },
   profilePhone: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
@@ -320,17 +323,17 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
   menuBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#333' },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18 },
-  menuIcon: { fontSize: 20, marginRight: 12 },
-  menuText: { color: 'white', fontSize: 16, flex: 1 },
-  menuArrow: { color: '#666', fontSize: 20 },
+  menuText: { color: 'white', fontSize: 16, flex: 1, marginLeft: 12 },
   divider: { height: 1, backgroundColor: '#333', marginHorizontal: 15 },
   infoBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
   infoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  infoTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   infoText: { color: '#aaa', fontSize: 14, marginBottom: 5 },
-  logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40 },
+  logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
   header: { backgroundColor: '#1DB954', padding: 50, alignItems: 'center' },
   logo: { fontSize: 36, fontWeight: 'bold', color: 'white' },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   tagline: { fontSize: 14, color: 'white', marginTop: 8 },
   form: { padding: 25, marginTop: 20 },
   formTitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 8, textAlign: 'center' },
@@ -342,9 +345,8 @@ const styles = StyleSheet.create({
   consentRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   checkbox: { width: 22, height: 22, borderWidth: 1, borderColor: '#666', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   checkboxChecked: { backgroundColor: '#1DB954', borderColor: '#1DB954' },
-  checkmark: { color: 'white', fontWeight: 'bold', fontSize: 15 },
   consentText: { flex: 1, fontSize: 14, lineHeight: 20 },
-  button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', marginBottom: 15 },
+  button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 15, flexDirection: 'row', gap: 7 },
   buttonDisabled: { backgroundColor: '#555' },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   backText: { color: '#1DB954', textAlign: 'center', fontSize: 14, marginBottom: 10 },

@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
+import { Medal, Target, Trophy } from 'lucide-react-native';
 
 export default function WinnersScreen() {
   const { t } = useLanguage();
@@ -86,7 +87,7 @@ export default function WinnersScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <Text style={styles.title}>🏆 {t('pastWinners')}</Text>
+        <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text style={styles.title}>{t('pastWinners')}</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>Verified Draw Records</Text>
       </View>
 
@@ -99,7 +100,7 @@ export default function WinnersScreen() {
 
       {winners.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyEmoji}>🎯</Text>
+          <Target color={theme.subtle} size={60} />
           <Text style={[styles.emptyText, { color: theme.text }]}>{t('noCompletedDraws')}</Text>
           <Text style={[styles.emptySubText, { color: theme.muted }]}>Be the first winner — enter a draw now!</Text>
         </View>
@@ -112,7 +113,7 @@ export default function WinnersScreen() {
               {product.winner_photo ? (
                 <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
               ) : (
-                <Text style={styles.trophy}>🏆</Text>
+                <Trophy color="#FFD700" size={40} />
               )}
               <Text style={styles.verifiedRecord}>Verified Draw Record</Text>
               <Text style={[styles.winnerName, { color: theme.text }]}>{winnerEntry?.name || t('notProvided')}</Text>
@@ -162,16 +163,15 @@ const styles = StyleSheet.create({
   loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
   header: { backgroundColor: '#1a1a1a', padding: 30, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
   title: { fontSize: 28, fontWeight: 'bold', color: '#FFD700' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { fontSize: 14, color: '#aaa', marginTop: 5 },
   trustBox: { backgroundColor: '#0d2b1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#1DB954' },
   trustTitle: { fontSize: 16, fontWeight: 'bold', color: '#1DB954', marginBottom: 12 },
   trustText: { color: '#aaa', fontSize: 14, marginBottom: 6 },
   emptyBox: { alignItems: 'center', padding: 50 },
-  emptyEmoji: { fontSize: 60, marginBottom: 15 },
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
   emptySubText: { color: '#aaa', fontSize: 14, textAlign: 'center' },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#FFD700', alignItems: 'center' },
-  trophy: { fontSize: 40, marginBottom: 10 },
   winnerPhoto: { width: 86, height: 86, borderRadius: 43, marginBottom: 12, borderWidth: 2, borderColor: '#FFD700' },
   verifiedRecord: { color: '#1DB954', fontSize: 12, fontWeight: 'bold', marginBottom: 8 },
   winnerName: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 4 },

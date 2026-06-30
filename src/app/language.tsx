@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LANGUAGE_OPTIONS, useLanguage, type LanguageCode } from '@/lib/i18n';
+import { Check } from 'lucide-react-native';
 
 const SAMPLE_TEXT: Record<LanguageCode, string> = {
   en: 'JeetoBaz will use English across the app.',
@@ -44,7 +45,9 @@ export default function LanguageScreen() {
                 <Text style={styles.optionSubtitle}>{option.nativeLabel}</Text>
                 <Text style={styles.sample}>{SAMPLE_TEXT[option.code]}</Text>
               </View>
-              <Text style={[styles.check, selected && styles.checkSelected]}>{selected ? '✓' : ''}</Text>
+              <View style={[styles.check, selected && styles.checkSelected]}>
+                {selected ? <Check color="#000" size={18} strokeWidth={3} /> : null}
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -68,6 +71,6 @@ const styles = StyleSheet.create({
   optionTitle: { color: 'white', fontSize: 17, fontWeight: 'bold' },
   optionSubtitle: { color: '#1DB954', fontSize: 14, marginTop: 4 },
   sample: { color: '#aaa', fontSize: 13, lineHeight: 19, marginTop: 8 },
-  check: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#444', color: '#0a0a0a', textAlign: 'center', lineHeight: 30, fontSize: 18, fontWeight: 'bold' },
-  checkSelected: { backgroundColor: '#FFD700', borderColor: '#FFD700', color: '#000' },
+  check: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#444', alignItems: 'center', justifyContent: 'center' },
+  checkSelected: { backgroundColor: '#FFD700', borderColor: '#FFD700' },
 });

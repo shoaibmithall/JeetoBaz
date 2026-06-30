@@ -7,12 +7,13 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
+import { CheckCircle2, CreditCard, House, Landmark, PartyPopper, TriangleAlert, WalletCards } from 'lucide-react-native';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', icon: '💚', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'Easypaisa', icon: '🟠', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'My ABL Allied Bank / Bank Transfer', icon: '🏦', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
+  { method: 'JazzCash', color: '#1DB954', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'Easypaisa', color: '#ff8c32', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'My ABL Allied Bank / Bank Transfer', color: '#4a9eff', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
 ];
 
 type ReceiptAsset = {
@@ -241,13 +242,13 @@ export default function PaymentScreen() {
   if (step === 'success') return (
     <View style={styles.container}>
       <View style={styles.successBox}>
-        <Text style={styles.successEmoji}>🎉</Text>
+        <PartyPopper color="#FFD700" size={80} />
         <Text style={styles.successTitle}>Payment Submitted!</Text>
         <Text style={styles.successText}>{t('goodLuck')}</Text>
         <Text style={styles.successSub}>Your entry will be added after admin approval.</Text>
       </View>
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
-        <Text style={styles.homeBtnText}>🏠 {t('backToHome')}</Text>
+        <House color="white" size={18} /><Text style={styles.homeBtnText}>{t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -258,7 +259,7 @@ export default function PaymentScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backBtn}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>💳 {t('payment')}</Text>
+        <View style={styles.titleRow}><CreditCard color="#FFD700" size={20} /><Text style={styles.title}>{t('payment')}</Text></View>
         <Text style={styles.dummy}></Text>
       </View>
 
@@ -277,7 +278,9 @@ export default function PaymentScreen() {
             onPress={() => setSelectedMethod(account.method)}
             activeOpacity={0.85}
           >
-            <Text style={styles.methodIcon}>{account.icon}</Text>
+            {account.method.includes('Bank')
+              ? <Landmark color={account.color} size={30} />
+              : <WalletCards color={account.color} size={30} />}
             <View style={styles.methodInfo}>
               <Text style={styles.methodName}>{account.method}</Text>
               <TouchableOpacity onPress={() => copyAccountNumber(account.number)}>
@@ -291,10 +294,10 @@ export default function PaymentScreen() {
 
         <View style={styles.stepsBox}>
           <Text style={styles.stepsTitle}>{t('howToPay')}:</Text>
-          <Text style={styles.step}>1️⃣ {t('openPaymentApp')}</Text>
-          <Text style={styles.step}>2️⃣ Send any entry fee to the above accounts</Text>
-          <Text style={styles.step}>3️⃣ Share transaction receipt screenshot</Text>
-          <Text style={styles.step}>4️⃣ Upload it below and confirm</Text>
+          <Text style={styles.step}>1. {t('openPaymentApp')}</Text>
+          <Text style={styles.step}>2. Send any entry fee to the above accounts</Text>
+          <Text style={styles.step}>3. Share transaction receipt screenshot</Text>
+          <Text style={styles.step}>4. Upload it below and confirm</Text>
         </View>
       </View>
 
@@ -318,14 +321,13 @@ export default function PaymentScreen() {
           onPress={confirmPayment}
           disabled={loading}
         >
-          <Text style={styles.confirmBtnText}>
-            {loading ? t('confirming') : `✅ ${t('confirmEntry')}`}
-          </Text>
+          {!loading && <CheckCircle2 color="#000" size={19} />}
+          <Text style={styles.confirmBtnText}>{loading ? t('confirming') : t('confirmEntry')}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.noteBox}>
-        <Text style={styles.noteTitle}>⚠️ {t('important')}:</Text>
+        <View style={styles.noteTitleRow}><TriangleAlert color="#FFD700" size={17} /><Text style={styles.noteTitle}>{t('important')}:</Text></View>
         <Text style={styles.noteText}>• {t('paymentVerify')}</Text>
         <Text style={styles.noteText}>• Keep your transaction receipt ID safe</Text>
         <Text style={styles.noteText}>• {t('oneEntry')}</Text>
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#1a1a1a', padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
   backBtn: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
   title: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   dummy: { width: 50 },
   productBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333', alignItems: 'center' },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
@@ -347,7 +350,6 @@ const styles = StyleSheet.create({
   payTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   methodCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 15, borderWidth: 1, borderColor: '#333' },
   methodCardSelected: { borderColor: '#FFD700', backgroundColor: '#241f0b' },
-  methodIcon: { fontSize: 30 },
   methodInfo: { flex: 1 },
   methodName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   methodNumber: { color: '#FFD700', fontSize: 16, fontFamily: 'monospace', marginTop: 2 },
@@ -367,17 +369,17 @@ const styles = StyleSheet.create({
   errorText: { color: '#ffd5d5', fontSize: 13, lineHeight: 18, marginBottom: 10 },
   retryButton: { backgroundColor: '#ff4444', borderRadius: 8, padding: 10, alignItems: 'center' },
   retryButtonText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
-  confirmBtn: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center' },
+  confirmBtn: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   confirmBtnDisabled: { backgroundColor: '#555' },
   confirmBtnText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   noteBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 12, padding: 15, marginBottom: 40, borderWidth: 1, borderColor: '#333' },
   noteTitle: { color: '#FFD700', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  noteTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   noteText: { color: '#aaa', fontSize: 13, marginBottom: 4 },
   successBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, marginTop: 100 },
-  successEmoji: { fontSize: 80, marginBottom: 20 },
   successTitle: { fontSize: 28, fontWeight: 'bold', color: '#1DB954', marginBottom: 10 },
   successText: { fontSize: 18, color: 'white', marginBottom: 8 },
   successSub: { fontSize: 14, color: '#aaa' },
-  homeBtn: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center' },
+  homeBtn: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   homeBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });

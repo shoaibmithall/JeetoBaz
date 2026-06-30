@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/database';
+import { BarChart3, Medal, ShieldCheck, Target, Trophy } from 'lucide-react-native';
 
 type PublicDrawResult = {
   winner_name: string;
@@ -77,7 +78,7 @@ export default function WinnerScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.trophy}>🏆</Text>
+        <Trophy color="#FFD700" size={80} />
         <Text style={styles.congrats}>CONGRATULATIONS!</Text>
         <Text style={styles.subtitle}>{t('drawResultReady')}</Text>
       </View>
@@ -86,7 +87,7 @@ export default function WinnerScreen() {
         {product?.winner_photo ? (
           <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
         ) : null}
-        <Text style={styles.winnerLabel}>🎯 {t('winnerOf')}</Text>
+        <View style={styles.labelRow}><Target color="#FFD700" size={16} /><Text style={styles.winnerLabel}>{t('winnerOf')}</Text></View>
         <Text style={styles.winnerName}>{result?.winner_name || legacyWinnerName || t('notProvided')}</Text>
         <Text style={styles.winnerPhone}>{result?.masked_phone || maskPhone(product?.winner_phone)}</Text>
         {result?.winner_ticket_number && (
@@ -99,7 +100,7 @@ export default function WinnerScreen() {
       </View>
 
       <View style={styles.detailCard}>
-        <Text style={styles.detailTitle}>📊 {t('drawDetails')}</Text>
+        <View style={styles.detailTitleRow}><BarChart3 color="white" size={19} /><Text style={styles.detailTitle}>{t('drawDetails')}</Text></View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Total Entries</Text>
           <Text style={styles.detailValue}>{entryCount.toLocaleString()}</Text>
@@ -119,14 +120,14 @@ export default function WinnerScreen() {
       </View>
 
       <View style={styles.verifyCard}>
-        <Text style={styles.verifyTitle}>✅ {t('verifiedFairDraw')}</Text>
+        <View style={styles.verifyTitleRow}><ShieldCheck color="#1DB954" size={18} /><Text style={styles.verifyTitle}>{t('verifiedFairDraw')}</Text></View>
         <Text style={styles.verifyText}>
           {t('winnerAlgorithmText')}
         </Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
-        <Text style={styles.buttonText}>🎯 {t('newDrawJoin')}</Text>
+        <Medal color="#000" size={19} /><Text style={styles.buttonText}>{t('newDrawJoin')}</Text>
       </TouchableOpacity>
 
       <Text style={styles.footer}>JeetoBaz - {t('appTagline')}</Text>
@@ -139,12 +140,12 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
   header: { backgroundColor: '#1DB954', padding: 40, alignItems: 'center' },
-  trophy: { fontSize: 80 },
   congrats: { fontSize: 32, fontWeight: 'bold', color: '#FFD700', marginTop: 10 },
   subtitle: { fontSize: 16, color: 'white', marginTop: 5 },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 25, borderWidth: 2, borderColor: '#FFD700', alignItems: 'center' },
   winnerPhoto: { width: 180, height: 180, borderRadius: 8, marginBottom: 16, borderWidth: 2, borderColor: '#FFD700' },
   winnerLabel: { fontSize: 14, color: '#FFD700', marginBottom: 10 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   winnerName: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   winnerPhone: { fontSize: 16, color: '#aaa', marginTop: 5 },
   winnerTicket: { fontSize: 14, color: '#FFD700', marginTop: 6 },
@@ -154,13 +155,15 @@ const styles = StyleSheet.create({
   productPrice: { fontSize: 16, color: '#FFD700', marginTop: 5 },
   detailCard: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20 },
   detailTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
+  detailTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   detailLabel: { color: '#aaa', fontSize: 14 },
   detailValue: { color: 'white', fontSize: 14, fontWeight: 'bold' },
   verifyCard: { backgroundColor: '#0d2b1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#1DB954' },
   verifyTitle: { fontSize: 16, fontWeight: 'bold', color: '#1DB954', marginBottom: 8 },
+  verifyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   verifyText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
-  button: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center' },
+  button: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   footer: { textAlign: 'center', color: '#444', fontSize: 12, marginBottom: 30 },
 });

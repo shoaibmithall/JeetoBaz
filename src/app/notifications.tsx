@@ -6,6 +6,7 @@ import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/stor
 import { useAppTheme } from '@/hooks/use-theme';
 import { isNotificationForUser } from '@/lib/notifications';
 import type { AppNotification } from '@/types/database';
+import { Bell } from 'lucide-react-native';
 
 const READ_KEY = 'readNotificationIds';
 
@@ -84,7 +85,7 @@ export default function NotificationsScreen() {
   if (!phone) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={styles.emptyIcon}>🔔</Text>
+        <Bell color={theme.gold} size={42} />
         <Text style={[styles.title, { color: theme.text }]}>Notifications</Text>
         <Text style={[styles.emptyText, { color: theme.muted }]}>Login to see your JeetoBaz notifications.</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/login')}>
@@ -100,7 +101,7 @@ export default function NotificationsScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]}>🔔 Notifications</Text>
+        <View style={styles.titleRow}><Bell color={theme.gold} size={22} /><Text style={[styles.title, { color: theme.text }]}>Notifications</Text></View>
         {notifications.length > 0 && (
           <TouchableOpacity onPress={markAllRead}>
             <Text style={styles.markReadText}>Mark read</Text>
@@ -117,7 +118,7 @@ export default function NotificationsScreen() {
 
       {!setupMissing && notifications.length === 0 && (
         <View style={[styles.emptyCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={styles.emptyIcon}>🔔</Text>
+          <Bell color={theme.subtle} size={42} />
           <Text style={[styles.emptyText, { color: theme.muted }]}>Abhi koi notification nahi.</Text>
         </View>
       )}
@@ -155,12 +156,12 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 10 },
   backText: { color: '#1DB954', fontSize: 14, fontWeight: 'bold' },
   title: { fontSize: 22, fontWeight: 'bold', flex: 1, textAlign: 'center' },
+  titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   markReadText: { color: '#1DB954', fontSize: 13, fontWeight: 'bold' },
   noticeBox: { borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 12 },
   noticeTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 6 },
   noticeText: { fontSize: 14, lineHeight: 20 },
   emptyCard: { borderWidth: 1, borderRadius: 12, padding: 24, alignItems: 'center' },
-  emptyIcon: { fontSize: 42, marginBottom: 10 },
   emptyText: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
   notificationCard: { borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 12 },
   notificationHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },

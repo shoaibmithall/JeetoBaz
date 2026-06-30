@@ -7,6 +7,7 @@ import { getStoredStringArray, setStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
+import { Heart } from 'lucide-react-native';
 
 export default function FavoritesScreen() {
   const { t } = useLanguage();
@@ -74,13 +75,13 @@ export default function FavoritesScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <Text style={styles.title}>❤️ {t('favorites')}</Text>
+        <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text style={styles.title}>{t('favorites')}</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
       </View>
 
       {products.length === 0 ? (
         <View style={[styles.center, { backgroundColor: theme.background }]}>
-          <Text style={styles.emptyIcon}>🤍</Text>
+          <Heart color={theme.subtle} size={56} />
           <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('noFavoritesYet')}</Text>
           <Text style={[styles.emptyText, { color: theme.muted }]}>Tap the heart on a draw to save it here.</Text>
           <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/')}>
@@ -95,7 +96,7 @@ export default function FavoritesScreen() {
               <View style={styles.cardHeader}>
                 <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
                 <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}>
-                  <Text style={styles.heart}>❤️</Text>
+                  <Heart color="#ff4d67" fill="#ff4d67" size={25} />
                 </TouchableOpacity>
               </View>
               <Text style={styles.price}>Rs. {product.price?.toLocaleString()}</Text>
@@ -118,10 +119,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a' },
   header: { backgroundColor: '#1a1a1a', padding: 30, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
   title: { color: '#FFD700', fontSize: 28, fontWeight: 'bold' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { color: '#aaa', fontSize: 14, marginTop: 5 },
   center: { flex: 1, minHeight: 420, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#0a0a0a' },
   loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
-  emptyIcon: { fontSize: 56, marginBottom: 15 },
   emptyTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   emptyText: { color: '#aaa', fontSize: 14, textAlign: 'center', marginBottom: 24 },
   browseButton: { backgroundColor: '#1DB954', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 14 },
@@ -131,7 +132,6 @@ const styles = StyleSheet.create({
   cardBody: { padding: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   productName: { color: 'white', fontSize: 19, fontWeight: 'bold', flex: 1 },
-  heart: { fontSize: 24, marginLeft: 12 },
   price: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginTop: 8 },
   entries: { color: '#aaa', fontSize: 13, marginTop: 5, marginBottom: 14 },
   enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center' },

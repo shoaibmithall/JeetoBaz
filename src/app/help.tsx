@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
 import { getStoredValue } from '@/lib/storage';
 import { useLanguage } from '@/lib/i18n';
 
@@ -89,21 +90,21 @@ export default function HelpCenterScreen() {
 
       <View style={styles.contactSection}>
         <TouchableOpacity style={styles.contactRow} onPress={openWhatsApp}>
-          <View style={[styles.contactIcon, styles.whatsAppIcon]}><Text style={styles.contactEmoji}>💬</Text></View>
+          <View style={[styles.contactIcon, styles.whatsAppIcon]}><MessageCircle color="#25D366" size={23} /></View>
           <View style={styles.contactInfo}>
             <Text style={styles.contactTitle}>WhatsApp</Text>
             <Text style={styles.contactValue}>{SUPPORT_PHONE_DISPLAY}</Text>
           </View>
-          <Text style={styles.contactArrow}>›</Text>
+          <ChevronRight color="#666" size={22} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.contactRow} onPress={openEmail}>
-          <View style={[styles.contactIcon, styles.emailIcon]}><Text style={styles.contactEmoji}>✉️</Text></View>
+          <View style={[styles.contactIcon, styles.emailIcon]}><Mail color="#4a9eff" size={23} /></View>
           <View style={styles.contactInfo}>
             <Text style={styles.contactTitle}>Email</Text>
             <Text style={styles.contactValue}>{SUPPORT_EMAIL}</Text>
           </View>
-          <Text style={styles.contactArrow}>›</Text>
+          <ChevronRight color="#666" size={22} />
         </TouchableOpacity>
       </View>
 
@@ -150,11 +151,9 @@ const styles = StyleSheet.create({
   contactIcon: { width: 44, height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   whatsAppIcon: { backgroundColor: '#0d2b1a' },
   emailIcon: { backgroundColor: '#1a2b3d' },
-  contactEmoji: { fontSize: 22 },
   contactInfo: { flex: 1 },
   contactTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 3 },
   contactValue: { color: '#aaa', fontSize: 13 },
-  contactArrow: { color: '#666', fontSize: 26 },
   ticketSection: { margin: 15, paddingTop: 12, paddingBottom: 40 },
   sectionTitle: { color: 'white', fontSize: 19, fontWeight: 'bold', marginBottom: 14 },
   input: { backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1, borderRadius: 8, color: 'white', fontSize: 15, padding: 14, marginBottom: 12 },

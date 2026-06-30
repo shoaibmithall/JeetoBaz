@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ClipboardList, TriangleAlert } from 'lucide-react-native';
 
 export default function TermsScreen() {
   const router = useRouter();
@@ -7,14 +8,14 @@ export default function TermsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>📋 Terms & Conditions</Text>
+        <View style={styles.titleRow}><ClipboardList color="white" size={25} /><Text style={styles.title}>Terms & Conditions</Text></View>
         <Text style={styles.subtitle}>JeetoBaz — Lucky Draw Platform</Text>
       </View>
 
       <View style={styles.content}>
 
         <View style={styles.importantBox}>
-          <Text style={styles.importantTitle}>⚠️ IMPORTANT NOTICE</Text>
+          <View style={styles.importantTitleRow}><TriangleAlert color="#FFD700" size={18} /><Text style={styles.importantTitle}>IMPORTANT NOTICE</Text></View>
           <Text style={styles.importantText}>
             JeetoBaz is a Lucky Draw platform. Please read all terms carefully before participating.
           </Text>
@@ -131,10 +132,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a' },
   header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
   title: { fontSize: 24, fontWeight: 'bold', color: 'white' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { fontSize: 13, color: 'white', marginTop: 5 },
   content: { padding: 20 },
   importantBox: { backgroundColor: '#2b1a00', borderRadius: 12, padding: 15, marginBottom: 20, borderWidth: 1, borderColor: '#FFD700' },
   importantTitle: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  importantTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   importantText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#FFD700', marginTop: 20, marginBottom: 8 },
   text: { color: '#aaa', fontSize: 14, lineHeight: 24 },
