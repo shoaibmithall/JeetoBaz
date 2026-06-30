@@ -33,13 +33,12 @@ jobs:
 
       - name: Build web app
         run: npx expo export -p web
-        env:
-          EXPO_BASE_URL: /JeetoBaz
 
       - name: Prepare Pages fallback
         run: |
           cp dist/index.html dist/404.html
           touch dist/.nojekyll
+          echo "jeetobaz.pk" > dist/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
