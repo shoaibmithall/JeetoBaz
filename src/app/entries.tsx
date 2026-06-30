@@ -8,6 +8,7 @@ import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
+import { CircleAlert, LockKeyhole, Target, Trophy } from 'lucide-react-native';
 
 type EntryWithProduct = Entry & { products?: Product | null };
 type PendingPaymentWithProduct = Transaction & { products?: Product | null };
@@ -127,7 +128,7 @@ export default function MyEntriesScreen() {
 
   if (!userPhone) return (
     <View style={[styles.notLoggedIn, { backgroundColor: theme.background }]}>
-      <Text style={styles.notLoggedInEmoji}>🔐</Text>
+      <LockKeyhole color={theme.gold} size={60} />
       <Text style={[styles.notLoggedInText, { color: theme.text }]}>Please login to see your entries</Text>
       <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
         <Text style={styles.loginBtnText}>{t('loginSignUp')}</Text>
@@ -138,13 +139,13 @@ export default function MyEntriesScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>🎯 {t('myEntries')}</Text>
+        <View style={styles.titleRow}><Target color="white" size={28} /><Text style={styles.title}>{t('myEntries')}</Text></View>
         <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
       </View>
 
       {cacheInfo ? (
         <View style={[styles.cacheBanner, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
-          <Text style={[styles.cacheText, { color: theme.gold }]}>⚠️ {cacheInfo}</Text>
+          <CircleAlert color={theme.gold} size={17} /><Text style={[styles.cacheText, { color: theme.gold }]}>{cacheInfo}</Text>
           <TouchableOpacity onPress={() => fetchEntries(userPhone)}>
             <Text style={[styles.cacheRetry, { color: theme.primary }]}>{t('tryAgain')}</Text>
           </TouchableOpacity>
@@ -165,7 +166,7 @@ export default function MyEntriesScreen() {
 
       {entries.length === 0 && pendingPayments.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyEmoji}>🎯</Text>
+          <Target color={theme.subtle} size={60} />
           <Text style={[styles.emptyText, { color: theme.text }]}>{t('noEntriesYet')}</Text>
           <Text style={[styles.emptySubText, { color: theme.muted }]}>{t('enterDrawHere')}</Text>
           <TouchableOpacity style={styles.browseBtn} onPress={() => router.push('/')}>
@@ -223,7 +224,7 @@ export default function MyEntriesScreen() {
                 )}
                 {entry.products?.winner_phone === entry.phone && (
                   <View style={styles.winnerBanner}>
-                    <Text style={styles.winnerText}>🏆 {t('wonThisDraw')}</Text>
+                    <Trophy color="#FFD700" size={17} /><Text style={styles.winnerText}>{t('wonThisDraw')}</Text>
                   </View>
                 )}
               </View>
@@ -244,12 +245,12 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
   notLoggedIn: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', padding: 30 },
-  notLoggedInEmoji: { fontSize: 60, marginBottom: 20 },
   notLoggedInText: { color: 'white', fontSize: 18, marginBottom: 20, textAlign: 'center' },
   loginBtn: { backgroundColor: '#FFD700', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   loginBtnText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
   header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
   title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { fontSize: 14, color: 'white', marginTop: 5 },
   cacheBanner: { marginHorizontal: 15, marginTop: 15, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
@@ -260,7 +261,6 @@ const styles = StyleSheet.create({
   statsNumber: { fontSize: 38, fontWeight: 'bold', color: '#FFD700' },
   statsLabel: { fontSize: 14, color: '#aaa', marginTop: 5 },
   emptyBox: { alignItems: 'center', padding: 40 },
-  emptyEmoji: { fontSize: 60, marginBottom: 15 },
   emptyText: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   emptySubText: { color: '#aaa', fontSize: 14, marginBottom: 25 },
   browseBtn: { backgroundColor: '#1DB954', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   infoValue: { color: '#ddd', fontSize: 13, lineHeight: 18 },
   drawStatus: { color: '#ddd', fontSize: 13, lineHeight: 18, marginTop: 10 },
   pendingNote: { color: '#FFD700', fontSize: 12, marginTop: 10 },
-  winnerBanner: { backgroundColor: '#2b2200', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center' },
+  winnerBanner: { backgroundColor: '#2b2200', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
   winnerText: { color: '#FFD700', fontWeight: 'bold', fontSize: 16 },
   backBtn: { margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#333', marginTop: 20, marginBottom: 40 },
   backBtnText: { color: '#aaa', fontSize: 16 },

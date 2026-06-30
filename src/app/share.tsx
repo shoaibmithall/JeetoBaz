@@ -2,6 +2,7 @@ import { Alert, Image, Linking, Platform, Share, StyleSheet, Text, TouchableOpac
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
+import { Clipboard as ClipboardIcon, Share2, X } from 'lucide-react-native';
 
 const APP_URL = 'https://jeetobaz.pk/';
 
@@ -91,9 +92,9 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>📤 {t('shareJeetoBaz')}</Text>
+          <View style={styles.sheetTitleRow}><Share2 color="#FFD700" size={20} /><Text style={styles.sheetTitle}>{t('shareJeetoBaz')}</Text></View>
           <TouchableOpacity onPress={onClose}>
-            <Text style={styles.closeBtn}>✕</Text>
+            <X color="#aaa" size={22} />
           </TouchableOpacity>
         </View>
 
@@ -121,7 +122,7 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
           style={styles.copyMsgBtn}
           onPress={() => copyText(fullMessage, 'Full JeetoBaz message copied.')}
         >
-          <Text style={styles.copyMsgBtnText}>📋 {t('copyFullMessage')}</Text>
+          <ClipboardIcon color="white" size={18} /><Text style={styles.copyMsgBtnText}>{t('copyFullMessage')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -178,8 +179,8 @@ const styles = StyleSheet.create({
   },
   handle: { width: 40, height: 4, backgroundColor: '#444', borderRadius: 2, alignSelf: 'center', marginBottom: 15 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  sheetTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   sheetTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
-  closeBtn: { color: '#aaa', fontSize: 20, fontWeight: 'bold' },
   linkRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a', borderRadius: 10, padding: 10, marginBottom: 15, gap: 10 },
   linkText: { flex: 1, color: '#1DB954', fontSize: 12, fontFamily: 'monospace' },
   copyBtn: { backgroundColor: '#1DB954', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
@@ -188,6 +189,6 @@ const styles = StyleSheet.create({
   platformBtn: { width: '30%', padding: 12, borderRadius: 12, alignItems: 'center' },
   platformIcon: { width: 30, height: 30, marginBottom: 6 },
   platformName: { fontSize: 11, fontWeight: 'bold', textAlign: 'center' },
-  copyMsgBtn: { backgroundColor: '#333', padding: 15, borderRadius: 10, alignItems: 'center' },
+  copyMsgBtn: { backgroundColor: '#333', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   copyMsgBtnText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
 });

@@ -225,7 +225,7 @@ export default function HomeScreen() {
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: theme.primarySoft }]}>
         <View style={styles.iconText}><ShieldCheck color={theme.primary} size={15} /><Text style={[styles.trustItem, { color: theme.primary }]}>Locked Results</Text></View>
         <View style={styles.iconText}><LockKeyhole color={theme.primary} size={14} /><Text style={[styles.trustItem, { color: theme.primary }]}>{t('transparent')}</Text></View>
-        <Text style={[styles.trustItem, { color: theme.primary }]}>🇵🇰 Pakistan</Text>
+        <Text style={[styles.trustItem, { color: theme.primary }]}>Pakistan</Text>
       </View>
 
       {cacheInfo ? (
@@ -409,7 +409,7 @@ export default function HomeScreen() {
 
       <View style={styles.footer}>
         <View style={styles.iconText}><LockKeyhole color="#666" size={14} /><Text style={styles.footerText}>{t('fairTransparent')}</Text></View>
-        <Text style={styles.footerText}>🇵🇰 {t('footerPakistan')}</Text>
+        <Text style={styles.footerText}>{t('footerPakistan')}</Text>
       </View>
     </ScrollView>
   );

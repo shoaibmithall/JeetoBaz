@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
 import { createUserNotification } from '@/lib/notifications';
+import { Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 
@@ -145,7 +146,7 @@ export default function DrawScreen() {
 
   if (!isAdmin) return (
     <View style={[styles.container, styles.center]}>
-      <Text style={styles.readyEmoji}>🔒</Text>
+      <LockKeyhole color="#FFD700" size={80} />
       <Text style={styles.readyTitle}>Admin access required</Text>
       <TouchableOpacity style={styles.loadButton} onPress={() => router.replace('/admin')}>
         <Text style={styles.loadButtonText}>Go to Admin Login</Text>
@@ -159,9 +160,9 @@ export default function DrawScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backBtn}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>🎰 {t('liveDrawTitle')}</Text>
+        <View style={styles.titleRow}><Dices color="#FFD700" size={20} /><Text style={styles.title}>{t('liveDrawTitle')}</Text></View>
         <View style={styles.liveBox}>
-          <Text style={styles.liveText}>🔴 LIVE</Text>
+          <Radio color="#ff4444" size={14} /><Text style={styles.liveText}>LIVE</Text>
         </View>
       </View>
 
@@ -169,22 +170,21 @@ export default function DrawScreen() {
 
       {phase === 'ready' && (
         <View style={styles.center}>
-          <Text style={styles.readyEmoji}>🎯</Text>
+          <Target color="#FFD700" size={80} />
           <Text style={styles.readyTitle}>{t('readyToDraw')}</Text>
           <Text style={styles.readySubtitle}>{t('allDrawsLive')}</Text>
           <TouchableOpacity style={styles.loadButton} onPress={loadEntries}>
-            <Text style={styles.loadButtonText}>📋 {t('showParticipants')}</Text>
+            <List color="white" size={19} /><Text style={styles.loadButtonText}>{t('showParticipants')}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {(phase === 'showing' || phase === 'spinning') && (
         <View style={styles.flex}>
-          <Text style={styles.listTitle}>
-            {phase === 'showing'
-              ? `👥 ${entries.length} ${t('participants')}:`
-              : `🎰 ${t('selectingWinner')}`}
-          </Text>
+          <View style={styles.listTitleRow}>
+            {phase === 'showing' ? <UsersRound color="#FFD700" size={18} /> : <Dices color="#FFD700" size={18} />}
+            <Text style={styles.listTitle}>{phase === 'showing' ? `${entries.length} ${t('participants')}:` : t('selectingWinner')}</Text>
+          </View>
           <ScrollView style={styles.list}>
             {entries.map((entry, index) => (
               <View key={entry.id} style={[
@@ -202,13 +202,13 @@ export default function DrawScreen() {
                     {maskPhone(entry.phone)}
                   </Text>
                 </View>
-                {highlighted === index && <Text>👈</Text>}
+                {highlighted === index && <MousePointer2 color="white" size={18} />}
               </View>
             ))}
           </ScrollView>
           {phase === 'showing' && (
             <TouchableOpacity style={styles.spinButton} onPress={startSpin}>
-              <Text style={styles.spinButtonText}>🎰 {t('pickWinner')}</Text>
+              <Dices color="#000" size={20} /><Text style={styles.spinButtonText}>{t('pickWinner')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -217,13 +217,13 @@ export default function DrawScreen() {
       {phase === 'winner' && winner && (
         <ScrollView>
           <View style={styles.winnerCard}>
-            <Text style={styles.trophyEmoji}>🏆</Text>
+            <Trophy color="#FFD700" size={80} />
             <Text style={styles.congratsText}>CONGRATULATIONS!</Text>
             <Text style={styles.winnerName}>{winner.name || t('winnerOf')}</Text>
             <Text style={styles.winnerPhone}>{maskPhone(winner.phone)}</Text>
             <Text style={styles.winnerSub}>{t('winnerOf')} {productNameValue}!</Text>
           </View>
-          <Text style={styles.allTitle}>📋 {t('showParticipants')}:</Text>
+          <View style={styles.allTitleRow}><List color="white" size={18} /><Text style={styles.allTitle}>{t('showParticipants')}:</Text></View>
           {entries.map((entry, index) => (
             <View key={entry.id} style={[
               styles.entryRow,
@@ -240,14 +240,14 @@ export default function DrawScreen() {
                   {maskPhone(entry.phone)}
                 </Text>
               </View>
-              {entry.id === winner.id && <Text style={styles.winnerBadge}>🏆 WINNER</Text>}
+              {entry.id === winner.id && <View style={styles.winnerBadge}><Trophy color="#FFD700" size={14} /><Text style={styles.winnerBadgeText}>WINNER</Text></View>}
             </View>
           ))}
           <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/')}>
-            <Text style={styles.homeButtonText}>🏠 {t('backToHome')}</Text>
+            <House color="white" size={18} /><Text style={styles.homeButtonText}>{t('backToHome')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.resultButton} onPress={() => router.push({ pathname: '/winner', params: { productId: productIdValue } })}>
-            <Text style={styles.resultButtonText}>🏆 View Result</Text>
+            <Trophy color="#000" size={18} /><Text style={styles.resultButtonText}>View Result</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -261,16 +261,17 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#1a1a1a', padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2, borderBottomColor: '#FFD700' },
   backBtn: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
   title: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
-  liveBox: { backgroundColor: '#2b0d0d', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  liveBox: { backgroundColor: '#2b0d0d', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveText: { color: '#ff4444', fontWeight: 'bold', fontSize: 12 },
   productTitle: { color: 'white', fontSize: 16, textAlign: 'center', padding: 12, backgroundColor: '#111', borderBottomWidth: 1, borderBottomColor: '#333' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  readyEmoji: { fontSize: 80, marginBottom: 20 },
   readyTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 10 },
   readySubtitle: { fontSize: 14, color: '#aaa', marginBottom: 30 },
-  loadButton: { backgroundColor: '#1DB954', padding: 18, borderRadius: 12, alignItems: 'center', width: '100%' },
+  loadButton: { backgroundColor: '#1DB954', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', width: '100%', flexDirection: 'row', gap: 7 },
   loadButtonText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
   listTitle: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', padding: 15 },
+  listTitleRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
   list: { flex: 1 },
   entryRow: { flexDirection: 'row', alignItems: 'center', padding: 14, marginHorizontal: 15, marginBottom: 6, backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333' },
   entryHighlighted: { backgroundColor: '#1DB954', borderColor: '#1DB954' },
@@ -279,20 +280,21 @@ const styles = StyleSheet.create({
   entryName: { color: 'white', fontSize: 15, fontWeight: 'bold' },
   entryPhone: { color: '#aaa', fontSize: 13, fontFamily: 'monospace', marginTop: 2 },
   whiteText: { color: 'white', fontWeight: 'bold' },
-  spinButton: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center' },
+  spinButton: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   spinButtonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   winnerCard: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 30, alignItems: 'center', borderWidth: 2, borderColor: '#FFD700' },
-  trophyEmoji: { fontSize: 80, marginBottom: 10 },
   congratsText: { fontSize: 26, fontWeight: 'bold', color: '#FFD700', marginBottom: 10 },
   winnerName: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 5 },
   winnerPhone: { fontSize: 18, color: '#aaa', fontFamily: 'monospace', marginBottom: 8 },
   winnerSub: { fontSize: 14, color: '#1DB954' },
   allTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', padding: 15 },
+  allTitleRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
   winnerRow: { backgroundColor: '#2b2200', borderColor: '#FFD700' },
   goldText: { color: '#FFD700', fontWeight: 'bold' },
-  winnerBadge: { color: '#FFD700', fontSize: 12, fontWeight: 'bold' },
-  homeButton: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 40 },
+  winnerBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  winnerBadgeText: { color: '#FFD700', fontSize: 12, fontWeight: 'bold' },
+  homeButton: { backgroundColor: '#1DB954', margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 40, flexDirection: 'row', gap: 7 },
   homeButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  resultButton: { backgroundColor: '#FFD700', marginHorizontal: 15, marginBottom: 40, padding: 15, borderRadius: 12, alignItems: 'center' },
+  resultButton: { backgroundColor: '#FFD700', marginHorizontal: 15, marginBottom: 40, padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   resultButtonText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
 });
