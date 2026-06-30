@@ -204,12 +204,21 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={styles.infoTitleRow}><Info color={theme.gold} size={18} /><Text style={[styles.infoTitle, { color: theme.text }]}>About JeetoBaz</Text></View>
+      <TouchableOpacity
+        style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        onPress={() => router.push('/about' as never)}
+        accessibilityRole="button"
+        accessibilityLabel="Open About JeetoBaz"
+      >
+        <View style={styles.infoTitleRow}>
+          <Info color={theme.gold} size={18} />
+          <Text style={[styles.infoTitle, { color: theme.text }]}>About JeetoBaz</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </View>
         <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
         <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
         <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
-      </View>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <LogOut color="#ff4444" size={19} /><Text style={styles.logoutText}>Logout</Text>
@@ -326,9 +335,9 @@ const styles = StyleSheet.create({
   menuText: { color: 'white', fontSize: 16, flex: 1, marginLeft: 12 },
   divider: { height: 1, backgroundColor: '#333', marginHorizontal: 15 },
   infoBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
-  infoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  infoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', flex: 1 },
   infoTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  infoText: { color: '#aaa', fontSize: 14, marginBottom: 5 },
+  infoText: { color: '#aaa', fontSize: 14, marginTop: 7 },
   logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
   header: { backgroundColor: '#1DB954', padding: 50, alignItems: 'center' },
