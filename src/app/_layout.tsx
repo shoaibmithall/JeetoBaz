@@ -20,7 +20,7 @@ export default function RootLayout() {
         <title>{siteTitle}</title>
         <meta name="description" content={siteDescription} />
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
-        <meta name="theme-color" content="#1DB954" />
+        <meta name="theme-color" content="#020d09" />
         <link rel="canonical" href={siteUrl} />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/jeetobaz-icon.png" />

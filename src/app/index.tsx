@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert, CircleUserRound,
-  Flame, Heart, ListFilter, LockKeyhole, Play, Search, Share2,
+  Flame, Gift, Heart, Laptop, ListFilter, LockKeyhole, Play, Search, Share2,
   ShieldCheck, Target, Ticket, UserRound, UsersRound, X,
 } from 'lucide-react-native';
 import { ShareModal } from './share';
@@ -16,6 +16,7 @@ import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
+type CategoryOption = 'all' | 'mobiles' | 'bikes' | 'electronics' | 'more';
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
@@ -25,6 +26,22 @@ const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] 
   { key: 'price_high', labels: { en: 'Price: High-Low', ur: 'قیمت: زیادہ سے کم', roman: 'Price: High-Low' } },
   { key: 'entry_low', labels: { en: 'Entry: Low-High', ur: 'انٹری: کم سے زیادہ', roman: 'Entry: Low-High' } },
 ];
+
+const CATEGORY_OPTIONS: { key: CategoryOption; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'mobiles', label: 'Mobiles' },
+  { key: 'bikes', label: 'Bikes' },
+  { key: 'electronics', label: 'Electronics' },
+  { key: 'more', label: 'More' },
+];
+
+function getProductCategory(name: string): Exclude<CategoryOption, 'all'> {
+  const value = name.toLowerCase();
+  if (/(iphone|mobile|phone|samsung|pixel|oppo|vivo|infinix)/.test(value)) return 'mobiles';
+  if (/(bike|motorcycle|honda cg|yamaha|suzuki)/.test(value)) return 'bikes';
+  if (/(laptop|ipad|tablet|macbook|tv|watch|airpods|headphone|powerbank|camera|console)/.test(value)) return 'electronics';
+  return 'more';
+}
 
 function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
   if (!drawDate) return null;
@@ -88,15 +105,48 @@ export default function HomeScreen() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [category, setCategory] = useState<CategoryOption>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [time, setTime] = useState(new Date());
   const [cacheInfo, setCacheInfo] = useState('');
   const router = useRouter();
   const isCompact = width < 480;
+  const isDark = theme.mode === 'dark';
+  const colors = isDark ? {
+    background: '#020d09',
+    surface: '#071b13',
+    surfaceAlt: '#04140e',
+    elevated: '#0a2419',
+    border: '#174a35',
+    borderSoft: '#103526',
+    text: '#f5f7f4',
+    muted: '#9aac9f',
+    primary: '#18a663',
+    primarySoft: '#082d1e',
+    gold: theme.gold,
+    goldSoft: '#2a2105',
+  } : {
+    background: theme.background,
+    surface: theme.surface,
+    surfaceAlt: theme.surfaceAlt,
+    elevated: theme.surface,
+    border: theme.border,
+    borderSoft: theme.border,
+    text: theme.text,
+    muted: theme.muted,
+    primary: theme.primary,
+    primarySoft: theme.primarySoft,
+    gold: theme.gold,
+    goldSoft: theme.goldSoft,
+  };
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const result = products.filter((product) => !query || product.name.toLowerCase().includes(query));
+    const result = products.filter((product) => {
+      const matchesSearch = !query || product.name.toLowerCase().includes(query);
+      const matchesCategory = category === 'all' || getProductCategory(product.name) === category;
+      return matchesSearch && matchesCategory;
+    });
 
     return result.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -105,7 +155,11 @@ export default function HomeScreen() {
       if (sortBy === 'entry_low') return (a.entry_fee || 1) - (b.entry_fee || 1);
       return (b.current_entries || 0) - (a.current_entries || 0);
     });
-  }, [products, search, sortBy]);
+  }, [category, products, search, sortBy]);
+
+  const featuredProduct = useMemo(() => {
+    return [...products].sort((a, b) => (b.current_entries || 0) - (a.current_entries || 0))[0] || null;
+  }, [products]);
 
   useEffect(() => {
     fetchProducts();
@@ -183,38 +237,38 @@ export default function HomeScreen() {
   }
 
   if (loading) return (
-    <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} />
-      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingJeetoBaz')}</Text>
+    <View style={[styles.loading, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.gold} />
+      <Text style={[styles.loadingText, { color: colors.gold }]}>{t('loadingJeetoBaz')}</Text>
     </View>
   );
 
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentInsetAdjustmentBehavior="automatic">
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentInsetAdjustmentBehavior="automatic">
       <ShareModal visible={showShare} onClose={() => setShowShare(false)} />
 
-      <View style={[styles.header, isCompact && styles.headerCompact]}>
+      <View style={[styles.header, isCompact && styles.headerCompact, { backgroundColor: colors.surfaceAlt, borderBottomColor: colors.border }]}>
         <View style={styles.brand}>
           <Image source={require('../../assets/images/icon.png')} style={styles.brandLogo} />
           <View>
-          <Text style={styles.title}>JeetoBaz</Text>
-          <Text style={styles.tagline}>{t('winBig')}</Text>
+          <Text style={[styles.title, { color: colors.gold }]}>JEETOBAZ</Text>
+          <Text style={[styles.tagline, { color: colors.muted }]}>{t('winBig')}</Text>
           </View>
         </View>
         <View style={[styles.headerRight, isCompact && styles.headerRightCompact]}>
-          <TouchableOpacity style={styles.shareBtn} onPress={() => setShowShare(true)} accessibilityLabel={t('share')}>
-            <Share2 color="white" size={17} strokeWidth={2.3} />
-            {!isCompact && <Text style={styles.shareBtnText}>{t('share')}</Text>}
+          <TouchableOpacity style={[styles.shareBtn, { backgroundColor: colors.elevated, borderColor: colors.border }]} onPress={() => setShowShare(true)} accessibilityLabel={t('share')}>
+            <Share2 color={colors.gold} size={17} strokeWidth={2.3} />
+            {!isCompact && <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('share')}</Text>}
           </TouchableOpacity>
           {userPhone ? (
-            <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/login')} accessibilityLabel={userName || t('profile')}>
-              <CircleUserRound color="white" size={16} />
-              {!isCompact && <Text style={styles.userText}>{userName || 'User'}</Text>}
+            <TouchableOpacity style={[styles.userBadge, { backgroundColor: colors.elevated, borderColor: colors.border }]} onPress={() => router.push('/login')} accessibilityLabel={userName || t('profile')}>
+              <CircleUserRound color={colors.gold} size={16} />
+              {!isCompact && <Text style={[styles.userText, { color: colors.text }]}>{userName || 'User'}</Text>}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
+            <TouchableOpacity style={[styles.loginBtn, { backgroundColor: colors.primary }]} onPress={() => router.push('/login')}>
               <UserRound color="white" size={16} />
               <Text style={styles.loginBtnText}>{t('login')}</Text>
             </TouchableOpacity>
@@ -222,27 +276,71 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: theme.primarySoft }]}>
-        <View style={styles.iconText}><ShieldCheck color={theme.primary} size={15} /><Text style={[styles.trustItem, { color: theme.primary }]}>Locked Results</Text></View>
-        <View style={styles.iconText}><LockKeyhole color={theme.primary} size={14} /><Text style={[styles.trustItem, { color: theme.primary }]}>{t('transparent')}</Text></View>
-        <Text style={[styles.trustItem, { color: theme.primary }]}>Pakistan</Text>
+      <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
+        <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
+        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{t('transparent')}</Text></View>
+        <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
 
+      {featuredProduct && (
+        <View style={[styles.featuredCard, isCompact && styles.featuredCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
+          <View style={styles.featuredContent}>
+            <View style={[styles.featuredLabel, { backgroundColor: colors.goldSoft }]}>
+              <Flame color={colors.gold} size={14} />
+              <Text style={[styles.featuredLabelText, { color: colors.gold }]}>TODAY&apos;S FEATURED DRAW</Text>
+            </View>
+            <Text style={[styles.featuredName, { color: colors.text }]} numberOfLines={2}>{featuredProduct.name}</Text>
+            <Text style={[styles.featuredMeta, { color: colors.muted }]}>
+              {(featuredProduct.current_entries || 0).toLocaleString()} / {featuredProduct.max_entries.toLocaleString()} {t('participants')}
+            </Text>
+            <View style={[styles.featuredProgressBar, { backgroundColor: colors.borderSoft }]}>
+              <View style={[styles.featuredProgress, { backgroundColor: colors.primary, width: `${Math.min(((featuredProduct.current_entries || 0) / featuredProduct.max_entries) * 100, 100)}%` }]} />
+            </View>
+            <TouchableOpacity style={[styles.featuredButton, { backgroundColor: colors.primary }]} onPress={() => handleEnter(featuredProduct)}>
+              <Target color="white" size={17} />
+              <Text style={styles.featuredButtonText}>{t('enterFor')} Rs.{featuredProduct.entry_fee || 1}</Text>
+            </TouchableOpacity>
+          </View>
+          {featuredProduct.image_url ? (
+            <Image source={{ uri: featuredProduct.image_url }} style={styles.featuredImage} resizeMode="contain" />
+          ) : (
+            <View style={[styles.featuredImageFallback, { backgroundColor: colors.elevated }]}><Gift color={colors.gold} size={48} /></View>
+          )}
+        </View>
+      )}
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+        {CATEGORY_OPTIONS.map((option) => {
+          const selected = category === option.key;
+          return (
+            <TouchableOpacity
+              key={option.key}
+              style={[styles.categoryChip, { backgroundColor: selected ? colors.goldSoft : colors.surface, borderColor: selected ? colors.gold : colors.border }]}
+              onPress={() => setCategory(option.key)}
+            >
+              {option.key === 'electronics' && <Laptop color={selected ? colors.gold : colors.muted} size={15} />}
+              {option.key === 'more' && <Gift color={selected ? colors.gold : colors.muted} size={15} />}
+              <Text style={[styles.categoryText, { color: selected ? colors.gold : colors.muted }]}>{option.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {cacheInfo ? (
-        <View style={[styles.cacheBanner, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
-          <CircleAlert color={theme.gold} size={17} />
-          <Text style={[styles.cacheText, { color: theme.gold }]}>{cacheInfo}</Text>
+        <View style={[styles.cacheBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+          <CircleAlert color={colors.gold} size={17} />
+          <Text style={[styles.cacheText, { color: colors.gold }]}>{cacheInfo}</Text>
           <TouchableOpacity onPress={fetchProducts}>
-            <Text style={[styles.cacheRetry, { color: theme.primary }]}>{t('tryAgain')}</Text>
+            <Text style={[styles.cacheRetry, { color: colors.primary }]}>{t('tryAgain')}</Text>
           </TouchableOpacity>
         </View>
       ) : null}
 
-      <View style={[styles.searchRow, { backgroundColor: theme.surfaceAlt }]}>
-        <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Search color={theme.muted} size={18} />
+      <View style={[styles.searchRow, { backgroundColor: colors.surfaceAlt }]}>
+        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Search color={colors.muted} size={18} />
           <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder={t('searchPrizes')}
             placeholderTextColor="#666"
             value={search}
@@ -250,30 +348,30 @@ export default function HomeScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} accessibilityLabel="Clear search">
-              <X color={theme.muted} size={18} />
+              <X color={colors.muted} size={18} />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
-          style={[styles.filterBtn, { backgroundColor: theme.surface, borderColor: theme.border }, showFilters && { borderColor: theme.gold, backgroundColor: theme.goldSoft }]}
+          style={[styles.filterBtn, { backgroundColor: colors.surface, borderColor: colors.border }, showFilters && { borderColor: colors.gold, backgroundColor: colors.goldSoft }]}
           onPress={() => setShowFilters((visible) => !visible)}
           accessibilityLabel={t('sortBy')}
         >
-          <ListFilter color={showFilters ? theme.gold : theme.muted} size={20} />
+          <ListFilter color={showFilters ? colors.gold : colors.muted} size={20} />
         </TouchableOpacity>
       </View>
 
       {showFilters && (
-        <View style={[styles.sortContainer, { backgroundColor: theme.surfaceAlt }]}>
-          <Text style={[styles.sortLabel, { color: theme.muted }]}>{t('sortBy')}</Text>
+        <View style={[styles.sortContainer, { backgroundColor: colors.surfaceAlt }]}>
+          <Text style={[styles.sortLabel, { color: colors.muted }]}>{t('sortBy')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {SORT_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.key}
-                style={[styles.sortChip, { backgroundColor: theme.surface, borderColor: theme.border }, sortBy === option.key && { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}
+                style={[styles.sortChip, { backgroundColor: colors.surface, borderColor: colors.border }, sortBy === option.key && { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}
                 onPress={() => setSortBy(option.key)}
               >
-                <Text style={[styles.sortChipText, { color: theme.muted }, sortBy === option.key && { color: theme.gold, fontWeight: 'bold' }]}>
+                <Text style={[styles.sortChipText, { color: colors.muted }, sortBy === option.key && { color: colors.gold, fontWeight: 'bold' }]}>
                   {option.labels[language]}
                 </Text>
               </TouchableOpacity>
@@ -282,49 +380,49 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <View style={[styles.howItWorks, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={styles.sectionHeading}><Ticket color={theme.gold} size={20} /><Text style={[styles.howTitle, { color: theme.text }]}>{t('howItWorks')}</Text></View>
+      <View style={[styles.howItWorks, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.sectionHeading}><Ticket color={colors.gold} size={20} /><Text style={[styles.howTitle, { color: colors.gold }]}>{t('howItWorks')}</Text></View>
         <View style={styles.steps}>
           <View style={styles.step}>
-            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>1</Text></View>
-            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('entryStepTitle')}</Text>
-            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('entryStepDesc')}</Text>
+            <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>1</Text></View>
+            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('entryStepTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('entryStepDesc')}</Text>
           </View>
-          <View style={styles.stepArrow}><ArrowRight color={theme.primary} size={isCompact ? 15 : 20} /></View>
+          <View style={styles.stepArrow}><ArrowRight color={colors.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
-            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>2</Text></View>
-            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('liveDrawTitle')}</Text>
-            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('liveDrawDesc')}</Text>
+            <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>2</Text></View>
+            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('liveDrawTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('liveDrawDesc')}</Text>
           </View>
-          <View style={styles.stepArrow}><ArrowRight color={theme.primary} size={isCompact ? 15 : 20} /></View>
+          <View style={styles.stepArrow}><ArrowRight color={colors.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
-            <View style={[styles.stepNumber, { borderColor: theme.gold }]}><Text style={[styles.stepNumberText, { color: theme.gold }]}>3</Text></View>
-            <Text style={[styles.stepTitle, { color: theme.gold }]}>{t('prizeTitle')}</Text>
-            <Text style={[styles.stepDesc, { color: theme.muted }]}>{t('prizeDesc')}</Text>
+            <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>3</Text></View>
+            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('prizeTitle')}</Text>
+            <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('prizeDesc')}</Text>
           </View>
         </View>
       </View>
 
-      <View style={[styles.algorithmBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
-        <View style={styles.iconText}><LockKeyhole color={theme.primary} size={18} /><Text style={[styles.algoTitle, { color: theme.primary }]}>{t('winnerAlgorithm')}</Text></View>
-        <Text style={[styles.algoText, { color: theme.muted }]}>{t('winnerAlgorithmText')}</Text>
-        <View style={[styles.verifiedBadge, { backgroundColor: theme.primary }]}>
+      <View style={[styles.algorithmBox, { backgroundColor: colors.primarySoft, borderColor: colors.border }]}>
+        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={18} /><Text style={[styles.algoTitle, { color: colors.primary }]}>{t('winnerAlgorithm')}</Text></View>
+        <Text style={[styles.algoText, { color: colors.muted }]}>{t('winnerAlgorithmText')}</Text>
+        <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
           <ShieldCheck color="white" size={15} /><Text style={styles.verifiedText}>{t('verifiedFairDraw')}</Text>
         </View>
       </View>
 
       <View style={styles.resultsRow}>
-        <View style={[styles.iconText, { flex: 1 }]}><Flame color={theme.gold} size={21} /><Text style={[styles.sectionTitle, { color: theme.text }]}>{t('activeDraws')}</Text></View>
+        <View style={[styles.iconText, { flex: 1 }]}><Flame color={colors.gold} size={21} /><Text style={[styles.sectionTitle, { color: colors.gold }]}>{t('activeDraws')}</Text></View>
         <View style={styles.resultsMeta}>
-          <Text style={[styles.resultsText, { color: theme.muted }]}>{filteredProducts.length} {t('found')}</Text>
-          <Text style={[styles.sortedBy, { color: theme.primary }]}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
+          <Text style={[styles.resultsText, { color: colors.muted }]}>{filteredProducts.length} {t('found')}</Text>
+          <Text style={[styles.sortedBy, { color: colors.primary }]}>{SORT_OPTIONS.find((option) => option.key === sortBy)?.labels[language]}</Text>
         </View>
       </View>
 
       {filteredProducts.length === 0 && (
         <View style={styles.emptyBox}>
-          <Search color={theme.muted} size={46} />
-          <Text style={[styles.emptyText, { color: theme.text }]}>{t('noDrawsFound')}</Text>
+          <Search color={colors.muted} size={46} />
+          <Text style={[styles.emptyText, { color: colors.text }]}>{t('noDrawsFound')}</Text>
           <TouchableOpacity onPress={() => setSearch('')}>
             <Text style={styles.clearSearch}>{t('clearSearch')}</Text>
           </TouchableOpacity>
@@ -341,11 +439,11 @@ export default function HomeScreen() {
               style={[
                 styles.card,
                 isMultiColumn && { width: productCardWidth, margin: 0 },
-                { backgroundColor: theme.surface, borderColor: theme.border },
+                { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
             >
-            <View style={[styles.verifiedBanner, { backgroundColor: theme.primarySoft }]}>
-              <View style={styles.iconText}><CheckCircle2 color={theme.primary} size={15} /><Text style={[styles.verifiedBannerText, { color: theme.primary }]}>{t('verifiedDraw')}</Text></View>
+            <View style={[styles.verifiedBanner, { backgroundColor: colors.primarySoft }]}>
+              <View style={styles.iconText}><CheckCircle2 color={colors.primary} size={15} /><Text style={[styles.verifiedBannerText, { color: colors.primary }]}>{t('verifiedDraw')}</Text></View>
               {liveLink && (
                 <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
                   <View style={styles.liveBtn}><Play color="#ff4444" size={13} fill="#ff4444" /><Text style={styles.liveBtnText}>{t('watchLive')}</Text></View>
@@ -363,18 +461,18 @@ export default function HomeScreen() {
 
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
-                <Text style={[styles.productName, { color: theme.text }]}>{p.name}</Text>
+                <Text style={[styles.productName, { color: colors.text }]}>{p.name}</Text>
                 <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
-                  <Heart color={favorites.includes(p.id) ? '#ff4d67' : theme.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={25} />
+                  <Heart color={favorites.includes(p.id) ? '#ff4d67' : colors.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={25} />
                 </TouchableOpacity>
               </View>
-              {p.description && <Text style={[styles.description, { color: theme.muted }]}>{p.description}</Text>}
+              {p.description && <Text style={[styles.description, { color: colors.muted }]}>{p.description}</Text>}
 
-              <View style={[styles.countdownBox, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
-                <Text style={[styles.countdownLabel, { color: theme.gold }]}>{drawSchedule.label}</Text>
-                <Text style={[styles.countdownTime, { color: theme.gold }]}>{drawSchedule.value}</Text>
+              <View style={[styles.countdownBox, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+                <Text style={[styles.countdownLabel, { color: colors.gold }]}>{drawSchedule.label}</Text>
+                <Text style={[styles.countdownTime, { color: colors.gold }]}>{drawSchedule.value}</Text>
               </View>
-              <Text style={[styles.drawScheduleNote, { color: theme.muted }]}>{drawSchedule.note}</Text>
+              <Text style={[styles.drawScheduleNote, { color: colors.muted }]}>{drawSchedule.note}</Text>
 
               {p.draw_date && (
                 <View style={styles.iconText}><CalendarDays color="#4a9eff" size={15} /><Text style={styles.drawDate}>{t('drawDate')}: {p.draw_date}</Text></View>
@@ -387,9 +485,9 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <View style={styles.iconText}><UsersRound color={theme.muted} size={15} /><Text style={[styles.participants, { color: theme.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
+              <View style={styles.iconText}><UsersRound color={colors.muted} size={15} /><Text style={[styles.participants, { color: colors.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
 
-              <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
+              <View style={[styles.progressBar, { backgroundColor: colors.borderSoft }]}>
                 <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
               </View>
 
@@ -416,10 +514,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  loading: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
-  header: { backgroundColor: '#1DB954', padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#020d09' },
+  loading: { flex: 1, backgroundColor: '#020d09', justifyContent: 'center', alignItems: 'center' },
+  loadingText: { color: '#18a663', marginTop: 10, fontSize: 16 },
+  header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1 },
   headerCompact: { paddingHorizontal: 12, paddingVertical: 14 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   brandLogo: { width: 38, height: 38, borderRadius: 9 },
@@ -427,35 +525,51 @@ const styles = StyleSheet.create({
   tagline: { fontSize: 12, color: 'white', marginTop: 2 },
   headerRight: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   headerRightCompact: { gap: 5 },
-  shareBtn: { backgroundColor: 'rgba(0,0,0,0.2)', minWidth: 34, minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
+  shareBtn: { minWidth: 34, minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, borderWidth: 1, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   shareBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  loginBtn: { backgroundColor: 'rgba(0,0,0,0.2)', minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center' },
+  loginBtn: { minHeight: 34, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center' },
   loginBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  userBadge: { backgroundColor: 'rgba(0,0,0,0.2)', minWidth: 34, minHeight: 34, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 17, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
+  userBadge: { minWidth: 34, minHeight: 34, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 17, borderWidth: 1, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   userText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  trustBar: { backgroundColor: '#0d2b1a', padding: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  trustBar: { padding: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12, borderBottomWidth: 1 },
   trustBarCompact: { flexWrap: 'wrap', rowGap: 6 },
   iconText: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustItem: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
-  trustDot: { color: '#1DB954', fontSize: 12 },
+  trustItem: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
+  trustDot: { color: '#18a663', fontSize: 12 },
   cacheBanner: { marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
   cacheRetry: { fontSize: 12, fontWeight: 'bold' },
-  searchRow: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#111' },
-  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', paddingHorizontal: 12 },
+  featuredCard: { marginHorizontal: 15, marginTop: 16, borderRadius: 18, borderWidth: 1, minHeight: 235, overflow: 'hidden', flexDirection: 'row', alignItems: 'stretch' },
+  featuredCardCompact: { minHeight: 220 },
+  featuredContent: { flex: 1.2, padding: 20, justifyContent: 'center', alignItems: 'flex-start', zIndex: 1 },
+  featuredLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, marginBottom: 11 },
+  featuredLabelText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  featuredName: { fontSize: 23, lineHeight: 28, fontWeight: '800', marginBottom: 7 },
+  featuredMeta: { fontSize: 12, marginBottom: 9 },
+  featuredProgressBar: { width: '100%', height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 14 },
+  featuredProgress: { height: 6, borderRadius: 3 },
+  featuredButton: { minHeight: 42, borderRadius: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  featuredButtonText: { color: 'white', fontSize: 13, fontWeight: '800' },
+  featuredImage: { flex: 0.9, minWidth: 120, margin: 12 },
+  featuredImageFallback: { flex: 0.9, minWidth: 120, margin: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  categoryRow: { paddingHorizontal: 15, paddingTop: 14, paddingBottom: 2, gap: 8 },
+  categoryChip: { minHeight: 38, borderRadius: 19, borderWidth: 1, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  categoryText: { fontSize: 12, fontWeight: '700' },
+  searchRow: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#04140e' },
+  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 8, borderWidth: 1, borderColor: '#174a35', paddingHorizontal: 12 },
   searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, color: 'white', fontSize: 14, paddingVertical: 10 },
   clearBtn: { color: '#aaa', fontSize: 16, padding: 5 },
-  filterBtn: { width: 46, height: 46, backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', alignItems: 'center', justifyContent: 'center' },
-  filterBtnActive: { borderColor: '#FFD700', backgroundColor: '#2b2200' },
+  filterBtn: { width: 46, height: 46, backgroundColor: '#071b13', borderRadius: 8, borderWidth: 1, borderColor: '#174a35', alignItems: 'center', justifyContent: 'center' },
+  filterBtnActive: { borderColor: '#FFD700', backgroundColor: '#2a2105' },
   filterBtnText: { fontSize: 18 },
-  sortContainer: { backgroundColor: '#111', paddingHorizontal: 12, paddingBottom: 12 },
+  sortContainer: { backgroundColor: '#04140e', paddingHorizontal: 12, paddingBottom: 12 },
   sortLabel: { color: '#aaa', fontSize: 12, marginBottom: 8 },
-  sortChip: { backgroundColor: '#1a1a1a', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8, borderWidth: 1, borderColor: '#333' },
-  sortChipActive: { backgroundColor: '#2b2200', borderColor: '#FFD700' },
+  sortChip: { backgroundColor: '#071b13', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8, borderWidth: 1, borderColor: '#174a35' },
+  sortChipActive: { backgroundColor: '#2a2105', borderColor: '#FFD700' },
   sortChipText: { color: '#aaa', fontSize: 12 },
   sortChipTextActive: { color: '#FFD700', fontWeight: 'bold' },
-  howItWorks: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
+  howItWorks: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   sectionHeading: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, marginBottom: 15 },
   howTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
@@ -465,26 +579,26 @@ const styles = StyleSheet.create({
   stepTitle: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
   stepDesc: { color: '#aaa', fontSize: 11, textAlign: 'center', lineHeight: 16 },
   stepArrow: { paddingHorizontal: 5 },
-  arrow: { color: '#1DB954', fontSize: 20 },
-  algorithmBox: { backgroundColor: '#0d1a0d', margin: 15, marginTop: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#1DB954' },
-  algoTitle: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
+  arrow: { color: '#18a663', fontSize: 20 },
+  algorithmBox: { backgroundColor: '#082d1e', margin: 15, marginTop: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#18a663' },
+  algoTitle: { color: '#18a663', fontSize: 16, fontWeight: 'bold' },
   algoText: { color: '#aaa', fontSize: 13, lineHeight: 20, marginBottom: 12 },
-  verifiedBadge: { backgroundColor: '#1DB954', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', flexDirection: 'row', gap: 5, alignItems: 'center' },
+  verifiedBadge: { backgroundColor: '#18a663', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', flexDirection: 'row', gap: 5, alignItems: 'center' },
   verifiedText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 },
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
   resultsMeta: { alignItems: 'flex-end', marginLeft: 12 },
   resultsText: { color: '#aaa', fontSize: 12 },
-  sortedBy: { color: '#1DB954', fontSize: 11, marginTop: 2 },
+  sortedBy: { color: '#18a663', fontSize: 11, marginTop: 2 },
   emptyBox: { alignItems: 'center', padding: 50 },
   emptyEmoji: { fontSize: 50, marginBottom: 15 },
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  clearSearch: { color: '#1DB954', fontSize: 14, fontWeight: 'bold' },
+  clearSearch: { color: '#18a663', fontSize: 14, fontWeight: 'bold' },
   productGrid: { width: '100%' },
   productGridMultiColumn: { paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' },
-  card: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
-  verifiedBanner: { backgroundColor: '#0d2b1a', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  verifiedBannerText: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
+  card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
+  verifiedBanner: { backgroundColor: '#082d1e', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  verifiedBannerText: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
   liveBtn: { backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', gap: 4, alignItems: 'center' },
   liveBtnText: { color: '#ff4444', fontSize: 12, fontWeight: 'bold' },
   productImage: { width: '100%', height: 200 },
@@ -494,21 +608,21 @@ const styles = StyleSheet.create({
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
   heartBtn: { fontSize: 24, marginLeft: 10 },
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
-  countdownBox: { backgroundColor: '#2b2200', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
+  countdownBox: { backgroundColor: '#2a2105', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
   countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
   countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
   drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
   drawDate: { color: '#4a9eff', fontSize: 12 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
-  entryBadge: { backgroundColor: '#0d2b1a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  entryFee: { fontSize: 13, color: '#1DB954', fontWeight: 'bold' },
+  entryBadge: { backgroundColor: '#082d1e', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  entryFee: { fontSize: 13, color: '#18a663', fontWeight: 'bold' },
   participants: { fontSize: 13, color: '#aaa' },
-  progressBar: { backgroundColor: '#333', height: 8, borderRadius: 4, marginBottom: 6 },
-  progress: { backgroundColor: '#1DB954', height: 8, borderRadius: 4 },
+  progressBar: { backgroundColor: '#174a35', height: 8, borderRadius: 4, marginBottom: 6 },
+  progress: { backgroundColor: '#18a663', height: 8, borderRadius: 4 },
   spotsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   spots: { color: '#ff6b6b', fontSize: 12 },
-  percent: { color: '#1DB954', fontSize: 12, fontWeight: 'bold' },
+  percent: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
   button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 30 },

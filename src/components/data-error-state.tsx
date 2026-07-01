@@ -23,9 +23,9 @@ export function DataErrorState({ message = 'Something went wrong. Please try aga
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, minHeight: 360, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#0a0a0a' },
+  container: { flex: 1, minHeight: 360, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#020d09' },
   title: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
   message: { color: '#aaa', fontSize: 14, lineHeight: 20, marginBottom: 22, textAlign: 'center' },
-  button: { backgroundColor: '#1DB954', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 13 },
+  button: { backgroundColor: '#18a663', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 13 },
   buttonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 });

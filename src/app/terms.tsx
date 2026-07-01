@@ -129,11 +129,11 @@ export default function TermsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', color: 'white' },
+  container: { flex: 1, backgroundColor: '#020d09' },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 30, alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  subtitle: { fontSize: 13, color: 'white', marginTop: 5 },
+  subtitle: { fontSize: 13, color: '#9aac9f', marginTop: 5 },
   content: { padding: 20 },
   importantBox: { backgroundColor: '#2b1a00', borderRadius: 12, padding: 15, marginBottom: 20, borderWidth: 1, borderColor: '#FFD700' },
   importantTitle: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
   importantText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#FFD700', marginTop: 20, marginBottom: 8 },
   text: { color: '#aaa', fontSize: 14, lineHeight: 24 },
-  finalBox: { backgroundColor: '#0d2b1a', borderRadius: 12, padding: 15, marginTop: 25, borderWidth: 1, borderColor: '#1DB954' },
-  finalText: { color: '#1DB954', fontSize: 14, lineHeight: 22, textAlign: 'center' },
+  finalBox: { backgroundColor: '#082d1e', borderRadius: 12, padding: 15, marginTop: 25, borderWidth: 1, borderColor: '#18a663' },
+  finalText: { color: '#18a663', fontSize: 14, lineHeight: 22, textAlign: 'center' },
   lastUpdated: { color: '#555', fontSize: 12, marginTop: 20, marginBottom: 10, textAlign: 'center' },
-  backBtn: { margin: 20, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#333', marginBottom: 40 },
+  backBtn: { margin: 20, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#174a35', marginBottom: 40 },
   backBtnText: { color: '#aaa', fontSize: 16 },
 });

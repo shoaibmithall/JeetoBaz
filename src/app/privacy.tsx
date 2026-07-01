@@ -118,9 +118,9 @@ export default function PrivacyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  header: { backgroundColor: '#1a1a1a', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backButton: { color: '#1DB954', fontSize: 16, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: '#020d09' },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { color: '#18a663', fontSize: 16, fontWeight: 'bold' },
   title: { color: '#FFD700', fontSize: 20, fontWeight: 'bold' },
   headerSpacer: { width: 48 },
   content: { padding: 20, paddingBottom: 50 },
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
   intro: { color: '#ddd', fontSize: 15, lineHeight: 23, marginBottom: 8 },
   sectionTitle: { color: '#FFD700', fontSize: 17, fontWeight: 'bold', marginTop: 22, marginBottom: 8 },
   text: { color: '#aaa', fontSize: 14, lineHeight: 23 },
-  deletionBox: { backgroundColor: '#1a1a1a', borderColor: '#ff4444', borderWidth: 1, borderRadius: 8, padding: 18, marginTop: 28 },
+  deletionBox: { backgroundColor: '#071b13', borderColor: '#ff4444', borderWidth: 1, borderRadius: 8, padding: 18, marginTop: 28 },
   deletionTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
   deletionText: { color: '#aaa', fontSize: 14, lineHeight: 21 },
   deleteButton: { backgroundColor: '#ff4444', borderRadius: 8, padding: 15, alignItems: 'center', marginTop: 16 },
   deleteButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  whatsAppButton: { backgroundColor: '#0d2b1a', borderColor: '#1DB954', borderWidth: 1, borderRadius: 8, padding: 15, alignItems: 'center', marginTop: 10 },
-  whatsAppButtonText: { color: '#1DB954', fontSize: 15, fontWeight: 'bold' },
+  whatsAppButton: { backgroundColor: '#082d1e', borderColor: '#18a663', borderWidth: 1, borderRadius: 8, padding: 15, alignItems: 'center', marginTop: 10 },
+  whatsAppButtonText: { color: '#18a663', fontSize: 15, fontWeight: 'bold' },
   emailText: { color: '#888', fontSize: 12, textAlign: 'center', marginTop: 12 },
 });

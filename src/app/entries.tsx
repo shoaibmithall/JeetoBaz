@@ -97,15 +97,15 @@ export default function MyEntriesScreen() {
 
   function getEntryStatus(entry: EntryWithProduct) {
     const product = entry.products;
-    if (!product) return { label: 'Entry Approved', color: '#1DB954', background: '#0d2b1a' };
+    if (!product) return { label: 'Entry Approved', color: '#18a663', background: '#082d1e' };
     if (product.status === 'completed') {
-      if (product.winner_phone === entry.phone) return { label: 'Winner', color: '#FFD700', background: '#2b2200' };
+      if (product.winner_phone === entry.phone) return { label: 'Winner', color: '#FFD700', background: '#2a2105' };
       return { label: 'Draw Completed', color: '#aaa', background: '#222' };
     }
     if ((product.current_entries || 0) >= product.max_entries) {
-      return { label: product.draw_date ? 'Draw Scheduled' : 'Ready to Schedule', color: '#FFD700', background: '#2b2200' };
+      return { label: product.draw_date ? 'Draw Scheduled' : 'Ready to Schedule', color: '#FFD700', background: '#2a2105' };
     }
-    return { label: 'Waiting for Participants', color: '#1DB954', background: '#0d2b1a' };
+    return { label: 'Waiting for Participants', color: '#18a663', background: '#082d1e' };
   }
 
   function getDrawStatusText(product?: Product | null) {
@@ -241,50 +241,50 @@ export default function MyEntriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  loading: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#1DB954', marginTop: 10, fontSize: 16 },
-  notLoggedIn: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', padding: 30 },
+  container: { flex: 1, backgroundColor: '#020d09' },
+  loading: { flex: 1, backgroundColor: '#020d09', justifyContent: 'center', alignItems: 'center' },
+  loadingText: { color: '#18a663', marginTop: 10, fontSize: 16 },
+  notLoggedIn: { flex: 1, backgroundColor: '#020d09', justifyContent: 'center', alignItems: 'center', padding: 30 },
   notLoggedInText: { color: 'white', fontSize: 18, marginBottom: 20, textAlign: 'center' },
   loginBtn: { backgroundColor: '#FFD700', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   loginBtnText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
-  header: { backgroundColor: '#1DB954', padding: 30, alignItems: 'center' },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 30, alignItems: 'center' },
   title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { fontSize: 14, color: 'white', marginTop: 5 },
   cacheBanner: { marginHorizontal: 15, marginTop: 15, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
   cacheRetry: { fontSize: 12, fontWeight: 'bold' },
-  statsBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#333', flexDirection: 'row' },
+  statsBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#174a35', flexDirection: 'row' },
   statColumn: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, height: 48, backgroundColor: '#333', marginHorizontal: 12 },
+  statDivider: { width: 1, height: 48, backgroundColor: '#174a35', marginHorizontal: 12 },
   statsNumber: { fontSize: 38, fontWeight: 'bold', color: '#FFD700' },
   statsLabel: { fontSize: 14, color: '#aaa', marginTop: 5 },
   emptyBox: { alignItems: 'center', padding: 40 },
   emptyText: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   emptySubText: { color: '#aaa', fontSize: 14, marginBottom: 25 },
-  browseBtn: { backgroundColor: '#1DB954', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
+  browseBtn: { backgroundColor: '#18a663', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   browseBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  entryCard: { backgroundColor: '#1a1a1a', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
+  entryCard: { backgroundColor: '#071b13', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   pendingCard: { borderColor: '#FFD700' },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   productName: { fontSize: 18, fontWeight: 'bold', color: 'white', flex: 1 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  activeBadge: { backgroundColor: '#0d2b1a' },
+  activeBadge: { backgroundColor: '#082d1e' },
   completedBadge: { backgroundColor: '#2b2b0d' },
-  pendingBadge: { backgroundColor: '#2b2200' },
-  statusText: { fontSize: 12, fontWeight: 'bold', color: '#1DB954' },
+  pendingBadge: { backgroundColor: '#2a2105' },
+  statusText: { fontSize: 12, fontWeight: 'bold', color: '#18a663' },
   pendingStatusText: { fontSize: 12, fontWeight: 'bold', color: '#FFD700' },
   ticketNumber: { color: '#4a9eff', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
   productPrice: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   entryDate: { color: '#aaa', fontSize: 13 },
-  infoRow: { backgroundColor: '#111', borderRadius: 8, padding: 10, marginTop: 10 },
+  infoRow: { backgroundColor: '#04140e', borderRadius: 8, padding: 10, marginTop: 10 },
   infoLabel: { color: '#777', fontSize: 11, marginBottom: 3, textTransform: 'uppercase' },
   infoValue: { color: '#ddd', fontSize: 13, lineHeight: 18 },
   drawStatus: { color: '#ddd', fontSize: 13, lineHeight: 18, marginTop: 10 },
   pendingNote: { color: '#FFD700', fontSize: 12, marginTop: 10 },
-  winnerBanner: { backgroundColor: '#2b2200', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  winnerBanner: { backgroundColor: '#2a2105', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
   winnerText: { color: '#FFD700', fontWeight: 'bold', fontSize: 16 },
-  backBtn: { margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#333', marginTop: 20, marginBottom: 40 },
+  backBtn: { margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#174a35', marginTop: 20, marginBottom: 40 },
   backBtnText: { color: '#aaa', fontSize: 16 },
 });
