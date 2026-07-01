@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { claimPendingReferral } from '@/lib/referrals';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
   Bell, Check, ChevronRight, Circle, CircleUserRound, ClipboardList,
   Globe2, Headphones, Info, LockKeyhole, LogOut, Medal, Moon,
   Rocket, Sun, Target, Trophy,
+  UserPlus,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
@@ -78,6 +80,7 @@ export default function ProfileScreen() {
         setStoredValue('userPhone', fullPhone),
         setStoredValue('userName', existingName),
       ]);
+      await claimPendingReferral(fullPhone);
       setPhone(fullPhone);
       setName(existingName);
       setStep('profile');
@@ -107,6 +110,7 @@ export default function ProfileScreen() {
         setStoredValue('userPhone', fullPhone),
         setStoredValue('userName', normalizedName),
       ]);
+      await claimPendingReferral(fullPhone);
       setPhone(fullPhone);
       setName(normalizedName);
       setStep('profile');
@@ -170,6 +174,12 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications' as never)}>
           <Bell color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>Notifications</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/referral' as never)}>
+          <UserPlus color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />

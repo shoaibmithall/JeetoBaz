@@ -24,6 +24,8 @@ export type Entry = {
   user_id?: string | null;
   ticket_number?: string | null;
   transaction_id?: string | null;
+  entry_source?: string;
+  referral_reward_id?: string | null;
 };
 
 export type DrawResult = {
@@ -45,6 +47,31 @@ export type User = {
   phone: string;
   created_at: string;
   jazzcash_number?: string | null;
+  referral_code?: string | null;
+  referral_device_token?: string | null;
+  referred_by?: string | null;
+};
+
+export type ReferralClaim = {
+  id: string;
+  referrer_user_id: string;
+  referred_user_id: string;
+  status: 'pending' | 'qualified' | 'rejected' | 'reversed';
+  created_at: string;
+  qualified_at: string | null;
+};
+
+export type ReferralReward = {
+  id: string;
+  user_id: string;
+  referral_claim_id: string;
+  reward_kind: 'rs1_entry';
+  status: 'available' | 'redeemed' | 'expired' | 'revoked';
+  expires_at: string;
+  redeemed_product_id: string | null;
+  redeemed_entry_id: string | null;
+  created_at: string;
+  redeemed_at: string | null;
 };
 
 export type Transaction = {
@@ -114,8 +141,11 @@ export type Database = {
       >;
       users: Table<
         User,
-        Pick<User, 'name' | 'phone'> & Partial<Pick<User, 'jazzcash_number'>>
+        Pick<User, 'name' | 'phone'> &
+          Partial<Pick<User, 'jazzcash_number' | 'referral_code' | 'referral_device_token' | 'referred_by'>>
       >;
+      referral_claims: Table<ReferralClaim>;
+      referral_rewards: Table<ReferralReward>;
       transactions: Table<
         Transaction,
         Pick<Transaction, 'product_id' | 'phone' | 'amount' | 'jazzcash_txn_id'> &
@@ -154,6 +184,36 @@ export type Database = {
           total_entries: number;
           drawn_at: string;
         }>;
+      };
+      get_referral_dashboard: {
+        Args: { requested_phone: string; requested_device_token: string };
+        Returns: Array<{
+          referral_code: string;
+          successful_referrals: number;
+          available_rewards: number;
+          redeemed_rewards: number;
+        }>;
+      };
+      claim_referral_code: {
+        Args: { requested_phone: string; requested_code: string; requested_device_token: string };
+        Returns: string;
+      };
+      get_referral_eligible_products: {
+        Args: Record<string, never>;
+        Returns: Product[];
+      };
+      get_available_referral_rewards: {
+        Args: { requested_phone: string; requested_device_token: string };
+        Returns: Array<{ reward_id: string; expires_at: string }>;
+      };
+      redeem_referral_reward: {
+        Args: {
+          requested_phone: string;
+          requested_device_token: string;
+          requested_reward_id: string;
+          requested_product_id: string;
+        };
+        Returns: string;
       };
     };
     Enums: {};

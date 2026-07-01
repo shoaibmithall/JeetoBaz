@@ -65,6 +65,7 @@ export default function RootLayout() {
         <Tabs.Screen name="language" options={{ href: null }} />
         <Tabs.Screen name="notifications" options={{ href: null }} />
         <Tabs.Screen name="about" options={{ href: null }} />
+        <Tabs.Screen name="referral" options={{ href: null }} />
       </Tabs>
     </>
   );
