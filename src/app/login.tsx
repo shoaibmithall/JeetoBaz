@@ -147,7 +147,7 @@ export default function ProfileScreen() {
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Circle color="#1DB954" fill="#1DB954" size={22} />
+          <Circle color="#18a663" fill="#18a663" size={22} />
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
       </View>
@@ -332,44 +332,44 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  profileHeader: { backgroundColor: '#1DB954', padding: 40, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#020d09' },
+  profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 40, alignItems: 'center' },
   profileName: { fontSize: 26, fontWeight: 'bold', color: 'white' },
   profilePhone: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
-  statCard: { flex: 1, backgroundColor: '#1a1a1a', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#333' },
+  statCard: { flex: 1, backgroundColor: '#071b13', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#174a35' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
-  menuBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#333' },
+  menuBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35' },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18 },
   menuText: { color: 'white', fontSize: 16, flex: 1, marginLeft: 12 },
-  divider: { height: 1, backgroundColor: '#333', marginHorizontal: 15 },
-  infoBox: { backgroundColor: '#1a1a1a', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#333' },
+  divider: { height: 1, backgroundColor: '#174a35', marginHorizontal: 15 },
+  infoBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   infoTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', flex: 1 },
   infoTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   infoText: { color: '#aaa', fontSize: 14, marginTop: 7 },
   logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
-  header: { backgroundColor: '#1DB954', padding: 50, alignItems: 'center' },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 50, alignItems: 'center' },
   logo: { fontSize: 36, fontWeight: 'bold', color: 'white' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   tagline: { fontSize: 14, color: 'white', marginTop: 8 },
   form: { padding: 25, marginTop: 20 },
   formTitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 8, textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#aaa', marginBottom: 25, textAlign: 'center' },
-  phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', marginBottom: 20 },
-  code: { color: 'white', padding: 15, fontSize: 14, borderRightWidth: 1, borderRightColor: '#333' },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', marginBottom: 20 },
+  code: { color: 'white', padding: 15, fontSize: 14, borderRightWidth: 1, borderRightColor: '#174a35' },
   phoneInput: { flex: 1, color: 'white', padding: 15, fontSize: 18 },
-  input: { backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: '#333', color: 'white', padding: 15, fontSize: 16, marginBottom: 20 },
+  input: { backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', color: 'white', padding: 15, fontSize: 16, marginBottom: 20 },
   consentRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   checkbox: { width: 22, height: 22, borderWidth: 1, borderColor: '#666', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  checkboxChecked: { backgroundColor: '#1DB954', borderColor: '#1DB954' },
+  checkboxChecked: { backgroundColor: '#18a663', borderColor: '#18a663' },
   consentText: { flex: 1, fontSize: 14, lineHeight: 20 },
   button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 15, flexDirection: 'row', gap: 7 },
   buttonDisabled: { backgroundColor: '#555' },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
-  backText: { color: '#1DB954', textAlign: 'center', fontSize: 14, marginBottom: 10 },
+  backText: { color: '#18a663', textAlign: 'center', fontSize: 14, marginBottom: 10 },
   termsLink: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 10 },
-  termsLinkHighlight: { color: '#1DB954', fontWeight: 'bold' },
-  privacyLink: { color: '#1DB954', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
+  termsLinkHighlight: { color: '#18a663', fontWeight: 'bold' },
+  privacyLink: { color: '#18a663', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
 });
