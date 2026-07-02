@@ -2,16 +2,18 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
-  ArrowRight, CalendarDays, CheckCircle2, CircleAlert, CircleUserRound,
-  BadgeDollarSign, Flame, Gift, Heart, Laptop, ListFilter, LockKeyhole, Play, Search, Share2,
-  ShieldCheck, Target, Ticket, UserRound, UsersRound, X,
+  ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
+  BadgeDollarSign, Flame, Gift, Heart, Laptop, ListFilter, LockKeyhole, Play, Search,
+  ShieldCheck, Target, Ticket, UsersRound, X,
 } from 'lucide-react-native';
 import { ShareModal } from './share';
 import { DataErrorState } from '@/components/data-error-state';
+import { HomeHeader } from '@/components/home-header';
 import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
+import { isNotificationForUser } from '@/lib/notifications';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
@@ -103,7 +105,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [userPhone, setUserPhone] = useState('');
-  const [userName, setUserName] = useState('');
   const [showShare, setShowShare] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -114,6 +115,7 @@ export default function HomeScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [time, setTime] = useState(new Date());
   const [cacheInfo, setCacheInfo] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
   const isCompact = width < 480;
   const isDark = theme.mode === 'dark';
@@ -186,15 +188,27 @@ export default function HomeScreen() {
       let active = true;
 
       async function loadStoredState() {
-        const [storedPhone, storedName, storedFavorites] = await Promise.all([
+        const [storedPhone, storedFavorites, readNotificationIds] = await Promise.all([
           getStoredValue('userPhone'),
-          getStoredValue('userName'),
           getStoredStringArray('favorites'),
+          getStoredStringArray('readNotificationIds'),
         ]);
         if (!active) return;
         setUserPhone(storedPhone || '');
-        setUserName(storedName || '');
         setFavorites(storedFavorites);
+        if (!storedPhone) {
+          setUnreadCount(0);
+          return;
+        }
+        const { data: notificationData } = await supabase
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!active) return;
+        setUnreadCount((notificationData || []).filter(
+          (item) => isNotificationForUser(item, storedPhone) && !readNotificationIds.includes(item.id)
+        ).length);
       }
 
       loadStoredState();
@@ -388,32 +402,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <View style={[styles.header, isCompact && styles.headerCompact, { backgroundColor: colors.surfaceAlt, borderBottomColor: colors.border }]}>
-        <View style={styles.brand}>
-          <Image source={require('../../assets/images/icon.png')} style={styles.brandLogo} />
-          <View>
-          <Text style={[styles.title, { color: colors.gold }]}>JEETOBAZ</Text>
-          <Text style={[styles.tagline, { color: colors.muted }]}>{t('winBig')}</Text>
-          </View>
-        </View>
-        <View style={[styles.headerRight, isCompact && styles.headerRightCompact]}>
-          <TouchableOpacity style={[styles.shareBtn, { backgroundColor: colors.elevated, borderColor: colors.border }]} onPress={() => setShowShare(true)} accessibilityLabel={t('share')}>
-            <Share2 color={colors.gold} size={17} strokeWidth={2.3} />
-            {!isCompact && <Text style={[styles.shareBtnText, { color: colors.text }]}>{t('share')}</Text>}
-          </TouchableOpacity>
-          {userPhone ? (
-            <TouchableOpacity style={[styles.userBadge, { backgroundColor: colors.elevated, borderColor: colors.border }]} onPress={() => router.push('/login')} accessibilityLabel={userName || t('profile')}>
-              <CircleUserRound color={colors.gold} size={16} />
-              {!isCompact && <Text style={[styles.userText, { color: colors.text }]}>{userName || 'User'}</Text>}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={[styles.loginBtn, { backgroundColor: colors.primary }]} onPress={() => router.push('/login')}>
-              <UserRound color="white" size={16} />
-              <Text style={styles.loginBtnText}>{t('login')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+      <HomeHeader unreadCount={unreadCount} onShare={() => setShowShare(true)} />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
