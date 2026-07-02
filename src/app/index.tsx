@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { isNotificationForUser } from '@/lib/notifications';
+import { getHomeAdImages } from '@/lib/app-settings';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
@@ -114,6 +115,8 @@ export default function HomeScreen() {
   const [time, setTime] = useState(new Date());
   const [cacheInfo, setCacheInfo] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
+  const [activeAdIndex, setActiveAdIndex] = useState(0);
   const router = useRouter();
   const isCompact = width < 480;
   const isDark = theme.mode === 'dark';
@@ -171,15 +174,24 @@ export default function HomeScreen() {
     }, {});
   }, [products]);
 
-  const featuredProduct = useMemo(() => {
-    return [...products].sort((a, b) => (b.current_entries || 0) - (a.current_entries || 0))[0] || null;
-  }, [products]);
+  const activeAdImage = homeAdImages.length > 0
+    ? homeAdImages[activeAdIndex % homeAdImages.length]
+    : null;
 
   useEffect(() => {
     fetchProducts();
+    fetchHomeAds();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (homeAdImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveAdIndex((current) => (current + 1) % homeAdImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [homeAdImages.length]);
 
   useFocusEffect(
     useCallback(() => {
@@ -233,6 +245,12 @@ export default function HomeScreen() {
       }
     }
     setLoading(false);
+  }
+
+  async function fetchHomeAds() {
+    const { images } = await getHomeAdImages();
+    setHomeAdImages(images);
+    setActiveAdIndex(0);
   }
 
   async function handleEnter(product: Product) {
@@ -407,32 +425,24 @@ export default function HomeScreen() {
         <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
 
-      {featuredProduct && (
-        <View style={[styles.featuredCard, isCompact && styles.featuredCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
-          <View style={styles.featuredContent}>
-            <View style={[styles.featuredLabel, { backgroundColor: colors.goldSoft }]}>
-              <Flame color={colors.gold} size={14} />
-              <Text style={[styles.featuredLabelText, { color: colors.gold }]}>TODAY&apos;S FEATURED DRAW</Text>
+      {activeAdImage ? (
+        <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
+          <Image source={{ uri: activeAdImage }} style={styles.adBannerImage} resizeMode="cover" />
+          {homeAdImages.length > 1 ? (
+            <View style={styles.adDots}>
+              {homeAdImages.map((image, index) => (
+                <View
+                  key={`${image}-${index}`}
+                  style={[
+                    styles.adDot,
+                    { backgroundColor: index === activeAdIndex % homeAdImages.length ? colors.gold : colors.border },
+                  ]}
+                />
+              ))}
             </View>
-            <Text style={[styles.featuredName, { color: colors.text }]} numberOfLines={2}>{featuredProduct.name}</Text>
-            <Text style={[styles.featuredMeta, { color: colors.muted }]}>
-              {(featuredProduct.current_entries || 0).toLocaleString()} / {featuredProduct.max_entries.toLocaleString()} {t('participants')}
-            </Text>
-            <View style={[styles.featuredProgressBar, { backgroundColor: colors.borderSoft }]}>
-              <View style={[styles.featuredProgress, { backgroundColor: colors.primary, width: `${Math.min(((featuredProduct.current_entries || 0) / featuredProduct.max_entries) * 100, 100)}%` }]} />
-            </View>
-            <TouchableOpacity style={[styles.featuredButton, { backgroundColor: colors.primary }]} onPress={() => handleEnter(featuredProduct)}>
-              <Target color="white" size={17} />
-              <Text style={styles.featuredButtonText}>{t('enterFor')} Rs.{featuredProduct.entry_fee || 1}</Text>
-            </TouchableOpacity>
-          </View>
-          {featuredProduct.image_url ? (
-            <Image source={{ uri: featuredProduct.image_url }} style={styles.featuredImage} resizeMode="contain" />
-          ) : (
-            <View style={[styles.featuredImageFallback, { backgroundColor: colors.elevated }]}><Gift color={colors.gold} size={48} /></View>
-          )}
+          ) : null}
         </View>
-      )}
+      ) : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
         {CATEGORY_OPTIONS.map((option) => {
@@ -692,19 +702,11 @@ const styles = StyleSheet.create({
   cacheBanner: { marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
   cacheRetry: { fontSize: 12, fontWeight: 'bold' },
-  featuredCard: { marginHorizontal: 15, marginTop: 16, borderRadius: 18, borderWidth: 1, minHeight: 235, overflow: 'hidden', flexDirection: 'row', alignItems: 'stretch' },
-  featuredCardCompact: { minHeight: 220 },
-  featuredContent: { flex: 1.2, padding: 20, justifyContent: 'center', alignItems: 'flex-start', zIndex: 1 },
-  featuredLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12, marginBottom: 11 },
-  featuredLabelText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  featuredName: { fontSize: 23, lineHeight: 28, fontWeight: '800', marginBottom: 7 },
-  featuredMeta: { fontSize: 12, marginBottom: 9 },
-  featuredProgressBar: { width: '100%', height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: 14 },
-  featuredProgress: { height: 6, borderRadius: 3 },
-  featuredButton: { minHeight: 42, borderRadius: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  featuredButtonText: { color: 'white', fontSize: 13, fontWeight: '800' },
-  featuredImage: { flex: 0.9, minWidth: 120, margin: 12 },
-  featuredImageFallback: { flex: 0.9, minWidth: 120, margin: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  adBannerCard: { marginHorizontal: 15, marginTop: 16, borderRadius: 18, borderWidth: 1, height: 260, overflow: 'hidden', position: 'relative' },
+  adBannerCardCompact: { height: 205 },
+  adBannerImage: { width: '100%', height: '100%' },
+  adDots: { position: 'absolute', left: 0, right: 0, bottom: 10, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  adDot: { width: 7, height: 7, borderRadius: 4 },
   categoryRow: { paddingHorizontal: 15, paddingTop: 14, paddingBottom: 2, gap: 8 },
   categoryChip: { minHeight: 38, borderRadius: 19, borderWidth: 1, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   categoryText: { fontSize: 12, fontWeight: '700' },

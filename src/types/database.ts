@@ -99,6 +99,12 @@ export type AppNotification = {
   created_at: string;
 };
 
+export type AppSetting = {
+  key: string;
+  value: unknown;
+  updated_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -155,6 +161,11 @@ export type Database = {
         AppNotification,
         Pick<AppNotification, 'title' | 'body'> &
           Partial<Pick<AppNotification, 'target_phone' | 'link' | 'kind'>>
+      >;
+      app_settings: Table<
+        AppSetting,
+        Pick<AppSetting, 'key' | 'value'>,
+        Partial<Pick<AppSetting, 'value'>>
       >;
     };
     Views: {};

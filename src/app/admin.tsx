@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { createNotification, createUserNotification } from '@/lib/notifications';
+import { getHomeAdImages, saveHomeAdImages } from '@/lib/app-settings';
 import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 import {
   BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
@@ -16,6 +17,7 @@ import {
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
+const HOME_ADS_BUCKET = 'home-ads';
 
 export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -42,6 +44,9 @@ export default function AdminScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [announcementSaved, setAnnouncementSaved] = useState(false);
+  const [homeAdImagesInput, setHomeAdImagesInput] = useState('');
+  const [homeAdImagesSaved, setHomeAdImagesSaved] = useState(false);
+  const [homeAdUploading, setHomeAdUploading] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
@@ -75,6 +80,7 @@ export default function AdminScreen() {
       fetchEntries();
       fetchTransactions();
       getStoredValue('announcement').then((value) => setAnnouncement(value || ''));
+      loadHomeAdImages();
     }
   }, [authenticated]);
 
@@ -329,6 +335,88 @@ export default function AdminScreen() {
     await setStoredValue('announcement', announcement);
     setAnnouncementSaved(true);
     setTimeout(() => setAnnouncementSaved(false), 2000);
+  }
+
+  function parseHomeAdImagesInput() {
+    return homeAdImagesInput
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+      .slice(0, 10);
+  }
+
+  async function loadHomeAdImages() {
+    const { images } = await getHomeAdImages();
+    setHomeAdImagesInput(images.join('\n'));
+  }
+
+  async function saveHomeAdImageSettings(nextImages = parseHomeAdImagesInput()) {
+    const { images, error } = await saveHomeAdImages(nextImages);
+    if (error) {
+      alert('Home ad images save failed. Pehle Supabase SQL setup run karein. Error: ' + error.message);
+      return;
+    }
+    setHomeAdImagesInput(images.join('\n'));
+    setHomeAdImagesSaved(true);
+    setTimeout(() => setHomeAdImagesSaved(false), 2000);
+  }
+
+  async function uploadHomeAdImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload the ad image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 6],
+      quality: 0.82,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setHomeAdUploading(true);
+    try {
+      const existingImages = parseHomeAdImagesInput();
+      if (existingImages.length >= 10) {
+        alert('Maximum 10 home ad images allowed.');
+        return;
+      }
+
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png'
+        ? 'png'
+        : mimeType === 'image/webp'
+          ? 'webp'
+          : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `home/${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(HOME_ADS_BUCKET)
+        .upload(filePath, fileData, {
+          contentType: mimeType,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage
+        .from(HOME_ADS_BUCKET)
+        .getPublicUrl(filePath);
+      await saveHomeAdImageSettings([...existingImages, data.publicUrl]);
+      alert('Home ad image uploaded and saved.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Home ad image upload failed.';
+      alert(message);
+    } finally {
+      setHomeAdUploading(false);
+    }
   }
 
   async function sendGlobalNotification() {
@@ -726,6 +814,41 @@ export default function AdminScreen() {
 
             <View style={styles.divider} />
 
+            <View style={styles.settingLabelRow}><Camera color="white" size={17} /><Text style={styles.settingLabel}>Home Ad Images</Text></View>
+            <Text style={styles.settingHint}>Featured draw ki jagah ye images home page par 1 by 1 show hongi. Maximum 10 images.</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="One image URL per line"
+              placeholderTextColor="#666"
+              value={homeAdImagesInput}
+              onChangeText={setHomeAdImagesInput}
+              multiline
+              numberOfLines={6}
+            />
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity style={[styles.addButton, styles.settingsHalfButton]} onPress={() => saveHomeAdImageSettings()}>
+                {homeAdImagesSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+                <Text style={styles.addButtonText}>{homeAdImagesSaved ? 'Saved!' : 'Save Ad Images'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.photoUploadButton, styles.settingsHalfButton, homeAdUploading && styles.photoUploadDisabled]}
+                onPress={uploadHomeAdImage}
+                disabled={homeAdUploading}
+              >
+                {!homeAdUploading && <Camera color="#4a9eff" size={18} />}
+                <Text style={styles.photoUploadText}>{homeAdUploading ? 'Uploading...' : 'Upload Ad Image'}</Text>
+              </TouchableOpacity>
+            </View>
+            {parseHomeAdImagesInput().length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.adPreviewRow}>
+                {parseHomeAdImagesInput().map((image, index) => (
+                  <Image key={`${image}-${index}`} source={{ uri: image }} style={styles.adPreviewImage} resizeMode="cover" />
+                ))}
+              </ScrollView>
+            ) : null}
+
+            <View style={styles.divider} />
+
             <View style={styles.settingLabelRow}><Send color="white" size={17} /><Text style={styles.settingLabel}>Send Notification</Text></View>
             <Text style={styles.settingHint}>Ye notification sab users ke Notifications page me dikh jayegi</Text>
             <TextInput
@@ -805,6 +928,10 @@ const styles = StyleSheet.create({
   photoUploadText: { color: '#4a9eff', fontWeight: 'bold', fontSize: 14 },
   winnerPhotoPreview: { width: 120, height: 120, borderRadius: 8, alignSelf: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#FFD700' },
   addButton: { backgroundColor: '#18a663', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 10, flexDirection: 'row', gap: 7 },
+  settingsButtonRow: { flexDirection: 'row', gap: 10 },
+  settingsHalfButton: { flex: 1 },
+  adPreviewRow: { marginBottom: 4 },
+  adPreviewImage: { width: 150, height: 72, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#174a35' },
   saveButton: { backgroundColor: '#FFD700' },
   addButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   cancelButton: { backgroundColor: '#2b0d0d', padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', flexDirection: 'row', gap: 7 },
