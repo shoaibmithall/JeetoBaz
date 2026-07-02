@@ -31,29 +31,29 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
 
   return (
     <>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
         <TouchableOpacity
-          style={styles.headerAction}
+          style={[styles.headerAction, { backgroundColor: theme.primarySoft }]}
           onPress={() => setMenuVisible(true)}
           accessibilityLabel="Open menu"
         >
-          <Menu color="white" size={24} strokeWidth={2.6} />
+          <Menu color={theme.gold} size={24} strokeWidth={2.6} />
         </TouchableOpacity>
 
         <View style={styles.brand}>
           <View style={styles.brandNameRow}>
             <Image source={require('@/assets/images/icon.png')} style={styles.brandLogo} />
-            <Text style={styles.brandName}>JEETOBAZ</Text>
+            <Text style={[styles.brandName, { color: theme.gold }]}>JEETOBAZ</Text>
           </View>
-          <Text style={styles.tagline}>{t('winBig')}</Text>
+          <Text style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
         </View>
 
         <TouchableOpacity
-          style={styles.headerAction}
+          style={[styles.headerAction, { backgroundColor: theme.primarySoft }]}
           onPress={() => router.push('/notifications' as never)}
           accessibilityLabel="Open notifications"
         >
-          <Bell color="white" size={22} strokeWidth={2.4} />
+          <Bell color={theme.gold} size={22} strokeWidth={2.4} />
           {unreadCount > 0 ? (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationBadgeText}>
@@ -122,25 +122,24 @@ function MenuItem({ icon, label, onPress, textColor }: MenuItemProps) {
 const styles = StyleSheet.create({
   header: {
     minHeight: 88,
-    backgroundColor: '#1DB954',
     paddingHorizontal: 14,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    borderBottomWidth: 1,
   },
   headerAction: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: 'rgba(0,0,0,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   brand: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
   brandNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   brandLogo: { width: 30, height: 30, borderRadius: 8 },
-  brandName: { color: 'white', fontSize: 22, fontWeight: '900', textAlign: 'center', letterSpacing: 0.4 },
-  tagline: { color: 'white', fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 2 },
+  brandName: { fontSize: 22, fontWeight: '900', textAlign: 'center', letterSpacing: 0.4 },
+  tagline: { fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 2 },
   notificationBadge: {
     position: 'absolute',
     top: -3,
