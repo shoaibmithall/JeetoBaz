@@ -8,8 +8,8 @@ import { claimPendingReferral } from '@/lib/referrals';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  Check, ChevronRight, Circle, CircleUserRound, LogOut, Medal,
-  Rocket, Target, Trophy,
+  Check, ChevronRight, Circle, CircleUserRound, ClipboardList, Info,
+  LockKeyhole, LogOut, Medal, Rocket, Target, Trophy,
   UserPlus,
 } from 'lucide-react-native';
 
@@ -174,7 +174,35 @@ export default function ProfileScreen() {
           <Text style={[styles.menuText, { color: theme.text }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
+          <ClipboardList color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('terms')}</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
+          <LockKeyhole color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        onPress={() => router.push('/about' as never)}
+        accessibilityRole="button"
+        accessibilityLabel="Open About JeetoBaz"
+      >
+        <View style={styles.infoTitleRow}>
+          <Info color={theme.gold} size={18} />
+          <Text style={[styles.infoTitle, { color: theme.text }]}>About JeetoBaz</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </View>
+        <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <LogOut color="#ff4444" size={19} /><Text style={styles.logoutText}>Logout</Text>
