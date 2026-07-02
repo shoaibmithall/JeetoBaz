@@ -8,15 +8,14 @@ import { claimPendingReferral } from '@/lib/referrals';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  Bell, Check, ChevronRight, Circle, CircleUserRound, ClipboardList,
-  Globe2, Headphones, Info, LockKeyhole, LogOut, Medal, Moon,
-  Rocket, Sun, Target, Trophy,
+  Check, ChevronRight, Circle, CircleUserRound, LogOut, Medal,
+  Rocket, Target, Trophy,
   UserPlus,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { t } = useLanguage();
-  const { mode, theme, toggleThemeMode } = useAppTheme();
+  const { theme } = useAppTheme();
   const [step, setStep] = useState('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -170,65 +169,12 @@ export default function ProfileScreen() {
           <Text style={[styles.menuText, { color: theme.text }]}>{t('pastWinners')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications' as never)}>
-          <Bell color={theme.gold} size={21} />
-          <Text style={[styles.menuText, { color: theme.text }]}>Notifications</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/referral' as never)}>
           <UserPlus color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
-          <ClipboardList color={theme.gold} size={21} />
-          <Text style={[styles.menuText, { color: theme.text }]}>{t('terms')}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
-          <LockKeyhole color={theme.gold} size={21} />
-          <Text style={[styles.menuText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/language' as never)}>
-          <Globe2 color={theme.gold} size={21} />
-          <Text style={[styles.menuText, { color: theme.text }]}>{t('language')}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={toggleThemeMode}>
-          {mode === 'dark' ? <Sun color={theme.gold} size={21} /> : <Moon color={theme.gold} size={21} />}
-          <Text style={[styles.menuText, { color: theme.text }]}>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
-          <Headphones color={theme.gold} size={21} />
-          <Text style={[styles.menuText, { color: theme.text }]}>{t('helpCenter')}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
-        onPress={() => router.push('/about' as never)}
-        accessibilityRole="button"
-        accessibilityLabel="Open About JeetoBaz"
-      >
-        <View style={styles.infoTitleRow}>
-          <Info color={theme.gold} size={18} />
-          <Text style={[styles.infoTitle, { color: theme.text }]}>About JeetoBaz</Text>
-          <ChevronRight color={theme.subtle} size={20} />
-        </View>
-        <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
-        <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
-        <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <LogOut color="#ff4444" size={19} /><Text style={styles.logoutText}>Logout</Text>

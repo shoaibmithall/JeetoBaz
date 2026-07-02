@@ -6,7 +6,6 @@ import {
   BadgeDollarSign, Flame, Gift, Heart, Laptop, ListFilter, LockKeyhole, Play, Search,
   ShieldCheck, Target, Ticket, UsersRound, X,
 } from 'lucide-react-native';
-import { ShareModal } from './share';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
@@ -105,7 +104,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [userPhone, setUserPhone] = useState('');
-  const [showShare, setShowShare] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('popular');
@@ -393,7 +391,6 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentInsetAdjustmentBehavior="automatic">
-      <ShareModal visible={showShare} onClose={() => setShowShare(false)} />
       <Modal visible={showPriceFilter && !showPriceSidebar} transparent animationType="slide" onRequestClose={() => setShowPriceFilter(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setShowPriceFilter(false)}>
           <View style={styles.priceSheet} onStartShouldSetResponder={() => true}>
@@ -402,7 +399,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <HomeHeader unreadCount={unreadCount} onShare={() => setShowShare(true)} />
+      <HomeHeader unreadCount={unreadCount} />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
