@@ -1,18 +1,19 @@
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
+import { Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Sun, X } from 'lucide-react-native';
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/lib/i18n';
 
 type HomeHeaderProps = {
   unreadCount: number;
-  onShare: () => void;
 };
 
-type MenuRoute = '/language' | '/help' | '/terms' | '/privacy';
+type MenuRoute = '/language' | '/help';
 
-export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
+export function HomeHeader({ unreadCount }: HomeHeaderProps) {
   const router = useRouter();
   const { t } = useLanguage();
   const { mode, theme, toggleThemeMode } = useAppTheme();
@@ -21,11 +22,6 @@ export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
   function openRoute(route: MenuRoute) {
     setMenuVisible(false);
     router.push(route);
-  }
-
-  function openShare() {
-    setMenuVisible(false);
-    onShare();
   }
 
   async function toggleTheme() {
@@ -39,13 +35,16 @@ export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
         <TouchableOpacity
           style={styles.headerAction}
           onPress={() => setMenuVisible(true)}
-          accessibilityLabel="Open more menu"
+          accessibilityLabel="Open menu"
         >
-          <Text style={styles.moreIcon}>•••</Text>
+          <Menu color="white" size={24} strokeWidth={2.6} />
         </TouchableOpacity>
 
         <View style={styles.brand}>
-          <Text style={styles.brandName}>🏆 JeetoBaz</Text>
+          <View style={styles.brandNameRow}>
+            <Image source={require('@/assets/images/icon.png')} style={styles.brandLogo} />
+            <Text style={styles.brandName}>JEETOBAZ</Text>
+          </View>
           <Text style={styles.tagline}>{t('winBig')}</Text>
         </View>
 
@@ -54,7 +53,7 @@ export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
           onPress={() => router.push('/notifications' as never)}
           accessibilityLabel="Open notifications"
         >
-          <Text style={styles.bellIcon}>🔔</Text>
+          <Bell color="white" size={22} strokeWidth={2.4} />
           {unreadCount > 0 ? (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationBadgeText}>
@@ -81,29 +80,21 @@ export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
             <View style={styles.menuHeader}>
               <View>
                 <Text style={[styles.menuTitle, { color: theme.text }]}>JeetoBaz</Text>
-                <Text style={[styles.menuSubtitle, { color: theme.muted }]}>More options</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.muted }]}>Quick settings</Text>
               </View>
               <TouchableOpacity onPress={() => setMenuVisible(false)} accessibilityLabel="Close menu">
-                <Text style={[styles.closeIcon, { color: theme.muted }]}>✕</Text>
+                <X color={theme.muted} size={22} />
               </TouchableOpacity>
             </View>
 
-            <MenuItem icon="📤" label={t('shareJeetoBaz')} onPress={openShare} textColor={theme.text} />
-            <MenuItem icon="🌐" label={t('language')} onPress={() => openRoute('/language')} textColor={theme.text} />
+            <MenuItem icon={<Globe2 color={theme.gold} size={21} />} label={t('language')} onPress={() => openRoute('/language')} textColor={theme.text} />
             <MenuItem
-              icon={mode === 'dark' ? '☀️' : '🌙'}
+              icon={mode === 'dark' ? <Sun color={theme.gold} size={21} /> : <Moon color={theme.gold} size={21} />}
               label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
               onPress={toggleTheme}
               textColor={theme.text}
             />
-            <MenuItem icon="🎧" label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.text} />
-            <MenuItem icon="📋" label={t('terms')} onPress={() => openRoute('/terms')} textColor={theme.text} />
-            <MenuItem icon="🔒" label={t('privacyPolicy')} onPress={() => openRoute('/privacy')} textColor={theme.text} />
-
-            <View style={[styles.about, { borderTopColor: theme.border }]}>
-              <Text style={[styles.aboutTitle, { color: theme.text }]}>ℹ️ About JeetoBaz</Text>
-              <Text style={[styles.aboutText, { color: theme.muted }]}>Version 1.0.0 • Made in Pakistan 🇵🇰</Text>
-            </View>
+            <MenuItem icon={<Headphones color={theme.gold} size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.text} />
           </View>
         </View>
       </Modal>
@@ -112,7 +103,7 @@ export function HomeHeader({ unreadCount, onShare }: HomeHeaderProps) {
 }
 
 type MenuItemProps = {
-  icon: string;
+  icon: ReactNode;
   label: string;
   onPress: () => void;
   textColor: string;
@@ -121,9 +112,9 @@ type MenuItemProps = {
 function MenuItem({ icon, label, onPress, textColor }: MenuItemProps) {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <Text style={styles.menuItemIcon}>{icon}</Text>
+      <View style={styles.menuItemIcon}>{icon}</View>
       <Text style={[styles.menuItemText, { color: textColor }]}>{label}</Text>
-      <Text style={styles.menuItemArrow}>›</Text>
+      <ChevronRight color="#888" size={20} />
     </TouchableOpacity>
   );
 }
@@ -145,10 +136,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  moreIcon: { color: 'white', fontSize: 18, fontWeight: '900', letterSpacing: 1 },
-  bellIcon: { fontSize: 21 },
   brand: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
-  brandName: { color: 'white', fontSize: 24, fontWeight: '900', textAlign: 'center' },
+  brandNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  brandLogo: { width: 30, height: 30, borderRadius: 8 },
+  brandName: { color: 'white', fontSize: 22, fontWeight: '900', textAlign: 'center', letterSpacing: 0.4 },
   tagline: { color: 'white', fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 2 },
   notificationBadge: {
     position: 'absolute',
@@ -189,7 +180,6 @@ const styles = StyleSheet.create({
   },
   menuTitle: { fontSize: 19, fontWeight: '900' },
   menuSubtitle: { fontSize: 12, marginTop: 1 },
-  closeIcon: { fontSize: 20, padding: 6 },
   menuItem: {
     minHeight: 48,
     borderRadius: 12,
@@ -198,10 +188,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  menuItemIcon: { width: 26, fontSize: 19, textAlign: 'center' },
+  menuItemIcon: { width: 28, alignItems: 'center', justifyContent: 'center' },
   menuItemText: { flex: 1, fontSize: 14, fontWeight: '700' },
-  menuItemArrow: { color: '#888', fontSize: 24 },
-  about: { borderTopWidth: 1, marginTop: 8, paddingHorizontal: 10, paddingTop: 12, paddingBottom: 4 },
-  aboutTitle: { fontSize: 13, fontWeight: '800' },
-  aboutText: { fontSize: 11, marginTop: 3 },
 });
