@@ -246,40 +246,59 @@ Deno.serve(async (request) => {
 
     const { data: pendingTransaction } = await supabase
       .from('transactions')
-      .select('id')
+      .select('id, status, jazzcash_txn_id, created_at')
       .eq('product_id', productId)
       .eq('phone', phone)
       .in('status', ['initiated', 'pending'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (pendingTransaction) {
+    if (pendingTransaction?.status === 'pending') {
       return redirectToWebsite({
         verified: '0',
-        pp_ResponseMessage: 'A payment request is already in progress',
+        pp_ResponseMessage: 'Your payment is already waiting for approval',
       });
     }
 
     const now = new Date();
     const txnDateTime = pakistanTimestamp(now);
     const expiryDateTime = pakistanTimestamp(new Date(now.getTime() + 60 * 60 * 1000));
-    const txnReference = `T${txnDateTime}${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
+    const reusableTransaction =
+      pendingTransaction?.status === 'initiated' &&
+      now.getTime() - new Date(pendingTransaction.created_at).getTime() < 15 * 60 * 1000
+        ? pendingTransaction
+        : null;
+    const txnReference =
+      reusableTransaction?.jazzcash_txn_id ||
+      `T${txnDateTime}${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
     const amountRupees = Number(product.entry_fee || 1);
     const amountPaisa = String(Math.round(amountRupees * 100));
 
-    const { error: insertError } = await supabase.from('transactions').insert({
-      product_id: productId,
-      phone,
-      user_name: userName || null,
-      amount: amountRupees,
-      jazzcash_txn_id: txnReference,
-      payment_method: 'JazzCash Online',
-      sender_name: userName || null,
-      sender_phone: phone,
-      receipt_path: null,
-      status: 'initiated',
-    });
+    if (!reusableTransaction) {
+      if (pendingTransaction?.status === 'initiated') {
+        await supabase
+          .from('transactions')
+          .update({ status: 'failed' })
+          .eq('id', pendingTransaction.id)
+          .eq('status', 'initiated');
+      }
 
-    if (insertError) throw insertError;
+      const { error: insertError } = await supabase.from('transactions').insert({
+        product_id: productId,
+        phone,
+        user_name: userName || null,
+        amount: amountRupees,
+        jazzcash_txn_id: txnReference,
+        payment_method: 'JazzCash Online',
+        sender_name: userName || null,
+        sender_phone: phone,
+        receipt_path: null,
+        status: 'initiated',
+      });
+
+      if (insertError) throw insertError;
+    }
 
     const fields: Record<string, string> = {
       pp_Amount: amountPaisa,
