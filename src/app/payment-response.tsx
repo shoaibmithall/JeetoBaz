@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type PaymentResponseParams = {
+  verified?: string | string[];
   pp_ResponseCode?: string | string[];
   pp_ResponseMessage?: string | string[];
   pp_TxnRef?: string | string[];
@@ -23,16 +24,18 @@ export default function PaymentResponseScreen() {
 
   const response = useMemo(() => {
     const responseCode = firstValue(params.pp_ResponseCode);
+    const verified = firstValue(params.verified) === '1';
     const rawStatus =
       firstValue(params.transactionStatus) ||
       firstValue(params.status) ||
       responseCode;
     const normalizedStatus = rawStatus?.trim().toLowerCase();
     const successful =
+      verified && (
       responseCode === '000' ||
       normalizedStatus === 'success' ||
       normalizedStatus === 'successful' ||
-      normalizedStatus === 'completed';
+      normalizedStatus === 'completed');
 
     return {
       successful,
