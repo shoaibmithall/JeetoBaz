@@ -1,4 +1,4 @@
-import { Alert, Image, Linking, Platform, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -7,10 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
-import { CheckCircle2, CreditCard, ExternalLink, House, Landmark, PartyPopper, ShieldCheck, TriangleAlert, WalletCards } from 'lucide-react-native';
-
-const JAZZCASH_CHECKOUT_URL =
-  'https://jqjrfnhqqfymwfsdkwmv.supabase.co/functions/v1/jazzcash-payment';
+import { CheckCircle2, CreditCard, House, Landmark, PartyPopper, TriangleAlert, WalletCards } from 'lucide-react-native';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -49,7 +46,6 @@ export default function PaymentScreen() {
   const [submitError, setSubmitError] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userName, setUserName] = useState('');
-  const [onlinePaymentLoading, setOnlinePaymentLoading] = useState(false);
   const submittingRef = useRef(false);
 
   useEffect(() => {
@@ -60,34 +56,6 @@ export default function PaymentScreen() {
       },
     );
   }, []);
-
-  async function openJazzCashCheckout() {
-    if (!productIdValue) {
-      Alert.alert('Missing draw', 'Please open the payment page from an active draw.');
-      return;
-    }
-    if (!userPhone) {
-      router.push('/login');
-      return;
-    }
-
-    setOnlinePaymentLoading(true);
-    const checkoutUrl = new URL('/jazzcash-redirect', 'https://jeetobaz.pk');
-    checkoutUrl.searchParams.set('productId', productIdValue);
-    checkoutUrl.searchParams.set('phone', userPhone);
-    checkoutUrl.searchParams.set('name', userName);
-    try {
-      if (Platform.OS === 'web') {
-        window.location.assign(`${checkoutUrl.pathname}${checkoutUrl.search}`);
-        return;
-      }
-      await Linking.openURL(checkoutUrl.toString());
-    } catch {
-      Alert.alert('Unable to open JazzCash', 'Please try again in a moment.');
-    } finally {
-      setOnlinePaymentLoading(false);
-    }
-  }
 
   async function copyAccountNumber(number: string) {
     await Clipboard.setStringAsync(number);
@@ -306,29 +274,8 @@ export default function PaymentScreen() {
         <Text style={styles.entryFee}>{t('entryFee')}: Rs. {entryFee || 1}</Text>
       </View>
 
-      <View style={styles.onlinePaymentBox}>
-        <View style={styles.onlinePaymentTitleRow}>
-          <ShieldCheck color="#18a663" size={21} />
-          <Text style={styles.onlinePaymentTitle}>JazzCash Online Checkout</Text>
-        </View>
-        <Text style={styles.onlinePaymentText}>
-          Pay securely through the JazzCash sandbox. Your entry will remain pending until JeetoBaz verifies and approves the payment.
-        </Text>
-        <TouchableOpacity
-          accessibilityRole="button"
-          style={[styles.onlinePaymentButton, onlinePaymentLoading && styles.confirmBtnDisabled]}
-          onPress={openJazzCashCheckout}
-          disabled={onlinePaymentLoading}
-        >
-          {!onlinePaymentLoading ? <ExternalLink color="#07130c" size={18} /> : null}
-          <Text style={styles.onlinePaymentButtonText}>
-            {onlinePaymentLoading ? 'Opening JazzCash...' : 'Pay Online with JazzCash'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.paymentBox}>
-        <Text style={styles.payTitle}>Or {t('sendPaymentTo').toLowerCase()}:</Text>
+        <Text style={styles.payTitle}>{t('sendPaymentTo')}:</Text>
 
         {PAYMENT_ACCOUNTS.map((account) => (
           <TouchableOpacity
@@ -405,12 +352,6 @@ const styles = StyleSheet.create({
   productBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35', alignItems: 'center' },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
   entryFee: { fontSize: 16, color: '#FFD700', fontWeight: 'bold' },
-  onlinePaymentBox: { backgroundColor: '#071b13', marginHorizontal: 15, borderRadius: 15, padding: 18, borderWidth: 1, borderColor: '#18a663' },
-  onlinePaymentTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  onlinePaymentTitle: { color: 'white', fontSize: 17, fontWeight: '800' },
-  onlinePaymentText: { color: '#9aac9f', fontSize: 13, lineHeight: 19, marginTop: 8, marginBottom: 14 },
-  onlinePaymentButton: { minHeight: 50, backgroundColor: '#FFD700', borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 16 },
-  onlinePaymentButtonText: { color: '#07130c', fontSize: 15, fontWeight: '800' },
   paymentBox: { margin: 15 },
   payTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   methodCard: { backgroundColor: '#071b13', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 15, borderWidth: 1, borderColor: '#174a35' },
