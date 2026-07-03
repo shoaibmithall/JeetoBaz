@@ -3,9 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
-  BadgeDollarSign, Flame, Gift, Heart, Laptop, ListFilter, LockKeyhole, Play, Search,
+  BadgeDollarSign, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
   ShieldCheck, Target, Ticket, UsersRound, X,
 } from 'lucide-react-native';
+import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
@@ -14,11 +15,14 @@ import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/stor
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { isNotificationForUser } from '@/lib/notifications';
 import { getHomeAdImages } from '@/lib/app-settings';
+import {
+  getProductCategory,
+  type CategorySelection,
+} from '@/lib/product-categories';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
-type CategoryOption = 'all' | 'mobiles' | 'bikes' | 'electronics' | 'more';
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 
@@ -29,22 +33,6 @@ const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] 
   { key: 'price_high', labels: { en: 'Price: High-Low', ur: 'قیمت: زیادہ سے کم', roman: 'Price: High-Low' } },
   { key: 'entry_low', labels: { en: 'Entry: Low-High', ur: 'انٹری: کم سے زیادہ', roman: 'Entry: Low-High' } },
 ];
-
-const CATEGORY_OPTIONS: { key: CategoryOption; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'mobiles', label: 'Mobiles' },
-  { key: 'bikes', label: 'Bikes' },
-  { key: 'electronics', label: 'Electronics' },
-  { key: 'more', label: 'More' },
-];
-
-function getProductCategory(name: string): Exclude<CategoryOption, 'all'> {
-  const value = name.toLowerCase();
-  if (/(iphone|mobile|phone|samsung|pixel|oppo|vivo|infinix)/.test(value)) return 'mobiles';
-  if (/(bike|motorcycle|honda cg|yamaha|suzuki)/.test(value)) return 'bikes';
-  if (/(laptop|ipad|tablet|macbook|tv|watch|airpods|headphone|powerbank|camera|console)/.test(value)) return 'electronics';
-  return 'more';
-}
 
 function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
   if (!drawDate) return null;
@@ -108,7 +96,7 @@ export default function HomeScreen() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('popular');
-  const [category, setCategory] = useState<CategoryOption>('all');
+  const [category, setCategory] = useState<CategorySelection>('all');
   const [selectedEntryFee, setSelectedEntryFee] = useState<number | null>(null);
   const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -152,7 +140,9 @@ export default function HomeScreen() {
     const query = search.trim().toLowerCase();
     const result = products.filter((product) => {
       const matchesSearch = !query || product.name.toLowerCase().includes(query);
-      const matchesCategory = category === 'all' || getProductCategory(product.name) === category;
+      const matchesCategory =
+        category === 'all' ||
+        getProductCategory(product.name) === category;
       const matchesEntryFee = selectedEntryFee === null || (product.entry_fee || 1) === selectedEntryFee;
       return matchesSearch && matchesCategory && matchesEntryFee;
     });
@@ -444,22 +434,11 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
-        {CATEGORY_OPTIONS.map((option) => {
-          const selected = category === option.key;
-          return (
-            <TouchableOpacity
-              key={option.key}
-              style={[styles.categoryChip, { backgroundColor: selected ? colors.goldSoft : colors.surface, borderColor: selected ? colors.gold : colors.border }]}
-              onPress={() => setCategory(option.key)}
-            >
-              {option.key === 'electronics' && <Laptop color={selected ? colors.gold : colors.muted} size={15} />}
-              {option.key === 'more' && <Gift color={selected ? colors.gold : colors.muted} size={15} />}
-              <Text style={[styles.categoryText, { color: selected ? colors.gold : colors.muted }]}>{option.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <CategoryBrowser
+        selectedCategory={category}
+        onSelectCategory={setCategory}
+        colors={colors}
+      />
 
       {cacheInfo ? (
         <View style={[styles.cacheBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
@@ -707,9 +686,6 @@ const styles = StyleSheet.create({
   adBannerImage: { width: '100%', height: '100%' },
   adDots: { position: 'absolute', left: 0, right: 0, bottom: 10, flexDirection: 'row', justifyContent: 'center', gap: 6 },
   adDot: { width: 7, height: 7, borderRadius: 4 },
-  categoryRow: { paddingHorizontal: 15, paddingTop: 14, paddingBottom: 2, gap: 8 },
-  categoryChip: { minHeight: 38, borderRadius: 19, borderWidth: 1, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  categoryText: { fontSize: 12, fontWeight: '700' },
   searchRow: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#04140e' },
   searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 8, borderWidth: 1, borderColor: '#174a35', paddingHorizontal: 12 },
   searchIcon: { fontSize: 16, marginRight: 8 },
