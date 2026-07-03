@@ -2,7 +2,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } fro
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Sun, X } from 'lucide-react-native';
+import { Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Share2, Sun, X } from 'lucide-react-native';
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/lib/i18n';
@@ -11,7 +11,7 @@ type HomeHeaderProps = {
   unreadCount: number;
 };
 
-type MenuRoute = '/language' | '/help';
+type MenuRoute = '/language' | '/help' | '/share';
 
 export function HomeHeader({ unreadCount }: HomeHeaderProps) {
   const router = useRouter();
@@ -95,6 +95,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
               textColor={theme.text}
             />
             <MenuItem icon={<Headphones color={theme.gold} size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.text} />
+            <MenuItem icon={<Share2 color={theme.gold} size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor={theme.text} />
           </View>
         </View>
       </Modal>
