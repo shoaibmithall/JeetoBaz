@@ -1,4 +1,4 @@
-import { Alert, Image, Linking, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Alert, Image, Linking, Platform, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -77,6 +77,10 @@ export default function PaymentScreen() {
     checkoutUrl.searchParams.set('phone', userPhone);
     checkoutUrl.searchParams.set('name', userName);
     try {
+      if (Platform.OS === 'web') {
+        window.location.assign(checkoutUrl.toString());
+        return;
+      }
       await Linking.openURL(checkoutUrl.toString());
     } catch {
       Alert.alert('Unable to open JazzCash', 'Please try again in a moment.');
