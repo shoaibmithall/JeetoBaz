@@ -8,7 +8,7 @@ import { claimPendingReferral } from '@/lib/referrals';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  Check, ChevronRight, Circle, CircleUserRound, ClipboardList, Info,
+  Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Info,
   LockKeyhole, LogOut, Medal, Rocket, Target, Trophy,
   UserPlus,
 } from 'lucide-react-native';
@@ -184,6 +184,12 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
           <LockKeyhole color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faq' as never)}>
+          <CircleHelp color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>Frequently Asked Questions</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
       </View>

@@ -62,6 +62,8 @@ export default function RootLayout() {
         <Tabs.Screen name="payment-response" options={{ href: null }} />
         <Tabs.Screen name="terms" options={{ href: null }} />
         <Tabs.Screen name="help" options={{ href: null }} />
+        <Tabs.Screen name="faq" options={{ href: null }} />
+        <Tabs.Screen name="jazzcash-redirect" options={{ href: null }} />
         <Tabs.Screen name="privacy" options={{ href: null }} />
         <Tabs.Screen name="language" options={{ href: null }} />
         <Tabs.Screen name="notifications" options={{ href: null }} />
