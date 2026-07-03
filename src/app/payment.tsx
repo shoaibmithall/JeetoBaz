@@ -72,13 +72,13 @@ export default function PaymentScreen() {
     }
 
     setOnlinePaymentLoading(true);
-    const checkoutUrl = new URL(JAZZCASH_CHECKOUT_URL);
+    const checkoutUrl = new URL('/jazzcash-redirect', 'https://jeetobaz.pk');
     checkoutUrl.searchParams.set('productId', productIdValue);
     checkoutUrl.searchParams.set('phone', userPhone);
     checkoutUrl.searchParams.set('name', userName);
     try {
       if (Platform.OS === 'web') {
-        window.location.assign(checkoutUrl.toString());
+        window.location.assign(`${checkoutUrl.pathname}${checkoutUrl.search}`);
         return;
       }
       await Linking.openURL(checkoutUrl.toString());
