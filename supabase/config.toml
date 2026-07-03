@@ -1,0 +1,4 @@
+project_id = "jqjrfnhqqfymwfsdkwmv"
+
+[functions.jazzcash-payment]
+verify_jwt = false
