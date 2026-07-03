@@ -81,6 +81,9 @@ export function CategoryBrowser({
   const columnCount = isDesktop ? 5 : isTablet ? 3 : 2;
   const cellWidth = `${100 / columnCount}%` as `${number}%`;
   const isMoreCategory = !QUICK_CATEGORY_KEYS.some((key) => key === selectedCategory);
+  const visibleCategoryKeys: CategorySelection[] = isDesktop
+    ? ['all', ...PRODUCT_CATEGORIES.map((category) => category.key)]
+    : [...QUICK_CATEGORY_KEYS];
 
   const groupedCategories = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
@@ -102,69 +105,79 @@ export function CategoryBrowser({
 
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.quickRow}
+      <View
+        style={[
+          isDesktop ? styles.desktopBar : styles.compactBar,
+          isDesktop
+            ? { backgroundColor: colors.surface, borderColor: colors.border }
+            : null,
+        ]}
       >
-        {QUICK_CATEGORY_KEYS.map((key) => {
-          const category = getCategoryByKey(key);
-          const label = key === 'all' ? 'All' : category?.label || key;
-          const Icon = QUICK_ICONS[key];
-          const selected = selectedCategory === key;
+        {isDesktop ? (
+          <View style={styles.desktopHeading}>
+            <Grid2X2 color={colors.gold} size={17} />
+            <Text style={[styles.desktopTitle, { color: colors.gold }]}>Categories</Text>
+          </View>
+        ) : null}
 
-          return (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.quickRow, isDesktop && styles.desktopOptions]}
+        >
+          {visibleCategoryKeys.map((key) => {
+            const category = getCategoryByKey(key);
+            const label = key === 'all' ? 'All' : category?.label || key;
+            const Icon =
+              key === 'all'
+                ? Grid2X2
+                : isDesktop
+                  ? category?.icon || Grid2X2
+                  : QUICK_ICONS[key as keyof typeof QUICK_ICONS] || category?.icon || Grid2X2;
+            const selected = selectedCategory === key;
+
+            return (
+              <TouchableOpacity
+                key={key}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                style={[
+                  isDesktop ? styles.desktopChip : styles.quickChip,
+                  {
+                    backgroundColor: selected ? colors.goldSoft : colors.surfaceAlt,
+                    borderColor: selected ? colors.gold : colors.border,
+                  },
+                ]}
+                onPress={() => selectCategory(key)}
+              >
+                <Icon color={selected ? colors.gold : colors.muted} size={15} strokeWidth={2} />
+                <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+
+          {!isDesktop ? (
             <TouchableOpacity
-              key={key}
               accessibilityRole="button"
-              accessibilityState={{ selected }}
               style={[
                 styles.quickChip,
                 {
-                  backgroundColor: selected ? colors.goldSoft : colors.surface,
-                  borderColor: selected ? colors.gold : colors.border,
+                  backgroundColor: isMoreCategory ? colors.goldSoft : colors.surfaceAlt,
+                  borderColor: isMoreCategory ? colors.gold : colors.border,
                 },
               ]}
-              onPress={() => selectCategory(key)}
+              onPress={() => setShowAll(true)}
             >
-              <Icon color={selected ? colors.gold : colors.muted} size={16} strokeWidth={2} />
-              <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
-                {label}
+              <Grid2X2 color={isMoreCategory ? colors.gold : colors.muted} size={16} strokeWidth={2} />
+              <Text style={[styles.quickLabel, { color: isMoreCategory ? colors.gold : colors.muted }]}>
+                More
               </Text>
             </TouchableOpacity>
-          );
-        })}
-
-        <TouchableOpacity
-          accessibilityRole="button"
-          style={[
-            styles.quickChip,
-            {
-              backgroundColor:
-                isMoreCategory ? colors.goldSoft : colors.surface,
-              borderColor:
-                isMoreCategory ? colors.gold : colors.border,
-            },
-          ]}
-          onPress={() => setShowAll(true)}
-        >
-          <Grid2X2
-            color={isMoreCategory ? colors.gold : colors.muted}
-            size={16}
-            strokeWidth={2}
-          />
-          <Text
-            style={[
-              styles.quickLabel,
-              {
-                color: isMoreCategory ? colors.gold : colors.muted,
-              },
-            ]}
-          >
-            More
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <Modal
         visible={showAll}
@@ -302,11 +315,51 @@ export function CategoryBrowser({
 }
 
 const styles = StyleSheet.create({
+  compactBar: {
+    width: '100%',
+  },
+  desktopBar: {
+    marginHorizontal: 15,
+    marginTop: 14,
+    marginBottom: 2,
+    borderWidth: 1,
+    borderRadius: 13,
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  desktopHeading: {
+    paddingHorizontal: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  desktopTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
   quickRow: {
     paddingHorizontal: 15,
     paddingTop: 14,
     paddingBottom: 2,
     gap: 8,
+  },
+  desktopOptions: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    gap: 6,
+  },
+  desktopChip: {
+    minHeight: 36,
+    borderRadius: 9,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   quickChip: {
     minHeight: 40,

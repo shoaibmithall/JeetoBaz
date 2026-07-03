@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
 import { useWindowDimensions } from 'react-native';
-import { Heart, House, Medal, Share2, Target, UserRound } from 'lucide-react-native';
+import { Heart, House, Medal, Target, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 
@@ -54,7 +54,7 @@ export default function RootLayout() {
         <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }} />
         <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }} />
         <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <UserRound color={color} size={21} /> }} />
-        <Tabs.Screen name="share" options={{ title: t('share'), tabBarIcon: ({ color }) => <Share2 color={color} size={21} /> }} />
+        <Tabs.Screen name="share" options={{ href: null }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="draw" options={{ href: null }} />
         <Tabs.Screen name="winner" options={{ href: null }} />
