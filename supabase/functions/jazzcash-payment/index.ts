@@ -31,15 +31,6 @@ function getSupabaseSecretKey() {
   throw new Error('Supabase server secret is unavailable');
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
 function pakistanTimestamp(date: Date) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Karachi',
@@ -94,51 +85,30 @@ function redirectToWebsite(params: Record<string, string>) {
   return Response.redirect(url.toString(), 303);
 }
 
-function renderCheckoutForm(fields: Record<string, string>) {
-  const nonce = crypto.randomUUID().replaceAll('-', '');
-  const inputs = Object.entries(fields)
-    .map(
-      ([name, value]) =>
-        `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`,
-    )
-    .join('\n');
-
+function checkoutResponse(fields: Record<string, string>) {
   return new Response(
-    `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; form-action https://sandbox.jazzcash.com.pk">
-    <title>Opening JazzCash</title>
-    <style>
-      body{margin:0;background:#020d09;color:#fff;font-family:system-ui,sans-serif;display:grid;min-height:100vh;place-items:center}
-      main{width:min(88vw,440px);background:#071b13;border:1px solid #174a35;border-radius:18px;padding:28px;text-align:center}
-      h1{color:#ffd700;font-size:24px;margin:0 0 10px}p{color:#aab7af;line-height:1.5}
-      button{width:100%;border:0;border-radius:12px;background:#ffd700;color:#07130c;padding:15px;font-size:16px;font-weight:800;cursor:pointer}
-    </style>
-  </head>
-  <body>
-    <main>
-      <h1>Opening JazzCash</h1>
-      <p>Your secure sandbox checkout is being prepared.</p>
-      <form id="jazzcash-form" method="post" action="${JAZZCASH_SANDBOX_URL}">
-        ${inputs}
-        <button type="submit">Continue to JazzCash</button>
-      </form>
-    </main>
-    <script nonce="${nonce}">document.getElementById('jazzcash-form').submit()</script>
-  </body>
-</html>`,
+    JSON.stringify({ action: JAZZCASH_SANDBOX_URL, fields }),
     {
       headers: {
-        'content-type': 'text/html; charset=utf-8',
+        'content-type': 'application/json; charset=utf-8',
+        'access-control-allow-origin': 'https://jeetobaz.pk',
         'cache-control': 'no-store',
         'x-content-type-options': 'nosniff',
         'referrer-policy': 'no-referrer',
       },
     },
   );
+}
+
+function checkoutError(message: string, status = 400) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'access-control-allow-origin': 'https://jeetobaz.pk',
+      'cache-control': 'no-store',
+    },
+  });
 }
 
 Deno.serve(async (request) => {
@@ -207,10 +177,7 @@ Deno.serve(async (request) => {
     const userName = requestUrl.searchParams.get('name')?.trim().slice(0, 60) || '';
 
     if (!/^[0-9a-f-]{36}$/i.test(productId) || !/^\+923\d{9}$/.test(phone)) {
-      return redirectToWebsite({
-        verified: '0',
-        pp_ResponseMessage: 'Invalid checkout request',
-      });
+      return checkoutError('Invalid checkout request');
     }
 
     const [{ data: user }, { data: product }, { data: existingEntry }] = await Promise.all([
@@ -229,19 +196,15 @@ Deno.serve(async (request) => {
     ]);
 
     if (!user || !product || product.status !== 'active' || existingEntry) {
-      return redirectToWebsite({
-        verified: '0',
-        pp_ResponseMessage: existingEntry
+      return checkoutError(
+        existingEntry
           ? 'You already have an entry in this draw'
           : 'This checkout is not available',
-      });
+      );
     }
 
     if ((product.current_entries || 0) >= product.max_entries) {
-      return redirectToWebsite({
-        verified: '0',
-        pp_ResponseMessage: 'This draw is full',
-      });
+      return checkoutError('This draw is full');
     }
 
     const { data: pendingTransaction } = await supabase
@@ -255,10 +218,7 @@ Deno.serve(async (request) => {
       .maybeSingle();
 
     if (pendingTransaction?.status === 'pending') {
-      return redirectToWebsite({
-        verified: '0',
-        pp_ResponseMessage: 'Your payment is already waiting for approval',
-      });
+      return checkoutError('Your payment is already waiting for approval');
     }
 
     const now = new Date();
@@ -325,9 +285,12 @@ Deno.serve(async (request) => {
     };
     fields.pp_SecureHash = await createSecureHash(fields, integritySalt);
 
-    return renderCheckoutForm(fields);
+    return checkoutResponse(fields);
   } catch (error) {
     console.error('JazzCash payment error', error);
+    if (request.method === 'GET') {
+      return checkoutError('JazzCash checkout is temporarily unavailable', 500);
+    }
     return redirectToWebsite({
       verified: '0',
       pp_ResponseMessage: 'JazzCash checkout is temporarily unavailable',
