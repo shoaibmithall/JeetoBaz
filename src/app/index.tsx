@@ -82,13 +82,17 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const showPriceSidebar = width >= 700;
   const productAreaWidth = width;
-  const columnCount = productAreaWidth >= 1250 ? 3 : productAreaWidth >= 680 ? 2 : 1;
+  const columnCount = productAreaWidth >= 1250 ? 3 : productAreaWidth >= 680 ? 2 : 3;
   const isMultiColumn = columnCount > 1;
+  const isCompactGrid = productAreaWidth < 680;
   const gridGap = 16;
-  const gridPadding = 16;
+  const gridPadding = isCompactGrid ? 10 : 16;
   const productCardWidth = isMultiColumn
     ? (productAreaWidth - (gridPadding * 2) - (gridGap * (columnCount - 1))) / columnCount
     : undefined;
+  const productImageHeight = isCompactGrid && productCardWidth
+    ? Math.max(82, Math.min(116, productCardWidth * 0.95))
+    : isMultiColumn ? 250 : 200;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -569,7 +573,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn]}>
+          <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
             {filteredProducts.map((p) => {
               const drawSchedule = getDrawScheduleStatus(p, language, time);
               const liveLink = p.live_link;
@@ -579,14 +583,23 @@ export default function HomeScreen() {
                   style={[
                     styles.card,
                     isMultiColumn && { width: productCardWidth, margin: 0 },
+                    isCompactGrid && styles.cardCompact,
                     { backgroundColor: colors.surface, borderColor: colors.border },
                   ]}
                 >
-                <View style={[styles.verifiedBanner, { backgroundColor: colors.primarySoft }]}>
-                  <View style={styles.iconText}><CheckCircle2 color={colors.primary} size={15} /><Text style={[styles.verifiedBannerText, { color: colors.primary }]}>{t('verifiedDraw')}</Text></View>
+                <View style={[styles.verifiedBanner, isCompactGrid && styles.verifiedBannerCompact, { backgroundColor: colors.primarySoft }]}>
+                  <View style={styles.iconText}>
+                    <CheckCircle2 color={colors.primary} size={isCompactGrid ? 11 : 15} />
+                    <Text numberOfLines={1} style={[styles.verifiedBannerText, isCompactGrid && styles.verifiedBannerTextCompact, { color: colors.primary }]}>
+                      {t('verifiedDraw')}
+                    </Text>
+                  </View>
                   {liveLink && (
                     <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
-                      <View style={styles.liveBtn}><Play color="#ff4444" size={13} fill="#ff4444" /><Text style={styles.liveBtnText}>{t('watchLive')}</Text></View>
+                      <View style={[styles.liveBtn, isCompactGrid && styles.liveBtnCompact]}>
+                        <Play color="#ff4444" size={isCompactGrid ? 10 : 13} fill="#ff4444" />
+                        <Text numberOfLines={1} style={[styles.liveBtnText, isCompactGrid && styles.liveBtnTextCompact]}>{t('watchLive')}</Text>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -594,50 +607,66 @@ export default function HomeScreen() {
                 {p.image_url && (
                   <Image
                     source={{ uri: p.image_url }}
-                    style={[styles.productImage, isMultiColumn && styles.productImageMultiColumn]}
-                    resizeMode={isMultiColumn ? 'contain' : 'cover'}
+                    style={[
+                      styles.productImage,
+                      isMultiColumn && styles.productImageMultiColumn,
+                      { height: productImageHeight },
+                    ]}
+                    resizeMode={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
                   />
                 )}
 
-                <View style={styles.cardBody}>
-                  <View style={styles.cardHeader}>
-                    <Text style={[styles.productName, { color: colors.text }]}>{p.name}</Text>
+                <View style={[styles.cardBody, isCompactGrid && styles.cardBodyCompact]}>
+                  <View style={[styles.cardHeader, isCompactGrid && styles.cardHeaderCompact]}>
+                    <Text
+                      numberOfLines={isCompactGrid ? 2 : undefined}
+                      style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
+                    >
+                      {p.name}
+                    </Text>
                     <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
-                      <Heart color={favorites.includes(p.id) ? '#ff4d67' : colors.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={25} />
+                      <Heart color={favorites.includes(p.id) ? '#ff4d67' : colors.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={isCompactGrid ? 17 : 25} />
                     </TouchableOpacity>
                   </View>
-                  {p.description && <Text style={[styles.description, { color: colors.muted }]}>{p.description}</Text>}
-
-                  <View style={[styles.countdownBox, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
-                    <Text style={[styles.countdownLabel, { color: colors.gold }]}>{drawSchedule.label}</Text>
-                    <Text style={[styles.countdownTime, { color: colors.gold }]}>{drawSchedule.value}</Text>
-                  </View>
-                  <Text style={[styles.drawScheduleNote, { color: colors.muted }]}>{drawSchedule.note}</Text>
-
-                  {p.draw_date && (
-                    <View style={styles.iconText}><CalendarDays color="#4a9eff" size={15} /><Text style={styles.drawDate}>{t('drawDate')}: {p.draw_date}</Text></View>
+                  {p.description && (
+                    <Text
+                      numberOfLines={isCompactGrid ? 1 : undefined}
+                      style={[styles.description, isCompactGrid && styles.descriptionCompact, { color: colors.muted }]}
+                    >
+                      {p.description}
+                    </Text>
                   )}
 
-                  <View style={styles.priceRow}>
-                    <Text style={styles.originalPrice}>Rs. {p.price?.toLocaleString()}</Text>
-                    <View style={styles.entryBadge}>
-                      <Text style={styles.entryFee}>{t('entryFee')}: Rs. {p.entry_fee || 1}</Text>
+                  <View style={[styles.countdownBox, isCompactGrid && styles.countdownBoxCompact, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+                    <Text numberOfLines={1} style={[styles.countdownLabel, isCompactGrid && styles.countdownLabelCompact, { color: colors.gold }]}>{drawSchedule.label}</Text>
+                    <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{drawSchedule.value}</Text>
+                  </View>
+                  <Text numberOfLines={isCompactGrid ? 1 : undefined} style={[styles.drawScheduleNote, isCompactGrid && styles.drawScheduleNoteCompact, { color: colors.muted }]}>{drawSchedule.note}</Text>
+
+                  {p.draw_date && (
+                    <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {p.draw_date}</Text></View>
+                  )}
+
+                  <View style={[styles.priceRow, isCompactGrid && styles.priceRowCompact]}>
+                    <Text numberOfLines={1} style={[styles.originalPrice, isCompactGrid && styles.originalPriceCompact]}>Rs. {p.price?.toLocaleString()}</Text>
+                    <View style={[styles.entryBadge, isCompactGrid && styles.entryBadgeCompact]}>
+                      <Text numberOfLines={1} style={[styles.entryFee, isCompactGrid && styles.entryFeeCompact]}>{t('entryFee')}: Rs. {p.entry_fee || 1}</Text>
                     </View>
                   </View>
 
-                  <View style={styles.iconText}><UsersRound color={colors.muted} size={15} /><Text style={[styles.participants, { color: colors.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
+                  <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
 
-                  <View style={[styles.progressBar, { backgroundColor: colors.borderSoft }]}>
-                    <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
+                  <View style={[styles.progressBar, isCompactGrid && styles.progressBarCompact, { backgroundColor: colors.borderSoft }]}>
+                    <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
                   </View>
 
-                  <View style={styles.spotsRow}>
-                    <View style={styles.iconText}><Flame color="#ff6b6b" size={14} /><Text style={styles.spots}>{(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text></View>
-                    <Text style={styles.percent}>{Math.round(((p.current_entries||0)/p.max_entries)*100)}%</Text>
+                  <View style={[styles.spotsRow, isCompactGrid && styles.spotsRowCompact]}>
+                    <View style={styles.iconText}><Flame color="#ff6b6b" size={isCompactGrid ? 10 : 14} /><Text numberOfLines={1} style={[styles.spots, isCompactGrid && styles.spotsCompact]}>{(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text></View>
+                    <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{Math.round(((p.current_entries||0)/p.max_entries)*100)}%</Text>
                   </View>
 
-                  <TouchableOpacity style={styles.button} onPress={() => handleEnter(p)}>
-                    <Target color="#000" size={19} /><Text style={styles.buttonText}>{t('enterFor')} Rs.{p.entry_fee || 1}</Text>
+                  <TouchableOpacity style={[styles.button, isCompactGrid && styles.buttonCompact]} onPress={() => handleEnter(p)}>
+                    <Target color="#000" size={isCompactGrid ? 12 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{p.entry_fee || 1}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -767,35 +796,62 @@ const styles = StyleSheet.create({
   clearSearch: { color: '#18a663', fontSize: 14, fontWeight: 'bold' },
   productGrid: { width: '100%' },
   productGridMultiColumn: { paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' },
+  productGridCompact: { paddingHorizontal: 10, gap: 10 },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
+  cardCompact: { borderRadius: 11 },
   verifiedBanner: { backgroundColor: '#082d1e', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  verifiedBannerCompact: { paddingHorizontal: 5, paddingVertical: 5, gap: 4 },
   verifiedBannerText: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
+  verifiedBannerTextCompact: { fontSize: 8, maxWidth: 58 },
   liveBtn: { backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', gap: 4, alignItems: 'center' },
+  liveBtnCompact: { paddingHorizontal: 5, paddingVertical: 3, borderRadius: 6, gap: 2 },
   liveBtnText: { color: '#ff4444', fontSize: 12, fontWeight: 'bold' },
+  liveBtnTextCompact: { fontSize: 8, maxWidth: 34 },
   productImage: { width: '100%', height: 200 },
   productImageMultiColumn: { height: 250 },
   cardBody: { padding: 15 },
+  cardBodyCompact: { padding: 7 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
+  cardHeaderCompact: { alignItems: 'flex-start', gap: 3, marginBottom: 4 },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
+  productNameCompact: { fontSize: 10.5, lineHeight: 13, minHeight: 26 },
   heartBtn: { fontSize: 24, marginLeft: 10 },
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
+  descriptionCompact: { fontSize: 8.5, lineHeight: 11, marginBottom: 6 },
   countdownBox: { backgroundColor: '#2a2105', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
+  countdownBoxCompact: { borderRadius: 7, paddingHorizontal: 5, paddingVertical: 5, marginBottom: 4, flexDirection: 'column', alignItems: 'flex-start', gap: 1 },
   countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
+  countdownLabelCompact: { fontSize: 8, marginRight: 0, flex: 0 },
   countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
+  countdownTimeCompact: { fontSize: 9.5, textAlign: 'left' },
   drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
+  drawScheduleNoteCompact: { fontSize: 8, lineHeight: 10, marginBottom: 5 },
   drawDate: { color: '#4a9eff', fontSize: 12 },
+  drawDateCompact: { fontSize: 8 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  priceRowCompact: { flexDirection: 'column', alignItems: 'flex-start', gap: 4, marginBottom: 6 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
+  originalPriceCompact: { fontSize: 10.5 },
   entryBadge: { backgroundColor: '#082d1e', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  entryBadgeCompact: { paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5, maxWidth: '100%' },
   entryFee: { fontSize: 13, color: '#18a663', fontWeight: 'bold' },
+  entryFeeCompact: { fontSize: 8.5 },
   participants: { fontSize: 13, color: '#aaa' },
+  participantsCompact: { fontSize: 8.5, flexShrink: 1 },
   progressBar: { backgroundColor: '#174a35', height: 8, borderRadius: 4, marginBottom: 6 },
+  progressBarCompact: { height: 5, borderRadius: 3, marginBottom: 4 },
   progress: { backgroundColor: '#18a663', height: 8, borderRadius: 4 },
+  progressCompact: { height: 5, borderRadius: 3 },
   spotsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  spotsRowCompact: { marginBottom: 7, gap: 3 },
   spots: { color: '#ff6b6b', fontSize: 12 },
+  spotsCompact: { fontSize: 8, flexShrink: 1 },
   percent: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
+  percentCompact: { fontSize: 8.5 },
   button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  buttonCompact: { paddingHorizontal: 4, paddingVertical: 8, borderRadius: 7, gap: 3 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  buttonTextCompact: { fontSize: 8.5, flexShrink: 1 },
   footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 30 },
   footerText: { color: '#444', fontSize: 12, marginBottom: 5 },
 });
