@@ -13,6 +13,7 @@ export default function RootLayout() {
   const siteUrl = 'https://jeetobaz.pk/';
   const siteTitle = 'JeetoBaz - Pakistan Lucky Draw Platform';
   const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
+  const iconVersion = '20260709';
 
   return (
     <>
@@ -21,9 +22,13 @@ export default function RootLayout() {
         <meta name="description" content={siteDescription} />
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
         <meta name="theme-color" content="#020d09" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="JeetoBaz" />
         <link rel="canonical" href={siteUrl} />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/jeetobaz-icon.png" />
+        <link rel="manifest" href={`/manifest.json?v=${iconVersion}`} />
+        <link rel="icon" type="image/png" sizes="48x48" href={`/favicon.png?v=${iconVersion}`} />
+        <link rel="apple-touch-icon" sizes="180x180" href={`/apple-touch-icon.png?v=${iconVersion}`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="JeetoBaz" />
         <meta property="og:title" content={siteTitle} />
