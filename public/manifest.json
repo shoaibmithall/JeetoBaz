@@ -1,16 +1,23 @@
 {
   "name": "JeetoBaz",
   "short_name": "JeetoBaz",
-  "description": "JeetoBaz lucky draw platform for Pakistan.",
-  "start_url": "/",
+  "description": "JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0A0A0A",
-  "theme_color": "#1DB954",
+  "background_color": "#07130c",
+  "theme_color": "#07130c",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/jeetobaz-icon.png",
-      "sizes": "1024x1024",
+      "src": "/icon-192.png?v=20260709",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png?v=20260709",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
