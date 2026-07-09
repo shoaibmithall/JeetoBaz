@@ -82,7 +82,7 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const showPriceSidebar = width >= 700;
   const productAreaWidth = width;
-  const columnCount = productAreaWidth >= 1250 ? 3 : productAreaWidth >= 680 ? 2 : 3;
+  const columnCount = productAreaWidth >= 1250 ? 3 : 2;
   const isMultiColumn = columnCount > 1;
   const isCompactGrid = productAreaWidth < 680;
   const gridGap = 16;
