@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
+import { useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Heart, House, Medal, Target, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
@@ -9,11 +10,16 @@ export default function RootLayout() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const isCompact = width < 480;
+  const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
+  const isCompact = !hasHydratedLayout || width < 480;
   const siteUrl = 'https://jeetobaz.pk/';
   const siteTitle = 'JeetoBaz - Pakistan Lucky Draw Platform';
   const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
   const iconVersion = '20260710';
+
+  useEffect(() => {
+    setHasHydratedLayout(true);
+  }, []);
 
   return (
     <>

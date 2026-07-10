@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -74,16 +74,23 @@ export function CategoryBrowser({
   colors,
 }: CategoryBrowserProps) {
   const { width, height } = useWindowDimensions();
+  const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [query, setQuery] = useState('');
-  const isDesktop = width >= 1024;
-  const isTablet = width >= 640;
+  const responsiveWidth = hasHydratedLayout ? width : 390;
+  const responsiveHeight = hasHydratedLayout ? height : 720;
+  const isDesktop = responsiveWidth >= 1024;
+  const isTablet = responsiveWidth >= 640;
   const columnCount = isDesktop ? 5 : isTablet ? 3 : 2;
   const cellWidth = `${100 / columnCount}%` as `${number}%`;
   const isMoreCategory = !QUICK_CATEGORY_KEYS.some((key) => key === selectedCategory);
   const visibleCategoryKeys: CategorySelection[] = isDesktop
     ? ['all', ...PRODUCT_CATEGORIES.map((category) => category.key)]
     : [...QUICK_CATEGORY_KEYS];
+
+  useEffect(() => {
+    setHasHydratedLayout(true);
+  }, []);
 
   const groupedCategories = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
@@ -203,7 +210,7 @@ export function CategoryBrowser({
               styles.sheet,
               isDesktop ? styles.sheetDesktop : styles.sheetMobile,
               {
-                maxHeight: Math.min(height * 0.9, 820),
+                maxHeight: Math.min(responsiveHeight * 0.9, 820),
                 backgroundColor: colors.surfaceAlt,
                 borderColor: colors.border,
               },

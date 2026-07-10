@@ -82,8 +82,10 @@ export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const showPriceSidebar = width >= 700;
-  const productAreaWidth = width;
+  const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
+  const responsiveWidth = hasHydratedLayout ? width : 390;
+  const showPriceSidebar = responsiveWidth >= 700;
+  const productAreaWidth = responsiveWidth;
   const columnCount = productAreaWidth >= 1250 ? 3 : 2;
   const isMultiColumn = columnCount > 1;
   const isCompactGrid = productAreaWidth < 680;
@@ -115,7 +117,7 @@ export default function HomeScreen() {
   const deferredSearch = useDeferredValue(search);
   const deferredCategory = useDeferredValue(category);
   const deferredSelectedEntryFee = useDeferredValue(selectedEntryFee);
-  const isCompact = width < 480;
+  const isCompact = responsiveWidth < 480;
   const isDark = theme.mode === 'dark';
   const colors = isDark ? {
     background: '#020d09',
@@ -178,6 +180,7 @@ export default function HomeScreen() {
     : null;
 
   useEffect(() => {
+    setHasHydratedLayout(true);
     fetchProducts();
     fetchHomeAds();
     const timer = setInterval(() => setTime(new Date()), 60000);
