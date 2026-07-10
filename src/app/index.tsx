@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
@@ -10,7 +10,7 @@ import {
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
-import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
+import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
@@ -23,6 +23,21 @@ import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
+type HomeColors = {
+  background: string;
+  surface: string;
+  surfaceAlt: string;
+  elevated: string;
+  border: string;
+  borderSoft: string;
+  text: string;
+  muted: string;
+  primary: string;
+  primarySoft: string;
+  gold: string;
+  goldSoft: string;
+};
+type DrawSchedule = ReturnType<typeof getDrawScheduleStatus>;
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
@@ -79,6 +94,158 @@ function getDrawScheduleStatus(product: Product, language: LanguageCode, now: Da
   };
 }
 
+const HomeProductCard = memo(function HomeProductCard({
+  product,
+  drawSchedule,
+  isFavorite,
+  isCompactGrid,
+  isMultiColumn,
+  productCardWidth,
+  productImageHeight,
+  colors,
+  t,
+  onEnter,
+  onToggleFavorite,
+}: {
+  product: Product;
+  drawSchedule: DrawSchedule;
+  isFavorite: boolean;
+  isCompactGrid: boolean;
+  isMultiColumn: boolean;
+  productCardWidth?: number;
+  productImageHeight: number;
+  colors: HomeColors;
+  t: (key: TranslationKey) => string;
+  onEnter: (product: Product) => void;
+  onToggleFavorite: (productId: string) => void;
+}) {
+  const [imageLoading, setImageLoading] = useState(Boolean(product.image_url));
+  const [imageFailed, setImageFailed] = useState(false);
+  const liveLink = product.live_link;
+  const showImage = Boolean(product.image_url && !imageFailed);
+  const currentEntries = product.current_entries || 0;
+  const maxEntries = product.max_entries || 1;
+  const progressPercent = Math.min((currentEntries / maxEntries) * 100, 100);
+  const spotsLeft = Math.max(maxEntries - currentEntries, 0);
+
+  return (
+    <View
+      style={[
+        styles.card,
+        isMultiColumn && { width: productCardWidth, margin: 0 },
+        isCompactGrid && styles.cardCompact,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+      ]}
+    >
+      <View style={[styles.verifiedBanner, isCompactGrid && styles.verifiedBannerCompact, { backgroundColor: colors.primarySoft }]}>
+        <View style={styles.iconText}>
+          <CheckCircle2 color={colors.primary} size={isCompactGrid ? 11 : 15} />
+          <Text numberOfLines={1} style={[styles.verifiedBannerText, isCompactGrid && styles.verifiedBannerTextCompact, { color: colors.primary }]}>
+            {t('verifiedDraw')}
+          </Text>
+        </View>
+        {liveLink && (
+          <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
+            <View style={[styles.liveBtn, isCompactGrid && styles.liveBtnCompact]}>
+              <Play color="#ff4444" size={isCompactGrid ? 10 : 13} fill="#ff4444" />
+              <Text numberOfLines={1} style={[styles.liveBtnText, isCompactGrid && styles.liveBtnTextCompact]}>{t('watchLive')}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={{ height: productImageHeight }}>
+        {showImage ? (
+          <>
+            {imageLoading ? (
+              <View style={[styles.productImageFallback, { backgroundColor: colors.surfaceAlt }]}>
+                <View style={[styles.skeletonBlock, styles.productImageSkeleton, { backgroundColor: colors.borderSoft }]} />
+              </View>
+            ) : null}
+            <ExpoImage
+              source={{ uri: product.image_url || '' }}
+              cachePolicy="disk"
+              transition={160}
+              contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                setImageFailed(true);
+              }}
+              style={[
+                styles.productImage,
+                isMultiColumn && styles.productImageMultiColumn,
+                { height: productImageHeight, opacity: imageLoading ? 0 : 1 },
+              ]}
+            />
+          </>
+        ) : (
+          <View style={[styles.productImageFallback, { backgroundColor: colors.surfaceAlt }]}>
+            <Ticket color={colors.gold} size={isCompactGrid ? 24 : 38} />
+            <Text numberOfLines={1} style={[styles.productImageFallbackText, isCompactGrid && styles.productImageFallbackTextCompact, { color: colors.muted }]}>
+              JeetoBaz Draw
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={[styles.cardBody, isCompactGrid && styles.cardBodyCompact]}>
+        <View style={[styles.cardHeader, isCompactGrid && styles.cardHeaderCompact]}>
+          <Text
+            numberOfLines={isCompactGrid ? 2 : undefined}
+            style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
+          >
+            {product.name}
+          </Text>
+          <TouchableOpacity onPress={() => onToggleFavorite(product.id)} accessibilityLabel={`${isFavorite ? t('removeFavorite') : t('addFavorite')}: ${product.name}`}>
+            <Heart color={isFavorite ? '#ff4d67' : colors.muted} fill={isFavorite ? '#ff4d67' : 'transparent'} size={isCompactGrid ? 17 : 25} />
+          </TouchableOpacity>
+        </View>
+        {product.description && (
+          <Text
+            numberOfLines={isCompactGrid ? 1 : undefined}
+            style={[styles.description, isCompactGrid && styles.descriptionCompact, { color: colors.muted }]}
+          >
+            {product.description}
+          </Text>
+        )}
+
+        <View style={[styles.countdownBox, isCompactGrid && styles.countdownBoxCompact, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+          <Text numberOfLines={1} style={[styles.countdownLabel, isCompactGrid && styles.countdownLabelCompact, { color: colors.gold }]}>{drawSchedule.label}</Text>
+          <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{drawSchedule.value}</Text>
+        </View>
+        <Text numberOfLines={isCompactGrid ? 1 : undefined} style={[styles.drawScheduleNote, isCompactGrid && styles.drawScheduleNoteCompact, { color: colors.muted }]}>{drawSchedule.note}</Text>
+
+        {product.draw_date && (
+          <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {product.draw_date}</Text></View>
+        )}
+
+        <View style={[styles.priceRow, isCompactGrid && styles.priceRowCompact]}>
+          <Text numberOfLines={1} style={[styles.originalPrice, isCompactGrid && styles.originalPriceCompact]}>Rs. {product.price?.toLocaleString()}</Text>
+          <View style={[styles.entryBadge, isCompactGrid && styles.entryBadgeCompact]}>
+            <Text numberOfLines={1} style={[styles.entryFee, isCompactGrid && styles.entryFeeCompact]}>{t('entryFee')}: Rs. {product.entry_fee || 1}</Text>
+          </View>
+        </View>
+
+        <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{currentEntries.toLocaleString()} {t('participants')}</Text></View>
+
+        <View style={[styles.progressBar, isCompactGrid && styles.progressBarCompact, { backgroundColor: colors.borderSoft }]}>
+          <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${progressPercent}%` }]} />
+        </View>
+
+        <View style={[styles.spotsRow, isCompactGrid && styles.spotsRowCompact]}>
+          <View style={styles.iconText}><Flame color="#ff6b6b" size={isCompactGrid ? 10 : 14} /><Text numberOfLines={1} style={[styles.spots, isCompactGrid && styles.spotsCompact]}>{spotsLeft.toLocaleString()} {t('spotsLeft')}</Text></View>
+          <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{Math.round(progressPercent)}%</Text>
+        </View>
+
+        <TouchableOpacity style={[styles.button, isCompactGrid && styles.buttonCompact]} onPress={() => onEnter(product)}>
+          <Target color="#000" size={isCompactGrid ? 12 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
 export default function HomeScreen() {
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
@@ -121,7 +288,7 @@ export default function HomeScreen() {
   const deferredSelectedEntryFee = useDeferredValue(selectedEntryFee);
   const isCompact = responsiveWidth < 480;
   const isDark = theme.mode === 'dark';
-  const colors = isDark ? {
+  const colors = useMemo<HomeColors>(() => isDark ? {
     background: '#020d09',
     surface: '#071b13',
     surfaceAlt: '#04140e',
@@ -147,7 +314,7 @@ export default function HomeScreen() {
     primarySoft: theme.primarySoft,
     gold: theme.gold,
     goldSoft: theme.goldSoft,
-  };
+  }, [isDark, theme.background, theme.border, theme.gold, theme.goldSoft, theme.mode, theme.muted, theme.primary, theme.primarySoft, theme.surface, theme.surfaceAlt, theme.text]);
 
   const filteredProducts = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
@@ -643,102 +810,21 @@ export default function HomeScreen() {
           <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
             {filteredProducts.map((p) => {
               const drawSchedule = getDrawScheduleStatus(p, language, time);
-              const liveLink = p.live_link;
               return (
-                <View
+                <HomeProductCard
                   key={p.id}
-                  style={[
-                    styles.card,
-                    isMultiColumn && { width: productCardWidth, margin: 0 },
-                    isCompactGrid && styles.cardCompact,
-                    { backgroundColor: colors.surface, borderColor: colors.border },
-                  ]}
-                >
-                <View style={[styles.verifiedBanner, isCompactGrid && styles.verifiedBannerCompact, { backgroundColor: colors.primarySoft }]}>
-                  <View style={styles.iconText}>
-                    <CheckCircle2 color={colors.primary} size={isCompactGrid ? 11 : 15} />
-                    <Text numberOfLines={1} style={[styles.verifiedBannerText, isCompactGrid && styles.verifiedBannerTextCompact, { color: colors.primary }]}>
-                      {t('verifiedDraw')}
-                    </Text>
-                  </View>
-                  {liveLink && (
-                    <TouchableOpacity onPress={() => Linking.openURL(liveLink)}>
-                      <View style={[styles.liveBtn, isCompactGrid && styles.liveBtnCompact]}>
-                        <Play color="#ff4444" size={isCompactGrid ? 10 : 13} fill="#ff4444" />
-                        <Text numberOfLines={1} style={[styles.liveBtnText, isCompactGrid && styles.liveBtnTextCompact]}>{t('watchLive')}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {p.image_url && (
-                  <ExpoImage
-                    source={{ uri: p.image_url }}
-                    cachePolicy="disk"
-                    transition={180}
-                    contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
-                    style={[
-                      styles.productImage,
-                      isMultiColumn && styles.productImageMultiColumn,
-                      { height: productImageHeight },
-                    ]}
-                  />
-                )}
-
-                <View style={[styles.cardBody, isCompactGrid && styles.cardBodyCompact]}>
-                  <View style={[styles.cardHeader, isCompactGrid && styles.cardHeaderCompact]}>
-                    <Text
-                      numberOfLines={isCompactGrid ? 2 : undefined}
-                      style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
-                    >
-                      {p.name}
-                    </Text>
-                    <TouchableOpacity onPress={() => toggleFavorite(p.id)} accessibilityLabel={`${favorites.includes(p.id) ? t('removeFavorite') : t('addFavorite')}: ${p.name}`}>
-                      <Heart color={favorites.includes(p.id) ? '#ff4d67' : colors.muted} fill={favorites.includes(p.id) ? '#ff4d67' : 'transparent'} size={isCompactGrid ? 17 : 25} />
-                    </TouchableOpacity>
-                  </View>
-                  {p.description && (
-                    <Text
-                      numberOfLines={isCompactGrid ? 1 : undefined}
-                      style={[styles.description, isCompactGrid && styles.descriptionCompact, { color: colors.muted }]}
-                    >
-                      {p.description}
-                    </Text>
-                  )}
-
-                  <View style={[styles.countdownBox, isCompactGrid && styles.countdownBoxCompact, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
-                    <Text numberOfLines={1} style={[styles.countdownLabel, isCompactGrid && styles.countdownLabelCompact, { color: colors.gold }]}>{drawSchedule.label}</Text>
-                    <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{drawSchedule.value}</Text>
-                  </View>
-                  <Text numberOfLines={isCompactGrid ? 1 : undefined} style={[styles.drawScheduleNote, isCompactGrid && styles.drawScheduleNoteCompact, { color: colors.muted }]}>{drawSchedule.note}</Text>
-
-                  {p.draw_date && (
-                    <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {p.draw_date}</Text></View>
-                  )}
-
-                  <View style={[styles.priceRow, isCompactGrid && styles.priceRowCompact]}>
-                    <Text numberOfLines={1} style={[styles.originalPrice, isCompactGrid && styles.originalPriceCompact]}>Rs. {p.price?.toLocaleString()}</Text>
-                    <View style={[styles.entryBadge, isCompactGrid && styles.entryBadgeCompact]}>
-                      <Text numberOfLines={1} style={[styles.entryFee, isCompactGrid && styles.entryFeeCompact]}>{t('entryFee')}: Rs. {p.entry_fee || 1}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{(p.current_entries || 0).toLocaleString()} {t('participants')}</Text></View>
-
-                  <View style={[styles.progressBar, isCompactGrid && styles.progressBarCompact, { backgroundColor: colors.borderSoft }]}>
-                    <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
-                  </View>
-
-                  <View style={[styles.spotsRow, isCompactGrid && styles.spotsRowCompact]}>
-                    <View style={styles.iconText}><Flame color="#ff6b6b" size={isCompactGrid ? 10 : 14} /><Text numberOfLines={1} style={[styles.spots, isCompactGrid && styles.spotsCompact]}>{(p.max_entries - (p.current_entries||0)).toLocaleString()} {t('spotsLeft')}</Text></View>
-                    <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{Math.round(((p.current_entries||0)/p.max_entries)*100)}%</Text>
-                  </View>
-
-                  <TouchableOpacity style={[styles.button, isCompactGrid && styles.buttonCompact]} onPress={() => handleEnter(p)}>
-                    <Target color="#000" size={isCompactGrid ? 12 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{p.entry_fee || 1}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                  product={p}
+                  drawSchedule={drawSchedule}
+                  isFavorite={favorites.includes(p.id)}
+                  isCompactGrid={isCompactGrid}
+                  isMultiColumn={isMultiColumn}
+                  productCardWidth={productCardWidth}
+                  productImageHeight={productImageHeight}
+                  colors={colors}
+                  t={t}
+                  onEnter={handleEnter}
+                  onToggleFavorite={toggleFavorite}
+                />
               );
             })}
           </View>
@@ -889,6 +975,10 @@ const styles = StyleSheet.create({
   liveBtnTextCompact: { fontSize: 8, maxWidth: 34 },
   productImage: { width: '100%', height: 200 },
   productImageMultiColumn: { height: 250 },
+  productImageFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  productImageSkeleton: { width: '54%', height: '46%' },
+  productImageFallbackText: { fontSize: 12, fontWeight: '800' },
+  productImageFallbackTextCompact: { fontSize: 8.5 },
   cardBody: { padding: 15 },
   cardBodyCompact: { padding: 7 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
