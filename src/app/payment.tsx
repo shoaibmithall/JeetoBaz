@@ -1,4 +1,4 @@
-import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -23,6 +23,11 @@ type ReceiptAsset = {
   dataUrl?: string | null;
 };
 
+function firstParam(value: string | string[] | undefined, fallback = '') {
+  if (Array.isArray(value)) return value[0] || fallback;
+  return value || fallback;
+}
+
 function dataUrlToArrayBuffer(dataUrl: string) {
   const base64 = dataUrl.split(',')[1];
   if (!base64) throw new Error('Receipt image could not be prepared.');
@@ -38,15 +43,19 @@ export default function PaymentScreen() {
   const { t } = useLanguage();
   const router = useRouter();
   const { productId, productName, entryFee } = useLocalSearchParams();
-  const productIdValue = Array.isArray(productId) ? productId[0] : productId;
+  const productIdValue = firstParam(productId);
+  const productNameValue = firstParam(productName, 'Selected draw');
+  const entryFeeValue = firstParam(entryFee, '1');
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
+  const [receiptPreviewError, setReceiptPreviewError] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('payment');
   const [submitError, setSubmitError] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userName, setUserName] = useState('');
   const submittingRef = useRef(false);
+  const canSubmit = Boolean(receipt && productIdValue && !loading);
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
@@ -78,6 +87,7 @@ export default function PaymentScreen() {
 
     if (!result.canceled && result.assets[0]) {
       const mimeType = result.assets[0].mimeType || 'image/jpeg';
+      setReceiptPreviewError('');
       setReceipt({
         uri: result.assets[0].uri,
         fileName: result.assets[0].fileName,
@@ -270,8 +280,8 @@ export default function PaymentScreen() {
       </View>
 
       <View style={styles.productBox}>
-        <Text style={styles.productName}>{productName}</Text>
-        <Text style={styles.entryFee}>{t('entryFee')}: Rs. {entryFee || 1}</Text>
+        <Text style={styles.productName}>{productNameValue}</Text>
+        <Text style={styles.entryFee}>{t('entryFee')}: Rs. {entryFeeValue}</Text>
       </View>
 
       <View style={styles.paymentBox}>
@@ -309,10 +319,31 @@ export default function PaymentScreen() {
 
       <View style={styles.txnBox}>
         <Text style={styles.txnLabel}>Enter Screenshot:</Text>
+        <Text style={styles.receiptHelpText}>Upload a clear screenshot of your payment receipt for admin approval.</Text>
         <TouchableOpacity style={styles.receiptButton} onPress={pickReceipt}>
           <Text style={styles.receiptButtonText}>{receipt ? 'Change Screenshot' : 'Upload Payment Screenshot'}</Text>
         </TouchableOpacity>
-        {receipt && <Image source={{ uri: receipt.uri }} style={styles.receiptPreview} resizeMode="cover" />}
+        {receipt ? (
+          <>
+            <Image
+              source={{ uri: receipt.uri }}
+              style={styles.receiptPreview}
+              resizeMode="cover"
+              onError={() => setReceiptPreviewError('Receipt preview could not load. You can choose the screenshot again.')}
+            />
+            <View style={styles.receiptSelectedRow}>
+              <CheckCircle2 color="#18a663" size={16} />
+              <Text style={styles.receiptSelectedText}>Screenshot selected</Text>
+            </View>
+          </>
+        ) : null}
+        {receiptPreviewError ? <Text style={styles.receiptErrorText}>{receiptPreviewError}</Text> : null}
+        {!productIdValue ? (
+          <View style={styles.warningBox}>
+            <TriangleAlert color="#FFD700" size={17} />
+            <Text style={styles.warningText}>Please open payment from a draw again so the product can be verified.</Text>
+          </View>
+        ) : null}
         {submitError ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorTitle}>Payment submit failed</Text>
@@ -323,9 +354,9 @@ export default function PaymentScreen() {
           </View>
         ) : null}
         <TouchableOpacity
-          style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
+          style={[styles.confirmBtn, !canSubmit && styles.confirmBtnDisabled]}
           onPress={confirmPayment}
-          disabled={loading}
+          disabled={!canSubmit}
         >
           {!loading && <CheckCircle2 color="#000" size={19} />}
           <Text style={styles.confirmBtnText}>{loading ? t('confirming') : t('confirmEntry')}</Text>
@@ -366,10 +397,15 @@ const styles = StyleSheet.create({
   step: { color: '#aaa', fontSize: 14, marginBottom: 6 },
   txnBox: { margin: 15 },
   txnLabel: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
-  txnInput: { backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#FFD700', color: 'white', padding: 15, fontSize: 16, marginBottom: 15 },
+  receiptHelpText: { color: '#9fb7ad', fontSize: 13, lineHeight: 18, marginBottom: 10 },
   receiptButton: { backgroundColor: '#1a3a5c', borderColor: '#4a9eff', borderWidth: 1, borderRadius: 10, padding: 15, alignItems: 'center', marginBottom: 12 },
   receiptButtonText: { color: '#4a9eff', fontSize: 15, fontWeight: 'bold' },
   receiptPreview: { width: '100%', height: 180, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#174a35' },
+  receiptSelectedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  receiptSelectedText: { color: '#18a663', fontWeight: 'bold', fontSize: 13 },
+  receiptErrorText: { color: '#ffb4b4', fontSize: 12, lineHeight: 17, marginBottom: 12 },
+  warningBox: { backgroundColor: '#2a2105', borderColor: '#FFD700', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 8, alignItems: 'center' },
+  warningText: { color: '#ffe88a', fontSize: 13, lineHeight: 18, flex: 1 },
   errorBox: { backgroundColor: '#2b0d0d', borderColor: '#ff4444', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12 },
   errorTitle: { color: '#ff7777', fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
   errorText: { color: '#ffd5d5', fontSize: 13, lineHeight: 18, marginBottom: 10 },
