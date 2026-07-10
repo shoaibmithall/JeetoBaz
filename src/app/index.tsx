@@ -24,6 +24,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
+const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
@@ -113,6 +114,7 @@ export default function HomeScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
+  const [adsLoading, setAdsLoading] = useState(true);
   const router = useRouter();
   const deferredSearch = useDeferredValue(search);
   const deferredCategory = useDeferredValue(category);
@@ -232,6 +234,12 @@ export default function HomeScreen() {
     setLoading(true);
     setLoadError(false);
     setCacheInfo('');
+    const cached = await loadOfflineCache<Product[]>(ACTIVE_DRAWS_CACHE_KEY);
+    if (cached?.data.length) {
+      setProducts(cached.data);
+      setLoading(false);
+    }
+
     const { data, error } = await supabase
       .from('products')
       .select(HOME_PRODUCT_COLUMNS)
@@ -243,7 +251,6 @@ export default function HomeScreen() {
       await saveOfflineCache(ACTIVE_DRAWS_CACHE_KEY, data);
     }
     if (error) {
-      const cached = await loadOfflineCache<Product[]>(ACTIVE_DRAWS_CACHE_KEY);
       if (cached) {
         setProducts(cached.data);
         setCacheInfo(`Showing saved draws from ${new Date(cached.savedAt).toLocaleString()}.`);
@@ -255,12 +262,25 @@ export default function HomeScreen() {
   }
 
   async function fetchHomeAds() {
-    const { images } = await getHomeAdImages();
-    setHomeAdImages(images);
-    setActiveAdIndex(0);
-    if (images.length > 0) {
-      await ExpoImage.prefetch(images.slice(0, 2), 'disk');
+    setAdsLoading(true);
+    const cached = await loadOfflineCache<string[]>(HOME_ADS_CACHE_KEY);
+    if (cached?.data.length) {
+      setHomeAdImages(cached.data);
+      setActiveAdIndex(0);
+      setAdsLoading(false);
+      void ExpoImage.prefetch(cached.data.slice(0, 2), 'disk');
     }
+
+    const { images, error } = await getHomeAdImages();
+    if (!error) {
+      setHomeAdImages(images);
+      setActiveAdIndex(0);
+      await saveOfflineCache(HOME_ADS_CACHE_KEY, images);
+      if (images.length > 0) {
+        void ExpoImage.prefetch(images.slice(0, 2), 'disk');
+      }
+    }
+    setAdsLoading(false);
   }
 
   async function handleEnter(product: Product) {
@@ -450,6 +470,12 @@ export default function HomeScreen() {
               ))}
             </View>
           ) : null}
+        </View>
+      ) : adsLoading ? (
+        <View style={[styles.adBannerCard, styles.adBannerLoading, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.skeletonBlock, styles.adBannerLoadingBar, { backgroundColor: colors.borderSoft }]} />
+          <View style={[styles.skeletonBlock, styles.adBannerLoadingTitle, { backgroundColor: colors.goldSoft }]} />
+          <Text style={[styles.adBannerLoadingText, { color: colors.muted }]}>Loading latest JeetoBaz offers...</Text>
         </View>
       ) : null}
 
@@ -757,6 +783,10 @@ const styles = StyleSheet.create({
   adBannerCard: { marginHorizontal: 15, marginTop: 16, borderRadius: 18, borderWidth: 1, height: 260, overflow: 'hidden', position: 'relative' },
   adBannerCardCompact: { height: 205 },
   adBannerImage: { width: '100%', height: '100%' },
+  adBannerLoading: { alignItems: 'center', justifyContent: 'center', gap: 12, padding: 18 },
+  adBannerLoadingBar: { width: '72%', height: 18 },
+  adBannerLoadingTitle: { width: '42%', height: 28 },
+  adBannerLoadingText: { fontSize: 12, fontWeight: '700' },
   adDots: { position: 'absolute', left: 0, right: 0, bottom: 10, flexDirection: 'row', justifyContent: 'center', gap: 6 },
   adDot: { width: 7, height: 7, borderRadius: 4 },
   searchRow: { flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#04140e' },
