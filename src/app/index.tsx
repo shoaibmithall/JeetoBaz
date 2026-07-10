@@ -28,9 +28,6 @@ const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 5
 const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
-const IMAGE_PLACEHOLDER =
-  '|12E2R0000~q9F00-;Mx-;WBRjWB00WB~q~qRjWBt7%MWB%Mt7WBWB%Mt7M{Rj';
-
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
   { key: 'newest', labels: { en: 'Newest', ur: 'تازہ ترین', roman: 'Newest' } },
@@ -432,7 +429,6 @@ export default function HomeScreen() {
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
           <ExpoImage
             source={{ uri: activeAdImage }}
-            placeholder={{ blurhash: IMAGE_PLACEHOLDER }}
             cachePolicy="disk"
             transition={180}
             contentFit="cover"
@@ -649,7 +645,6 @@ export default function HomeScreen() {
                 {p.image_url && (
                   <ExpoImage
                     source={{ uri: p.image_url }}
-                    placeholder={{ blurhash: IMAGE_PLACEHOLDER }}
                     cachePolicy="disk"
                     transition={180}
                     contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
