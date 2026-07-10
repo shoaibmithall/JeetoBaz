@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
@@ -14,7 +14,6 @@ import { translate, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
-import { isNotificationForUser } from '@/lib/notifications';
 import { getHomeAdImages } from '@/lib/app-settings';
 import {
   getProductCategory,
@@ -28,6 +27,7 @@ const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
+const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
 const IMAGE_PLACEHOLDER =
   '|12E2R0000~q9F00-;Mx-;WBRjWB00WB~q~qRjWBt7%MWB%Mt7WBWB%Mt7M{Rj';
 
@@ -115,6 +115,9 @@ export default function HomeScreen() {
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const router = useRouter();
+  const deferredSearch = useDeferredValue(search);
+  const deferredCategory = useDeferredValue(category);
+  const deferredSelectedEntryFee = useDeferredValue(selectedEntryFee);
   const isCompact = width < 480;
   const isDark = theme.mode === 'dark';
   const colors = isDark ? {
@@ -146,13 +149,13 @@ export default function HomeScreen() {
   };
 
   const filteredProducts = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = deferredSearch.trim().toLowerCase();
     const result = products.filter((product) => {
       const matchesSearch = !query || product.name.toLowerCase().includes(query);
       const matchesCategory =
-        category === 'all' ||
-        getProductCategory(product.name) === category;
-      const matchesEntryFee = selectedEntryFee === null || (product.entry_fee || 1) === selectedEntryFee;
+        deferredCategory === 'all' ||
+        getProductCategory(product.name) === deferredCategory;
+      const matchesEntryFee = deferredSelectedEntryFee === null || (product.entry_fee || 1) === deferredSelectedEntryFee;
       return matchesSearch && matchesCategory && matchesEntryFee;
     });
 
@@ -163,7 +166,7 @@ export default function HomeScreen() {
       if (sortBy === 'entry_low') return (a.entry_fee || 1) - (b.entry_fee || 1);
       return (b.current_entries || 0) - (a.current_entries || 0);
     });
-  }, [category, products, search, selectedEntryFee, sortBy]);
+  }, [deferredCategory, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
 
   const entryFeeCounts = useMemo(() => {
     return products.reduce<Record<number, number>>((counts, product) => {
@@ -211,12 +214,12 @@ export default function HomeScreen() {
         }
         const { data: notificationData } = await supabase
           .from('notifications')
-          .select('*')
+          .select(HOME_NOTIFICATION_COLUMNS)
           .order('created_at', { ascending: false })
           .limit(50);
         if (!active) return;
         setUnreadCount((notificationData || []).filter(
-          (item) => isNotificationForUser(item, storedPhone) && !readNotificationIds.includes(item.id)
+          (item) => (!item.target_phone || item.target_phone === storedPhone) && !readNotificationIds.includes(item.id)
         ).length);
       }
 
