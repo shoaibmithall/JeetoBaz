@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
@@ -25,6 +26,10 @@ import { useAppTheme } from '@/hooks/use-theme';
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
+const HOME_PRODUCTS_LIMIT = 120;
+const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
+const IMAGE_PLACEHOLDER =
+  '|12E2R0000~q9F00-;Mx-;WBRjWB00WB~q~qRjWBt7%MWB%Mt7WBWB%Mt7M{Rj';
 
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
@@ -224,7 +229,12 @@ export default function HomeScreen() {
     setLoading(true);
     setLoadError(false);
     setCacheInfo('');
-    const { data, error } = await supabase.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('products')
+      .select(HOME_PRODUCT_COLUMNS)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(HOME_PRODUCTS_LIMIT);
     if (data) {
       setProducts(data);
       await saveOfflineCache(ACTIVE_DRAWS_CACHE_KEY, data);
@@ -245,6 +255,9 @@ export default function HomeScreen() {
     const { images } = await getHomeAdImages();
     setHomeAdImages(images);
     setActiveAdIndex(0);
+    if (images.length > 0) {
+      await ExpoImage.prefetch(images.slice(0, 2), 'disk');
+    }
   }
 
   async function handleEnter(product: Product) {
@@ -392,13 +405,6 @@ export default function HomeScreen() {
     );
   }
 
-  if (loading) return (
-    <View style={[styles.loading, { backgroundColor: colors.background }]}>
-      <ActivityIndicator size="large" color={colors.gold} />
-      <Text style={[styles.loadingText, { color: colors.gold }]}>{t('loadingJeetoBaz')}</Text>
-    </View>
-  );
-
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
@@ -421,7 +427,14 @@ export default function HomeScreen() {
 
       {activeAdImage ? (
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
-          <Image source={{ uri: activeAdImage }} style={styles.adBannerImage} resizeMode="cover" />
+          <ExpoImage
+            source={{ uri: activeAdImage }}
+            placeholder={{ blurhash: IMAGE_PLACEHOLDER }}
+            cachePolicy="disk"
+            transition={180}
+            contentFit="cover"
+            style={styles.adBannerImage}
+          />
           {homeAdImages.length > 1 ? (
             <View style={styles.adDots}>
               {homeAdImages.map((image, index) => (
@@ -559,7 +572,32 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {filteredProducts.length === 0 && (
+          {loading && (
+            <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
+              {Array.from({ length: isCompactGrid ? 4 : 6 }).map((_, index) => (
+                <View
+                  key={`home-skeleton-${index}`}
+                  style={[
+                    styles.card,
+                    styles.skeletonCard,
+                    isMultiColumn && { width: productCardWidth, margin: 0 },
+                    isCompactGrid && styles.cardCompact,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <View style={[styles.skeletonBlock, styles.skeletonBanner, { backgroundColor: colors.primarySoft }]} />
+                  <View style={[styles.skeletonBlock, { height: productImageHeight, backgroundColor: colors.surfaceAlt }]} />
+                  <View style={[styles.cardBody, isCompactGrid && styles.cardBodyCompact]}>
+                    <View style={[styles.skeletonBlock, styles.skeletonTitle, { backgroundColor: colors.borderSoft }]} />
+                    <View style={[styles.skeletonBlock, styles.skeletonLine, { backgroundColor: colors.borderSoft }]} />
+                    <View style={[styles.skeletonBlock, styles.skeletonButton, { backgroundColor: colors.goldSoft }]} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {!loading && filteredProducts.length === 0 && (
             <View style={styles.emptyBox}>
               <Search color={colors.muted} size={46} />
               <Text style={[styles.emptyText, { color: colors.text }]}>{t('noDrawsFound')}</Text>
@@ -573,6 +611,7 @@ export default function HomeScreen() {
             </View>
           )}
 
+          {!loading && filteredProducts.length > 0 && (
           <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
             {filteredProducts.map((p) => {
               const drawSchedule = getDrawScheduleStatus(p, language, time);
@@ -605,14 +644,17 @@ export default function HomeScreen() {
                 </View>
 
                 {p.image_url && (
-                  <Image
+                  <ExpoImage
                     source={{ uri: p.image_url }}
+                    placeholder={{ blurhash: IMAGE_PLACEHOLDER }}
+                    cachePolicy="disk"
+                    transition={180}
+                    contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
                     style={[
                       styles.productImage,
                       isMultiColumn && styles.productImageMultiColumn,
                       { height: productImageHeight },
                     ]}
-                    resizeMode={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
                   />
                 )}
 
@@ -673,6 +715,7 @@ export default function HomeScreen() {
               );
             })}
           </View>
+          )}
         </View>
       </View>
 
@@ -799,6 +842,12 @@ const styles = StyleSheet.create({
   productGridCompact: { paddingHorizontal: 10, gap: 10 },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
   cardCompact: { borderRadius: 11 },
+  skeletonCard: { opacity: 0.92 },
+  skeletonBlock: { borderRadius: 10 },
+  skeletonBanner: { height: 31, borderRadius: 0 },
+  skeletonTitle: { height: 18, width: '82%', marginBottom: 9 },
+  skeletonLine: { height: 12, width: '62%', marginBottom: 12 },
+  skeletonButton: { height: 40, width: '100%' },
   verifiedBanner: { backgroundColor: '#082d1e', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verifiedBannerCompact: { paddingHorizontal: 5, paddingVertical: 5, gap: 4 },
   verifiedBannerText: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
