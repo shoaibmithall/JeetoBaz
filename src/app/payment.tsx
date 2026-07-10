@@ -1,5 +1,5 @@
 import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,6 +15,18 @@ const PAYMENT_ACCOUNTS = [
   { method: 'Easypaisa', color: '#ff8c32', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
   { method: 'My ABL Allied Bank / Bank Transfer', color: '#4a9eff', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
 ];
+
+function subscribeToHydration() {
+  return () => {};
+}
+
+function getClientHydrationSnapshot() {
+  return true;
+}
+
+function getServerHydrationSnapshot() {
+  return false;
+}
 
 type ReceiptAsset = {
   uri: string;
@@ -43,9 +55,14 @@ export default function PaymentScreen() {
   const { t } = useLanguage();
   const router = useRouter();
   const { productId, productName, entryFee } = useLocalSearchParams();
-  const productIdValue = firstParam(productId);
-  const productNameValue = firstParam(productName, 'Selected draw');
-  const entryFeeValue = firstParam(entryFee, '1');
+  const hasHydratedParams = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+  const productIdValue = hasHydratedParams ? firstParam(productId) : '';
+  const productNameValue = hasHydratedParams ? firstParam(productName, 'Selected draw') : 'Selected draw';
+  const entryFeeValue = hasHydratedParams ? firstParam(entryFee, '1') : '1';
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [receiptPreviewError, setReceiptPreviewError] = useState('');
