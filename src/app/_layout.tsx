@@ -5,6 +5,7 @@ import { useWindowDimensions } from 'react-native';
 import { Heart, House, Medal, Target, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
+import { requestHomeScrollToTop } from '@/lib/home-scroll';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -60,7 +61,15 @@ export default function RootLayout() {
           tabBarInactiveTintColor: theme.subtle,
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ color }) => <House color={color} size={21} /> }} />
+        <Tabs.Screen
+          name="index"
+          options={{ title: 'Home', tabBarIcon: ({ color }) => <House color={color} size={21} /> }}
+          listeners={{
+            tabPress: () => {
+              requestHomeScrollToTop();
+            },
+          }}
+        />
         <Tabs.Screen name="entries" options={{ title: t('myEntries'), tabBarIcon: ({ color }) => <Target color={color} size={21} /> }} />
         <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }} />
         <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }} />

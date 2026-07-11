@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getHomeAdImages } from '@/lib/app-settings';
+import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import {
   getProductCategory,
   type CategorySelection,
@@ -282,6 +283,7 @@ export default function HomeScreen() {
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
+  const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
   const router = useRouter();
   const deferredSearch = useDeferredValue(search);
   const deferredCategory = useDeferredValue(category);
@@ -354,6 +356,12 @@ export default function HomeScreen() {
     fetchHomeAds();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    return subscribeHomeScrollToTop(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
   }, []);
 
   useEffect(() => {
@@ -598,7 +606,7 @@ export default function HomeScreen() {
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentInsetAdjustmentBehavior="automatic">
+    <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: colors.background }]} contentInsetAdjustmentBehavior="automatic">
       <Modal visible={showPriceFilter && !showPriceSidebar} transparent animationType="slide" onRequestClose={() => setShowPriceFilter(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setShowPriceFilter(false)}>
           <View style={styles.priceSheet} onStartShouldSetResponder={() => true}>
