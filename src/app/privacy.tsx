@@ -1,6 +1,7 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue } from '@/lib/storage';
 
 const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
@@ -11,6 +12,7 @@ export default function PrivacyScreen() {
   const [userName, setUserName] = useState('Not provided');
   const [userPhone, setUserPhone] = useState('Not provided');
   const router = useRouter();
+  const { theme } = useAppTheme();
 
   useEffect(() => {
     Promise.all([getStoredValue('userName'), getStoredValue('userPhone')]).then(([name, phone]) => {
@@ -45,71 +47,71 @@ export default function PrivacyScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← Back</Text>
+          <Text style={[styles.backButton, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Privacy Policy</Text>
+        <Text style={[styles.title, { color: theme.gold }]}>Privacy Policy</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.updated}>Effective date: June 24, 2026</Text>
-        <Text style={styles.intro}>
+        <Text style={[styles.updated, { color: theme.subtle }]}>Effective date: June 24, 2026</Text>
+        <Text style={[styles.intro, { color: theme.text }]}>
           This Privacy Policy explains how JeetoBaz collects, uses, stores, and protects information when you use the app or website.
         </Text>
 
-        <Text style={styles.sectionTitle}>Information We Collect</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Information We Collect</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           • Your name and Pakistani mobile number{`\n`}
           • Draw entries and participation history{`\n`}
           • Payment details needed for verification, including amount, payment method, receipt screenshot, and transaction reference where available{`\n`}
           • Support requests you choose to send, including the subject and message
         </Text>
 
-        <Text style={styles.sectionTitle}>How We Use Information</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>How We Use Information</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           We use this information to create and manage your profile, process draw participation, verify payments, contact winners, provide support, prevent fraud, and operate JeetoBaz securely.
         </Text>
 
-        <Text style={styles.sectionTitle}>Storage and Sharing</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Storage and Sharing</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           App records are stored using our database service provider. We may share only the information needed with payment, hosting, or support providers that help operate JeetoBaz, or where required by law. JeetoBaz does not sell your personal information.
         </Text>
 
-        <Text style={styles.sectionTitle}>Public Information</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Public Information</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           Winner and participant displays may show a masked version of a phone number. Full phone numbers are not intended to be shown publicly.
         </Text>
 
-        <Text style={styles.sectionTitle}>Data Retention</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Data Retention</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           We retain information while your account is active and as reasonably needed for payment verification, disputes, fraud prevention, record keeping, or legal obligations. Payment receipt screenshots may be cleared after review. Information that is no longer required is deleted or anonymized where practical.
         </Text>
 
-        <Text style={styles.sectionTitle}>Your Choices</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Your Choices</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           You may ask us to review, correct, or delete your account information. We will verify ownership of the registered number before processing a deletion request. Some transaction or legal records may be retained where required.
         </Text>
 
-        <View style={styles.deletionBox}>
-          <Text style={styles.deletionTitle}>Delete Your Account</Text>
-          <Text style={styles.deletionText}>
+        <View style={[styles.deletionBox, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
+          <Text style={[styles.deletionTitle, { color: theme.text }]}>Delete Your Account</Text>
+          <Text style={[styles.deletionText, { color: theme.muted }]}>
             Send a deletion request from your email app. Our support team will verify the account and confirm when the request is completed.
           </Text>
-          <TouchableOpacity style={styles.deleteButton} onPress={requestAccountDeletion}>
+          <TouchableOpacity style={[styles.deleteButton, { backgroundColor: theme.danger }]} onPress={requestAccountDeletion}>
             <Text style={styles.deleteButtonText}>Request by Email</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.whatsAppButton} onPress={openWhatsAppDeletionRequest}>
-            <Text style={styles.whatsAppButtonText}>Request by WhatsApp</Text>
+          <TouchableOpacity style={[styles.whatsAppButton, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]} onPress={openWhatsAppDeletionRequest}>
+            <Text style={[styles.whatsAppButtonText, { color: theme.primary }]}>Request by WhatsApp</Text>
           </TouchableOpacity>
-          <Text style={styles.emailText}>Email: {SUPPORT_EMAIL}</Text>
-          <Text style={styles.emailText}>WhatsApp: {SUPPORT_WHATSAPP}</Text>
+          <Text style={[styles.emailText, { color: theme.subtle }]}>Email: {SUPPORT_EMAIL}</Text>
+          <Text style={[styles.emailText, { color: theme.subtle }]}>WhatsApp: {SUPPORT_WHATSAPP}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Contact Us</Text>
-        <Text style={styles.text}>
+        <Text style={[styles.sectionTitle, { color: theme.gold }]}>Contact Us</Text>
+        <Text style={[styles.text, { color: theme.muted }]}>
           Questions about privacy or personal data can be sent to {SUPPORT_EMAIL} or {SUPPORT_WHATSAPP}.
         </Text>
       </View>
