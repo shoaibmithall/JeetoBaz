@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import Head from 'expo-router/head';
 import { useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { Heart, House, Medal, Target, UserRound } from 'lucide-react-native';
+import { Heart, House, Medal, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { requestHomeScrollToTop } from '@/lib/home-scroll';
@@ -52,11 +52,17 @@ export default function RootLayout() {
             backgroundColor: theme.surface,
             borderTopColor: theme.border,
             borderTopWidth: 1,
-            height: 60,
-            paddingBottom: isCompact ? 5 : 8,
+            height: isCompact ? 66 : 60,
+            paddingBottom: isCompact ? 6 : 8,
+            paddingTop: isCompact ? 3 : 0,
           },
-          tabBarShowLabel: !isCompact,
-          tabBarIconStyle: isCompact ? { marginTop: 5 } : undefined,
+          tabBarShowLabel: true,
+          tabBarLabelStyle: {
+            fontSize: isCompact ? 10 : 12,
+            fontWeight: '600',
+            marginTop: isCompact ? 1 : 0,
+          },
+          tabBarIconStyle: isCompact ? { marginTop: 3 } : undefined,
           tabBarActiveTintColor: theme.gold,
           tabBarInactiveTintColor: theme.subtle,
         }}
@@ -70,10 +76,10 @@ export default function RootLayout() {
             },
           }}
         />
-        <Tabs.Screen name="entries" options={{ title: t('myEntries'), tabBarIcon: ({ color }) => <Target color={color} size={21} /> }} />
         <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }} />
         <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }} />
         <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <UserRound color={color} size={21} /> }} />
+        <Tabs.Screen name="entries" options={{ href: null }} />
         <Tabs.Screen name="share" options={{ href: null }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="draw" options={{ href: null }} />
