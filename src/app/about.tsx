@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -9,7 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   AppWindow,
   Award,
@@ -65,6 +65,10 @@ const sections: Array<{ id: SectionId; title: string; subtitle: string }> = [
   { id: 'app', title: 'App Information', subtitle: 'Version, platform and development details' },
 ];
 
+function isSectionId(value: string | undefined): value is SectionId {
+  return sections.some((section) => section.id === value);
+}
+
 const responsibleUseRules = [
   {
     title: '1. Fair Participation',
@@ -102,10 +106,21 @@ const responsibleUseRules = [
 
 export default function AboutJeetoBazScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ section?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const [selected, setSelected] = useState<SectionId | null>(null);
+  const [selected, setSelected] = useState<SectionId | null>(() => {
+    const sectionParam = typeof params.section === 'string' ? params.section : undefined;
+    return isSectionId(sectionParam) ? sectionParam : null;
+  });
   const contentWidth = Math.min(width - 30, 920);
+
+  useEffect(() => {
+    const sectionParam = typeof params.section === 'string' ? params.section : undefined;
+    if (isSectionId(sectionParam)) {
+      setSelected(sectionParam);
+    }
+  }, [params.section]);
 
   async function openLink(url: string, fallback: string) {
     try {

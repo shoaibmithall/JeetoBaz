@@ -9,8 +9,9 @@ import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName }
 import { useAppTheme } from '@/hooks/use-theme';
 import {
   Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Info,
-  LockKeyhole, LogOut, Medal, Rocket, Target, Trophy,
+  HeartHandshake, LockKeyhole, LogOut, Medal, Rocket, Target, Trophy,
   UserPlus,
+  UsersRound,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
@@ -128,6 +129,10 @@ export default function ProfileScreen() {
     setInputPhone('');
   }
 
+  function openAboutSection(section: 'social' | 'works' | 'support') {
+    router.push({ pathname: '/about', params: { section } });
+  }
+
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
@@ -169,6 +174,7 @@ export default function ProfileScreen() {
           <Text style={[styles.menuText, { color: theme.text }]}>{t('pastWinners')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/referral' as never)}>
           <UserPlus color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>Refer & Earn</Text>
@@ -190,6 +196,24 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faq' as never)}>
           <CircleHelp color={theme.gold} size={21} />
           <Text style={[styles.menuText, { color: theme.text }]}>Frequently Asked Questions</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('social')}>
+          <UsersRound color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>Follow JeetoBaz</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('works')}>
+          <Rocket color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>How JeetoBaz Works</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('support')}>
+          <HeartHandshake color={theme.gold} size={21} />
+          <Text style={[styles.menuText, { color: theme.text }]}>Support & Contact</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
       </View>
