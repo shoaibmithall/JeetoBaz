@@ -12,7 +12,7 @@ module.exports = ({ config }) => ({
     [
       'expo-image-picker',
       {
-        photosPermission: 'JeetoBaz needs photo access so you can upload payment receipts or winner photos.',
+        photosPermission: 'JeetoBaz needs photo access so you can upload profile photos, payment receipts, or winner photos.',
         cameraPermission: false,
         microphonePermission: false,
       },

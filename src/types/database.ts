@@ -47,6 +47,7 @@ export type User = {
   phone: string;
   created_at: string;
   jazzcash_number?: string | null;
+  avatar_url?: string | null;
   referral_code?: string | null;
   referral_device_token?: string | null;
   referred_by?: string | null;
@@ -148,7 +149,7 @@ export type Database = {
       users: Table<
         User,
         Pick<User, 'name' | 'phone'> &
-          Partial<Pick<User, 'jazzcash_number' | 'referral_code' | 'referral_device_token' | 'referred_by'>>
+          Partial<Pick<User, 'jazzcash_number' | 'avatar_url' | 'referral_code' | 'referral_device_token' | 'referred_by'>>
       >;
       referral_claims: Table<ReferralClaim>;
       referral_rewards: Table<ReferralReward>;
@@ -208,6 +209,10 @@ export type Database = {
       claim_referral_code: {
         Args: { requested_phone: string; requested_code: string; requested_device_token: string };
         Returns: string;
+      };
+      update_profile_avatar: {
+        Args: { requested_phone: string; requested_avatar_url: string };
+        Returns: boolean;
       };
       get_referral_eligible_products: {
         Args: Record<string, never>;

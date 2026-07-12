@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -14,6 +15,24 @@ import {
   UsersRound,
 } from 'lucide-react-native';
 
+const PROFILE_AVATAR_BUCKET = 'profile-avatars';
+const USER_AVATAR_STORAGE_KEY = 'userAvatarUrl';
+
+function dataUrlToArrayBuffer(dataUrl: string) {
+  const base64 = dataUrl.split(',')[1];
+  if (!base64) throw new Error('Profile photo could not be prepared.');
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
+
+function sanitizePhoneForPath(value: string) {
+  return value.replace(/\D/g, '') || 'profile';
+}
+
 export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
@@ -22,6 +41,8 @@ export default function ProfileScreen() {
   const [phone, setPhone] = useState('');
   const [inputPhone, setInputPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
   const router = useRouter();
@@ -30,16 +51,19 @@ export default function ProfileScreen() {
     let active = true;
 
     async function loadProfile() {
-      const [savedPhone, savedName] = await Promise.all([
+      const [savedPhone, savedName, savedAvatarUrl] = await Promise.all([
         getStoredValue('userPhone'),
         getStoredValue('userName'),
+        getStoredValue(USER_AVATAR_STORAGE_KEY),
       ]);
       if (!active) return;
+      if (savedAvatarUrl) setAvatarUrl(savedAvatarUrl);
       if (savedPhone) {
         setPhone(savedPhone);
         setName(savedName || '');
         setStep('profile');
         fetchStats(savedPhone);
+        fetchProfileAvatar(savedPhone);
       } else {
         setStep('phone');
       }
@@ -52,6 +76,18 @@ export default function ProfileScreen() {
   async function fetchStats(phone: string) {
     const { data } = await supabase.from('entries').select('*').eq('phone', phone);
     if (data) setTotalEntries(data.length);
+  }
+
+  async function fetchProfileAvatar(phone: string) {
+    const { data } = await supabase
+      .from('users')
+      .select('avatar_url')
+      .eq('phone', phone)
+      .maybeSingle();
+    if (data?.avatar_url) {
+      setAvatarUrl(data.avatar_url);
+      await setStoredValue(USER_AVATAR_STORAGE_KEY, data.avatar_url);
+    }
   }
 
   async function handleLogin() {
@@ -76,13 +112,18 @@ export default function ProfileScreen() {
 
     if (existing) {
       const existingName = existing.name || '';
+      const existingAvatarUrl = existing.avatar_url || '';
       await Promise.all([
         setStoredValue('userPhone', fullPhone),
         setStoredValue('userName', existingName),
+        existingAvatarUrl
+          ? setStoredValue(USER_AVATAR_STORAGE_KEY, existingAvatarUrl)
+          : Promise.resolve(),
       ]);
       await claimPendingReferral(fullPhone);
       setPhone(fullPhone);
       setName(existingName);
+      setAvatarUrl(existingAvatarUrl);
       setStep('profile');
       fetchStats(fullPhone);
     } else {
@@ -122,11 +163,80 @@ export default function ProfileScreen() {
   }
 
   async function logout() {
-    await removeStoredValues(['userPhone', 'userName']);
+    await removeStoredValues(['userPhone', 'userName', USER_AVATAR_STORAGE_KEY]);
     setStep('phone');
     setPhone('');
     setName('');
     setInputPhone('');
+    setAvatarUrl('');
+  }
+
+  async function uploadProfilePhoto() {
+    if (!phone || avatarUploading) return;
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert('Please allow photo access to upload your profile photo.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.65,
+      base64: true,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setAvatarUploading(true);
+    try {
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png'
+        ? 'png'
+        : mimeType === 'image/webp'
+          ? 'webp'
+          : 'jpg';
+      const filePath = `${sanitizePhoneForPath(phone)}/avatar-${Date.now()}.${extension}`;
+      const fileData = asset.base64
+        ? dataUrlToArrayBuffer(`data:${mimeType};base64,${asset.base64}`)
+        : await fetch(asset.uri).then((response) => response.arrayBuffer());
+
+      const { error: uploadError } = await supabase.storage
+        .from(PROFILE_AVATAR_BUCKET)
+        .upload(filePath, fileData, {
+          contentType: mimeType,
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from(PROFILE_AVATAR_BUCKET)
+        .getPublicUrl(filePath);
+      const nextAvatarUrl = publicUrlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .rpc('update_profile_avatar', {
+          requested_phone: phone,
+          requested_avatar_url: nextAvatarUrl,
+        });
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(nextAvatarUrl);
+      await setStoredValue(USER_AVATAR_STORAGE_KEY, nextAvatarUrl);
+      alert('Profile photo updated.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Profile photo upload failed.';
+      alert(`${message}\n\nIf this is the first profile photo upload, please run the profile avatar Supabase setup SQL first.`);
+    } finally {
+      setAvatarUploading(false);
+    }
   }
 
   function openAboutSection(section: 'social' | 'works' | 'support') {
@@ -136,7 +246,29 @@ export default function ProfileScreen() {
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
-        <CircleUserRound color="white" size={60} />
+        <TouchableOpacity
+          style={styles.avatarButton}
+          onPress={uploadProfilePhoto}
+          disabled={avatarUploading}
+          accessibilityRole="button"
+          accessibilityLabel="Change profile photo"
+        >
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <CircleUserRound color="white" size={60} />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.changePhotoButton}
+          onPress={uploadProfilePhoto}
+          disabled={avatarUploading}
+          accessibilityRole="button"
+        >
+          <Text style={styles.changePhotoText}>
+            {avatarUploading ? 'Uploading...' : 'Change Photo'}
+          </Text>
+        </TouchableOpacity>
         <Text style={styles.profileName}>{name}</Text>
         <Text style={styles.profilePhone}>{phone}</Text>
       </View>
@@ -338,6 +470,10 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
   profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 40, alignItems: 'center' },
+  avatarButton: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
+  avatarImage: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, borderColor: '#FFD700' },
+  changePhotoButton: { borderWidth: 1, borderColor: 'rgba(255,215,0,0.55)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 12 },
+  changePhotoText: { color: '#FFD700', fontSize: 12, fontWeight: '700' },
   profileName: { fontSize: 26, fontWeight: 'bold', color: 'white' },
   profilePhone: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
