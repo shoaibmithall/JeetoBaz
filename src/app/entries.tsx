@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -32,6 +32,8 @@ export default function MyEntriesScreen() {
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 640;
 
   useEffect(() => {
     let active = true;
@@ -138,7 +140,7 @@ export default function MyEntriesScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, isCompact && styles.headerCompact]}>
         <View style={styles.titleRow}><Target color="white" size={28} /><Text style={styles.title}>{t('myEntries')}</Text></View>
         <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
       </View>
@@ -152,15 +154,15 @@ export default function MyEntriesScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.statsBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <View style={[styles.statsBox, isCompact && styles.statsBoxCompact, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={styles.statColumn}>
-          <Text style={styles.statsNumber}>{entries.length}</Text>
-          <Text style={[styles.statsLabel, { color: theme.muted }]}>Approved Tickets</Text>
+          <Text style={[styles.statsNumber, isCompact && styles.statsNumberCompact]}>{entries.length}</Text>
+          <Text style={[styles.statsLabel, isCompact && styles.statsLabelCompact, { color: theme.muted }]}>Approved Tickets</Text>
         </View>
         <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
         <View style={styles.statColumn}>
-          <Text style={styles.statsNumber}>{pendingPayments.length}</Text>
-          <Text style={[styles.statsLabel, { color: theme.muted }]}>Pending Payments</Text>
+          <Text style={[styles.statsNumber, isCompact && styles.statsNumberCompact]}>{pendingPayments.length}</Text>
+          <Text style={[styles.statsLabel, isCompact && styles.statsLabelCompact, { color: theme.muted }]}>Pending Payments</Text>
         </View>
       </View>
 
@@ -176,50 +178,54 @@ export default function MyEntriesScreen() {
       ) : (
         <>
           {pendingPayments.map((payment) => (
-            <View key={payment.id} style={[styles.entryCard, styles.pendingCard, { backgroundColor: theme.surface }]}>
-              <View style={styles.entryHeader}>
-                <Text style={[styles.productName, { color: theme.text }]}>{payment.products?.name || t('unknownProduct')}</Text>
-                <View style={[styles.statusBadge, styles.pendingBadge]}>
+            <View key={payment.id} style={[styles.entryCard, isCompact && styles.entryCardCompact, styles.pendingCard, { backgroundColor: theme.surface }]}>
+              <View style={[styles.entryHeader, isCompact && styles.entryHeaderCompact]}>
+                <Text numberOfLines={isCompact ? 3 : undefined} style={[styles.productName, isCompact && styles.productNameCompact, { color: theme.text }]}>{payment.products?.name || t('unknownProduct')}</Text>
+                <View style={[styles.statusBadge, isCompact && styles.statusBadgeCompact, styles.pendingBadge]}>
                   <Text style={styles.pendingStatusText}>Payment Pending</Text>
                 </View>
               </View>
-              <Text style={styles.ticketNumber}>Ticket: Pending admin approval</Text>
-              <Text style={styles.productPrice}>Rs. {payment.products?.price?.toLocaleString() || payment.amount}</Text>
-              <Text style={[styles.entryDate, { color: theme.muted }]}>
-                Submitted: {new Date(payment.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </Text>
-              <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
-                <Text style={[styles.infoLabel, { color: theme.subtle }]}>Payment method</Text>
-                <Text style={[styles.infoValue, { color: theme.text }]}>{payment.payment_method || t('notProvided')}</Text>
+              <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.ticketNumber, isCompact && styles.ticketNumberCompact]}>Ticket: Pending admin approval</Text>
+              <View style={isCompact ? styles.entryMetaRow : undefined}>
+                <Text style={[styles.productPrice, isCompact && styles.productPriceCompact]}>Rs. {payment.products?.price?.toLocaleString() || payment.amount}</Text>
+                <Text style={[styles.entryDate, isCompact && styles.entryDateCompact, { color: theme.muted }]}>
+                  Submitted: {new Date(payment.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </Text>
               </View>
-              <Text style={[styles.drawStatus, { color: theme.text }]}>{getDrawStatusText(payment.products)}</Text>
-              <Text style={styles.pendingNote}>Your ticket will appear here after admin approval.</Text>
+              <View style={[styles.infoRow, isCompact && styles.infoRowCompact, { backgroundColor: theme.surfaceAlt }]}>
+                <Text style={[styles.infoLabel, { color: theme.subtle }]}>Payment method</Text>
+                <Text numberOfLines={isCompact ? 2 : undefined} style={[styles.infoValue, isCompact && styles.infoValueCompact, { color: theme.text }]}>{payment.payment_method || t('notProvided')}</Text>
+              </View>
+              <Text numberOfLines={isCompact ? 2 : undefined} style={[styles.drawStatus, isCompact && styles.drawStatusCompact, { color: theme.text }]}>{getDrawStatusText(payment.products)}</Text>
+              <Text style={[styles.pendingNote, isCompact && styles.pendingNoteCompact]}>Your ticket will appear here after admin approval.</Text>
             </View>
           ))}
 
           {entries.map((entry) => {
             const entryStatus = getEntryStatus(entry);
             return (
-              <View key={entry.id} style={[styles.entryCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <View style={styles.entryHeader}>
-                  <Text style={[styles.productName, { color: theme.text }]}>{entry.products?.name || t('unknownProduct')}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: entryStatus.background }]}>
+              <View key={entry.id} style={[styles.entryCard, isCompact && styles.entryCardCompact, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <View style={[styles.entryHeader, isCompact && styles.entryHeaderCompact]}>
+                  <Text numberOfLines={isCompact ? 3 : undefined} style={[styles.productName, isCompact && styles.productNameCompact, { color: theme.text }]}>{entry.products?.name || t('unknownProduct')}</Text>
+                  <View style={[styles.statusBadge, isCompact && styles.statusBadgeCompact, { backgroundColor: entryStatus.background }]}>
                     <Text style={[styles.statusText, { color: entryStatus.color }]}>{entryStatus.label}</Text>
                   </View>
                 </View>
-                <Text style={styles.ticketNumber}>Ticket: {getTicketNumber(entry)}</Text>
-                <Text style={styles.productPrice}>Rs. {entry.products?.price?.toLocaleString()}</Text>
-                <Text style={[styles.entryDate, { color: theme.muted }]}>
-                  Approved: {new Date(entry.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </Text>
-                <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
+                <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.ticketNumber, isCompact && styles.ticketNumberCompact]}>Ticket: {getTicketNumber(entry)}</Text>
+                <View style={isCompact ? styles.entryMetaRow : undefined}>
+                  <Text style={[styles.productPrice, isCompact && styles.productPriceCompact]}>Rs. {entry.products?.price?.toLocaleString()}</Text>
+                  <Text style={[styles.entryDate, isCompact && styles.entryDateCompact, { color: theme.muted }]}>
+                    Approved: {new Date(entry.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Text>
+                </View>
+                <View style={[styles.infoRow, isCompact && styles.infoRowCompact, { backgroundColor: theme.surfaceAlt }]}>
                   <Text style={[styles.infoLabel, { color: theme.subtle }]}>Draw status</Text>
-                  <Text style={[styles.infoValue, { color: theme.text }]}>{getDrawStatusText(entry.products)}</Text>
+                  <Text numberOfLines={isCompact ? 2 : undefined} style={[styles.infoValue, isCompact && styles.infoValueCompact, { color: theme.text }]}>{getDrawStatusText(entry.products)}</Text>
                 </View>
                 {entry.transaction_id && (
-                  <View style={[styles.infoRow, { backgroundColor: theme.surfaceAlt }]}>
+                  <View style={[styles.infoRow, isCompact && styles.infoRowCompact, { backgroundColor: theme.surfaceAlt }]}>
                     <Text style={[styles.infoLabel, { color: theme.subtle }]}>Payment ref</Text>
-                    <Text style={[styles.infoValue, { color: theme.text }]}>{entry.transaction_id}</Text>
+                    <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.infoValue, isCompact && styles.infoValueCompact, { color: theme.text }]}>{entry.transaction_id}</Text>
                   </View>
                 )}
                 {entry.products?.winner_phone === entry.phone && (
@@ -249,6 +255,7 @@ const styles = StyleSheet.create({
   loginBtn: { backgroundColor: '#FFD700', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   loginBtnText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
   header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 30, alignItems: 'center' },
+  headerCompact: { paddingVertical: 22, paddingHorizontal: 18 },
   title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   subtitle: { fontSize: 14, color: 'white', marginTop: 5 },
@@ -256,33 +263,48 @@ const styles = StyleSheet.create({
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
   cacheRetry: { fontSize: 12, fontWeight: 'bold' },
   statsBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#174a35', flexDirection: 'row' },
+  statsBoxCompact: { margin: 12, padding: 14, borderRadius: 14 },
   statColumn: { flex: 1, alignItems: 'center' },
   statDivider: { width: 1, height: 48, backgroundColor: '#174a35', marginHorizontal: 12 },
   statsNumber: { fontSize: 38, fontWeight: 'bold', color: '#FFD700' },
+  statsNumberCompact: { fontSize: 31 },
   statsLabel: { fontSize: 14, color: '#aaa', marginTop: 5 },
+  statsLabelCompact: { fontSize: 12, textAlign: 'center', marginTop: 2 },
   emptyBox: { alignItems: 'center', padding: 40 },
   emptyText: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   emptySubText: { color: '#aaa', fontSize: 14, marginBottom: 25 },
   browseBtn: { backgroundColor: '#18a663', padding: 15, borderRadius: 12, alignItems: 'center', width: '100%' },
   browseBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
   entryCard: { backgroundColor: '#071b13', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
+  entryCardCompact: { marginHorizontal: 12, borderRadius: 14, padding: 14 },
   pendingCard: { borderColor: '#FFD700' },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  entryHeaderCompact: { alignItems: 'flex-start', marginBottom: 6, gap: 8 },
   productName: { fontSize: 18, fontWeight: 'bold', color: 'white', flex: 1 },
+  productNameCompact: { fontSize: 16, lineHeight: 21 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusBadgeCompact: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
   activeBadge: { backgroundColor: '#082d1e' },
   completedBadge: { backgroundColor: '#2b2b0d' },
   pendingBadge: { backgroundColor: '#2a2105' },
   statusText: { fontSize: 12, fontWeight: 'bold', color: '#18a663' },
   pendingStatusText: { fontSize: 12, fontWeight: 'bold', color: '#FFD700' },
   ticketNumber: { color: '#4a9eff', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  ticketNumberCompact: { fontSize: 13, marginBottom: 6 },
   productPrice: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  productPriceCompact: { fontSize: 15, marginBottom: 0, flexShrink: 0 },
   entryDate: { color: '#aaa', fontSize: 13 },
+  entryDateCompact: { fontSize: 12, textAlign: 'right', flex: 1 },
+  entryMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 },
   infoRow: { backgroundColor: '#04140e', borderRadius: 8, padding: 10, marginTop: 10 },
+  infoRowCompact: { paddingVertical: 8, paddingHorizontal: 10, marginTop: 8 },
   infoLabel: { color: '#777', fontSize: 11, marginBottom: 3, textTransform: 'uppercase' },
   infoValue: { color: '#ddd', fontSize: 13, lineHeight: 18 },
+  infoValueCompact: { fontSize: 12, lineHeight: 16 },
   drawStatus: { color: '#ddd', fontSize: 13, lineHeight: 18, marginTop: 10 },
+  drawStatusCompact: { fontSize: 12, lineHeight: 16, marginTop: 8 },
   pendingNote: { color: '#FFD700', fontSize: 12, marginTop: 10 },
+  pendingNoteCompact: { fontSize: 11, marginTop: 8 },
   winnerBanner: { backgroundColor: '#2a2105', borderWidth: 1, borderColor: '#FFD700', borderRadius: 8, padding: 10, marginTop: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
   winnerText: { color: '#FFD700', fontWeight: 'bold', fontSize: 16 },
   backBtn: { margin: 15, padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#174a35', marginTop: 20, marginBottom: 40 },
