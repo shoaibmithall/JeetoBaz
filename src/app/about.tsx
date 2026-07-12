@@ -65,6 +65,9 @@ const sections: Array<{ id: SectionId; title: string; subtitle: string }> = [
   { id: 'app', title: 'App Information', subtitle: 'Version, platform and development details' },
 ];
 
+const profileOnlySectionIds = new Set<SectionId>(['works', 'support', 'social']);
+const aboutMenuSections = sections.filter((section) => !profileOnlySectionIds.has(section.id));
+
 function isSectionId(value: string | undefined): value is SectionId {
   return sections.some((section) => section.id === value);
 }
@@ -442,7 +445,7 @@ export default function AboutJeetoBazScreen() {
               </Text>
             </View>
             <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              {sections.map((section, index) => (
+              {aboutMenuSections.map((section, index) => (
                 <View key={section.id}>
                   <TouchableOpacity
                     style={styles.menuRow}
@@ -457,7 +460,7 @@ export default function AboutJeetoBazScreen() {
                     </View>
                     <ChevronRight color={theme.subtle} size={21} />
                   </TouchableOpacity>
-                  {index < sections.length - 1 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
+                  {index < aboutMenuSections.length - 1 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                 </View>
               ))}
             </View>
