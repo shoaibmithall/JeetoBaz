@@ -79,7 +79,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
           <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <View style={styles.menuHeader}>
               <View>
-                <Text style={[styles.menuTitle, { color: theme.text }]}>JeetoBaz</Text>
+                <Text style={[styles.menuTitle, { color: theme.gold }]}>JeetoBaz</Text>
                 <Text style={[styles.menuSubtitle, { color: theme.muted }]}>Quick settings</Text>
               </View>
               <TouchableOpacity onPress={() => setMenuVisible(false)} accessibilityLabel="Close menu">
@@ -87,15 +87,15 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
               </TouchableOpacity>
             </View>
 
-            <MenuItem icon={<Globe2 color={theme.gold} size={21} />} label={t('language')} onPress={() => openRoute('/language')} textColor={theme.text} />
+            <MenuItem icon={<Globe2 color={theme.gold} size={21} />} label={t('language')} onPress={() => openRoute('/language')} textColor={theme.gold} />
             <MenuItem
               icon={mode === 'dark' ? <Sun color={theme.gold} size={21} /> : <Moon color={theme.gold} size={21} />}
               label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
               onPress={toggleTheme}
-              textColor={theme.text}
+              textColor={theme.gold}
             />
-            <MenuItem icon={<Headphones color={theme.gold} size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.text} />
-            <MenuItem icon={<Share2 color={theme.gold} size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor={theme.text} />
+            <MenuItem icon={<Headphones color={theme.gold} size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.gold} />
+            <MenuItem icon={<Share2 color={theme.gold} size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor={theme.gold} />
           </View>
         </View>
       </Modal>
