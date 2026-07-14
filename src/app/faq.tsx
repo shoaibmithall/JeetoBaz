@@ -125,7 +125,7 @@ export default function FaqScreen() {
       </View>
 
       <View style={styles.hero}>
-        <Text style={[styles.heroTitle, { color: theme.text }]}>How can we help?</Text>
+        <Text style={[styles.heroTitle, { color: theme.gold }]}>How can we help?</Text>
         <Text style={[styles.heroText, { color: theme.muted }]}>
           Quick answers about entries, payments, draws, winners, and account security.
         </Text>
@@ -162,7 +162,7 @@ export default function FaqScreen() {
                 </View>
                 <View style={styles.questionCopy}>
                   <Text style={[styles.category, { color: theme.primary }]}>{item.category}</Text>
-                  <Text style={[styles.question, { color: theme.text }]}>{item.question}</Text>
+                  <Text style={[styles.question, { color: theme.gold }]}>{item.question}</Text>
                 </View>
                 {expanded ? (
                   <ChevronDown color={theme.gold} size={21} />
@@ -182,7 +182,7 @@ export default function FaqScreen() {
 
       {filteredFaqs.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>No matching question found</Text>
+          <Text style={[styles.emptyTitle, { color: theme.gold }]}>No matching question found</Text>
           <TouchableOpacity onPress={() => router.push('/help')}>
             <Text style={[styles.helpLink, { color: theme.primary }]}>Open Help Center</Text>
           </TouchableOpacity>

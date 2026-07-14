@@ -96,7 +96,7 @@ export default function PrivacyScreen() {
         </Text>
 
         <View style={[styles.deletionBox, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
-          <Text style={[styles.deletionTitle, { color: theme.text }]}>Delete Your Account</Text>
+          <Text style={[styles.deletionTitle, { color: theme.gold }]}>Delete Your Account</Text>
           <Text style={[styles.deletionText, { color: theme.muted }]}>
             Send a deletion request from your email app. Our support team will verify the account and confirm when the request is completed.
           </Text>
