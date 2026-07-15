@@ -87,15 +87,15 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
               </TouchableOpacity>
             </View>
 
-            <MenuItem icon={<Globe2 color={theme.gold} size={21} />} label={t('language')} onPress={() => openRoute('/language')} textColor={theme.gold} />
+            <MenuItem icon={<Globe2 color="#3B82F6" size={21} />} label={t('language')} onPress={() => openRoute('/language')} textColor="#3B82F6" />
             <MenuItem
-              icon={mode === 'dark' ? <Sun color={theme.gold} size={21} /> : <Moon color={theme.gold} size={21} />}
+              icon={mode === 'dark' ? <Sun color="#FBBF24" size={21} /> : <Moon color="#A78BFA" size={21} />}
               label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
               onPress={toggleTheme}
-              textColor={theme.gold}
+              textColor={mode === 'dark' ? '#FBBF24' : '#A78BFA'}
             />
-            <MenuItem icon={<Headphones color={theme.gold} size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor={theme.gold} />
-            <MenuItem icon={<Share2 color={theme.gold} size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor={theme.gold} />
+            <MenuItem icon={<Headphones color="#14B8A6" size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor="#14B8A6" />
+            <MenuItem icon={<Share2 color="#18a663" size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor="#18a663" />
           </View>
         </View>
       </Modal>
