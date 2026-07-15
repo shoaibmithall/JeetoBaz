@@ -38,6 +38,15 @@ import {
   UsersRound,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  TikTokIcon,
+  YouTubeIcon,
+  SnapchatIcon,
+  XIcon,
+  TelegramIcon,
+} from '@/components/social-icons';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -329,19 +338,72 @@ export default function AboutJeetoBazScreen() {
     }
 
     if (selected === 'social') {
-      const socialNetworks = ['Facebook', 'Instagram', 'TikTok', 'YouTube', 'Snapchat', 'X / Twitter', 'Telegram'];
+      const socialLinks: Array<{
+        name: string;
+        url: string;
+        icon: React.ReactNode;
+        color: string;
+      }> = [
+        {
+          name: 'Facebook',
+          url: 'https://www.facebook.com/share/17uAJE6AQY/?mibextid=wwXIfr',
+          icon: <FacebookIcon size={36} />,
+          color: '#1877F2',
+        },
+        {
+          name: 'Instagram',
+          url: 'https://www.instagram.com/jeetobaz?igsh=ZWZpaGxyajY4Mmxy&utm_source=qr',
+          icon: <InstagramIcon size={36} />,
+          color: '#E4405F',
+        },
+        {
+          name: 'TikTok',
+          url: 'https://www.tiktok.com/@jeetobaz?_r=1&_t=ZS-97wXLf85a2G',
+          icon: <TikTokIcon size={36} />,
+          color: '#010101',
+        },
+        {
+          name: 'YouTube',
+          url: 'https://youtube.com/@jeetobaz?si=XIzw2WyovPCZZjv8',
+          icon: <YouTubeIcon size={36} />,
+          color: '#FF0000',
+        },
+        {
+          name: 'Snapchat',
+          url: 'https://snapchat.com/t/ZM4Q6K11',
+          icon: <SnapchatIcon size={36} />,
+          color: '#FFFC00',
+        },
+        {
+          name: 'X (Twitter)',
+          url: 'https://x.com/jeetobaz?s=11',
+          icon: <XIcon size={36} />,
+          color: '#000000',
+        },
+        {
+          name: 'Telegram',
+          url: 'https://t.me/jeetobaz',
+          icon: <TelegramIcon size={36} />,
+          color: '#0088CC',
+        },
+      ];
       return (
         <>
           <DetailHero icon={<UsersRound color={theme.gold} size={38} />} title="Follow JeetoBaz" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             Follow JeetoBaz for campaign announcements, winner updates, product news and important platform information.
           </Text>
-          {socialNetworks.map((network) => (
-            <View key={network} style={[styles.socialRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Globe2 color={theme.gold} size={21} />
-              <Text style={[styles.linkText, { color: theme.gold }]}>{network}</Text>
-              <Text style={[styles.comingSoon, { color: theme.gold }]}>Coming Soon</Text>
-            </View>
+          {socialLinks.map((social) => (
+            <TouchableOpacity
+              key={social.name}
+              style={[styles.socialRow, { backgroundColor: theme.surface, borderColor: theme.border }]}
+              onPress={() => openLink(social.url, `Follow us on ${social.name}`)}
+              activeOpacity={0.7}
+            >
+              {social.icon}
+              <Text style={[styles.linkText, { color: theme.gold }]}>{social.name}</Text>
+              <ExternalLink color={theme.subtle} size={18} />
+            </TouchableOpacity>
           ))}
           <ContactButton
             icon={<MessageCircle color="#25D366" size={23} />}
@@ -515,8 +577,7 @@ const styles = StyleSheet.create({
   policyDate: { fontSize: 13, fontWeight: '700', marginTop: 5, marginBottom: 13 },
   policyRule: { paddingTop: 16 },
   policyRuleTitle: { fontSize: 16, fontWeight: '800', marginBottom: 5 },
-  socialRow: { minHeight: 64, borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  comingSoon: { fontSize: 12, fontWeight: '800' },
+  socialRow: { minHeight: 68, borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 12 },
   infoLine: { minHeight: 70, borderWidth: 1, borderRadius: 14, padding: 15, marginBottom: 10 },
   infoLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
   infoValue: { fontSize: 17, fontWeight: '700', marginTop: 5 },
