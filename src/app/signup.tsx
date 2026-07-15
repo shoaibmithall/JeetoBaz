@@ -93,12 +93,18 @@ export default function SignupScreen() {
     console.log('signUp result:', JSON.stringify({ hasData: !!data, error }));
 
     if (error) {
+      const details = [
+        'name: ' + (error.name || 'none'),
+        'message: ' + (error.message || 'none'),
+        'status: ' + ((error as any).status || 'none'),
+        'code: ' + ((error as any).code || 'none'),
+      ].join('\n');
+      console.error('Signup error details:', details, error);
       const msg = error.message || String(error) || 'Unknown error';
-      console.error('Signup error:', msg, error);
       if (msg.includes('already registered')) {
         setErrors({ email: 'This email is already registered. Try logging in.' });
       } else {
-        alert('Signup failed: ' + msg);
+        alert('Signup failed:\n' + details);
       }
     } else {
       console.log('Signup success, user:', data?.user?.id);
