@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { ChevronLeft, KeyRound, LockKeyhole, Shield } from 'lucide-react-native';
 
+const OTP_STORAGE_KEY = 'otp_verify_last_sent_at';
+const MAX_RESENDS = 3;
+
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return email;
@@ -25,7 +28,18 @@ export default function VerifyResetOtpScreen() {
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
+  const [resendCount, setResendCount] = useState(0);
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    const lastSent = localStorage.getItem(OTP_STORAGE_KEY);
+    if (lastSent) {
+      const elapsed = Math.floor((Date.now() - parseInt(lastSent, 10)) / 1000);
+      if (elapsed < 60) {
+        setCountdown(60 - elapsed);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -84,8 +98,9 @@ export default function VerifyResetOtpScreen() {
   }
 
   async function handleResend() {
-    if (countdown > 0) return;
+    if (countdown > 0 || resendCount >= MAX_RESENDS) return;
     setResendLoading(true);
+    setError('');
 
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase()
@@ -94,12 +109,13 @@ export default function VerifyResetOtpScreen() {
     if (error) {
       const msg = error.message || '';
       if (msg.includes('rate') || msg.includes('limit')) {
-        setError('Too many requests. Please wait and try again.');
+        setError('Email sending limit reached. Please wait and try again later.');
       }
     } else {
       setCountdown(60);
+      setResendCount(resendCount + 1);
       setOtp(['', '', '', '', '', '']);
-      setError('');
+      localStorage.setItem(OTP_STORAGE_KEY, Date.now().toString());
       inputRefs.current[0]?.focus();
     }
 
@@ -168,6 +184,10 @@ export default function VerifyResetOtpScreen() {
               <Text style={[styles.countdownText, { color: theme.muted }]}>
                 Resend OTP in {countdown}s
               </Text>
+            ) : resendCount >= MAX_RESENDS ? (
+              <Text style={[styles.maxResendText, { color: theme.muted }]}>
+                Maximum resend attempts reached
+              </Text>
             ) : (
               <TouchableOpacity onPress={handleResend} disabled={resendLoading}>
                 <Text style={styles.resendLink}>
@@ -221,6 +241,7 @@ const styles = StyleSheet.create({
 
   resendRow: { alignItems: 'center', marginTop: 4 },
   countdownText: { fontSize: 13 },
+  maxResendText: { fontSize: 13, fontStyle: 'italic' },
   resendLink: { color: '#18a663', fontSize: 14, fontWeight: '600' },
 
   trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },

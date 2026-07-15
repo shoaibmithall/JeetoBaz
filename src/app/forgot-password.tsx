@@ -6,6 +6,9 @@ import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { ChevronLeft, LockKeyhole, Mail, Shield, Send } from 'lucide-react-native';
 
+const STORAGE_KEY = 'otp_last_sent_at';
+const MAX_RESENDS = 3;
+
 export default function ForgotPasswordScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
@@ -15,7 +18,19 @@ export default function ForgotPasswordScreen() {
   const [emailError, setEmailError] = useState('');
   const [rateLimitError, setRateLimitError] = useState('');
   const [countdown, setCountdown] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [resendCount, setResendCount] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const lastSent = localStorage.getItem(STORAGE_KEY);
+    if (lastSent) {
+      const elapsed = Math.floor((Date.now() - parseInt(lastSent, 10)) / 1000);
+      if (elapsed < 60) {
+        setCountdown(60 - elapsed);
+        setSent(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -42,7 +57,7 @@ export default function ForgotPasswordScreen() {
     if (error) {
       const msg = error.message || '';
       if (msg.includes('rate') || msg.includes('limit') || msg.includes('Too many')) {
-        setRateLimitError('Too many reset requests. Please wait a few minutes and try again.');
+        setRateLimitError('Email sending limit reached. Please wait and try again later.');
       } else if (msg.includes('not found') || msg.includes('invalid')) {
         setEmailError('No account found with this email.');
       } else {
@@ -51,13 +66,15 @@ export default function ForgotPasswordScreen() {
     } else {
       setSent(true);
       setCountdown(60);
+      setResendCount(1);
+      localStorage.setItem(STORAGE_KEY, Date.now().toString());
     }
 
     setLoading(false);
   }
 
   async function handleResendOTP() {
-    if (countdown > 0) return;
+    if (countdown > 0 || resendCount >= MAX_RESENDS) return;
     setLoading(true);
     setRateLimitError('');
 
@@ -68,10 +85,12 @@ export default function ForgotPasswordScreen() {
     if (error) {
       const msg = error.message || '';
       if (msg.includes('rate') || msg.includes('limit') || msg.includes('Too many')) {
-        setRateLimitError('Too many requests. Please wait and try again.');
+        setRateLimitError('Email sending limit reached. Please wait and try again later.');
       }
     } else {
       setCountdown(60);
+      setResendCount(resendCount + 1);
+      localStorage.setItem(STORAGE_KEY, Date.now().toString());
     }
 
     setLoading(false);
@@ -120,9 +139,15 @@ export default function ForgotPasswordScreen() {
                 <Text style={[styles.countdownText, { color: theme.muted }]}>
                   Resend OTP in {countdown}s
                 </Text>
+              ) : resendCount >= MAX_RESENDS ? (
+                <Text style={[styles.maxResendText, { color: theme.muted }]}>
+                  Maximum resend attempts reached
+                </Text>
               ) : (
                 <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
-                  <Text style={styles.resendLink}>Resend OTP</Text>
+                  <Text style={styles.resendLink}>
+                    {loading ? 'Sending...' : 'Resend OTP'}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -266,6 +291,7 @@ const styles = StyleSheet.create({
 
   resendRow: { alignItems: 'center', marginTop: 8 },
   countdownText: { fontSize: 13 },
+  maxResendText: { fontSize: 13, fontStyle: 'italic' },
   resendLink: { color: '#18a663', fontSize: 14, fontWeight: '600' },
 
   rateLimitText: { color: '#ff4444', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 18 },
