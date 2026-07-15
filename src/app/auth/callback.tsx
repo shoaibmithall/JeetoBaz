@@ -29,7 +29,7 @@ export default function AuthCallbackScreen() {
         return;
       }
 
-      router.replace('/profile-setup');
+      router.replace('/profile-setup' as never);
     }
 
     handle();

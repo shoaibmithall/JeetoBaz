@@ -1,19 +1,17 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { signInWithEmail, signOut, getMigrationFlag } from '@/lib/auth';
+import { signInWithEmail, signOut } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
-import { claimPendingReferral } from '@/lib/referrals';
-import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Info,
-  HeartHandshake, LockKeyhole, LogOut, Mail, Medal, Rocket, Target, Trophy,
+  Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Eye, EyeOff, Info,
+  HeartHandshake, LockKeyhole, LogOut, Mail, Medal, Rocket, Shield, Target, Trophy,
   UserPlus, UsersRound,
 } from 'lucide-react-native';
 
@@ -39,31 +37,24 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const { user, isEmailVerified } = useAuth();
-  const [step, setStep] = useState<'check' | 'email-login' | 'phone' | 'name' | 'profile'>('check');
+  const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [inputPhone, setInputPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [ageAccepted, setAgeAccepted] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
-  const [authMigrationEnabled, setAuthMigrationEnabled] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     let active = true;
 
     async function loadProfile() {
-      const [flag] = await Promise.all([getMigrationFlag()]);
-      if (!active) return;
-
-      const migrationOn = ['staging', 'gradual', 'full'].includes(flag);
-      setAuthMigrationEnabled(migrationOn);
-
       if (user && isEmailVerified) {
         const { data: profile } = await supabase
           .from('users')
@@ -76,9 +67,7 @@ export default function ProfileScreen() {
           setName(profile.name || '');
           setAvatarUrl(profile.avatar_url || '');
           setStep('profile');
-          if (profile.phone) {
-            fetchStats(profile.phone);
-          }
+          if (profile.phone) fetchStats(profile.phone);
         } else if (active) {
           setStep('profile');
           setEmail(user.email || '');
@@ -100,7 +89,7 @@ export default function ProfileScreen() {
         fetchStats(savedPhone);
         fetchProfileAvatar(savedPhone);
       } else {
-        setStep(migrationOn ? 'email-login' : 'phone');
+        setStep('login');
       }
     }
 
@@ -150,87 +139,14 @@ export default function ProfileScreen() {
     setLoading(false);
   }
 
-  async function handleLogin() {
-    const normalizedPhone = normalizePakistaniMobile(inputPhone);
-    if (!isValidPakistaniMobile(normalizedPhone)) {
-      alert('Please enter a valid Pakistani mobile number, e.g. 3001234567.');
-      return;
-    }
-    setLoading(true);
-    const fullPhone = '+92' + normalizedPhone;
-    const { data: existing, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('phone', fullPhone)
-      .maybeSingle();
-
-    if (error) {
-      alert('Unable to check this number. Please try again.');
-      setLoading(false);
-      return;
-    }
-
-    if (existing) {
-      const existingName = existing.name || '';
-      const existingAvatarUrl = existing.avatar_url || '';
-      await Promise.all([
-        setStoredValue('userPhone', fullPhone),
-        setStoredValue('userName', existingName),
-        existingAvatarUrl
-          ? setStoredValue(USER_AVATAR_STORAGE_KEY, existingAvatarUrl)
-          : Promise.resolve(),
-      ]);
-      await claimPendingReferral(fullPhone);
-      setPhone(fullPhone);
-      setName(existingName);
-      setAvatarUrl(existingAvatarUrl);
-      setStep('profile');
-      fetchStats(fullPhone);
-    } else {
-      setStep('name');
-    }
-    setLoading(false);
-  }
-
-  async function createAccount() {
-    if (!ageAccepted) {
-      alert('You must confirm that you are 18 years or older and accept the Terms and Privacy Policy.');
-      return;
-    }
-    const normalizedName = normalizePersonName(name);
-    if (normalizedName.length < 2) { alert('Please enter your full name.'); return; }
-    setLoading(true);
-    const fullPhone = '+92' + normalizePakistaniMobile(inputPhone);
-    const { error } = await supabase.from('users').insert({
-      name: normalizedName,
-      phone: fullPhone,
-      jazzcash_number: fullPhone,
-    });
-    if (!error) {
-      await Promise.all([
-        setStoredValue('userPhone', fullPhone),
-        setStoredValue('userName', normalizedName),
-      ]);
-      await claimPendingReferral(fullPhone);
-      setPhone(fullPhone);
-      setName(normalizedName);
-      setStep('profile');
-      fetchStats(fullPhone);
-    } else {
-      alert('Error: ' + error.message);
-    }
-    setLoading(false);
-  }
-
   async function logout() {
     if (user) {
       await signOut();
     }
     await removeStoredValues(['userPhone', 'userName', USER_AVATAR_STORAGE_KEY]);
-    setStep(authMigrationEnabled ? 'email-login' : 'phone');
+    setStep('login');
     setPhone('');
     setName('');
-    setInputPhone('');
     setEmail('');
     setPassword('');
     setAvatarUrl('');
@@ -300,7 +216,7 @@ export default function ProfileScreen() {
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
         : 'Profile photo upload failed.';
-      alert(`${message}\n\nIf this is the first profile photo upload, please run the profile avatar Supabase setup SQL first.`);
+      alert(message);
     } finally {
       setAvatarUploading(false);
     }
@@ -445,152 +361,128 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <View style={styles.logoRow}><Trophy color="white" size={34} /><Text style={styles.logo}>JeetoBaz</Text></View>
-        <Text style={styles.tagline}>{t('appTagline')}</Text>
-      </View>
-      <ScrollView style={styles.form}>
-        {step === 'email-login' && (
-          <>
-            <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
-            <Text style={[styles.subtitle, { color: theme.muted }]}>Sign in with your email and password</Text>
-            <View style={[styles.inputRow, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
-              <Mail color={theme.muted} size={18} />
-              <TextInput
-                style={[styles.inputField, { color: theme.text }]}
-                placeholder="you@example.com"
-                placeholderTextColor="#666"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={(v) => { setEmail(v); setEmailError(''); }}
-              />
-            </View>
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-            <View style={[styles.inputRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <LockKeyhole color={theme.muted} size={18} />
-              <TextInput
-                style={[styles.inputField, { color: theme.text }]}
-                placeholder="Password"
-                placeholderTextColor="#666"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-            </View>
-            <TouchableOpacity onPress={() => router.push('/forgot-password')}>
-              <Text style={styles.forgotLink}>Forgot Password?</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleEmailLogin}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Signing in...' : `${t('continue')} →`}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/signup')}>
-              <Text style={styles.switchLink}>
-                Don't have an account?{' '}
-                <Text style={styles.switchLinkHighlight}>Create one</Text>
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/terms')}>
-              <Text style={styles.termsLink}>
-                {t('youAgreeContinue')}{' '}
-                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
-            </TouchableOpacity>
-          </>
-        )}
-        {step === 'phone' && (
-          <>
-            <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
-            <Text style={[styles.subtitle, { color: theme.muted }]}>{t('enterPhone')}</Text>
-            <View style={[styles.phoneRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.code, { color: theme.text, borderRightColor: theme.border }]}>PK +92</Text>
-              <TextInput
-                style={[styles.phoneInput, { color: theme.text }]}
-                placeholder="3001234567"
-                placeholderTextColor="#666"
-                keyboardType="phone-pad"
-                value={inputPhone}
-                onChangeText={(value) => setInputPhone(normalizePakistaniMobile(value))}
-                maxLength={10}
-              />
-            </View>
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Please wait...' : `${t('continue')} →`}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/terms')}>
-              <Text style={styles.termsLink}>
-                {t('youAgreeContinue')}{' '}
-                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
-            </TouchableOpacity>
-          </>
-        )}
-        {step === 'name' && (
-          <>
-            <Text style={[styles.formTitle, { color: theme.text }]}>{t('createAccount')}</Text>
-            <Text style={[styles.subtitle, { color: theme.muted }]}>{t('welcome')}! What's your name?</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.logoRow}>
+            <Trophy color="#FFD700" size={40} />
+            <Text style={styles.logo}>JeetoBaz</Text>
+          </View>
+          <Text style={styles.tagline}>Pakistan's Transparent Prize Campaign Platform</Text>
+        </View>
+
+        <View style={styles.loginCard}>
+          <View style={styles.secureBadge}>
+            <Shield color="#18a663" size={16} />
+            <Text style={styles.secureBadgeText}>Secure Account Access</Text>
+          </View>
+
+          <Text style={styles.welcomeTitle}>Welcome Back</Text>
+          <Text style={styles.welcomeSubtitle}>Sign in to your account</Text>
+
+          <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
+            <Mail color={theme.muted} size={18} />
             <TextInput
-              style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
-              placeholder="e.g. Shoaib Mithal"
+              style={[styles.inputField, { color: theme.text }]}
+              placeholder="Email address"
               placeholderTextColor="#666"
-              value={name}
-              onChangeText={setName}
-              maxLength={60}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={(v) => { setEmail(v); setEmailError(''); }}
             />
+          </View>
+          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+          <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <LockKeyhole color={theme.muted} size={18} />
+            <TextInput
+              style={[styles.inputField, { color: theme.text }]}
+              placeholder="Password"
+              placeholderTextColor="#666"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              {showPassword ? <EyeOff color={theme.muted} size={18} /> : <Eye color={theme.muted} size={18} />}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.optionsRow}>
             <TouchableOpacity
-              style={styles.consentRow}
-              onPress={() => setAgeAccepted((accepted) => !accepted)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: ageAccepted }}
+              style={styles.rememberRow}
+              onPress={() => setRememberMe(!rememberMe)}
             >
-              <View style={[styles.checkbox, ageAccepted && styles.checkboxChecked]}>
-                {ageAccepted ? <Check color="white" size={15} strokeWidth={3} /> : null}
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe ? <Check color="white" size={12} strokeWidth={3} /> : null}
               </View>
-              <Text style={[styles.consentText, { color: theme.text }]}>
-                I confirm that I am 18 years or older and accept the Terms and Privacy Policy.
-              </Text>
+              <Text style={[styles.rememberText, { color: theme.muted }]}>Keep me signed in</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, (loading || !ageAccepted) && styles.buttonDisabled]}
-              onPress={createAccount}
-              disabled={loading || !ageAccepted}
-            >
-              {!loading && <Rocket color="#000" size={19} />}
-              <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Join JeetoBaz!'}</Text>
+            <TouchableOpacity onPress={() => router.push('/forgot-password' as never)}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setStep('phone')}>
-              <Text style={styles.backText}>← {t('changeNumber')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/terms')}>
-              <Text style={styles.termsLink}>
-                {t('youAgreeJoin')}{' '}
-                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
-            </TouchableOpacity>
-          </>
-        )}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.primaryButton, loading && styles.buttonDisabled]}
+            onPress={handleEmailLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#000" size="small" />
+            ) : (
+              <>
+                <Text style={styles.primaryButtonText}>Sign In</Text>
+                <Text style={styles.primaryButtonText}>→</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+            <Text style={[styles.dividerText, { color: theme.muted }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+          </View>
+
+          <TouchableOpacity style={styles.googleButton} disabled>
+            <Text style={styles.googleButtonText}>G</Text>
+            <Text style={styles.googleButtonLabel}>Continue with Google</Text>
+            <Text style={styles.comingSoonBadge}>Soon</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push('/signup' as never)}>
+            <Text style={styles.switchText}>
+              New to JeetoBaz?{' '}
+              <Text style={styles.switchHighlight}>Create Account</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.trustStrip}>
+          <View style={styles.trustItem}>
+            <Shield color="#18a663" size={14} />
+            <Text style={styles.trustText}>Secure Login</Text>
+          </View>
+          <View style={styles.trustItem}>
+            <Check color="#18a663" size={14} />
+            <Text style={styles.trustText}>Verified Platform</Text>
+          </View>
+          <View style={styles.trustItem}>
+            <LockKeyhole color="#18a663" size={14} />
+            <Text style={styles.trustText}>Protected Information</Text>
+          </View>
+        </View>
+
+        <View style={styles.footerLinks}>
+          <TouchableOpacity onPress={() => router.push('/terms')}>
+            <Text style={styles.footerLink}>Terms</Text>
+          </TouchableOpacity>
+          <Text style={styles.footerDot}>•</Text>
+          <TouchableOpacity onPress={() => router.push('/privacy')}>
+            <Text style={styles.footerLink}>Privacy</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -598,6 +490,55 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
+  scrollContent: { paddingBottom: 40 },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 50, paddingHorizontal: 20, alignItems: 'center' },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logo: { fontSize: 40, fontWeight: 'bold', color: 'white' },
+  tagline: { fontSize: 13, color: '#9aac9f', marginTop: 10, textAlign: 'center', lineHeight: 18 },
+
+  loginCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24 },
+
+  secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
+  secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },
+
+  welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
+  welcomeSubtitle: { fontSize: 14, color: '#9aac9f', textAlign: 'center', marginBottom: 24 },
+
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, marginBottom: 12, paddingHorizontal: 14, gap: 10 },
+  inputField: { flex: 1, padding: 16, fontSize: 16 },
+  errorText: { color: '#ff4444', fontSize: 12, marginBottom: 10, marginLeft: 4 },
+
+  optionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  checkbox: { width: 18, height: 18, borderWidth: 1.5, borderColor: '#5e7468', borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: '#18a663', borderColor: '#18a663' },
+  rememberText: { fontSize: 13 },
+  forgotText: { color: '#FFD700', fontSize: 13, fontWeight: '600' },
+
+  primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 16 },
+  buttonDisabled: { backgroundColor: '#555' },
+  primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
+
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 12 },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 13 },
+
+  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#174a35', gap: 10, marginBottom: 16, opacity: 0.6 },
+  googleButtonText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+  googleButtonLabel: { fontSize: 15, color: 'white', flex: 1 },
+  comingSoonBadge: { fontSize: 11, color: '#FFD700', backgroundColor: '#2a2105', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, fontWeight: '600' },
+
+  switchText: { color: '#9aac9f', fontSize: 14, textAlign: 'center' },
+  switchHighlight: { color: '#18a663', fontWeight: 'bold' },
+
+  trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  trustText: { color: '#5e7468', fontSize: 11, fontWeight: '500' },
+
+  footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 },
+  footerLink: { color: '#5e7468', fontSize: 12 },
+  footerDot: { color: '#5e7468', fontSize: 12 },
+
   profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 40, alignItems: 'center' },
   avatarButton: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
   avatarImage: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, borderColor: '#FFD700' },
@@ -619,32 +560,4 @@ const styles = StyleSheet.create({
   infoText: { color: '#aaa', fontSize: 14, marginTop: 7 },
   logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 50, alignItems: 'center' },
-  logo: { fontSize: 36, fontWeight: 'bold', color: 'white' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  tagline: { fontSize: 14, color: 'white', marginTop: 8 },
-  form: { padding: 25, marginTop: 20 },
-  formTitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#aaa', marginBottom: 25, textAlign: 'center' },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', marginBottom: 12, paddingHorizontal: 14, gap: 10 },
-  inputField: { flex: 1, padding: 15, fontSize: 16 },
-  errorText: { color: '#ff4444', fontSize: 12, marginBottom: 8, marginLeft: 4 },
-  forgotLink: { color: '#18a663', fontSize: 13, fontWeight: '600', textAlign: 'right', marginBottom: 18 },
-  switchLink: { color: '#666', fontSize: 14, textAlign: 'center', marginTop: 18 },
-  switchLinkHighlight: { color: '#18a663', fontWeight: 'bold' },
-  phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', marginBottom: 20 },
-  code: { color: 'white', padding: 15, fontSize: 14, borderRightWidth: 1, borderRightColor: '#174a35' },
-  phoneInput: { flex: 1, color: 'white', padding: 15, fontSize: 18 },
-  input: { backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', color: 'white', padding: 15, fontSize: 16, marginBottom: 20 },
-  consentRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  checkbox: { width: 22, height: 22, borderWidth: 1, borderColor: '#666', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  checkboxChecked: { backgroundColor: '#18a663', borderColor: '#18a663' },
-  consentText: { flex: 1, fontSize: 14, lineHeight: 20 },
-  button: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 15, flexDirection: 'row', gap: 7 },
-  buttonDisabled: { backgroundColor: '#555' },
-  buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
-  backText: { color: '#18a663', textAlign: 'center', fontSize: 14, marginBottom: 10 },
-  termsLink: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 10 },
-  termsLinkHighlight: { color: '#18a663', fontWeight: 'bold' },
-  privacyLink: { color: '#18a663', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
 });

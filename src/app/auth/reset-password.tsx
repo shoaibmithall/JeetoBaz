@@ -29,7 +29,7 @@ export default function ResetPasswordCallbackScreen() {
         return;
       }
 
-      router.replace('/reset-password');
+      router.replace('/reset-password' as never);
     }
 
     handle();

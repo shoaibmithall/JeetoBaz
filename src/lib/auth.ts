@@ -14,12 +14,17 @@ export interface AuthState {
  * Sign up with email and password.
  * After success, user receives confirmation email.
  */
-export async function signUpWithEmail(email: string, password: string) {
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  options?: { data?: Record<string, unknown> }
+) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
+      data: options?.data,
     },
   });
 
@@ -114,21 +119,21 @@ export function isEmailVerified(user: User | null): boolean {
  */
 export async function getMigrationFlag(): Promise<string> {
   const { data } = await supabase
-    .from('auth_migration_config')
+    .from('auth_migration_config' as never)
     .select('value')
     .single();
 
-  return data?.value ?? 'false';
+  return (data as unknown as { value?: string })?.value ?? 'false';
 }
 
 /**
  * Create user profile via RPC (server-side validation).
  */
 export async function createUserProfile(name: string, phone: string) {
-  const { error } = await supabase.rpc('create_user_profile', {
+  const { error } = await supabase.rpc('create_user_profile' as never, {
     p_name: name,
     p_phone: phone,
-  });
+  } as never);
 
   return { error };
 }
@@ -141,11 +146,11 @@ export async function updateUserProfile(
   avatarUrl?: string,
   phone?: string
 ) {
-  const { error } = await supabase.rpc('update_my_profile', {
+  const { error } = await supabase.rpc('update_my_profile' as never, {
     p_name: name,
     p_avatar_url: avatarUrl,
     p_phone: phone,
-  });
+  } as never);
 
   return { error };
 }

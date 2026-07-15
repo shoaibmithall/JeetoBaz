@@ -128,6 +128,9 @@ const HomeProductCard = memo(function HomeProductCard({
   const maxEntries = product.max_entries || 1;
   const progressPercent = Math.min((currentEntries / maxEntries) * 100, 100);
   const spotsLeft = Math.max(maxEntries - currentEntries, 0);
+  const compactScheduleValue = isCompactGrid && !product.draw_date
+    ? `${spotsLeft.toLocaleString()} ${t('spotsLeft')}`
+    : drawSchedule.value;
 
   return (
     <View
@@ -140,7 +143,7 @@ const HomeProductCard = memo(function HomeProductCard({
     >
       <View style={[styles.verifiedBanner, isCompactGrid && styles.verifiedBannerCompact, { backgroundColor: colors.primarySoft }]}>
         <View style={styles.iconText}>
-          <CheckCircle2 color={colors.primary} size={isCompactGrid ? 11 : 15} />
+          <CheckCircle2 color={colors.primary} size={isCompactGrid ? 13 : 15} />
           <Text numberOfLines={1} style={[styles.verifiedBannerText, isCompactGrid && styles.verifiedBannerTextCompact, { color: colors.primary }]}>
             {t('verifiedDraw')}
           </Text>
@@ -204,7 +207,7 @@ const HomeProductCard = memo(function HomeProductCard({
         </View>
         {product.description && (
           <Text
-            numberOfLines={isCompactGrid ? 1 : undefined}
+            numberOfLines={isCompactGrid ? 2 : undefined}
             style={[styles.description, isCompactGrid && styles.descriptionCompact, { color: colors.muted }]}
           >
             {product.description}
@@ -213,9 +216,11 @@ const HomeProductCard = memo(function HomeProductCard({
 
         <View style={[styles.countdownBox, isCompactGrid && styles.countdownBoxCompact, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
           <Text numberOfLines={1} style={[styles.countdownLabel, isCompactGrid && styles.countdownLabelCompact, { color: colors.gold }]}>{drawSchedule.label}</Text>
-          <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{drawSchedule.value}</Text>
+          <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{compactScheduleValue}</Text>
         </View>
-        <Text numberOfLines={isCompactGrid ? 1 : undefined} style={[styles.drawScheduleNote, isCompactGrid && styles.drawScheduleNoteCompact, { color: colors.muted }]}>{drawSchedule.note}</Text>
+        {!isCompactGrid && (
+          <Text style={[styles.drawScheduleNote, { color: colors.muted }]}>{drawSchedule.note}</Text>
+        )}
 
         {product.draw_date && (
           <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {product.draw_date}</Text></View>
@@ -240,7 +245,7 @@ const HomeProductCard = memo(function HomeProductCard({
         </View>
 
         <TouchableOpacity style={[styles.button, isCompactGrid && styles.buttonCompact]} onPress={() => onEnter(product)}>
-          <Target color="#000" size={isCompactGrid ? 12 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
+          <Target color="#000" size={isCompactGrid ? 14 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -46,6 +46,7 @@ export type User = {
   name: string | null;
   phone: string;
   created_at: string;
+  auth_user_id?: string | null;
   jazzcash_number?: string | null;
   avatar_url?: string | null;
   referral_code?: string | null;
