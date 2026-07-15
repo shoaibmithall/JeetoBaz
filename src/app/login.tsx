@@ -278,61 +278,61 @@ export default function ProfileScreen() {
       <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
           <Target color="#FF6B6B" size={21} />
-          <Text style={[styles.menuText, { color: '#FF6B6B' }]}>{t('myEntries')}</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>{t('myEntries')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/')}>
           <Trophy color="#FFD700" size={21} />
-          <Text style={[styles.menuText, { color: '#FFD700' }]}>{t('activeDraws')}</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>{t('activeDraws')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/explore')}>
           <Medal color="#F59E0B" size={21} />
-          <Text style={[styles.menuText, { color: '#F59E0B' }]}>{t('pastWinners')}</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>{t('pastWinners')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/referral' as never)}>
           <UserPlus color="#18a663" size={21} />
-          <Text style={[styles.menuText, { color: '#18a663' }]}>Refer & Earn</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
           <ClipboardList color="#6366F1" size={21} />
-          <Text style={[styles.menuText, { color: '#6366F1' }]}>{t('terms')}</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>{t('terms')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
           <LockKeyhole color="#EC4899" size={21} />
-          <Text style={[styles.menuText, { color: '#EC4899' }]}>{t('privacyAccountData')}</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>{t('privacyAccountData')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faq' as never)}>
           <CircleHelp color="#3B82F6" size={21} />
-          <Text style={[styles.menuText, { color: '#3B82F6' }]}>Frequently Asked Questions</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>Frequently Asked Questions</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('social')}>
           <UsersRound color="#8B5CF6" size={21} />
-          <Text style={[styles.menuText, { color: '#8B5CF6' }]}>Follow JeetoBaz</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>Follow JeetoBaz</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('works')}>
           <Rocket color="#F97316" size={21} />
-          <Text style={[styles.menuText, { color: '#F97316' }]}>How JeetoBaz Works</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>How JeetoBaz Works</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => openAboutSection('support')}>
           <HeartHandshake color="#14B8A6" size={21} />
-          <Text style={[styles.menuText, { color: '#14B8A6' }]}>Support & Contact</Text>
+          <Text style={[styles.menuText, { color: theme.gold }]}>Support & Contact</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
       </View>
