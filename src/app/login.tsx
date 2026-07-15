@@ -364,7 +364,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.logoRow}>
-            <Trophy color="#FFD700" size={40} />
+            <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
             <Text style={styles.logo}>JeetoBaz</Text>
           </View>
           <Text style={styles.tagline}>Pakistan's Transparent Prize Campaign Platform</Text>
@@ -493,6 +493,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 50, paddingHorizontal: 20, alignItems: 'center' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logoImage: { width: 50, height: 50, borderRadius: 10 },
   logo: { fontSize: 40, fontWeight: 'bold', color: 'white' },
   tagline: { fontSize: 13, color: '#9aac9f', marginTop: 10, textAlign: 'center', lineHeight: 18 },
 
