@@ -6,6 +6,7 @@ import { Heart, House, Medal, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { requestHomeScrollToTop } from '@/lib/home-scroll';
+import { AuthProvider } from '@/providers/AuthProvider';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -23,6 +24,7 @@ export default function RootLayout() {
   }, []);
 
   return (
+    <AuthProvider>
     <>
       <Head>
         <title>{siteTitle}</title>
@@ -95,7 +97,15 @@ export default function RootLayout() {
         <Tabs.Screen name="notifications" options={{ href: null }} />
         <Tabs.Screen name="about" options={{ href: null }} />
         <Tabs.Screen name="referral" options={{ href: null }} />
+        <Tabs.Screen name="signup" options={{ href: null }} />
+        <Tabs.Screen name="verify-email" options={{ href: null }} />
+        <Tabs.Screen name="forgot-password" options={{ href: null }} />
+        <Tabs.Screen name="reset-password" options={{ href: null }} />
+        <Tabs.Screen name="profile-setup" options={{ href: null }} />
+        <Tabs.Screen name="auth/callback" options={{ href: null }} />
+        <Tabs.Screen name="auth/reset-password" options={{ href: null }} />
       </Tabs>
     </>
+    </AuthProvider>
   );
 }

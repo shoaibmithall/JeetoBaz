@@ -3,16 +3,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/providers/AuthProvider';
+import { signInWithEmail, signOut, getMigrationFlag } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { claimPendingReferral } from '@/lib/referrals';
 import { isValidPakistaniMobile, normalizePakistaniMobile, normalizePersonName } from '@/lib/validation';
+import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
   Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Info,
-  HeartHandshake, LockKeyhole, LogOut, Medal, Rocket, Target, Trophy,
-  UserPlus,
-  UsersRound,
+  HeartHandshake, LockKeyhole, LogOut, Mail, Medal, Rocket, Target, Trophy,
+  UserPlus, UsersRound,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
@@ -36,42 +38,75 @@ function sanitizePhoneForPath(value: string) {
 export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
-  const [step, setStep] = useState('check');
+  const { user, isEmailVerified } = useAuth();
+  const [step, setStep] = useState<'check' | 'email-login' | 'phone' | 'name' | 'profile'>('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [inputPhone, setInputPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
+  const [authMigrationEnabled, setAuthMigrationEnabled] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     let active = true;
 
     async function loadProfile() {
-      const [savedPhone, savedName, savedAvatarUrl] = await Promise.all([
-        getStoredValue('userPhone'),
-        getStoredValue('userName'),
-        getStoredValue(USER_AVATAR_STORAGE_KEY),
-      ]);
+      const [flag] = await Promise.all([getMigrationFlag()]);
       if (!active) return;
-      if (savedAvatarUrl) setAvatarUrl(savedAvatarUrl);
+
+      const migrationOn = ['staging', 'gradual', 'full'].includes(flag);
+      setAuthMigrationEnabled(migrationOn);
+
+      if (user && isEmailVerified) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('name, phone, avatar_url')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+
+        if (profile && active) {
+          setPhone(profile.phone || '');
+          setName(profile.name || '');
+          setAvatarUrl(profile.avatar_url || '');
+          setStep('profile');
+          if (profile.phone) {
+            fetchStats(profile.phone);
+          }
+        } else if (active) {
+          setStep('profile');
+          setEmail(user.email || '');
+          setName(user.user_metadata?.name || '');
+        }
+        return;
+      }
+
+      const savedPhone = await getStoredValue('userPhone');
+      if (!active) return;
+
       if (savedPhone) {
+        const savedName = await getStoredValue('userName');
+        const savedAvatar = await getStoredValue(USER_AVATAR_STORAGE_KEY);
         setPhone(savedPhone);
         setName(savedName || '');
+        if (savedAvatar) setAvatarUrl(savedAvatar);
         setStep('profile');
         fetchStats(savedPhone);
         fetchProfileAvatar(savedPhone);
       } else {
-        setStep('phone');
+        setStep(migrationOn ? 'email-login' : 'phone');
       }
     }
 
     loadProfile();
     return () => { active = false; };
-  }, []);
+  }, [user, isEmailVerified]);
 
   async function fetchStats(phone: string) {
     const { data } = await supabase.from('entries').select('*').eq('phone', phone);
@@ -88,6 +123,31 @@ export default function ProfileScreen() {
       setAvatarUrl(data.avatar_url);
       await setStoredValue(USER_AVATAR_STORAGE_KEY, data.avatar_url);
     }
+  }
+
+  async function handleEmailLogin() {
+    const validationError = validateEmail(email);
+    if (validationError) {
+      setEmailError(validationError);
+      return;
+    }
+    if (!password) {
+      alert('Please enter your password.');
+      return;
+    }
+
+    setLoading(true);
+    setEmailError('');
+    const { error } = await signInWithEmail(email.trim().toLowerCase(), password);
+
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        alert('Invalid email or password. Please try again.');
+      } else {
+        alert('Login failed: ' + error.message);
+      }
+    }
+    setLoading(false);
   }
 
   async function handleLogin() {
@@ -163,16 +223,22 @@ export default function ProfileScreen() {
   }
 
   async function logout() {
+    if (user) {
+      await signOut();
+    }
     await removeStoredValues(['userPhone', 'userName', USER_AVATAR_STORAGE_KEY]);
-    setStep('phone');
+    setStep(authMigrationEnabled ? 'email-login' : 'phone');
     setPhone('');
     setName('');
     setInputPhone('');
+    setEmail('');
+    setPassword('');
     setAvatarUrl('');
   }
 
   async function uploadProfilePhoto() {
-    if (!phone || avatarUploading) return;
+    const identifier = phone || user?.id;
+    if (!identifier || avatarUploading) return;
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -199,7 +265,7 @@ export default function ProfileScreen() {
         : mimeType === 'image/webp'
           ? 'webp'
           : 'jpg';
-      const filePath = `${sanitizePhoneForPath(phone)}/avatar-${Date.now()}.${extension}`;
+      const filePath = `${sanitizePhoneForPath(identifier)}/avatar-${Date.now()}.${extension}`;
       const fileData = asset.base64
         ? dataUrlToArrayBuffer(`data:${mimeType};base64,${asset.base64}`)
         : await fetch(asset.uri).then((response) => response.arrayBuffer());
@@ -218,13 +284,14 @@ export default function ProfileScreen() {
         .getPublicUrl(filePath);
       const nextAvatarUrl = publicUrlData.publicUrl;
 
-      const { error: updateError } = await supabase
-        .rpc('update_profile_avatar', {
-          requested_phone: phone,
-          requested_avatar_url: nextAvatarUrl,
-        });
-
-      if (updateError) throw updateError;
+      if (phone) {
+        const { error: updateError } = await supabase
+          .rpc('update_profile_avatar', {
+            requested_phone: phone,
+            requested_avatar_url: nextAvatarUrl,
+          });
+        if (updateError) throw updateError;
+      }
 
       setAvatarUrl(nextAvatarUrl);
       await setStoredValue(USER_AVATAR_STORAGE_KEY, nextAvatarUrl);
@@ -270,7 +337,11 @@ export default function ProfileScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={styles.profileName}>{name}</Text>
-        <Text style={styles.profilePhone}>{phone}</Text>
+        {user ? (
+          <Text style={styles.profilePhone}>{user.email}</Text>
+        ) : (
+          <Text style={styles.profilePhone}>{phone}</Text>
+        )}
       </View>
 
       <View style={styles.statsRow}>
@@ -378,7 +449,65 @@ export default function ProfileScreen() {
         <View style={styles.logoRow}><Trophy color="white" size={34} /><Text style={styles.logo}>JeetoBaz</Text></View>
         <Text style={styles.tagline}>{t('appTagline')}</Text>
       </View>
-      <View style={styles.form}>
+      <ScrollView style={styles.form}>
+        {step === 'email-login' && (
+          <>
+            <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
+            <Text style={[styles.subtitle, { color: theme.muted }]}>Sign in with your email and password</Text>
+            <View style={[styles.inputRow, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
+              <Mail color={theme.muted} size={18} />
+              <TextInput
+                style={[styles.inputField, { color: theme.text }]}
+                placeholder="you@example.com"
+                placeholderTextColor="#666"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={email}
+                onChangeText={(v) => { setEmail(v); setEmailError(''); }}
+              />
+            </View>
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            <View style={[styles.inputRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <LockKeyhole color={theme.muted} size={18} />
+              <TextInput
+                style={[styles.inputField, { color: theme.text }]}
+                placeholder="Password"
+                placeholderTextColor="#666"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+            <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+              <Text style={styles.forgotLink}>Forgot Password?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleEmailLogin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Signing in...' : `${t('continue')} →`}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/signup')}>
+              <Text style={styles.switchLink}>
+                Don't have an account?{' '}
+                <Text style={styles.switchLinkHighlight}>Create one</Text>
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/terms')}>
+              <Text style={styles.termsLink}>
+                {t('youAgreeContinue')}{' '}
+                <Text style={styles.termsLinkHighlight}>{t('terms')}</Text>
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/privacy')}>
+              <Text style={styles.privacyLink}>{t('readPrivacy')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
         {step === 'phone' && (
           <>
             <Text style={[styles.formTitle, { color: theme.text }]}>{t('loginSignUp')}</Text>
@@ -462,7 +591,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -497,6 +626,12 @@ const styles = StyleSheet.create({
   form: { padding: 25, marginTop: 20 },
   formTitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 8, textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#aaa', marginBottom: 25, textAlign: 'center' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', marginBottom: 12, paddingHorizontal: 14, gap: 10 },
+  inputField: { flex: 1, padding: 15, fontSize: 16 },
+  errorText: { color: '#ff4444', fontSize: 12, marginBottom: 8, marginLeft: 4 },
+  forgotLink: { color: '#18a663', fontSize: 13, fontWeight: '600', textAlign: 'right', marginBottom: 18 },
+  switchLink: { color: '#666', fontSize: 14, textAlign: 'center', marginTop: 18 },
+  switchLinkHighlight: { color: '#18a663', fontWeight: 'bold' },
   phoneRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', marginBottom: 20 },
   code: { color: 'white', padding: 15, fontSize: 14, borderRightWidth: 1, borderRightColor: '#174a35' },
   phoneInput: { flex: 1, color: 'white', padding: 15, fontSize: 18 },
