@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "jeetobaz",
+    "deepLinks": [
+      "jeetobaz://auth/callback",
+      "jeetobaz://reset-password"
+    ],
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
