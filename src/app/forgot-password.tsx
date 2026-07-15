@@ -35,12 +35,9 @@ export default function ForgotPasswordScreen() {
     setEmailError('');
     setRateLimitError('');
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: {
-        shouldCreateUser: false,
-      },
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase()
+    );
 
     if (error) {
       const msg = error.message || '';
@@ -64,12 +61,9 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     setRateLimitError('');
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: {
-        shouldCreateUser: false,
-      },
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase()
+    );
 
     if (error) {
       const msg = error.message || '';

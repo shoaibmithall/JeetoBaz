@@ -87,10 +87,9 @@ export default function VerifyResetOtpScreen() {
     if (countdown > 0) return;
     setResendLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: false },
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase()
+    );
 
     if (error) {
       const msg = error.message || '';
