@@ -73,41 +73,20 @@ export default function SignupScreen() {
     setLoading(true);
 
     const normalizedPhoneFull = '+92' + normalizePakistaniMobile(phone);
-    console.log('Signup attempt:', { email: email.trim().toLowerCase(), phoneLen: normalizedPhoneFull.length, nameLen: name.trim().length });
-
-    let result;
-    try {
-      result = await signUpWithEmail(
-        email.trim().toLowerCase(),
-        password,
-        { data: { name: name.trim(), phone: normalizedPhoneFull } }
-      );
-    } catch (e) {
-      console.error('signUpWithEmail THREW:', e);
-      alert('Signup exception: ' + (e instanceof Error ? e.message : String(e)));
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = result;
-    console.log('signUp result:', JSON.stringify({ hasData: !!data, error }));
+    const { error } = await signUpWithEmail(
+      email.trim().toLowerCase(),
+      password,
+      { data: { name: name.trim(), phone: normalizedPhoneFull } }
+    );
 
     if (error) {
-      const details = [
-        'name: ' + (error.name || 'none'),
-        'message: ' + (error.message || 'none'),
-        'status: ' + ((error as any).status || 'none'),
-        'code: ' + ((error as any).code || 'none'),
-      ].join('\n');
-      console.error('Signup error details:', details, error);
       const msg = error.message || String(error) || 'Unknown error';
       if (msg.includes('already registered')) {
         setErrors({ email: 'This email is already registered. Try logging in.' });
       } else {
-        alert('Signup failed:\n' + details);
+        alert('Signup failed: ' + msg);
       }
     } else {
-      console.log('Signup success, user:', data?.user?.id);
       router.replace('/verify-email' as never);
     }
 
