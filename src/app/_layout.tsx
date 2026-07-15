@@ -100,6 +100,7 @@ export default function RootLayout() {
         <Tabs.Screen name="signup" options={{ href: null }} />
         <Tabs.Screen name="verify-email" options={{ href: null }} />
         <Tabs.Screen name="forgot-password" options={{ href: null }} />
+        <Tabs.Screen name="verify-reset-otp" options={{ href: null }} />
         <Tabs.Screen name="reset-password" options={{ href: null }} />
         <Tabs.Screen name="profile-setup" options={{ href: null }} />
         <Tabs.Screen name="auth/callback" options={{ href: null }} />

@@ -1,10 +1,10 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { resetPassword } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
-import { ChevronLeft, LockKeyhole, Mail, Send, Shield } from 'lucide-react-native';
+import { ChevronLeft, LockKeyhole, Mail, Shield, Send } from 'lucide-react-native';
 
 export default function ForgotPasswordScreen() {
   const { theme } = useAppTheme();
@@ -13,8 +13,18 @@ export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [rateLimitError, setRateLimitError] = useState('');
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  async function handleReset() {
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [countdown]);
+
+  async function handleSendOTP() {
     const validationError = validateEmail(email);
     if (validationError) {
       setEmailError(validationError);
@@ -23,14 +33,58 @@ export default function ForgotPasswordScreen() {
 
     setLoading(true);
     setEmailError('');
-    const { error } = await resetPassword(email.trim().toLowerCase());
+    setRateLimitError('');
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        shouldCreateUser: false,
+      },
+    });
 
     if (error) {
-      alert('Failed to send reset email: ' + error.message);
+      const msg = error.message || '';
+      if (msg.includes('rate') || msg.includes('limit') || msg.includes('Too many')) {
+        setRateLimitError('Too many reset requests. Please wait a few minutes and try again.');
+      } else if (msg.includes('not found') || msg.includes('invalid')) {
+        setEmailError('No account found with this email.');
+      } else {
+        alert('Failed to send OTP: ' + msg);
+      }
     } else {
       setSent(true);
+      setCountdown(60);
     }
+
     setLoading(false);
+  }
+
+  async function handleResendOTP() {
+    if (countdown > 0) return;
+    setLoading(true);
+    setRateLimitError('');
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        shouldCreateUser: false,
+      },
+    });
+
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('rate') || msg.includes('limit') || msg.includes('Too many')) {
+        setRateLimitError('Too many requests. Please wait and try again.');
+      }
+    } else {
+      setCountdown(60);
+    }
+
+    setLoading(false);
+  }
+
+  function handleContinue() {
+    router.push({ pathname: '/verify-reset-otp' as never, params: { email: email.trim().toLowerCase() } });
   }
 
   if (sent) {
@@ -38,7 +92,7 @@ export default function ForgotPasswordScreen() {
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backBtn}>
+            <TouchableOpacity onPress={() => router.replace('/forgot-password')} style={styles.backBtn}>
               <ChevronLeft color="white" size={24} />
             </TouchableOpacity>
             <View style={styles.logoRow}>
@@ -50,22 +104,38 @@ export default function ForgotPasswordScreen() {
           <View style={styles.card}>
             <View style={styles.secureBadge}>
               <Mail color="#FFD700" size={16} />
-              <Text style={styles.secureBadgeText}>Check Your Email</Text>
+              <Text style={styles.secureBadgeText}>OTP Sent!</Text>
             </View>
 
-            <Text style={styles.title}>Email Sent!</Text>
+            <Text style={styles.title}>Check Your Email</Text>
             <Text style={styles.subtitle}>
-              We sent a password reset link to:
+              We sent a 6-digit verification code to:
             </Text>
             <Text style={styles.email}>{email.trim().toLowerCase()}</Text>
-            <Text style={styles.hint}>
-              Click the link in the email to set a new password. The link expires in 1 hour.
-            </Text>
 
-            <TouchableOpacity style={styles.primaryButton} onPress={() => router.replace('/login')}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleContinue}
+            >
               <LockKeyhole color="#000" size={18} />
-              <Text style={styles.primaryButtonText}>Back to Login</Text>
+              <Text style={styles.primaryButtonText}>Enter OTP Code</Text>
             </TouchableOpacity>
+
+            <View style={styles.resendRow}>
+              {countdown > 0 ? (
+                <Text style={[styles.countdownText, { color: theme.muted }]}>
+                  Resend OTP in {countdown}s
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
+                  <Text style={styles.resendLink}>Resend OTP</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {rateLimitError ? (
+              <Text style={styles.rateLimitText}>{rateLimitError}</Text>
+            ) : null}
           </View>
 
           <View style={styles.trustStrip}>
@@ -75,18 +145,8 @@ export default function ForgotPasswordScreen() {
             </View>
             <View style={styles.trustItem}>
               <LockKeyhole color="#18a663" size={14} />
-              <Text style={styles.trustText}>1 Hour Expiry</Text>
+              <Text style={styles.trustText}>Code Expires Soon</Text>
             </View>
-          </View>
-
-          <View style={styles.footerLinks}>
-            <TouchableOpacity onPress={() => router.push('/terms' as never)}>
-              <Text style={styles.footerLink}>Terms</Text>
-            </TouchableOpacity>
-            <Text style={styles.footerDot}>•</Text>
-            <TouchableOpacity onPress={() => router.push('/privacy' as never)}>
-              <Text style={styles.footerLink}>Privacy</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
@@ -114,7 +174,7 @@ export default function ForgotPasswordScreen() {
 
           <Text style={styles.title}>Forgot Password?</Text>
           <Text style={styles.subtitle}>
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we'll send you a 6-digit verification code.
           </Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
@@ -127,14 +187,14 @@ export default function ForgotPasswordScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               value={email}
-              onChangeText={(v) => { setEmail(v); setEmailError(''); }}
+              onChangeText={(v) => { setEmail(v); setEmailError(''); setRateLimitError(''); }}
             />
           </View>
           {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
           <TouchableOpacity
             style={[styles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={handleReset}
+            onPress={handleSendOTP}
             disabled={loading}
           >
             {loading ? (
@@ -142,10 +202,14 @@ export default function ForgotPasswordScreen() {
             ) : (
               <>
                 <Send color="#000" size={18} />
-                <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+                <Text style={styles.primaryButtonText}>Send Verification Code</Text>
               </>
             )}
           </TouchableOpacity>
+
+          {rateLimitError ? (
+            <Text style={styles.rateLimitText}>{rateLimitError}</Text>
+          ) : null}
 
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backLink}>← Back to Login</Text>
@@ -159,7 +223,7 @@ export default function ForgotPasswordScreen() {
           </View>
           <View style={styles.trustItem}>
             <LockKeyhole color="#18a663" size={14} />
-            <Text style={styles.trustText}>1 Hour Expiry</Text>
+            <Text style={styles.trustText}>Code Expires Soon</Text>
           </View>
         </View>
 
@@ -204,8 +268,13 @@ const styles = StyleSheet.create({
 
   backLink: { color: '#18a663', fontSize: 14, fontWeight: '600', textAlign: 'center' },
 
-  email: { fontSize: 16, fontWeight: '700', color: '#FFD700', marginBottom: 12, textAlign: 'center' },
-  hint: { fontSize: 13, color: '#9aac9f', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  email: { fontSize: 16, fontWeight: '700', color: '#FFD700', marginBottom: 20, textAlign: 'center' },
+
+  resendRow: { alignItems: 'center', marginTop: 8 },
+  countdownText: { fontSize: 13 },
+  resendLink: { color: '#18a663', fontSize: 14, fontWeight: '600' },
+
+  rateLimitText: { color: '#ff4444', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 18 },
 
   trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
