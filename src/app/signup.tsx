@@ -96,23 +96,23 @@ export default function SignupScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft color="white" size={24} />
+            <ChevronLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <Text style={styles.logo}>JeetoBaz</Text>
+            <Text style={[styles.logo, { color: theme.text }]}>JeetoBaz</Text>
           </View>
         </View>
 
-        <View style={styles.signupCard}>
-          <View style={styles.secureBadge}>
+        <View style={[styles.signupCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
             <Shield color="#18a663" size={16} />
             <Text style={styles.secureBadgeText}>Create Your Account</Text>
           </View>
 
-          <Text style={styles.welcomeTitle}>Join JeetoBaz</Text>
-          <Text style={styles.welcomeSubtitle}>Start winning prizes today!</Text>
+          <Text style={[styles.welcomeTitle, { color: theme.text }]}>Join JeetoBaz</Text>
+          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Start winning prizes today!</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>
             <User color={theme.muted} size={18} />
@@ -126,7 +126,7 @@ export default function SignupScreen() {
             />
           </View>
           {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
-          <Text style={styles.fieldHint}>As per CNIC</Text>
+          <Text style={[styles.fieldHint, { color: theme.subtle }]}>As per CNIC</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.phone ? '#ff4444' : theme.border }]}>
             <Phone color={theme.muted} size={18} />
@@ -142,7 +142,7 @@ export default function SignupScreen() {
             />
           </View>
           {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
-          <Text style={styles.fieldHint}>Use a mobile number registered in your own name</Text>
+          <Text style={[styles.fieldHint, { color: theme.subtle }]}>Use a mobile number registered in your own name</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.email ? '#ff4444' : theme.border }]}>
             <Mail color={theme.muted} size={18} />
@@ -226,7 +226,7 @@ export default function SignupScreen() {
           </View>
           {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
 
-          <View style={styles.passwordRequirements}>
+          <View style={[styles.passwordRequirements, { backgroundColor: theme.surfaceAlt }]}>
             <Text style={[styles.reqTitle, { color: theme.muted }]}>Password Requirements</Text>
             <View style={styles.reqRow}>
               <Text style={[styles.reqDot, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>
@@ -286,7 +286,7 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.replace('/login')}>
-            <Text style={styles.switchText}>
+            <Text style={[styles.switchText, { color: theme.muted }]}>
               Already have an account?{' '}
               <Text style={styles.switchHighlight}>Sign In</Text>
             </Text>
@@ -296,25 +296,25 @@ export default function SignupScreen() {
         <View style={styles.trustStrip}>
           <View style={styles.trustItem}>
             <Shield color="#18a663" size={14} />
-            <Text style={styles.trustText}>Secure Sign Up</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Sign Up</Text>
           </View>
           <View style={styles.trustItem}>
             <Check color="#18a663" size={14} />
-            <Text style={styles.trustText}>Email Verification</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Email Verification</Text>
           </View>
           <View style={styles.trustItem}>
             <LockKeyhole color="#18a663" size={14} />
-            <Text style={styles.trustText}>Data Protected</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Data Protected</Text>
           </View>
         </View>
 
         <View style={styles.footerLinks}>
           <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={styles.footerLink}>Terms</Text>
+            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
           </TouchableOpacity>
-          <Text style={styles.footerDot}>•</Text>
+          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
           <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={styles.footerLink}>Privacy</Text>
+            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

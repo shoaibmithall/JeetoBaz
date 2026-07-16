@@ -257,7 +257,7 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.profileHeader}>
+      <View style={[styles.profileHeader, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity
           style={styles.avatarButton}
           onPress={uploadProfilePhoto}
@@ -268,10 +268,10 @@ export default function ProfileScreen() {
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
           ) : (
-            <CircleUserRound color="white" size={60} />
+            <CircleUserRound color={theme.text} size={60} />
           )}
         </TouchableOpacity>
-        <Text style={styles.profileName}>{name}</Text>
+        <Text style={[styles.profileName, { color: theme.text }]}>{name}</Text>
 
         <View style={styles.verifiedBadge}>
           <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
@@ -281,40 +281,40 @@ export default function ProfileScreen() {
         </View>
 
         {user ? (
-          <Text style={styles.profileEmail}>{user.email}</Text>
+          <Text style={[styles.profileEmail, { color: theme.muted }]}>{user.email}</Text>
         ) : phone ? (
-          <Text style={styles.profileEmail}>{phone}</Text>
+          <Text style={[styles.profileEmail, { color: theme.muted }]}>{phone}</Text>
         ) : null}
 
         {jbUserId ? (
           <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
-            <Text style={styles.jbIdText}>{jbUserId}</Text>
-            <Copy color={copiedField === 'jbId' ? '#18a663' : 'rgba(255,255,255,0.5)'} size={14} />
+            <Text style={[styles.jbIdText, { color: theme.muted }]}>{jbUserId}</Text>
+            <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={14} />
             {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
           </TouchableOpacity>
         ) : null}
 
         {memberSince ? (
           <View style={styles.memberSinceRow}>
-            <CalendarDays color="rgba(255,255,255,0.5)" size={14} />
-            <Text style={styles.memberSinceText}>Member Since {memberSince}</Text>
+            <CalendarDays color={theme.subtle} size={14} />
+            <Text style={[styles.memberSinceText, { color: theme.subtle }]}>Member Since {memberSince}</Text>
           </View>
         ) : null}
 
         <View style={styles.btnRow}>
-          <TouchableOpacity style={styles.editProfileBtn} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.editProfileBtn, { borderColor: theme.gold }]} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
             <Pencil color={theme.gold} size={15} />
-            <Text style={styles.editProfileText}>Edit Profile</Text>
+            <Text style={[styles.editProfileText, { color: theme.gold }]}>Edit Profile</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.changePhotoBtn} onPress={uploadProfilePhoto} disabled={avatarUploading} activeOpacity={0.7}>
-            <Camera color="rgba(255,255,255,0.7)" size={15} />
-            <Text style={styles.changePhotoBtnText}>{avatarUploading ? 'Uploading...' : 'Change Photo'}</Text>
+          <TouchableOpacity style={[styles.changePhotoBtn, { borderColor: theme.border }]} onPress={uploadProfilePhoto} disabled={avatarUploading} activeOpacity={0.7}>
+            <Camera color={theme.muted} size={15} />
+            <Text style={[styles.changePhotoBtnText, { color: theme.muted }]}>{avatarUploading ? 'Uploading...' : 'Change Photo'}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
+        <View style={[styles.verifyPill, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <MailCheck color={theme.gold} size={18} />
           <View>
             <Text style={[styles.verifyLabel, { color: theme.muted }]}>Email</Text>
@@ -323,7 +323,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
-        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
+        <View style={[styles.verifyPill, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Smartphone color={phone ? '#18a663' : '#F59E0B'} size={18} />
           <View>
             <Text style={[styles.verifyLabel, { color: theme.muted }]}>Phone</Text>
@@ -336,11 +336,11 @@ export default function ProfileScreen() {
 
       <View style={styles.statsRow}>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={styles.statNumber}>{totalEntries}</Text>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>{totalEntries}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsEntered')}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>0</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -464,22 +464,22 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
           <View style={styles.logoRow}>
             <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
-            <Text style={styles.logo}>JeetoBaz</Text>
+            <Text style={[styles.logo, { color: theme.text }]}>JeetoBaz</Text>
           </View>
-          <Text style={styles.tagline}>Pakistan's Transparent Prize Campaign Platform</Text>
+          <Text style={[styles.tagline, { color: theme.muted }]}>Pakistan's Transparent Prize Campaign Platform</Text>
         </View>
 
-        <View style={styles.loginCard}>
-          <View style={styles.secureBadge}>
+        <View style={[styles.loginCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
             <Shield color="#18a663" size={16} />
             <Text style={styles.secureBadgeText}>Secure Account Access</Text>
           </View>
 
-          <Text style={styles.welcomeTitle}>Welcome Back</Text>
-          <Text style={styles.welcomeSubtitle}>Sign in to your account</Text>
+          <Text style={[styles.welcomeTitle, { color: theme.text }]}>Welcome Back</Text>
+          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Sign in to your account</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
             <Mail color={theme.muted} size={18} />
@@ -547,14 +547,14 @@ export default function ProfileScreen() {
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
           </View>
 
-          <TouchableOpacity style={styles.googleButton} disabled>
-            <Text style={styles.googleButtonText}>G</Text>
-            <Text style={styles.googleButtonLabel}>Continue with Google</Text>
+          <TouchableOpacity style={[styles.googleButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]} disabled>
+            <Text style={[styles.googleButtonText, { color: theme.text }]}>G</Text>
+            <Text style={[styles.googleButtonLabel, { color: theme.text }]}>Continue with Google</Text>
             <Text style={styles.comingSoonBadge}>Soon</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push('/signup' as never)}>
-            <Text style={styles.switchText}>
+            <Text style={[styles.switchText, { color: theme.muted }]}>
               New to JeetoBaz?{' '}
               <Text style={styles.switchHighlight}>Create Account</Text>
             </Text>
@@ -564,25 +564,25 @@ export default function ProfileScreen() {
         <View style={styles.trustStrip}>
           <View style={styles.trustItem}>
             <Shield color="#18a663" size={14} />
-            <Text style={styles.trustText}>Secure Login</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Login</Text>
           </View>
           <View style={styles.trustItem}>
             <Check color="#18a663" size={14} />
-            <Text style={styles.trustText}>Verified Platform</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Verified Platform</Text>
           </View>
           <View style={styles.trustItem}>
             <LockKeyhole color="#18a663" size={14} />
-            <Text style={styles.trustText}>Protected Information</Text>
+            <Text style={[styles.trustText, { color: theme.subtle }]}>Protected Information</Text>
           </View>
         </View>
 
         <View style={styles.footerLinks}>
           <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={styles.footerLink}>Terms</Text>
+            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
           </TouchableOpacity>
-          <Text style={styles.footerDot}>•</Text>
+          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
           <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={styles.footerLink}>Privacy</Text>
+            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

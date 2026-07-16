@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
 import { getStoredValue } from '@/lib/storage';
 import { useLanguage } from '@/lib/i18n';
+import { useAppTheme } from '@/hooks/use-theme';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -16,6 +17,7 @@ export default function HelpCenterScreen() {
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
   const { language, t } = useLanguage();
+  const { theme } = useAppTheme();
 
   useEffect(() => {
     Promise.all([getStoredValue('userName'), getStoredValue('userPhone')]).then(([name, phone]) => {
@@ -74,64 +76,64 @@ export default function HelpCenterScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} keyboardShouldPersistTaps="handled">
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← {t('back')}</Text>
+          <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{t('helpCenter')}</Text>
+        <Text style={[styles.title, { color: theme.gold }]}>{t('helpCenter')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.intro}>
-        <Text style={styles.introTitle}>{t('helpIntroTitle')}</Text>
-        <Text style={styles.introText}>{t('supportIntro')}</Text>
+        <Text style={[styles.introTitle, { color: theme.text }]}>{t('helpIntroTitle')}</Text>
+        <Text style={[styles.introText, { color: theme.muted }]}>{t('supportIntro')}</Text>
       </View>
 
       <View style={styles.contactSection}>
-        <TouchableOpacity style={styles.contactRow} onPress={openWhatsApp}>
-          <View style={[styles.contactIcon, styles.whatsAppIcon]}><MessageCircle color="#25D366" size={23} /></View>
+        <TouchableOpacity style={[styles.contactRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openWhatsApp}>
+          <View style={[styles.contactIcon, { backgroundColor: theme.primarySoft }]}><MessageCircle color="#25D366" size={23} /></View>
           <View style={styles.contactInfo}>
-            <Text style={styles.contactTitle}>WhatsApp</Text>
-            <Text style={styles.contactValue}>{SUPPORT_PHONE_DISPLAY}</Text>
+            <Text style={[styles.contactTitle, { color: theme.text }]}>WhatsApp</Text>
+            <Text style={[styles.contactValue, { color: theme.muted }]}>{SUPPORT_PHONE_DISPLAY}</Text>
           </View>
-          <ChevronRight color="#666" size={22} />
+          <ChevronRight color={theme.subtle} size={22} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.contactRow} onPress={openEmail}>
-          <View style={[styles.contactIcon, styles.emailIcon]}><Mail color="#4a9eff" size={23} /></View>
+        <TouchableOpacity style={[styles.contactRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openEmail}>
+          <View style={[styles.contactIcon, { backgroundColor: theme.infoSoft }]}><Mail color={theme.info} size={23} /></View>
           <View style={styles.contactInfo}>
-            <Text style={styles.contactTitle}>Email</Text>
-            <Text style={styles.contactValue}>{SUPPORT_EMAIL}</Text>
+            <Text style={[styles.contactTitle, { color: theme.text }]}>Email</Text>
+            <Text style={[styles.contactValue, { color: theme.muted }]}>{SUPPORT_EMAIL}</Text>
           </View>
-          <ChevronRight color="#666" size={22} />
+          <ChevronRight color={theme.subtle} size={22} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.ticketSection}>
-        <Text style={styles.sectionTitle}>{t('supportTicket')}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('supportTicket')}</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
           placeholder={t('issueSubject')}
-          placeholderTextColor="#666"
+          placeholderTextColor={theme.subtle}
           value={subject}
           onChangeText={setSubject}
           maxLength={80}
         />
         <TextInput
-          style={[styles.input, styles.messageInput]}
+          style={[styles.input, styles.messageInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
           placeholder={t('describeIssue')}
-          placeholderTextColor="#666"
+          placeholderTextColor={theme.subtle}
           value={message}
           onChangeText={setMessage}
           multiline
           maxLength={1000}
           textAlignVertical="top"
         />
-        <TouchableOpacity style={styles.ticketButton} onPress={createTicket}>
-          <Text style={styles.ticketButtonText}>{t('submitTicket')}</Text>
+        <TouchableOpacity style={[styles.ticketButton, { backgroundColor: theme.gold }]} onPress={createTicket}>
+          <Text style={[styles.ticketButtonText, { color: theme.buttonText }]}>{t('submitTicket')}</Text>
         </TouchableOpacity>
-        <Text style={styles.ticketNote}>{t('emailAppTicket')}</Text>
+        <Text style={[styles.ticketNote, { color: theme.subtle }]}>{t('emailAppTicket')}</Text>
       </View>
     </ScrollView>
   );

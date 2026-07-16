@@ -167,7 +167,7 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.backdrop} onPress={onClose} />
       <View style={[styles.sheet, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={styles.handle} />
+        <View style={[styles.handle, { backgroundColor: theme.border }]} />
 
         <View style={styles.sheetHeader}>
           <View style={styles.sheetTitleRow}>
@@ -226,8 +226,9 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
 export default function ShareScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <ShareModal visible onClose={() => router.push('/')} />
       <TouchableOpacity onPress={() => router.push('/')} style={styles.backHomeButton}>
         <Text style={styles.backHomeText}>← {t('backToHome')}</Text>

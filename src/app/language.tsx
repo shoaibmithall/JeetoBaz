@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { useRouter } from 'expo-router';
 import { LANGUAGE_OPTIONS, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { Check } from 'lucide-react-native';
+import { useAppTheme } from '@/hooks/use-theme';
 
 const SAMPLE_TEXT: Record<LanguageCode, string> = {
   en: 'JeetoBaz will use English across the app.',
@@ -12,6 +13,7 @@ const SAMPLE_TEXT: Record<LanguageCode, string> = {
 export default function LanguageScreen() {
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
+  const { theme } = useAppTheme();
 
   async function chooseLanguage(code: LanguageCode) {
     await setLanguage(code);
@@ -19,33 +21,33 @@ export default function LanguageScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← {t('back')}</Text>
+          <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{t('language')}</Text>
+        <Text style={[styles.title, { color: theme.gold }]}>{t('language')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.heading}>{t('selectLanguage')}</Text>
-        <Text style={styles.hint}>{t('languageHint')}</Text>
+        <Text style={[styles.heading, { color: theme.text }]}>{t('selectLanguage')}</Text>
+        <Text style={[styles.hint, { color: theme.muted }]}>{t('languageHint')}</Text>
 
         {LANGUAGE_OPTIONS.map((option) => {
           const selected = language === option.code;
           return (
             <TouchableOpacity
               key={option.code}
-              style={[styles.option, selected && styles.optionSelected]}
+              style={[styles.option, { backgroundColor: selected ? theme.selected : theme.surface, borderColor: selected ? theme.gold : theme.border }]}
               onPress={() => chooseLanguage(option.code)}
             >
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>{option.label}</Text>
-                <Text style={styles.optionSubtitle}>{option.nativeLabel}</Text>
-                <Text style={styles.sample}>{SAMPLE_TEXT[option.code]}</Text>
+                <Text style={[styles.optionTitle, { color: theme.text }]}>{option.label}</Text>
+                <Text style={[styles.optionSubtitle, { color: theme.primary }]}>{option.nativeLabel}</Text>
+                <Text style={[styles.sample, { color: theme.muted }]}>{SAMPLE_TEXT[option.code]}</Text>
               </View>
-              <View style={[styles.check, selected && styles.checkSelected]}>
+              <View style={[styles.check, { borderColor: selected ? theme.gold : theme.border }, selected && { backgroundColor: theme.gold }]}>
                 {selected ? <Check color="#000" size={18} strokeWidth={3} /> : null}
               </View>
             </TouchableOpacity>
