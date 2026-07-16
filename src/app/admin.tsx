@@ -158,18 +158,24 @@ export default function AdminScreen() {
 
   async function clearPendingPaymentsWithExistingEntries(items: Transaction[]) {
     const clearedPaymentIds = new Set<string>();
+    const pendingItems = items.filter((item) => item.status === 'pending');
+    if (pendingItems.length === 0) return clearedPaymentIds;
 
-    for (const item of items) {
-      if (item.status !== 'pending') continue;
+    const uniqueProductIds = [...new Set(pendingItems.map((item) => item.product_id))];
 
-      const { data: existingEntry, error: existingError } = await supabase
-        .from('entries')
-        .select('id')
-        .eq('product_id', item.product_id)
-        .eq('phone', item.phone)
-        .maybeSingle();
+    const { data: existingEntries } = await supabase
+      .from('entries')
+      .select('product_id, phone')
+      .in('product_id', uniqueProductIds);
 
-      if (existingError || !existingEntry) continue;
+    if (!existingEntries) return clearedPaymentIds;
+
+    const existingSet = new Set(
+      existingEntries.map((e) => `${e.product_id}:${e.phone}`)
+    );
+
+    for (const item of pendingItems) {
+      if (!existingSet.has(`${item.product_id}:${item.phone}`)) continue;
 
       try {
         await clearApprovedPayment(item);
@@ -481,7 +487,7 @@ export default function AdminScreen() {
     if (!confirmed) return;
 
     const entryPhone = txn.phone;
-    const entryName = txn.user_name || null;
+    const entryName = txn.user_name || undefined;
 
     const { data: existing } = await supabase
       .from('entries')
@@ -515,38 +521,26 @@ export default function AdminScreen() {
       return;
     }
 
-    const { data: product } = await supabase
-      .from('products')
-      .select('id, current_entries, max_entries, status')
-      .eq('id', txn.product_id)
-      .maybeSingle();
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('approve_entry_atomic', {
+        p_product_id: txn.product_id,
+        p_phone: entryPhone,
+        p_name: entryName,
+        p_transaction_id: txn.jazzcash_txn_id,
+      })
+      .single();
 
-    if (!product || product.status !== 'active') {
-      alert('This draw is not active.');
+    if (rpcError) {
+      alert('Entry approval failed: ' + rpcError.message);
       return;
     }
 
-    if ((product.current_entries || 0) >= product.max_entries) {
-      alert('This draw is full.');
+    if (!rpcResult?.ok) {
+      alert(rpcResult?.error || 'Entry approval failed.');
       return;
     }
 
-    const { error: entryError } = await supabase.from('entries').insert({
-      product_id: txn.product_id,
-      phone: entryPhone,
-      name: entryName,
-      transaction_id: txn.jazzcash_txn_id,
-    });
-
-    if (entryError) {
-      alert('Entry approval failed: ' + entryError.message);
-      return;
-    }
-
-    await supabase
-      .from('products')
-      .update({ current_entries: (product.current_entries || 0) + 1 })
-      .eq('id', txn.product_id);
+    const product = products.find((p) => p.id === txn.product_id);
 
     try {
       await clearApprovedPayment(txn);
@@ -561,7 +555,7 @@ export default function AdminScreen() {
       return;
     }
 
-    const productName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
+    const productName = product?.name || 'your draw';
     await createUserNotification({
       title: 'Payment confirmed',
       body: `Aapki ${productName} wali entry approve ho gayi hai. Good luck!`,
@@ -570,7 +564,7 @@ export default function AdminScreen() {
       link: '/entries',
     });
 
-    if ((product.current_entries || 0) + 1 >= product.max_entries) {
+    if (rpcResult?.new_entries != null && product && rpcResult.new_entries >= product.max_entries) {
       await createUserNotification({
         title: 'Draw ready',
         body: `${productName} ke participants complete ho gaye hain. JeetoBaz draw date/time announce karega.`,

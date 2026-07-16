@@ -119,6 +119,11 @@ export type ProductFormData = {
   winner_photo: string | null;
 };
 
+export type AuthMigrationConfig = {
+  key: string;
+  value: string;
+};
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -169,6 +174,7 @@ export type Database = {
         Pick<AppSetting, 'key' | 'value'>,
         Partial<Pick<AppSetting, 'value'>>
       >;
+      auth_migration_config: Table<AuthMigrationConfig>;
     };
     Views: {};
     Functions: {
@@ -231,6 +237,28 @@ export type Database = {
           requested_product_id: string;
         };
         Returns: string;
+      };
+      create_user_profile: {
+        Args: { p_name: string; p_phone: string };
+        Returns: void;
+      };
+      update_my_profile: {
+        Args: { p_name?: string; p_avatar_url?: string; p_phone?: string };
+        Returns: void;
+      };
+      approve_entry_atomic: {
+        Args: {
+          p_product_id: string;
+          p_phone: string;
+          p_name?: string;
+          p_transaction_id?: string;
+        };
+        Returns: Array<{
+          ok: boolean;
+          error?: string;
+          entry_id?: string;
+          new_entries?: number;
+        }>;
       };
     };
     Enums: {};

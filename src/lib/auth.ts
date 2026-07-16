@@ -127,21 +127,21 @@ export function isEmailVerified(user: User | null): boolean {
  */
 export async function getMigrationFlag(): Promise<string> {
   const { data } = await supabase
-    .from('auth_migration_config' as never)
+    .from('auth_migration_config')
     .select('value')
     .single();
 
-  return (data as unknown as { value?: string })?.value ?? 'false';
+  return data?.value ?? 'false';
 }
 
 /**
  * Create user profile via RPC (server-side validation).
  */
 export async function createUserProfile(name: string, phone: string) {
-  const { error } = await supabase.rpc('create_user_profile' as never, {
+  const { error } = await supabase.rpc('create_user_profile', {
     p_name: name,
     p_phone: phone,
-  } as never);
+  });
 
   return { error };
 }
@@ -154,11 +154,11 @@ export async function updateUserProfile(
   avatarUrl?: string,
   phone?: string
 ) {
-  const { error } = await supabase.rpc('update_my_profile' as never, {
+  const { error } = await supabase.rpc('update_my_profile', {
     p_name: name,
     p_avatar_url: avatarUrl,
     p_phone: phone,
-  } as never);
+  });
 
   return { error };
 }
