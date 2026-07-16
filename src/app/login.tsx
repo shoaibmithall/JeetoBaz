@@ -252,7 +252,7 @@ export default function ProfileScreen() {
   }
 
   function openAboutSection(section: 'social' | 'works' | 'support') {
-    router.push({ pathname: '/about', params: { section } });
+    router.push({ pathname: '/about', params: { section, source: 'profile' } });
   }
 
   if (step === 'profile') return (
@@ -378,7 +378,7 @@ export default function ProfileScreen() {
       ) : null}
 
       <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/entries', params: { source: 'profile' } })}>
           <Target color="#FF6B6B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('myEntries')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
@@ -396,25 +396,25 @@ export default function ProfileScreen() {
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/referral' as never)}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/referral', params: { source: 'profile' } })}>
           <UserPlus color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/terms')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/terms', params: { source: 'profile' } })}>
           <ClipboardList color="#6366F1" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('terms')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/privacy', params: { source: 'profile' } })}>
           <LockKeyhole color="#EC4899" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('privacyAccountData')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/faq' as never)}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/faq', params: { source: 'profile' } })}>
           <CircleHelp color="#3B82F6" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Frequently Asked Questions</Text>
           <ChevronRight color={theme.subtle} size={20} />
@@ -441,7 +441,7 @@ export default function ProfileScreen() {
 
       <TouchableOpacity
         style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
-        onPress={() => router.push('/about' as never)}
+        onPress={() => router.push({ pathname: '/about', params: { source: 'profile' } })}
         accessibilityRole="button"
         accessibilityLabel="Open About JeetoBaz"
       >

@@ -148,7 +148,7 @@ const responsibleUseRules = [
 
 export default function AboutJeetoBazScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ section?: string }>();
+  const params = useLocalSearchParams<{ section?: string; source?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const [selected, setSelected] = useState<SectionId | null>(() => {
@@ -183,6 +183,10 @@ export default function AboutJeetoBazScreen() {
   }
 
   function goBack() {
+    if (params.source === 'profile') {
+      router.replace('/login');
+      return;
+    }
     if (selected) {
       setSelected(null);
       return;

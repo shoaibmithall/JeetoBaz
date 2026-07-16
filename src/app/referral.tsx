@@ -61,7 +61,7 @@ type Reward = {
 
 export default function ReferralScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ ref?: string }>();
+  const params = useLocalSearchParams<{ ref?: string; source?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const [phone, setPhone] = useState('');
@@ -208,7 +208,7 @@ export default function ReferralScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
           <ArrowLeft color={theme.primary} size={22} />
           <Text style={[styles.backText, { color: theme.primary }]}>Back</Text>
         </TouchableOpacity>

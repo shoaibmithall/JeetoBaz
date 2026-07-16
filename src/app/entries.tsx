@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
@@ -32,6 +32,7 @@ export default function MyEntriesScreen() {
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const { width } = useWindowDimensions();
   const isCompact = width < 640;
 
@@ -239,8 +240,8 @@ export default function MyEntriesScreen() {
         </>
       )}
 
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
-        <Text style={styles.backBtnText}>← {t('backToDraws')}</Text>
+      <TouchableOpacity style={styles.backBtn} onPress={() => params.source === 'profile' ? router.replace('/login') : router.push('/')}>
+        <Text style={styles.backBtnText}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

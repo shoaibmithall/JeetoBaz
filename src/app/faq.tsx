@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ChevronDown,
   ChevronRight,
@@ -104,6 +104,7 @@ const FAQS = [
 
 export default function FaqScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const { theme } = useAppTheme();
   const [query, setQuery] = useState('');
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export default function FaqScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
           <Text style={[styles.back, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>

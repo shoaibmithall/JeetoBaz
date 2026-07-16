@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ClipboardList, TriangleAlert } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 
 export default function TermsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const { theme } = useAppTheme();
 
   return (
@@ -123,7 +124,7 @@ export default function TermsScreen() {
         <Text style={[styles.lastUpdated, { color: theme.subtle }]}>Last updated: June 2026</Text>
       </View>
 
-      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => router.back()}>
+      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
         <Text style={[styles.backBtnText, { color: theme.muted }]}>← Go Back</Text>
       </TouchableOpacity>
     </ScrollView>

@@ -1,6 +1,6 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue } from '@/lib/storage';
 
@@ -12,6 +12,7 @@ export default function PrivacyScreen() {
   const [userName, setUserName] = useState('Not provided');
   const [userPhone, setUserPhone] = useState('Not provided');
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const { theme } = useAppTheme();
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function PrivacyScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.gold }]}>Privacy Policy</Text>
