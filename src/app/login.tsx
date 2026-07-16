@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, useWindowDimensions } from 'react-native';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -11,7 +11,7 @@ import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storag
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  CalendarDays, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
   Medal, Pencil, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy,
   UserPlus, UsersRound,
@@ -39,6 +39,8 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const { user, isEmailVerified } = useAuth();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 600;
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -253,82 +255,77 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.profileHeader}>
+      <View style={[styles.profileHeader, isCompact ? styles.profileHeaderCompact : styles.profileHeaderWide]}>
         <TouchableOpacity
-          style={styles.avatarButton}
+          style={isCompact ? styles.avatarButtonCompact : styles.avatarButtonWide}
           onPress={uploadProfilePhoto}
           disabled={avatarUploading}
           accessibilityRole="button"
           accessibilityLabel="Change profile photo"
         >
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            <Image source={{ uri: avatarUrl }} style={isCompact ? styles.avatarImageCompact : styles.avatarImageWide} />
           ) : (
-            <CircleUserRound color="white" size={60} />
+            <CircleUserRound color="white" size={isCompact ? 48 : 64} />
           )}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.changePhotoButton}
-          onPress={uploadProfilePhoto}
-          disabled={avatarUploading}
-          accessibilityRole="button"
-        >
-          <Text style={styles.changePhotoText}>
-            {avatarUploading ? 'Uploading...' : 'Change Photo'}
-          </Text>
-        </TouchableOpacity>
-        <Text style={styles.profileName}>{name}</Text>
-        {user ? (
-          <Text style={styles.profilePhone}>{user.email}</Text>
-        ) : (
-          <Text style={styles.profilePhone}>{phone}</Text>
-        )}
 
-        <View style={styles.verifiedBadge}>
-          <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={16} />
-          <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
-            {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
-          </Text>
-        </View>
-
-        {jbUserId ? (
-          <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
-            <Text style={styles.jbIdText}>{jbUserId}</Text>
-            <Copy color={copiedField === 'jbId' ? '#18a663' : 'rgba(255,255,255,0.5)'} size={14} />
-            {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
-          </TouchableOpacity>
-        ) : null}
-
-        {memberSince ? (
-          <View style={styles.memberSinceRow}>
-            <CalendarDays color="rgba(255,255,255,0.5)" size={14} />
-            <Text style={styles.memberSinceText}>Member Since {memberSince}</Text>
+        <View style={isCompact ? styles.infoColCompact : styles.infoColWide}>
+          <View style={styles.nameRow}>
+            <Text style={isCompact ? styles.profileNameCompact : styles.profileNameWide}>{name}</Text>
+            <View style={styles.verifiedBadge}>
+              <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={14} />
+              <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+                {isEmailVerified ? 'Verified' : 'Pending'}
+              </Text>
+            </View>
           </View>
-        ) : null}
 
-        <TouchableOpacity style={styles.editProfileBtn} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
-          <Pencil color={theme.gold} size={15} />
-          <Text style={styles.editProfileText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
+          {user ? (
+            <Text style={styles.profileEmail}>{user.email}</Text>
+          ) : phone ? (
+            <Text style={styles.profileEmail}>{phone}</Text>
+          ) : null}
 
-      <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
-          <MailCheck color={theme.gold} size={18} />
-          <View>
-            <Text style={[styles.verifyLabel, { color: theme.muted }]}>Email</Text>
-            <Text style={[styles.verifyStatus, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
-              {isEmailVerified ? 'Verified' : 'Not Verified'}
-            </Text>
+          {jbUserId ? (
+            <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
+              <Text style={styles.jbIdText}>{jbUserId}</Text>
+              <Copy color={copiedField === 'jbId' ? '#18a663' : 'rgba(255,255,255,0.5)'} size={13} />
+              {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
+            </TouchableOpacity>
+          ) : null}
+
+          {memberSince ? (
+            <View style={styles.memberSinceRow}>
+              <CalendarDays color="rgba(255,255,255,0.45)" size={13} />
+              <Text style={styles.memberSinceText}>Member Since {memberSince}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.statusPillsRow}>
+            <View style={[styles.statusPill, { borderColor: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+              <MailCheck color={theme.gold} size={14} />
+              <Text style={[styles.statusPillText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+                {isEmailVerified ? 'Email Verified' : 'Email Not Verified'}
+              </Text>
+            </View>
+            <View style={[styles.statusPill, { borderColor: phone ? '#18a663' : '#F59E0B' }]}>
+              <Smartphone color={phone ? '#18a663' : '#F59E0B'} size={14} />
+              <Text style={[styles.statusPillText, { color: phone ? '#18a663' : '#F59E0B' }]}>
+                {phone ? 'Phone Verified' : 'Phone Not Verified'}
+              </Text>
+            </View>
           </View>
-        </View>
-        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
-          <Smartphone color={phone ? '#18a663' : '#F59E0B'} size={18} />
-          <View>
-            <Text style={[styles.verifyLabel, { color: theme.muted }]}>Phone</Text>
-            <Text style={[styles.verifyStatus, { color: phone ? '#18a663' : '#F59E0B' }]}>
-              {phone ? 'Verified' : 'Not Verified'}
-            </Text>
+
+          <View style={styles.btnRow}>
+            <TouchableOpacity style={styles.editProfileBtn} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
+              <Pencil color={theme.gold} size={14} />
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.changePhotoBtn} onPress={uploadProfilePhoto} disabled={avatarUploading} activeOpacity={0.7}>
+              <Camera color="rgba(255,255,255,0.7)" size={14} />
+              <Text style={styles.changePhotoBtnText}>{avatarUploading ? 'Uploading...' : 'Change Photo'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -641,13 +638,42 @@ const styles = StyleSheet.create({
   footerLink: { color: '#5e7468', fontSize: 12 },
   footerDot: { color: '#5e7468', fontSize: 12 },
 
-  profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 40, alignItems: 'center' },
-  avatarButton: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
-  avatarImage: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, borderColor: '#FFD700' },
-  changePhotoButton: { borderWidth: 1, borderColor: 'rgba(255,215,0,0.55)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 12 },
-  changePhotoText: { color: '#FFD700', fontSize: 12, fontWeight: '700' },
-  profileName: { fontSize: 26, fontWeight: 'bold', color: 'white' },
-  profilePhone: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
+  profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 20 },
+  profileHeaderCompact: { flexDirection: 'column', alignItems: 'center', paddingVertical: 24 },
+  profileHeaderWide: { flexDirection: 'row', alignItems: 'center', gap: 20, paddingVertical: 24, paddingHorizontal: 30 },
+
+  avatarButtonCompact: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 12 },
+  avatarImageCompact: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: '#FFD700' },
+  avatarButtonWide: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImageWide: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFD700' },
+
+  infoColCompact: { alignItems: 'center', width: '100%' },
+  infoColWide: { flex: 1 },
+
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
+  profileNameCompact: { fontSize: 22, fontWeight: 'bold', color: 'white' },
+  profileNameWide: { fontSize: 26, fontWeight: 'bold', color: 'white' },
+  profileEmail: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 },
+
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 14 },
+  verifiedText: { fontSize: 11, fontWeight: '700' },
+
+  jbIdRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
+  jbIdText: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', letterSpacing: 1 },
+  copiedLabel: { fontSize: 10, color: '#18a663', fontWeight: '600', marginLeft: 3 },
+
+  memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  memberSinceText: { fontSize: 11, color: 'rgba(255,255,255,0.45)' },
+
+  statusPillsRow: { flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, borderWidth: 1, backgroundColor: 'rgba(7,27,19,0.8)' },
+  statusPillText: { fontSize: 11, fontWeight: '600' },
+
+  btnRow: { flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' },
+  editProfileBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
+  editProfileText: { fontSize: 12, fontWeight: '700', color: '#FFD700' },
+  changePhotoBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  changePhotoBtnText: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
   statCard: { flex: 1, backgroundColor: '#071b13', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#174a35' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
@@ -662,24 +688,6 @@ const styles = StyleSheet.create({
   infoText: { color: '#aaa', fontSize: 14, marginTop: 7 },
   logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
-
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 20 },
-  verifiedText: { fontSize: 13, fontWeight: '700' },
-
-  jbIdRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  jbIdText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', letterSpacing: 1 },
-  copiedLabel: { fontSize: 11, color: '#18a663', fontWeight: '600', marginLeft: 4 },
-
-  memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
-
-  editProfileBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
-  editProfileText: { fontSize: 13, fontWeight: '700', color: '#FFD700' },
-
-  verifyRow: { flexDirection: 'row', marginHorizontal: 15, marginTop: 12, gap: 10 },
-  verifyPill: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#071b13', borderRadius: 12, padding: 14, borderWidth: 1 },
-  verifyLabel: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
-  verifyStatus: { fontSize: 14, fontWeight: '700' },
 
   referralCard: { marginHorizontal: 15, marginTop: 12, borderRadius: 15, borderWidth: 1, padding: 16 },
   referralTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
