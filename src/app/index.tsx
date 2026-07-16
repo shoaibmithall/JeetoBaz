@@ -483,12 +483,26 @@ export default function HomeScreen() {
   }
 
   async function handleEnter(product: Product) {
-    if (!userPhone) { router.push('/login'); return; }
+    let phone = userPhone;
+    if (!phone && user?.id) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('phone, name')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (profile?.phone) {
+        phone = profile.phone;
+        setUserPhone(phone);
+        setStoredValue('userPhone', phone);
+        setStoredValue('userName', profile.name || '');
+      }
+    }
+    if (!phone) { router.push('/login'); return; }
     const { data: existing } = await supabase
       .from('entries')
       .select('id')
       .eq('product_id', product.id)
-      .eq('phone', userPhone)
+      .eq('phone', phone)
       .maybeSingle();
     if (existing) { alert(t('alreadyEntered')); return; }
     router.push({
