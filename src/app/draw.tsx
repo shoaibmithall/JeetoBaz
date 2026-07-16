@@ -129,7 +129,7 @@ export default function DrawScreen() {
 
   function maskPhone(phone?: string | null) {
     if (!phone) return '';
-    return phone.slice(0, 7) + '****' + phone.slice(-4);
+    return phone.slice(0, 4) + '****' + phone.slice(-3);
   }
 
   function maskName(name?: string | null) {

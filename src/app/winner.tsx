@@ -65,7 +65,7 @@ export default function WinnerScreen() {
 
   function maskPhone(phone?: string | null) {
     if (!phone) return 'N/A';
-    return phone.slice(0, 7) + '****' + phone.slice(-4);
+    return phone.slice(0, 4) + '****' + phone.slice(-3);
   }
 
   if (loading) return (

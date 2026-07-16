@@ -13,7 +13,7 @@ const listeners = new Set<(mode: AppThemeMode) => void>();
 
 export function useTheme() {
   const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
+  const theme = scheme === 'dark' ? 'dark' : 'light';
 
   return Colors[theme];
 }
@@ -47,6 +47,9 @@ export function useAppTheme() {
     mode,
     theme: AppThemes[mode],
     setThemeMode: setAppThemeMode,
-    toggleThemeMode: () => setAppThemeMode(mode === 'dark' ? 'light' : 'dark'),
+    toggleThemeMode: async () => {
+      const current = normalizeTheme(await getStoredValue(THEME_KEY));
+      await setAppThemeMode(current === 'dark' ? 'light' : 'dark');
+    },
   };
 }

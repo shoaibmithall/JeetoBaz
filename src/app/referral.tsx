@@ -37,6 +37,16 @@ import type { Product } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
 
+function StatCard({ label, value, icon, theme }: { label: string; value: number; icon: React.ReactNode; theme: ReturnType<typeof useAppTheme>['theme'] }) {
+  return (
+    <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      {icon}
+      <Text selectable style={[styles.statValue, { color: theme.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: theme.muted }]}>{label}</Text>
+    </View>
+  );
+}
+
 type Dashboard = {
   referral_code: string;
   successful_referrals: number;
@@ -169,22 +179,25 @@ export default function ReferralScreen() {
 
   async function redeemReward(rewardId: string, productId: string) {
     setRedeemingId(`${rewardId}:${productId}`);
-    const deviceToken = await getReferralDeviceToken();
-    const { data, error } = await supabase.rpc('redeem_referral_reward', {
-      requested_phone: phone,
-      requested_device_token: deviceToken,
-      requested_reward_id: rewardId,
-      requested_product_id: productId,
-    });
-    setRedeemingId('');
+    try {
+      const deviceToken = await getReferralDeviceToken();
+      const { data, error } = await supabase.rpc('redeem_referral_reward', {
+        requested_phone: phone,
+        requested_device_token: deviceToken,
+        requested_reward_id: rewardId,
+        requested_product_id: productId,
+      });
 
-    if (error) {
-      Alert.alert('Entry not added', error.message);
-      return;
+      if (error) {
+        Alert.alert('Entry not added', error.message);
+        return;
+      }
+
+      Alert.alert('Free entry confirmed', `Your ticket is ${data}.`);
+      await loadReferralData();
+    } finally {
+      setRedeemingId('');
     }
-
-    Alert.alert('Free entry confirmed', `Your ticket is ${data}.`);
-    await loadReferralData();
   }
 
   return (
@@ -236,9 +249,9 @@ export default function ReferralScreen() {
         ) : (
           <>
             <View style={styles.statsRow}>
-              <StatCard label="Successful" value={dashboard?.successful_referrals || 0} icon={<UsersRound color={theme.primary} size={21} />} />
-              <StatCard label="Available" value={dashboard?.available_rewards || 0} icon={<Gift color={theme.gold} size={21} />} />
-              <StatCard label="Redeemed" value={dashboard?.redeemed_rewards || 0} icon={<Ticket color={theme.info} size={21} />} />
+              <StatCard label="Successful" value={dashboard?.successful_referrals || 0} icon={<UsersRound color={theme.primary} size={21} />} theme={theme} />
+              <StatCard label="Available" value={dashboard?.available_rewards || 0} icon={<Gift color={theme.gold} size={21} />} theme={theme} />
+              <StatCard label="Redeemed" value={dashboard?.redeemed_rewards || 0} icon={<Ticket color={theme.info} size={21} />} theme={theme} />
             </View>
 
             <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -338,16 +351,6 @@ export default function ReferralScreen() {
       </View>
     </ScrollView>
   );
-
-  function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
-    return (
-      <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        {icon}
-        <Text selectable style={[styles.statValue, { color: theme.text }]}>{value}</Text>
-        <Text style={[styles.statLabel, { color: theme.muted }]}>{label}</Text>
-      </View>
-    );
-  }
 }
 
 const styles = StyleSheet.create({

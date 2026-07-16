@@ -9,11 +9,19 @@ export async function getStoredValue(key: string) {
 }
 
 export async function setStoredValue(key: string, value: string) {
-  await AsyncStorage.setItem(key, value);
+  try {
+    await AsyncStorage.setItem(key, value);
+  } catch {
+    // silent fail
+  }
 }
 
 export async function removeStoredValues(keys: string[]) {
-  await AsyncStorage.multiRemove(keys);
+  try {
+    await AsyncStorage.multiRemove(keys);
+  } catch {
+    // silent fail
+  }
 }
 
 export async function getStoredStringArray(key: string) {

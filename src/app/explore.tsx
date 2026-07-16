@@ -59,7 +59,7 @@ export default function WinnersScreen() {
 
   function maskPhone(phone?: string | null) {
     if (!phone) return 'N/A';
-    return phone.slice(0, 6) + '****' + phone.slice(-4);
+    return phone.slice(0, 4) + '****' + phone.slice(-3);
   }
 
   function getTicketNumber(entry?: Entry) {

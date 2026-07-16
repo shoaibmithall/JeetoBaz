@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,6 +18,18 @@ const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
+
+function confirmAsync(title: string, message: string): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    return Promise.resolve(window.confirm(message));
+  }
+  return new Promise((resolve) => {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: 'OK', onPress: () => resolve(true) },
+    ]);
+  });
+}
 
 export default function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -199,7 +211,7 @@ export default function AdminScreen() {
     setLiveLink(p.live_link || '');
     setWinnerPhoto(p.winner_photo || '');
     setActiveTab('products');
-    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') window.scrollTo(0, 0);
   }
 
   function cancelEdit() {
@@ -310,7 +322,8 @@ export default function AdminScreen() {
   }
 
   async function deleteProduct(id: string) {
-    if (!window.confirm('Delete this product?')) return;
+    const confirmed = await confirmAsync('Delete', 'Delete this product?');
+    if (!confirmed) return;
     await supabase.from('products').delete().eq('id', id);
     fetchProducts();
   }
@@ -464,7 +477,8 @@ export default function AdminScreen() {
   }
 
   async function approvePayment(txn: Transaction) {
-    if (!window.confirm('Approve this payment and add entry? Receipt screenshot will be deleted after approval.')) return;
+    const confirmed = await confirmAsync('Approve', 'Approve this payment and add entry? Receipt screenshot will be deleted after approval.');
+    if (!confirmed) return;
 
     const entryPhone = txn.phone;
     const entryName = txn.user_name || null;
@@ -572,7 +586,8 @@ export default function AdminScreen() {
   }
 
   async function rejectPayment(txn: Transaction) {
-    if (!window.confirm('Reject this payment request?')) return;
+    const confirmed = await confirmAsync('Reject', 'Reject this payment request?');
+    if (!confirmed) return;
     await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
     fetchTransactions();
   }

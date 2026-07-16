@@ -431,7 +431,7 @@ export default function HomeScreen() {
       await saveOfflineCache(ACTIVE_DRAWS_CACHE_KEY, data);
     }
     if (error) {
-      if (cached) {
+      if (!data && cached) {
         setProducts(cached.data);
         setCacheInfo(`Showing saved draws from ${new Date(cached.savedAt).toLocaleString()}.`);
       } else {

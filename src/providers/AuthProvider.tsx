@@ -26,24 +26,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!active) return;
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
+    }).catch(() => {
+      if (active) setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, s) => {
+        if (!active) return;
         setSession(s);
         setUser(s?.user ?? null);
         setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const isEmailVerified = user?.email_confirmed_at !== null;
+  const isEmailVerified = user !== null && user.email_confirmed_at !== null;
 
   return (
     <AuthContext.Provider value={{ session, user, loading, isEmailVerified }}>

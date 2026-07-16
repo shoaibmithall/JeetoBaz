@@ -23,6 +23,4 @@ export const supabase =
     },
   });
 
-if (__DEV__) {
-  globalThis.__jeetobazSupabase = supabase;
-}
+globalThis.__jeetobazSupabase = supabase;

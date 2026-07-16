@@ -259,7 +259,10 @@ export default function PaymentScreen() {
         status: 'pending',
       });
 
-      if (error) throw error;
+      if (error) {
+        await supabase.storage.from(RECEIPT_BUCKET).remove([receiptPath]).catch(() => {});
+        throw error;
+      }
       setStep('success');
     } catch (error) {
       const message = error && typeof error === 'object' && 'message' in error
