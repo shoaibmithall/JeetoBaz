@@ -185,12 +185,17 @@ export default function AboutJeetoBazScreen() {
   }
 
   function goBack() {
-    if (params.source === 'profile') {
-      router.replace('/login');
+    if (selected) {
+      const sectionParam = typeof params.section === 'string' ? params.section : undefined;
+      if (params.source === 'profile' && isSectionId(sectionParam)) {
+        router.replace('/login');
+        return;
+      }
+      setSelected(null);
       return;
     }
-    if (selected) {
-      setSelected(null);
+    if (params.source === 'profile') {
+      router.replace('/login');
       return;
     }
     router.back();
