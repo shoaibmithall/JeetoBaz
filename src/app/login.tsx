@@ -92,7 +92,11 @@ export default function ProfileScreen() {
           setReferralCode(profile.referral_code || null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
-          if (profile.phone) fetchStats(profile.phone);
+          if (profile.phone) {
+            fetchStats(profile.phone);
+            setStoredValue('userPhone', profile.phone);
+            setStoredValue('userName', profile.name || '');
+          }
         } else if (active) {
           setStep('profile');
           setEmail(user.email || '');

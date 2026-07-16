@@ -6,6 +6,7 @@ import { createUserProfile } from '@/lib/auth';
 import { validatePhone, validateName } from '@/lib/auth-validation';
 import { normalizePakistaniMobile } from '@/lib/validation';
 import { claimPendingReferral } from '@/lib/referrals';
+import { setStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Phone, Rocket, User } from 'lucide-react-native';
 
@@ -47,6 +48,8 @@ export default function ProfileSetupScreen() {
       }
     } else {
       await claimPendingReferral(normalizedPhoneFull);
+      await setStoredValue('userPhone', normalizedPhoneFull);
+      await setStoredValue('userName', name.trim());
       router.replace('/');
     }
 
