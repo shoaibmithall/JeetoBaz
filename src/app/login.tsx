@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
+import { createUserProfile, signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
@@ -245,7 +245,32 @@ export default function ProfileScreen() {
       const nextAvatarUrl = publicUrlData.publicUrl;
 
       if (user?.id) {
-        const { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
+        let { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
+
+        if (updateError?.message.includes('Profile not found')) {
+          const metadataName = typeof user.user_metadata?.name === 'string'
+            ? user.user_metadata.name.trim()
+            : name.trim();
+          const metadataPhone = typeof user.user_metadata?.phone === 'string'
+            ? user.user_metadata.phone.trim()
+            : '';
+
+          if (!metadataName || !/^\+92[0-9]{10}$/.test(metadataPhone)) {
+            router.push('/profile-setup');
+            throw new Error('Please complete your phone profile, then upload the photo again.');
+          }
+
+          const { error: profileError } = await createUserProfile(metadataName, metadataPhone);
+          if (profileError) throw profileError;
+
+          setName(metadataName);
+          setPhone(metadataPhone);
+          await setStoredValue('userName', metadataName);
+          await setStoredValue('userPhone', metadataPhone);
+
+          ({ error: updateError } = await updateUserProfile(undefined, nextAvatarUrl));
+        }
+
         if (updateError) throw updateError;
       } else if (phone) {
         const { error: updateError } = await supabase
