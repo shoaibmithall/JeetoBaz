@@ -20,6 +20,10 @@ import {
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
 const USER_AVATAR_STORAGE_KEY = 'userAvatarUrl';
 
+function avatarStorageKey(userId: string) {
+  return `${USER_AVATAR_STORAGE_KEY}:${userId}`;
+}
+
 function dataUrlToArrayBuffer(dataUrl: string) {
   const base64 = dataUrl.split(',')[1];
   if (!base64) throw new Error('Profile photo could not be prepared.');
@@ -79,6 +83,14 @@ export default function ProfileScreen() {
 
     async function loadProfile() {
       if (user && isEmailVerified) {
+        const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
+        const legacyAvatar = scopedAvatar ? null : await getStoredValue(USER_AVATAR_STORAGE_KEY);
+        const cachedAvatar = scopedAvatar || legacyAvatar;
+        if (cachedAvatar && active) {
+          setAvatarUrl(cachedAvatar);
+          if (!scopedAvatar) await setStoredValue(avatarStorageKey(user.id), cachedAvatar);
+        }
+
         const { data: profile } = await supabase
           .from('users')
           .select('name, phone, avatar_url, referral_code, created_at')
@@ -88,7 +100,10 @@ export default function ProfileScreen() {
         if (profile && active) {
           setPhone(profile.phone || '');
           setName(profile.name || '');
-          setAvatarUrl(profile.avatar_url || '');
+          if (profile.avatar_url) {
+            setAvatarUrl(profile.avatar_url);
+            setStoredValue(avatarStorageKey(user.id), profile.avatar_url);
+          }
           setReferralCode(profile.referral_code || null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
@@ -239,6 +254,7 @@ export default function ProfileScreen() {
       }
 
       setAvatarUrl(nextAvatarUrl);
+      if (user?.id) await setStoredValue(avatarStorageKey(user.id), nextAvatarUrl);
       await setStoredValue(USER_AVATAR_STORAGE_KEY, nextAvatarUrl);
       alert('Profile photo updated.');
     } catch (error) {

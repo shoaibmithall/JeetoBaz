@@ -1,4 +1,4 @@
-import { Alert, Linking, Platform, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
@@ -192,7 +192,13 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.platformsList}>
+        <ScrollView
+          style={styles.platformsScroll}
+          contentContainerStyle={styles.platformsList}
+          showsVerticalScrollIndicator
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+        >
           {platforms.map((platform) => (
             <TouchableOpacity
               key={platform.name}
@@ -209,15 +215,15 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
               <ExternalLink color={theme.subtle} size={18} />
             </TouchableOpacity>
           ))}
-        </View>
+          <TouchableOpacity
+            style={[styles.copyMsgBtn, { backgroundColor: theme.primarySoft, borderColor: theme.border }]}
+            onPress={() => copyText(fullMessage, 'Full JeetoBaz message copied.')}
+          >
+            <ClipboardIcon color={theme.gold} size={18} />
+            <Text style={[styles.copyMsgBtnText, { color: theme.gold }]}>{t('copyFullMessage')}</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
-        <TouchableOpacity
-          style={[styles.copyMsgBtn, { backgroundColor: theme.primarySoft, borderColor: theme.border }]}
-          onPress={() => copyText(fullMessage, 'Full JeetoBaz message copied.')}
-        >
-          <ClipboardIcon color={theme.gold} size={18} />
-          <Text style={[styles.copyMsgBtnText, { color: theme.gold }]}>{t('copyFullMessage')}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -288,7 +294,8 @@ const styles = StyleSheet.create({
   copyBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, gap: 5 },
   copyBtnText: { fontSize: 12, fontWeight: '700' },
 
-  platformsList: { gap: 8, marginBottom: 16 },
+  platformsScroll: { flexShrink: 1 },
+  platformsList: { gap: 8, paddingBottom: 8 },
   platformRow: { minHeight: 56, borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   platformLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   platformIconContainer: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

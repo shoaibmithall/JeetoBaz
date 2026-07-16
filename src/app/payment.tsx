@@ -5,6 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
+import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
@@ -54,6 +55,7 @@ function dataUrlToArrayBuffer(dataUrl: string) {
 
 export default function PaymentScreen() {
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { productId, productName, entryFee } = useLocalSearchParams();
@@ -293,12 +295,12 @@ export default function PaymentScreen() {
   }
 
   if (step === 'success') return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.successBox}>
-        <PartyPopper color="#FFD700" size={80} />
-        <Text style={styles.successTitle}>Payment Submitted!</Text>
-        <Text style={styles.successText}>{t('goodLuck')}</Text>
-        <Text style={styles.successSub}>Your entry will be added after admin approval.</Text>
+        <PartyPopper color={theme.gold} size={80} />
+        <Text style={[styles.successTitle, { color: theme.primary }]}>Payment Submitted!</Text>
+        <Text style={[styles.successText, { color: theme.text }]}>{t('goodLuck')}</Text>
+        <Text style={[styles.successSub, { color: theme.muted }]}>Your entry will be added after admin approval.</Text>
       </View>
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
         <House color="white" size={18} /><Text style={styles.homeBtnText}>{t('backToHome')}</Text>
@@ -307,27 +309,31 @@ export default function PaymentScreen() {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backBtn}>← {t('back')}</Text>
+          <Text style={[styles.backBtn, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <View style={styles.titleRow}><CreditCard color="#FFD700" size={20} /><Text style={styles.title}>{t('payment')}</Text></View>
+        <View style={styles.titleRow}><CreditCard color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>{t('payment')}</Text></View>
         <Text style={styles.dummy}></Text>
       </View>
 
-      <View style={styles.productBox}>
-        <Text style={styles.productName}>{productNameValue}</Text>
-        <Text style={styles.entryFee}>{t('entryFee')}: Rs. {entryFeeValue}</Text>
+      <View style={[styles.productBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.productName, { color: theme.text }]}>{productNameValue}</Text>
+        <Text style={[styles.entryFee, { color: theme.gold }]}>{t('entryFee')}: Rs. {entryFeeValue}</Text>
       </View>
 
       <View style={styles.paymentBox}>
-        <Text style={styles.payTitle}>{t('sendPaymentTo')}:</Text>
+        <Text style={[styles.payTitle, { color: theme.text }]}>{t('sendPaymentTo')}:</Text>
 
         {PAYMENT_ACCOUNTS.map((account) => (
           <TouchableOpacity
             key={account.method}
-            style={[styles.methodCard, selectedMethod === account.method && styles.methodCardSelected]}
+            style={[
+              styles.methodCard,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+              selectedMethod === account.method && { borderColor: theme.gold, backgroundColor: theme.goldSoft },
+            ]}
             onPress={() => setSelectedMethod(account.method)}
             activeOpacity={0.85}
           >
@@ -335,56 +341,56 @@ export default function PaymentScreen() {
               ? <Landmark color={account.color} size={30} />
               : <WalletCards color={account.color} size={30} />}
             <View style={styles.methodInfo}>
-              <Text style={styles.methodName}>{account.method}</Text>
+              <Text style={[styles.methodName, { color: theme.text }]}>{account.method}</Text>
               <TouchableOpacity onPress={() => copyAccountNumber(account.number)}>
-                <Text style={styles.methodNumber}>{account.number}</Text>
+                <Text style={[styles.methodNumber, { color: theme.gold }]}>{account.number}</Text>
               </TouchableOpacity>
-              <Text style={styles.methodAccount}>{account.accountTitle}</Text>
+              <Text style={[styles.methodAccount, { color: theme.primary }]}>{account.accountTitle}</Text>
             </View>
-            <Text style={styles.copyHint}>Tap number to copy</Text>
+            <Text style={[styles.copyHint, { color: theme.subtle }]}>Tap number to copy</Text>
           </TouchableOpacity>
         ))}
 
-        <View style={styles.stepsBox}>
-          <Text style={styles.stepsTitle}>{t('howToPay')}:</Text>
-          <Text style={styles.step}>1. {t('openPaymentApp')}</Text>
-          <Text style={styles.step}>2. Send any entry fee to the above accounts</Text>
-          <Text style={styles.step}>3. Share transaction receipt screenshot</Text>
-          <Text style={styles.step}>4. Upload it below and confirm</Text>
+        <View style={[styles.stepsBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
+          <Text style={[styles.stepsTitle, { color: theme.primary }]}>{t('howToPay')}:</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>1. {t('openPaymentApp')}</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>2. Send any entry fee to the above accounts</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>3. Share transaction receipt screenshot</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>4. Upload it below and confirm</Text>
         </View>
       </View>
 
       <View style={styles.txnBox}>
-        <Text style={styles.txnLabel}>Enter Screenshot:</Text>
-        <Text style={styles.receiptHelpText}>Upload a clear screenshot of your payment receipt for admin approval.</Text>
-        <TouchableOpacity style={styles.receiptButton} onPress={pickReceipt}>
-          <Text style={styles.receiptButtonText}>{receipt ? 'Change Screenshot' : 'Upload Payment Screenshot'}</Text>
+        <Text style={[styles.txnLabel, { color: theme.text }]}>Enter Screenshot:</Text>
+        <Text style={[styles.receiptHelpText, { color: theme.muted }]}>Upload a clear screenshot of your payment receipt for admin approval.</Text>
+        <TouchableOpacity style={[styles.receiptButton, { backgroundColor: theme.infoSoft, borderColor: theme.info }]} onPress={pickReceipt}>
+          <Text style={[styles.receiptButtonText, { color: theme.info }]}>{receipt ? 'Change Screenshot' : 'Upload Payment Screenshot'}</Text>
         </TouchableOpacity>
         {receipt ? (
           <>
             <Image
               source={{ uri: receipt.uri }}
-              style={styles.receiptPreview}
+              style={[styles.receiptPreview, { borderColor: theme.border }]}
               resizeMode="cover"
               onError={() => setReceiptPreviewError('Receipt preview could not load. You can choose the screenshot again.')}
             />
             <View style={styles.receiptSelectedRow}>
               <CheckCircle2 color="#18a663" size={16} />
-              <Text style={styles.receiptSelectedText}>Screenshot selected</Text>
+            <Text style={[styles.receiptSelectedText, { color: theme.primary }]}>Screenshot selected</Text>
             </View>
           </>
         ) : null}
         {receiptPreviewError ? <Text style={styles.receiptErrorText}>{receiptPreviewError}</Text> : null}
         {!productIdValue ? (
-          <View style={styles.warningBox}>
-            <TriangleAlert color="#FFD700" size={17} />
-            <Text style={styles.warningText}>Please open payment from a draw again so the product can be verified.</Text>
+          <View style={[styles.warningBox, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
+            <TriangleAlert color={theme.gold} size={17} />
+            <Text style={[styles.warningText, { color: theme.text }]}>Please open payment from a draw again so the product can be verified.</Text>
           </View>
         ) : null}
         {submitError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorTitle}>Payment submit failed</Text>
-            <Text style={styles.errorText}>{submitError}</Text>
+          <View style={[styles.errorBox, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
+            <Text style={[styles.errorTitle, { color: theme.danger }]}>Payment submit failed</Text>
+            <Text style={[styles.errorText, { color: theme.text }]}>{submitError}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={confirmPayment} disabled={loading}>
               <Text style={styles.retryButtonText}>{loading ? t('confirming') : t('tryAgain')}</Text>
             </TouchableOpacity>
@@ -400,11 +406,11 @@ export default function PaymentScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.noteBox}>
-        <View style={styles.noteTitleRow}><TriangleAlert color="#FFD700" size={17} /><Text style={styles.noteTitle}>{t('important')}:</Text></View>
-        <Text style={styles.noteText}>• {t('paymentVerify')}</Text>
-        <Text style={styles.noteText}>• Keep your transaction receipt ID safe</Text>
-        <Text style={styles.noteText}>• {t('oneEntry')}</Text>
+      <View style={[styles.noteBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={styles.noteTitleRow}><TriangleAlert color={theme.gold} size={17} /><Text style={[styles.noteTitle, { color: theme.gold }]}>{t('important')}:</Text></View>
+        <Text style={[styles.noteText, { color: theme.muted }]}>• {t('paymentVerify')}</Text>
+        <Text style={[styles.noteText, { color: theme.muted }]}>• Keep your transaction receipt ID safe</Text>
+        <Text style={[styles.noteText, { color: theme.muted }]}>• {t('oneEntry')}</Text>
       </View>
     </ScrollView>
   );
