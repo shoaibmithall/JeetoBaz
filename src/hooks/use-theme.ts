@@ -22,13 +22,20 @@ function normalizeTheme(value: string | null): AppThemeMode {
   return value === 'light' ? 'light' : 'dark';
 }
 
+function getInitialThemeMode(): AppThemeMode {
+  if (process.env.EXPO_OS === 'web' && typeof window !== 'undefined') {
+    return normalizeTheme(window.localStorage.getItem(THEME_KEY));
+  }
+  return 'dark';
+}
+
 export async function setAppThemeMode(mode: AppThemeMode) {
   await setStoredValue(THEME_KEY, mode);
   listeners.forEach((listener) => listener(mode));
 }
 
 export function useAppTheme() {
-  const [mode, setModeState] = useState<AppThemeMode>('dark');
+  const [mode, setModeState] = useState<AppThemeMode>(getInitialThemeMode);
 
   useEffect(() => {
     let active = true;

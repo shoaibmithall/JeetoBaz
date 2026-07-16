@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, RefreshControl, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -46,6 +46,7 @@ const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 5
 const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
+const PULL_TO_REFRESH_THRESHOLD = 64;
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
   { key: 'newest', labels: { en: 'Newest', ur: 'تازہ ترین', roman: 'Newest' } },
@@ -290,7 +291,11 @@ export default function HomeScreen() {
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
   const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
+  const scrollYRef = useRef(0);
+  const pullStartYRef = useRef<number | null>(null);
   const router = useRouter();
   const deferredSearch = useDeferredValue(search);
   const deferredCategory = useDeferredValue(category);
@@ -458,6 +463,43 @@ export default function HomeScreen() {
       }
     }
     setLoading(false);
+  }
+
+  async function refreshHome() {
+    if (refreshing) return;
+    setRefreshing(true);
+    setPullDistance(PULL_TO_REFRESH_THRESHOLD);
+
+    if (process.env.EXPO_OS === 'web') {
+      window.location.reload();
+      return;
+    }
+
+    try {
+      await Promise.all([fetchProducts(), fetchHomeAds()]);
+    } finally {
+      setRefreshing(false);
+      setPullDistance(0);
+    }
+  }
+
+  function handleTouchStart(pageY: number) {
+    pullStartYRef.current = scrollYRef.current <= 1 ? pageY : null;
+  }
+
+  function handleTouchMove(pageY: number) {
+    if (pullStartYRef.current === null || refreshing) return;
+    const distance = Math.max(0, Math.min(92, (pageY - pullStartYRef.current) * 0.55));
+    setPullDistance(distance);
+  }
+
+  function handleTouchEnd() {
+    pullStartYRef.current = null;
+    if (pullDistance >= PULL_TO_REFRESH_THRESHOLD) {
+      refreshHome();
+    } else {
+      setPullDistance(0);
+    }
   }
 
   async function fetchHomeAds() {
@@ -668,7 +710,26 @@ export default function HomeScreen() {
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
-    <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: colors.background }]} contentInsetAdjustmentBehavior="automatic">
+    <ScrollView
+      ref={scrollViewRef}
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={process.env.EXPO_OS === 'web' ? undefined : (
+        <RefreshControl refreshing={refreshing} onRefresh={refreshHome} tintColor={colors.primary} colors={[colors.primary]} />
+      )}
+      onScroll={(event) => { scrollYRef.current = event.nativeEvent.contentOffset.y; }}
+      scrollEventThrottle={16}
+      onTouchStart={(event) => handleTouchStart(event.nativeEvent.pageY)}
+      onTouchMove={(event) => handleTouchMove(event.nativeEvent.pageY)}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      {process.env.EXPO_OS === 'web' && pullDistance > 0 ? (
+        <View style={[styles.pullRefreshIndicator, { height: pullDistance, backgroundColor: colors.background }]}>
+          <ActivityIndicator color={colors.primary} size="small" animating={refreshing || pullDistance >= PULL_TO_REFRESH_THRESHOLD} />
+          <Text style={[styles.pullRefreshText, { color: colors.primary }]}>Loading JeetoBaz...</Text>
+        </View>
+      ) : null}
       <Modal visible={showPriceFilter && !showPriceSidebar} transparent animationType="slide" onRequestClose={() => setShowPriceFilter(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setShowPriceFilter(false)}>
           <View style={styles.priceSheet} onStartShouldSetResponder={() => true}>
@@ -912,6 +973,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
+  pullRefreshIndicator: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  pullRefreshText: { fontSize: 13, fontWeight: '700' },
   loading: { flex: 1, backgroundColor: '#020d09', justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#18a663', marginTop: 10, fontSize: 16 },
   header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1 },

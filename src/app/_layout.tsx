@@ -30,7 +30,7 @@ export default function RootLayout() {
         <title>{siteTitle}</title>
         <meta name="description" content={siteDescription} />
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
-        <meta name="theme-color" content="#020d09" />
+        <meta name="theme-color" content={theme.background} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="JeetoBaz" />
