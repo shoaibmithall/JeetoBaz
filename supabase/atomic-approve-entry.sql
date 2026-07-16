@@ -11,6 +11,7 @@ CREATE OR REPLACE FUNCTION public.approve_entry_atomic(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_product record;
