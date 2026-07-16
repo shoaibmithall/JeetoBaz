@@ -441,7 +441,7 @@ export default function ProfileScreen() {
 
       <TouchableOpacity
         style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
-        onPress={() => router.push({ pathname: '/about', params: { source: 'profile' } })}
+        onPress={() => router.push({ pathname: '/about', params: { section: 'menu', source: 'profile' } })}
         accessibilityRole="button"
         accessibilityLabel="Open About JeetoBaz"
       >

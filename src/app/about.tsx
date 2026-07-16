@@ -171,6 +171,8 @@ export default function AboutJeetoBazScreen() {
     const sectionParam = typeof params.section === 'string' ? params.section : undefined;
     if (isSectionId(sectionParam)) {
       setSelected(sectionParam);
+    } else {
+      setSelected(null);
     }
   }, [params.section]);
 
