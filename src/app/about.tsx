@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  LayoutAnimation,
   Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  UIManager,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -13,6 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   AppWindow,
   Award,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
@@ -47,6 +51,32 @@ import {
   XIcon,
   TelegramIcon,
 } from '@/components/social-icons';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const WHY_ITEMS = [
+  { title: 'Transparent Process', desc: 'Users can clearly view entry progress, draw status, winners and available proof related to completed campaigns.' },
+  { title: 'Secure Platform', desc: 'JeetoBaz is designed with protected authentication, secure sessions and controlled access to user information.' },
+  { title: 'Verified Winners', desc: 'Winner details, certificates and supporting proof can be published after verification and permission.' },
+  { title: 'Live Draw Updates', desc: 'Users can receive timely information when a campaign completes and its draw is scheduled or conducted.' },
+  { title: 'Dedicated Customer Support', desc: 'Users can contact JeetoBaz through available support channels for account, entry and payment-related assistance.' },
+  { title: 'User-Friendly Experience', desc: 'The platform is designed to make browsing campaigns, purchasing entries and checking results simple.' },
+  { title: 'Fast Notifications', desc: 'Important campaign, payment, draw and winner updates can be delivered through in-app and supported notification channels.' },
+  { title: 'Fair Participation', desc: 'Entries are recorded with unique ticket numbers and all eligible entries follow the same draw process.' },
+];
+
+const TRUST_ITEMS = [
+  { title: 'Secure Platform', desc: 'JeetoBaz uses protected systems and controlled access to reduce unauthorized activity.' },
+  { title: 'Secure Login', desc: 'Account access is protected through verified authentication and secure session handling.' },
+  { title: 'Privacy Protection', desc: 'Personal information is handled according to the platform privacy policy and is not displayed publicly without permission.' },
+  { title: 'Fair Draw Process', desc: 'Every eligible entry is included under the same published campaign and draw conditions.' },
+  { title: 'Verified Winners', desc: 'Winner identity and eligibility are checked before winner information or prize delivery is finalized.' },
+  { title: 'Transparent Draw History', desc: 'Completed campaigns can display draw results, winning tickets, dates and available supporting proof.' },
+  { title: 'Secure Payment Processing', desc: 'Payments are processed through approved payment channels, with transaction records stored for verification.' },
+  { title: 'Data Protection', desc: 'Sensitive account and transaction information is protected using database permissions and security controls.' },
+];
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -126,6 +156,16 @@ export default function AboutJeetoBazScreen() {
     return isSectionId(sectionParam) ? sectionParam : null;
   });
   const contentWidth = Math.min(width - 30, 920);
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
+
+  function toggleExpand(title: string) {
+    LayoutAnimation.configureNext(LayoutAnimation.create(
+      220,
+      LayoutAnimation.Types.easeInEaseOut,
+      LayoutAnimation.Properties.opacity,
+    ));
+    setExpandedItem((prev) => (prev === title ? null : title));
+  }
 
   useEffect(() => {
     const sectionParam = typeof params.section === 'string' ? params.section : undefined;
@@ -181,6 +221,30 @@ export default function AboutJeetoBazScreen() {
     );
   }
 
+  function ExpandableBullet({ title, desc }: { title: string; desc: string }) {
+    const isOpen = expandedItem === title;
+    return (
+      <View style={styles.expandableWrapper}>
+        <TouchableOpacity
+          style={styles.bulletRow}
+          onPress={() => toggleExpand(title)}
+          activeOpacity={0.7}
+        >
+          <CircleCheck color={theme.gold} size={18} />
+          <Text selectable style={[styles.bulletText, { color: theme.gold, flex: 1 }]}>{title}</Text>
+          <View style={{ transform: [{ rotate: isOpen ? '180deg' : '0deg' }] }}>
+            <ChevronDown color={theme.subtle} size={18} />
+          </View>
+        </TouchableOpacity>
+        {isOpen ? (
+          <Text selectable style={[styles.expandableDesc, { color: theme.muted, borderLeftColor: theme.border }]}>
+            {desc}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+
   function Step({
     icon,
     title,
@@ -229,16 +293,9 @@ export default function AboutJeetoBazScreen() {
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             JeetoBaz is being built around the features that matter most to participants.
           </Text>
-          {[
-            'Transparent Process',
-            'Secure Platform',
-            'Verified Winners',
-            'Live Draw Updates',
-            'Dedicated Customer Support',
-            'User-Friendly Experience',
-            'Fast Notifications',
-            'Fair Participation',
-          ].map((item) => <Bullet key={item}>{item}</Bullet>)}
+          {WHY_ITEMS.map((item) => (
+            <ExpandableBullet key={item.title} title={item.title} desc={item.desc} />
+          ))}
         </>
       );
     }
@@ -264,16 +321,9 @@ export default function AboutJeetoBazScreen() {
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             Trust is central to the JeetoBaz experience. Our platform is being developed with security, privacy and transparent participation in mind.
           </Text>
-          {[
-            'Secure Platform',
-            'Secure Login',
-            'Privacy Protection',
-            'Fair Draw Process',
-            'Verified Winners',
-            'Transparent Draw History',
-            'Secure Payment Processing',
-            'Data Protection',
-          ].map((item) => <Bullet key={item}>{item}</Bullet>)}
+          {TRUST_ITEMS.map((item) => (
+            <ExpandableBullet key={item.title} title={item.title} desc={item.desc} />
+          ))}
         </>
       );
     }
@@ -571,6 +621,8 @@ const styles = StyleSheet.create({
   sectionCardTitle: { fontSize: 18, fontWeight: '800' },
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9 },
   bulletText: { flex: 1, fontSize: 16, lineHeight: 22, fontWeight: '600' },
+  expandableWrapper: { marginBottom: 2 },
+  expandableDesc: { fontSize: 14, lineHeight: 22, marginLeft: 28, paddingLeft: 12, paddingVertical: 8, borderLeftWidth: 2 },
   stepCard: { borderWidth: 1, borderRadius: 16, padding: 16, flexDirection: 'row', marginBottom: 12 },
   stepIcon: { width: 46, height: 46, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   stepContent: { flex: 1, paddingLeft: 13 },
