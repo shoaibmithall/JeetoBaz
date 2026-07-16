@@ -10,7 +10,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 
 export default function RootLayout() {
   const { t } = useLanguage();
-  const { theme } = useAppTheme();
+  const { theme, ready: themeReady } = useAppTheme();
   const { width } = useWindowDimensions();
   const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
   const isCompact = !hasHydratedLayout || width < 480;
@@ -23,11 +23,31 @@ export default function RootLayout() {
     setHasHydratedLayout(true);
   }, []);
 
+  useEffect(() => {
+    if (!themeReady || process.env.EXPO_OS !== 'web') return;
+    document.documentElement.classList.add('jeetobaz-theme-ready');
+  }, [themeReady]);
+
   return (
     <AuthProvider>
     <>
       <Head>
         <title>{siteTitle}</title>
+        <style>{`
+          html:not(.jeetobaz-theme-ready) #root { visibility: hidden; }
+          html:not(.jeetobaz-theme-ready) body::before {
+            align-items: center;
+            background: #f4f7f5;
+            color: #b38a00;
+            content: 'Loading JeetoBaz...';
+            display: flex;
+            font: 800 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            inset: 0;
+            justify-content: center;
+            position: fixed;
+            z-index: 2147483647;
+          }
+        `}</style>
         <meta name="description" content={siteDescription} />
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
         <meta name="theme-color" content={theme.background} />
