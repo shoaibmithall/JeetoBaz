@@ -1,6 +1,7 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
@@ -10,8 +11,9 @@ import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storag
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
-  Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList, Eye, EyeOff, Info,
-  HeartHandshake, LockKeyhole, LogOut, Mail, Medal, Rocket, Shield, Target, Trophy,
+  CalendarDays, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
+  Medal, Pencil, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy,
   UserPlus, UsersRound,
 } from 'lucide-react-native';
 
@@ -49,7 +51,28 @@ export default function ProfileScreen() {
   const [totalEntries, setTotalEntries] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
+
+  const jbUserId = useMemo(() => {
+    if (!user?.id) return null;
+    return 'JB-' + user.id.replace(/-/g, '').slice(0, 8).toUpperCase();
+  }, [user?.id]);
+
+  const memberSince = useMemo(() => {
+    const dateStr = profileCreatedAt || user?.created_at;
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [profileCreatedAt, user?.created_at]);
+
+  async function copyToClipboard(text: string, field: string) {
+    await Clipboard.setStringAsync(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  }
 
   useEffect(() => {
     let active = true;
@@ -58,7 +81,7 @@ export default function ProfileScreen() {
       if (user && isEmailVerified) {
         const { data: profile } = await supabase
           .from('users')
-          .select('name, phone, avatar_url')
+          .select('name, phone, avatar_url, referral_code, created_at')
           .eq('auth_user_id', user.id)
           .maybeSingle();
 
@@ -66,6 +89,8 @@ export default function ProfileScreen() {
           setPhone(profile.phone || '');
           setName(profile.name || '');
           setAvatarUrl(profile.avatar_url || '');
+          setReferralCode(profile.referral_code || null);
+          setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
           if (profile.phone) fetchStats(profile.phone);
         } else if (active) {
@@ -258,6 +283,54 @@ export default function ProfileScreen() {
         ) : (
           <Text style={styles.profilePhone}>{phone}</Text>
         )}
+
+        <View style={styles.verifiedBadge}>
+          <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={16} />
+          <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+            {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
+          </Text>
+        </View>
+
+        {jbUserId ? (
+          <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
+            <Text style={styles.jbIdText}>{jbUserId}</Text>
+            <Copy color={copiedField === 'jbId' ? '#18a663' : 'rgba(255,255,255,0.5)'} size={14} />
+            {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
+          </TouchableOpacity>
+        ) : null}
+
+        {memberSince ? (
+          <View style={styles.memberSinceRow}>
+            <CalendarDays color="rgba(255,255,255,0.5)" size={14} />
+            <Text style={styles.memberSinceText}>Member Since {memberSince}</Text>
+          </View>
+        ) : null}
+
+        <TouchableOpacity style={styles.editProfileBtn} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
+          <Pencil color={theme.gold} size={15} />
+          <Text style={styles.editProfileText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
+          <MailCheck color={theme.gold} size={18} />
+          <View>
+            <Text style={[styles.verifyLabel, { color: theme.muted }]}>Email</Text>
+            <Text style={[styles.verifyStatus, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+              {isEmailVerified ? 'Verified' : 'Not Verified'}
+            </Text>
+          </View>
+        </View>
+        <View style={[styles.verifyPill, { borderColor: theme.border }]}>
+          <Smartphone color={phone ? '#18a663' : '#F59E0B'} size={18} />
+          <View>
+            <Text style={[styles.verifyLabel, { color: theme.muted }]}>Phone</Text>
+            <Text style={[styles.verifyStatus, { color: phone ? '#18a663' : '#F59E0B' }]}>
+              {phone ? 'Verified' : 'Not Verified'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.statsRow}>
@@ -274,6 +347,34 @@ export default function ProfileScreen() {
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
       </View>
+
+      {referralCode ? (
+        <View style={[styles.referralCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={styles.referralTop}>
+            <View style={styles.referralLeft}>
+              <View style={[styles.referralIconBox, { backgroundColor: theme.primarySoft }]}>
+                <Gift color="#FFD700" size={20} />
+              </View>
+              <View>
+                <Text style={[styles.referralLabel, { color: theme.muted }]}>Referral Code</Text>
+                <Text style={[styles.referralCode, { color: theme.gold }]}>{referralCode}</Text>
+              </View>
+            </View>
+            <View style={styles.referralActions}>
+              <TouchableOpacity style={[styles.referralBtn, { backgroundColor: theme.primarySoft }]} onPress={() => copyToClipboard(referralCode, 'referral')}>
+                <Copy color={copiedField === 'referral' ? '#18a663' : theme.gold} size={16} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.referralBtn, { backgroundColor: theme.primarySoft }]}
+                onPress={() => Share.share({ message: `Join JeetoBaz using my referral code: ${referralCode}\nhttps://jeetobaz.pk/` })}
+              >
+                <Gift color={theme.gold} size={16} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          {copiedField === 'referral' ? <Text style={[styles.copiedMsg, { color: '#18a663' }]}>Copied to clipboard!</Text> : null}
+        </View>
+      ) : null}
 
       <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/entries')}>
@@ -561,4 +662,32 @@ const styles = StyleSheet.create({
   infoText: { color: '#aaa', fontSize: 14, marginTop: 7 },
   logoutBtn: { margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff4444', marginBottom: 40, flexDirection: 'row', gap: 7 },
   logoutText: { color: '#ff4444', fontWeight: 'bold', fontSize: 16 },
+
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 20 },
+  verifiedText: { fontSize: 13, fontWeight: '700' },
+
+  jbIdRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  jbIdText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', letterSpacing: 1 },
+  copiedLabel: { fontSize: 11, color: '#18a663', fontWeight: '600', marginLeft: 4 },
+
+  memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
+  memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+
+  editProfileBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
+  editProfileText: { fontSize: 13, fontWeight: '700', color: '#FFD700' },
+
+  verifyRow: { flexDirection: 'row', marginHorizontal: 15, marginTop: 12, gap: 10 },
+  verifyPill: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#071b13', borderRadius: 12, padding: 14, borderWidth: 1 },
+  verifyLabel: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
+  verifyStatus: { fontSize: 14, fontWeight: '700' },
+
+  referralCard: { marginHorizontal: 15, marginTop: 12, borderRadius: 15, borderWidth: 1, padding: 16 },
+  referralTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  referralIconBox: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  referralLabel: { fontSize: 12, fontWeight: '500', marginBottom: 2 },
+  referralCode: { fontSize: 17, fontWeight: '800', letterSpacing: 1 },
+  referralActions: { flexDirection: 'row', gap: 8 },
+  referralBtn: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  copiedMsg: { fontSize: 12, fontWeight: '600', marginTop: 8, textAlign: 'center' },
 });
