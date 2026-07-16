@@ -5,7 +5,8 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
-import { getStoredValue } from '@/lib/storage';
+import { getStoredValue, setStoredValue } from '@/lib/storage';
+import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 import { CheckCircle2, CreditCard, House, Landmark, PartyPopper, TriangleAlert, WalletCards } from 'lucide-react-native';
 
@@ -54,6 +55,7 @@ function dataUrlToArrayBuffer(dataUrl: string) {
 export default function PaymentScreen() {
   const { t } = useLanguage();
   const router = useRouter();
+  const { user } = useAuth();
   const { productId, productName, entryFee } = useLocalSearchParams();
   const hasHydratedParams = useSyncExternalStore(
     subscribeToHydration,
@@ -76,12 +78,27 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
-      ([storedPhone, storedName]) => {
-        setUserPhone(storedPhone || '');
-        setUserName(storedName || '');
+      async ([storedPhone, storedName]) => {
+        let phone = storedPhone || '';
+        let name = storedName || '';
+        if (!phone && user?.id) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('phone, name')
+            .eq('auth_user_id', user.id)
+            .maybeSingle();
+          if (profile?.phone) {
+            phone = profile.phone;
+            name = profile.name || '';
+            setStoredValue('userPhone', phone);
+            setStoredValue('userName', name);
+          }
+        }
+        setUserPhone(phone);
+        setUserName(name);
       },
     );
-  }, []);
+  }, [user]);
 
   async function copyAccountNumber(number: string) {
     await Clipboard.setStringAsync(number);

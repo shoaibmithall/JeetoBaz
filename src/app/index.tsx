@@ -21,6 +21,7 @@ import {
   type CategorySelection,
 } from '@/lib/product-categories';
 import type { Product } from '@/types/database';
+import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type SortOption = 'popular' | 'newest' | 'price_low' | 'price_high' | 'entry_low';
@@ -253,6 +254,7 @@ const HomeProductCard = memo(function HomeProductCard({
 });
 
 export default function HomeScreen() {
+  const { user } = useAuth();
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -388,9 +390,26 @@ export default function HomeScreen() {
           getStoredStringArray('readNotificationIds'),
         ]);
         if (!active) return;
-        setUserPhone(storedPhone || '');
+
+        let resolvedPhone = storedPhone || '';
+
+        if (!resolvedPhone && user?.id) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('phone, name')
+            .eq('auth_user_id', user.id)
+            .maybeSingle();
+          if (!active) return;
+          if (profile?.phone) {
+            resolvedPhone = profile.phone;
+            setStoredValue('userPhone', profile.phone);
+            setStoredValue('userName', profile.name || '');
+          }
+        }
+
+        setUserPhone(resolvedPhone);
         setFavorites(storedFavorites);
-        if (!storedPhone) {
+        if (!resolvedPhone) {
           setUnreadCount(0);
           return;
         }
@@ -401,13 +420,13 @@ export default function HomeScreen() {
           .limit(50);
         if (!active) return;
         setUnreadCount((notificationData || []).filter(
-          (item) => (!item.target_phone || item.target_phone === storedPhone) && !readNotificationIds.includes(item.id)
+          (item) => (!item.target_phone || item.target_phone === resolvedPhone) && !readNotificationIds.includes(item.id)
         ).length);
       }
 
       loadStoredState();
       return () => { active = false; };
-    }, [])
+    }, [user])
   );
 
   async function fetchProducts() {
