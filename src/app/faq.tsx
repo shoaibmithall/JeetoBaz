@@ -19,72 +19,84 @@ const FAQS = [
   {
     category: 'Getting Started',
     icon: UserRound,
+    iconColor: '#EC4899',
     question: 'Who can participate in JeetoBaz draws?',
     answer: 'JeetoBaz participation is for eligible users in Pakistan who are 18 years or older and accept the Terms and Privacy Policy.',
   },
   {
     category: 'Getting Started',
     icon: TicketCheck,
+    iconColor: '#10B981',
     question: 'How do I enter a draw?',
     answer: 'Open an active draw, review its entry fee and available spots, make the payment, upload a clear receipt, and submit it for verification.',
   },
   {
     category: 'Entries',
     icon: TicketCheck,
+    iconColor: '#3B82F6',
     question: 'When is my entry confirmed?',
     answer: 'Your entry is confirmed only after JeetoBaz verifies the payment. You can check its latest status under My Entries.',
   },
   {
     category: 'Entries',
     icon: TicketCheck,
+    iconColor: '#8B5CF6',
     question: 'Can I enter the same draw more than once?',
     answer: 'No. JeetoBaz currently allows one approved entry per person for each draw.',
   },
   {
     category: 'Payments',
     icon: CreditCard,
+    iconColor: '#F59E0B',
     question: 'Which payment methods are available?',
     answer: 'The payment screen shows the currently supported JazzCash, Easypaisa, and bank transfer details. Always use the account details displayed inside JeetoBaz.',
   },
   {
     category: 'Payments',
     icon: CreditCard,
+    iconColor: '#FF6B6B',
     question: 'Why is my payment still pending?',
     answer: 'Pending means the receipt is waiting for review. Keep your transaction ID and upload a clear receipt showing the amount, date, and reference.',
   },
   {
     category: 'Payments',
     icon: CreditCard,
+    iconColor: '#14B8A6',
     question: 'Are entry fees refundable?',
     answer: 'Confirmed entry fees are non-refundable. If JeetoBaz cancels a draw, the applicable refund is processed according to the Terms & Conditions.',
   },
   {
     category: 'Draws & Winners',
     icon: Trophy,
+    iconColor: '#FFD700',
     question: 'When does a draw take place?',
     answer: 'JeetoBaz announces the draw date and time after the required spots are filled. Check the app notifications and draw details for the latest schedule.',
   },
   {
     category: 'Draws & Winners',
     icon: ShieldCheck,
+    iconColor: '#10B981',
     question: 'How is the winner selected?',
     answer: 'The winner is selected randomly from eligible approved entries by the JeetoBaz draw system. Completed results are locked and recorded.',
   },
   {
     category: 'Draws & Winners',
     icon: Trophy,
+    iconColor: '#F97316',
     question: 'How will a winner receive the prize?',
     answer: 'JeetoBaz contacts the winner using the registered details. After verification, prize delivery or pickup is arranged. The prize must be claimed within the period stated in the Terms.',
   },
   {
     category: 'Account & Security',
     icon: ShieldCheck,
+    iconColor: '#EC4899',
     question: 'How does JeetoBaz use my information?',
     answer: 'Information is used to manage your profile, verify payments, process entries, contact winners, provide support, and prevent fraud. See Privacy & Account Data for full details.',
   },
   {
     category: 'Support',
     icon: Headphones,
+    iconColor: '#14B8A6',
     question: 'What should I do if I still need help?',
     answer: 'Open Help Center from the main menu to contact JeetoBaz through WhatsApp or email, or submit a support ticket with your issue details.',
   },
@@ -158,7 +170,7 @@ export default function FaqScreen() {
                 accessibilityState={{ expanded }}
               >
                 <View style={[styles.iconBox, { backgroundColor: theme.background }]}>
-                  <Icon color={theme.gold} size={20} />
+                  <Icon color={item.iconColor} size={20} />
                 </View>
                 <View style={styles.questionCopy}>
                   <Text style={[styles.category, { color: theme.primary }]}>{item.category}</Text>
