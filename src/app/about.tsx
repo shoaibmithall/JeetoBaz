@@ -151,15 +151,25 @@ export default function AboutJeetoBazScreen() {
   }
 
   function sectionIcon(id: SectionId, size = 22) {
-    const props = { color: theme.gold, size };
-    if (id === 'about') return <Info {...props} />;
-    if (id === 'why') return <Sparkles {...props} />;
-    if (id === 'works') return <Rocket {...props} />;
-    if (id === 'trust') return <ShieldCheck {...props} />;
-    if (id === 'support') return <ContactRound {...props} />;
-    if (id === 'legal') return <Scale {...props} />;
-    if (id === 'social') return <UsersRound {...props} />;
-    return <AppWindow {...props} />;
+    const colors: Record<string, string> = {
+      about: '#3B82F6',
+      why: '#FBBF24',
+      works: '#F97316',
+      trust: '#10B981',
+      support: '#8B5CF6',
+      legal: '#6366F1',
+      social: '#EC4899',
+      info: '#14B8A6',
+    };
+    const c = colors[id] || '#3B82F6';
+    if (id === 'about') return <Info color={c} size={size} />;
+    if (id === 'why') return <Sparkles color={c} size={size} />;
+    if (id === 'works') return <Rocket color={c} size={size} />;
+    if (id === 'trust') return <ShieldCheck color={c} size={size} />;
+    if (id === 'support') return <ContactRound color={c} size={size} />;
+    if (id === 'legal') return <Scale color={c} size={size} />;
+    if (id === 'social') return <UsersRound color={c} size={size} />;
+    return <AppWindow color={c} size={size} />;
   }
 
   function Bullet({ children }: { children: string }) {
@@ -195,17 +205,17 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'about') {
       return (
         <>
-          <DetailHero icon={<Trophy color={theme.gold} size={38} />} title="About JeetoBaz" />
+          <DetailHero icon={<Trophy color="#FFD700" size={38} />} title="About JeetoBaz" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             JeetoBaz is a modern digital platform designed to provide users with a simple, secure and transparent experience through promotional prize campaigns.
           </Text>
           <Text selectable style={[styles.bodyText, { color: theme.muted }]}>
             We combine technology, fair participation and a user-friendly mobile experience to make campaign discovery, participation updates and prize delivery clear and convenient.
           </Text>
-          <SectionCard title="Our Mission" icon={<Target color={theme.gold} size={22} />}>
+          <SectionCard title="Our Mission" icon={<Target color="#FF6B6B" size={22} />}>
             To create Pakistan&apos;s most trusted and transparent digital promotional platform, where every eligible participant receives a fair opportunity through secure and technology-driven processes.
           </SectionCard>
-          <SectionCard title="Our Vision" icon={<Award color={theme.gold} size={22} />}>
+          <SectionCard title="Our Vision" icon={<Award color="#F59E0B" size={22} />}>
             To become Pakistan&apos;s leading digital promotional platform, recognized for innovation, transparency, customer trust and an outstanding user experience.
           </SectionCard>
         </>
@@ -215,7 +225,7 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'why') {
       return (
         <>
-          <DetailHero icon={<Sparkles color={theme.gold} size={38} />} title="Why Choose JeetoBaz?" />
+          <DetailHero icon={<Sparkles color="#FBBF24" size={38} />} title="Why Choose JeetoBaz?" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             JeetoBaz is being built around the features that matter most to participants.
           </Text>
@@ -236,13 +246,13 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'works') {
       return (
         <>
-          <DetailHero icon={<Rocket color={theme.gold} size={38} />} title="How JeetoBaz Works" />
-          <Step icon={<Gift color={theme.gold} size={23} />} title="1. Select a Campaign" text="Explore active promotional campaigns and review the prize, participation details, available spots and campaign conditions." />
-          <Step icon={<Smartphone color={theme.gold} size={23} />} title="2. Participate" text="Choose an eligible campaign, complete the required details and submit your participation request through the JeetoBaz app." />
-          <Step icon={<FileCheck2 color={theme.gold} size={23} />} title="3. Payment Verification" text="Your submitted payment details and receipt are reviewed. A confirmed entry and ticket are added only after successful verification." />
-          <Step icon={<Trophy color={theme.gold} size={23} />} title="4. Draw Process" text="After the published participation conditions are met, the draw is scheduled and an eligible winner is selected through the JeetoBaz draw process." />
-          <Step icon={<Award color={theme.gold} size={23} />} title="5. Winner Verification" text="The selected winner is contacted and verified according to the campaign rules before a prize is released." />
-          <Step icon={<PackageCheck color={theme.gold} size={23} />} title="6. Prize Delivery" text="Eligible small or digital prizes may be delivered online. Larger physical prizes are handed over or delivered through a verified physical-delivery process, with appropriate confirmation and winner consent." />
+          <DetailHero icon={<Rocket color="#F97316" size={38} />} title="How JeetoBaz Works" />
+          <Step icon={<Gift color="#EC4899" size={23} />} title="1. Select a Campaign" text="Explore active promotional campaigns and review the prize, participation details, available spots and campaign conditions." />
+          <Step icon={<Smartphone color="#3B82F6" size={23} />} title="2. Participate" text="Choose an eligible campaign, complete the required details and submit your participation request through the JeetoBaz app." />
+          <Step icon={<FileCheck2 color="#10B981" size={23} />} title="3. Payment Verification" text="Your submitted payment details and receipt are reviewed. A confirmed entry and ticket are added only after successful verification." />
+          <Step icon={<Trophy color="#FFD700" size={23} />} title="4. Draw Process" text="After the published participation conditions are met, the draw is scheduled and an eligible winner is selected through the JeetoBaz draw process." />
+          <Step icon={<Award color="#F59E0B" size={23} />} title="5. Winner Verification" text="The selected winner is contacted and verified according to the campaign rules before a prize is released." />
+          <Step icon={<PackageCheck color="#8B5CF6" size={23} />} title="6. Prize Delivery" text="Eligible small or digital prizes may be delivered online. Larger physical prizes are handed over or delivered through a verified physical-delivery process, with appropriate confirmation and winner consent." />
         </>
       );
     }
@@ -250,7 +260,7 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'trust') {
       return (
         <>
-          <DetailHero icon={<ShieldCheck color={theme.gold} size={38} />} title="Trust & Security" />
+          <DetailHero icon={<ShieldCheck color="#10B981" size={38} />} title="Trust & Security" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             Trust is central to the JeetoBaz experience. Our platform is being developed with security, privacy and transparent participation in mind.
           </Text>
@@ -271,7 +281,7 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'support') {
       return (
         <>
-          <DetailHero icon={<HeartHandshake color={theme.gold} size={38} />} title="Support & Contact" />
+          <DetailHero icon={<HeartHandshake color="#14B8A6" size={38} />} title="Support & Contact" />
           <ContactButton
             icon={<MessageCircle color="#25D366" size={23} />}
             title="WhatsApp Support"
@@ -285,18 +295,18 @@ export default function AboutJeetoBazScreen() {
             onPress={() => openLink(`mailto:${SUPPORT_EMAIL}`, `Email us at ${SUPPORT_EMAIL}.`)}
           />
           <ContactButton
-            icon={<Globe2 color={theme.gold} size={23} />}
+            icon={<Globe2 color="#3B82F6" size={23} />}
             title="Website"
             value="www.jeetobaz.pk"
             onPress={() => openLink(WEBSITE, 'Visit www.jeetobaz.pk.')}
           />
-          <SectionCard title="In-App Support" icon={<MessageCircle color={theme.gold} size={22} />}>
+          <SectionCard title="In-App Support" icon={<MessageCircle color="#25D366" size={22} />}>
             Users can access the Help Center and submit a support request from within JeetoBaz.
           </SectionCard>
-          <SectionCard title="Support Hours" icon={<ContactRound color={theme.gold} size={22} />}>
+          <SectionCard title="Support Hours" icon={<ContactRound color="#8B5CF6" size={22} />}>
             Monday–Saturday, 9:00 AM–9:00 PM. Our target response time is within 24 hours.
           </SectionCard>
-          <SectionCard title="Office Address" icon={<MapPin color={theme.gold} size={22} />}>
+          <SectionCard title="Office Address" icon={<MapPin color="#FF6B6B" size={22} />}>
             Qasimabad, Hyderabad, Sindh, Pakistan.
           </SectionCard>
         </>
@@ -306,14 +316,14 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'legal') {
       return (
         <>
-          <DetailHero icon={<Scale color={theme.gold} size={38} />} title="Legal & Policies" />
+          <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Legal & Policies" />
           <TouchableOpacity style={[styles.linkRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/privacy')}>
-            <LockKeyhole color={theme.gold} size={22} />
+            <LockKeyhole color="#EC4899" size={22} />
             <Text style={[styles.linkText, { color: theme.gold }]}>Privacy Policy</Text>
             <ChevronRight color={theme.subtle} size={20} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.linkRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/terms')}>
-            <FileCheck2 color={theme.gold} size={22} />
+            <FileCheck2 color="#10B981" size={22} />
             <Text style={[styles.linkText, { color: theme.gold }]}>Terms & Conditions</Text>
             <ChevronRight color={theme.subtle} size={20} />
           </TouchableOpacity>
@@ -389,7 +399,7 @@ export default function AboutJeetoBazScreen() {
       ];
       return (
         <>
-          <DetailHero icon={<UsersRound color={theme.gold} size={38} />} title="Follow JeetoBaz" />
+          <DetailHero icon={<UsersRound color="#EC4899" size={38} />} title="Follow JeetoBaz" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
             Follow JeetoBaz for campaign announcements, winner updates, product news and important platform information.
           </Text>
@@ -417,7 +427,7 @@ export default function AboutJeetoBazScreen() {
 
     return (
       <>
-        <DetailHero icon={<AppWindow color={theme.gold} size={38} />} title="App Information" />
+        <DetailHero icon={<AppWindow color="#14B8A6" size={38} />} title="App Information" />
         <InfoLine label="Application Name" value="JeetoBaz" />
         <InfoLine label="Version" value="1.0.0" />
         <InfoLine label="Platforms" value="Android & iOS" />
