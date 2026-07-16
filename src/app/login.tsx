@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { signInWithEmail, signOut } from '@/lib/auth';
+import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
@@ -244,7 +244,10 @@ export default function ProfileScreen() {
         .getPublicUrl(filePath);
       const nextAvatarUrl = publicUrlData.publicUrl;
 
-      if (phone) {
+      if (user?.id) {
+        const { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
+        if (updateError) throw updateError;
+      } else if (phone) {
         const { error: updateError } = await supabase
           .rpc('update_profile_avatar', {
             requested_phone: phone,
