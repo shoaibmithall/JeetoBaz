@@ -113,9 +113,18 @@ export default function ProfileScreen() {
             setStoredValue('userName', profile.name || '');
           }
         } else if (active) {
+          const metadataPhone = typeof user.user_metadata?.phone === 'string'
+            ? user.user_metadata.phone.trim()
+            : '';
           setStep('profile');
           setEmail(user.email || '');
           setName(user.user_metadata?.name || '');
+          if (/^\+92[0-9]{10}$/.test(metadataPhone)) {
+            setPhone(metadataPhone);
+            fetchStats(metadataPhone);
+            fetchProfileAvatar(metadataPhone);
+            setStoredValue('userPhone', metadataPhone);
+          }
         }
         return;
       }
@@ -261,14 +270,28 @@ export default function ProfileScreen() {
           }
 
           const { error: profileError } = await createUserProfile(metadataName, metadataPhone);
-          if (profileError) throw profileError;
+
+          if (profileError) {
+            const isExistingLegacyPhone = profileError.code === '23505'
+              || profileError.message.includes('users_phone_key');
+            if (!isExistingLegacyPhone) throw profileError;
+
+            const { data: legacyUpdated, error: legacyUpdateError } = await supabase
+              .rpc('update_profile_avatar', {
+                requested_phone: metadataPhone,
+                requested_avatar_url: nextAvatarUrl,
+              });
+            if (legacyUpdateError) throw legacyUpdateError;
+            if (!legacyUpdated) throw new Error('Existing profile could not be updated.');
+            updateError = null;
+          } else {
+            ({ error: updateError } = await updateUserProfile(undefined, nextAvatarUrl));
+          }
 
           setName(metadataName);
           setPhone(metadataPhone);
           await setStoredValue('userName', metadataName);
           await setStoredValue('userPhone', metadataPhone);
-
-          ({ error: updateError } = await updateUserProfile(undefined, nextAvatarUrl));
         }
 
         if (updateError) throw updateError;
