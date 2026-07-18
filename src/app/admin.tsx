@@ -377,13 +377,26 @@ export default function AdminScreen() {
   }
 
   async function sendDrawReminder(p: Product) {
-    await createUserNotification({
-      title: 'Draw reminder',
-      body: `${p.name} currently has ${p.current_entries || 0}/${p.max_entries} participants. Check the draw page for scheduling updates.`,
-      kind: 'draw-reminder',
-      link: '/',
-    });
-    alert('Draw reminder notification sent.');
+    try {
+      const { error } = await createNotification({
+        title: 'Draw reminder',
+        body: `${p.name} currently has ${p.current_entries || 0}/${p.max_entries} participants. Check the draw page for scheduling updates.`,
+        kind: 'draw-reminder',
+        link: '/',
+      });
+
+      if (error) {
+        alert('Draw reminder could not be sent. Error: ' + error.message);
+        return;
+      }
+
+      alert('Draw reminder notification sent to all users.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Unknown notification error.';
+      alert('Draw reminder could not be sent. Error: ' + message);
+    }
   }
 
   async function loadAnnouncement() {

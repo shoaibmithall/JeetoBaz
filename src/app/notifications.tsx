@@ -1,6 +1,6 @@
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -19,43 +19,59 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [setupMissing, setSetupMissing] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
 
-    async function loadNotifications() {
-      setLoading(true);
-      const savedPhone = await getStoredValue('userPhone');
-      const savedReadIds = await getStoredStringArray(READ_KEY);
-      if (!savedPhone) {
+      async function loadNotifications(showLoading = true) {
+        if (showLoading) setLoading(true);
+        const savedPhone = await getStoredValue('userPhone');
+        const savedReadIds = await getStoredStringArray(READ_KEY);
+        if (!savedPhone) {
+          if (!active) return;
+          setPhone('');
+          setReadIds(savedReadIds);
+          setNotifications([]);
+          setSetupMissing(false);
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
         if (!active) return;
-        setPhone('');
+        setPhone(savedPhone);
         setReadIds(savedReadIds);
-        setNotifications([]);
+        if (error) {
+          setSetupMissing(error.message.includes('notifications'));
+          setNotifications([]);
+        } else {
+          setSetupMissing(false);
+          setNotifications((data || []).filter((item) => isNotificationForUser(item, savedPhone)));
+        }
         setLoading(false);
-        return;
       }
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      loadNotifications();
+      const channel = supabase
+        .channel('notifications-screen')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications' },
+          () => loadNotifications(false)
+        )
+        .subscribe();
 
-      if (!active) return;
-      setPhone(savedPhone);
-      setReadIds(savedReadIds);
-      if (error) {
-        setSetupMissing(error.message.includes('notifications'));
-        setNotifications([]);
-      } else {
-        setNotifications((data || []).filter((item) => isNotificationForUser(item, savedPhone)));
-      }
-      setLoading(false);
-    }
-
-    loadNotifications();
-    return () => { active = false; };
-  }, []);
+      return () => {
+        active = false;
+        supabase.removeChannel(channel);
+      };
+    }, [])
+  );
 
   async function markAllRead() {
     const ids = notifications.map((item) => item.id);
