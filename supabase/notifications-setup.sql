@@ -1,7 +1,7 @@
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   title text not null,
-  body text not null,
+  message text not null,
   target_phone text null,
   link text null,
   kind text default 'general',

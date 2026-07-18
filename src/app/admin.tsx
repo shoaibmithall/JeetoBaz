@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { createNotification, createUserNotification } from '@/lib/notifications';
-import { getHomeAdImages, saveHomeAdImages } from '@/lib/app-settings';
+import { getAnnouncement, getHomeAdImages, saveAnnouncement as saveAnnouncementSetting, saveHomeAdImages } from '@/lib/app-settings';
 import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 import {
   BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
@@ -91,7 +91,7 @@ export default function AdminScreen() {
       fetchUsers();
       fetchEntries();
       fetchTransactions();
-      getStoredValue('announcement').then((value) => setAnnouncement(value || ''));
+      loadAnnouncement();
       loadHomeAdImages();
     }
   }, [authenticated]);
@@ -315,7 +315,7 @@ export default function AdminScreen() {
       else {
         await createUserNotification({
           title: 'New contest added',
-          body: `${productName} draw live ho gaya hai. Abhi entry karein!`,
+          body: `${productName} is now live. Enter the draw today!`,
           kind: 'new-contest',
           link: '/',
         });
@@ -343,15 +343,31 @@ export default function AdminScreen() {
   async function sendDrawReminder(p: Product) {
     await createUserNotification({
       title: 'Draw reminder',
-      body: `${p.name} draw ke participants ${p.current_entries || 0}/${p.max_entries} hain. Draw ready/scheduled update check karein.`,
+      body: `${p.name} currently has ${p.current_entries || 0}/${p.max_entries} participants. Check the draw page for scheduling updates.`,
       kind: 'draw-reminder',
       link: '/',
     });
-    alert('Draw reminder notification send ho gayi.');
+    alert('Draw reminder notification sent.');
+  }
+
+  async function loadAnnouncement() {
+    const { announcement: savedAnnouncement, error } = await getAnnouncement();
+    if (!error && savedAnnouncement) {
+      setAnnouncement(savedAnnouncement);
+      return;
+    }
+    const localAnnouncement = await getStoredValue('announcement');
+    setAnnouncement(localAnnouncement || '');
   }
 
   async function saveAnnouncement() {
-    await setStoredValue('announcement', announcement);
+    const { announcement: savedAnnouncement, error } = await saveAnnouncementSetting(announcement);
+    if (error) {
+      alert('Announcement could not be saved. Error: ' + error.message);
+      return;
+    }
+    setAnnouncement(savedAnnouncement);
+    await setStoredValue('announcement', savedAnnouncement);
     setAnnouncementSaved(true);
     setTimeout(() => setAnnouncementSaved(false), 2000);
   }
@@ -372,7 +388,7 @@ export default function AdminScreen() {
   async function saveHomeAdImageSettings(nextImages = parseHomeAdImagesInput()) {
     const { images, error } = await saveHomeAdImages(nextImages);
     if (error) {
-      alert('Home ad images save failed. Pehle Supabase SQL setup run karein. Error: ' + error.message);
+      alert('Home ad images could not be saved. Error: ' + error.message);
       return;
     }
     setHomeAdImagesInput(images.join('\n'));
@@ -442,7 +458,7 @@ export default function AdminScreen() {
     const title = notificationTitle.trim();
     const body = notificationBody.trim();
     if (!title || !body) {
-      alert('Notification title aur message required hain.');
+      alert('A notification title and message are required.');
       return;
     }
 
@@ -456,13 +472,13 @@ export default function AdminScreen() {
     setNotificationSending(false);
 
     if (error) {
-      alert('Notification send failed. Pehle Supabase SQL setup run karein. Error: ' + error.message);
+      alert('Notification could not be sent. Error: ' + error.message);
       return;
     }
 
     setNotificationTitle('');
     setNotificationBody('');
-    alert('Notification users ko send ho gayi.');
+    alert('Notification sent to all users.');
   }
 
   async function clearApprovedPayment(txn: Transaction) {
@@ -509,7 +525,7 @@ export default function AdminScreen() {
       const existingProductName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
       await createUserNotification({
         title: 'Payment confirmed',
-        body: `Aapki ${existingProductName} wali payment confirm ho gayi. Aapki entry already active hai.`,
+        body: `Your payment for ${existingProductName} has been confirmed. Your entry is already active.`,
         targetPhone: entryPhone,
         kind: 'payment-confirmed',
         link: '/entries',
@@ -558,7 +574,7 @@ export default function AdminScreen() {
     const productName = product?.name || 'your draw';
     await createUserNotification({
       title: 'Payment confirmed',
-      body: `Aapki ${productName} wali entry approve ho gayi hai. Good luck!`,
+      body: `Your entry for ${productName} has been approved. Good luck!`,
       targetPhone: entryPhone,
       kind: 'payment-confirmed',
       link: '/entries',
@@ -567,7 +583,7 @@ export default function AdminScreen() {
     if (rpcResult?.new_entries != null && product && rpcResult.new_entries >= product.max_entries) {
       await createUserNotification({
         title: 'Draw ready',
-        body: `${productName} ke participants complete ho gaye hain. JeetoBaz draw date/time announce karega.`,
+        body: `${productName} has reached the required number of participants. JeetoBaz will announce the draw date and time.`,
         kind: 'draw-ready',
         link: '/',
       });
@@ -806,7 +822,7 @@ export default function AdminScreen() {
             <View style={styles.sectionTitleRow}><Settings color="white" size={19} /><Text style={styles.sectionTitle}>App Settings</Text></View>
 
             <View style={styles.settingLabelRow}><Bell color="white" size={17} /><Text style={styles.settingLabel}>Announcement Banner</Text></View>
-            <Text style={styles.settingHint}>Home page pe top pe dikh jayega</Text>
+            <Text style={styles.settingHint}>This message will appear near the top of the home page for all users.</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="e.g. New draw starting soon! Honda 70 draw on 30 June!"
@@ -824,7 +840,7 @@ export default function AdminScreen() {
             <View style={styles.divider} />
 
             <View style={styles.settingLabelRow}><Camera color="white" size={17} /><Text style={styles.settingLabel}>Home Ad Images</Text></View>
-            <Text style={styles.settingHint}>Featured draw ki jagah ye images home page par 1 by 1 show hongi. Maximum 10 images.</Text>
+            <Text style={styles.settingHint}>These images appear one at a time in the home-page carousel. Maximum 10 images.</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="One image URL per line"
@@ -859,7 +875,7 @@ export default function AdminScreen() {
             <View style={styles.divider} />
 
             <View style={styles.settingLabelRow}><Send color="white" size={17} /><Text style={styles.settingLabel}>Send Notification</Text></View>
-            <Text style={styles.settingHint}>Ye notification sab users ke Notifications page me dikh jayegi</Text>
+            <Text style={styles.settingHint}>This notification will appear on every user's Notifications page.</Text>
             <TextInput
               style={styles.input}
               placeholder="Title e.g. New draw added!"
@@ -869,7 +885,7 @@ export default function AdminScreen() {
             />
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Message e.g. Powerbank draw live ho gaya hai. Abhi entry karein!"
+              placeholder="Message e.g. The Powerbank draw is now live. Enter today!"
               placeholderTextColor="#666"
               value={notificationBody}
               onChangeText={setNotificationBody}
@@ -884,7 +900,7 @@ export default function AdminScreen() {
 
             <View style={styles.settingLabelRow}><LockKeyhole color="white" size={17} /><Text style={styles.settingLabel}>Secure Admin Login</Text></View>
             <Text style={styles.settingHint}>Admin: {ADMIN_EMAIL}</Text>
-            <Text style={styles.settingNote}>Password Supabase Authentication se securely manage hota hai.</Text>
+            <Text style={styles.settingNote}>The password is managed securely through Supabase Authentication.</Text>
 
             <View style={styles.divider} />
 

@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
-  ShieldCheck, Target, Ticket, UsersRound, X,
+  Megaphone, ShieldCheck, Target, Ticket, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -14,7 +14,7 @@ import { translate, useLanguage, type LanguageCode, type TranslationKey } from '
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
-import { getHomeAdImages } from '@/lib/app-settings';
+import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import {
   getProductCategory,
@@ -288,6 +288,7 @@ export default function HomeScreen() {
   const [time, setTime] = useState(new Date());
   const [cacheInfo, setCacheInfo] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [announcement, setAnnouncement] = useState('');
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
@@ -366,6 +367,7 @@ export default function HomeScreen() {
     setHasHydratedLayout(true);
     fetchProducts();
     fetchHomeAds();
+    fetchAnnouncement();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -476,7 +478,7 @@ export default function HomeScreen() {
     }
 
     try {
-      await Promise.all([fetchProducts(), fetchHomeAds()]);
+      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement()]);
     } finally {
       setRefreshing(false);
       setPullDistance(0);
@@ -522,6 +524,11 @@ export default function HomeScreen() {
       }
     }
     setAdsLoading(false);
+  }
+
+  async function fetchAnnouncement() {
+    const { announcement: latestAnnouncement, error } = await getAnnouncement();
+    if (!error) setAnnouncement(latestAnnouncement);
   }
 
   async function handleEnter(product: Product) {
@@ -745,6 +752,13 @@ export default function HomeScreen() {
         <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{t('transparent')}</Text></View>
         <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
+
+      {announcement ? (
+        <View style={[styles.announcementBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+          <Megaphone color={colors.gold} size={18} />
+          <Text style={[styles.announcementText, { color: colors.text }]}>{announcement}</Text>
+        </View>
+      ) : null}
 
       {activeAdImage ? (
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
@@ -996,6 +1010,8 @@ const styles = StyleSheet.create({
   iconText: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   trustItem: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
   trustDot: { color: '#18a663', fontSize: 12 },
+  announcementBanner: { marginHorizontal: 15, marginTop: 14, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  announcementText: { flex: 1, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   cacheBanner: { marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   cacheText: { flex: 1, fontSize: 12, lineHeight: 17 },
   cacheRetry: { fontSize: 12, fontWeight: 'bold' },

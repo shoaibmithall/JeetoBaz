@@ -94,7 +94,7 @@ export type Transaction = {
 export type AppNotification = {
   id: string;
   title: string;
-  body: string;
+  message: string;
   target_phone: string | null;
   link: string | null;
   kind: string | null;
@@ -166,7 +166,7 @@ export type Database = {
       >;
       notifications: Table<
         AppNotification,
-        Pick<AppNotification, 'title' | 'body'> &
+        Pick<AppNotification, 'title' | 'message'> &
           Partial<Pick<AppNotification, 'target_phone' | 'link' | 'kind'>>
       >;
       app_settings: Table<

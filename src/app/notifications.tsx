@@ -112,14 +112,14 @@ export default function NotificationsScreen() {
       {setupMissing && (
         <View style={[styles.noticeBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.noticeTitle, { color: theme.text }]}>Setup needed</Text>
-          <Text style={[styles.noticeText, { color: theme.muted }]}>Admin ko Supabase SQL setup run karna hoga.</Text>
+          <Text style={[styles.noticeText, { color: theme.muted }]}>Notification service setup is incomplete. Please contact support.</Text>
         </View>
       )}
 
       {!setupMissing && notifications.length === 0 && (
         <View style={[styles.emptyCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Bell color={theme.subtle} size={42} />
-          <Text style={[styles.emptyText, { color: theme.muted }]}>Abhi koi notification nahi.</Text>
+          <Text style={[styles.emptyText, { color: theme.muted }]}>No notifications yet.</Text>
         </View>
       )}
 
@@ -138,7 +138,7 @@ export default function NotificationsScreen() {
               <Text style={[styles.notificationTitle, { color: theme.text }]}>{item.title}</Text>
               {unread && <Text style={styles.unreadBadge}>NEW</Text>}
             </View>
-            <Text style={[styles.notificationBody, { color: theme.muted }]}>{item.body}</Text>
+            <Text style={[styles.notificationBody, { color: theme.muted }]}>{item.message}</Text>
             <Text style={[styles.notificationDate, { color: theme.subtle }]}>
               {new Date(item.created_at).toLocaleString()}
             </Text>

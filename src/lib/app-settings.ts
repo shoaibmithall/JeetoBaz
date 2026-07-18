@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 export const HOME_AD_IMAGES_KEY = 'home_ad_images';
+export const ANNOUNCEMENT_KEY = 'announcement';
 
 function normalizeImageUrls(value: unknown) {
   if (!Array.isArray(value)) return [];
@@ -32,4 +33,27 @@ export async function saveHomeAdImages(images: string[]) {
     .upsert({ key: HOME_AD_IMAGES_KEY, value: cleanImages });
 
   return { images: cleanImages, error };
+}
+
+export async function getAnnouncement() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', ANNOUNCEMENT_KEY)
+    .maybeSingle();
+
+  if (error) return { announcement: '', error };
+  return {
+    announcement: typeof data?.value === 'string' ? data.value.trim() : '',
+    error: null,
+  };
+}
+
+export async function saveAnnouncement(value: string) {
+  const announcement = value.trim();
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ key: ANNOUNCEMENT_KEY, value: announcement });
+
+  return { announcement, error };
 }

@@ -12,7 +12,7 @@ export type CreateNotificationInput = {
 export async function createNotification(input: CreateNotificationInput) {
   return supabase.from('notifications').insert({
     title: input.title.trim(),
-    body: input.body.trim(),
+    message: input.body.trim(),
     target_phone: input.targetPhone || null,
     link: input.link || null,
     kind: input.kind || 'general',
