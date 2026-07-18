@@ -14,7 +14,7 @@ import {
   BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
-  Sun, TriangleAlert, Trophy, UserRound, UsersRound, X,
+  Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, X,
 } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
@@ -45,6 +45,7 @@ export default function AdminScreen() {
   const [resetSending, setResetSending] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
+  const [productSearch, setProductSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -641,6 +642,16 @@ export default function AdminScreen() {
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
   const pendingPayments = transactions.filter((txn) => txn.status === 'pending');
+  const filteredProducts = useMemo(() => {
+    const query = productSearch.trim().toLowerCase();
+    if (!query) return products;
+
+    return products.filter((product) =>
+      [product.name, product.description, product.draw_date]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  }, [productSearch, products]);
 
   if (authLoading && !authenticated) return (
     <View style={styles.loginContainer}>
@@ -756,7 +767,34 @@ export default function AdminScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionTitleRow}><ClipboardList color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Products ({products.length})</Text></View>
-              {products.map((p) => (
+              <View style={styles.productSearchBox}>
+                <Search color={theme.muted} size={20} />
+                <TextInput
+                  style={styles.productSearchInput}
+                  placeholder="Search products to edit..."
+                  placeholderTextColor={theme.muted}
+                  value={productSearch}
+                  onChangeText={setProductSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Search products"
+                />
+                {productSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setProductSearch('')} accessibilityLabel="Clear product search">
+                    <X color={theme.muted} size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {productSearch.trim() && (
+                <Text style={styles.searchResultText}>
+                  Showing {filteredProducts.length} of {products.length} products
+                </Text>
+              )}
+              {filteredProducts.length === 0 && (
+                <Text style={styles.emptyText}>No products match “{productSearch.trim()}”.</Text>
+              )}
+              {filteredProducts.map((p) => (
                 <View key={p.id} style={[styles.productCard, editingId === p.id && styles.productCardEditing]}>
                   <View style={styles.productHeader}>
                     <Text style={styles.productName}>{p.name}</Text>
@@ -1037,6 +1075,9 @@ function createStyles(theme: AdminTheme) {
   editBanner: { backgroundColor: theme.goldSoft, borderWidth: 1, borderColor: theme.gold, borderRadius: 8, padding: 8, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   editBannerText: { color: theme.gold, fontSize: 13, textAlign: 'center' },
   input: { backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, color: theme.text, padding: 15, marginBottom: 12, fontSize: 14 },
+  productSearchBox: { minHeight: 52, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 15, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  productSearchInput: { flex: 1, color: theme.text, fontSize: 14, paddingVertical: 13 },
+  searchResultText: { color: theme.muted, fontSize: 12, marginBottom: 10 },
   textArea: { height: 80, textAlignVertical: 'top' },
   photoUploadButton: { backgroundColor: theme.infoSoft, borderWidth: 1, borderColor: theme.info, padding: 13, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12, flexDirection: 'row', gap: 7 },
   photoUploadDisabled: { opacity: 0.55 },
