@@ -9,13 +9,18 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
-import { CheckCircle2, CreditCard, House, Landmark, PartyPopper, TriangleAlert, WalletCards } from 'lucide-react-native';
+import { PaymentBrandLogo } from '@/components/payment-brand-logo';
+import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert } from 'lucide-react-native';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', color: '#1DB954', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'Easypaisa', color: '#ff8c32', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'My ABL Allied Bank / Bank Transfer', color: '#4a9eff', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
+  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
+  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
 ];
 
 function subscribeToHydration() {
@@ -337,9 +342,7 @@ export default function PaymentScreen() {
             onPress={() => setSelectedMethod(account.method)}
             activeOpacity={0.85}
           >
-            {account.method.includes('Bank')
-              ? <Landmark color={account.color} size={30} />
-              : <WalletCards color={account.color} size={30} />}
+            <PaymentBrandLogo brand={account.method} />
             <View style={styles.methodInfo}>
               <Text style={[styles.methodName, { color: theme.text }]}>{account.method}</Text>
               <TouchableOpacity onPress={() => copyAccountNumber(account.number)}>
@@ -353,7 +356,7 @@ export default function PaymentScreen() {
 
         <View style={[styles.stepsBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
           <Text style={[styles.stepsTitle, { color: theme.primary }]}>{t('howToPay')}:</Text>
-          <Text style={[styles.step, { color: theme.muted }]}>1. {t('openPaymentApp')}</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>1. Open your preferred wallet or banking app</Text>
           <Text style={[styles.step, { color: theme.muted }]}>2. Send any entry fee to the above accounts</Text>
           <Text style={[styles.step, { color: theme.muted }]}>3. Share transaction receipt screenshot</Text>
           <Text style={[styles.step, { color: theme.muted }]}>4. Upload it below and confirm</Text>
