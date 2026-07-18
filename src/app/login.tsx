@@ -517,9 +517,11 @@ export default function ProfileScreen() {
           <Text style={[styles.infoTitle, { color: theme.gold }]}>About JeetoBaz</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </View>
-        <Text style={[styles.infoText, { color: theme.muted }]}>{t('appTagline')} Platform</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>Pakistan&apos;s Trusted Prize Platform</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>Secure Payments • Transparent Draws • Verified Winners</Text>
         <Text style={[styles.infoText, { color: theme.muted }]}>Version 1.0.0</Text>
-        <Text style={[styles.infoText, { color: theme.muted }]}>{t('madeInPakistan')}</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>Secure • Transparent • Trusted</Text>
+        <Text style={[styles.infoText, { color: theme.muted }]}>© 2026 JeetoBaz. All rights reserved.</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
