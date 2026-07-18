@@ -97,7 +97,7 @@ export default function SignupScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backBtn}>
             <ChevronLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
