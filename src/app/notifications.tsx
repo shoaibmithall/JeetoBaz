@@ -1,4 +1,4 @@
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -85,8 +85,6 @@ export default function NotificationsScreen() {
       setReadIds(nextReadIds);
       await setStoredValue(READ_KEY, JSON.stringify(nextReadIds));
     }
-    if (item.link?.startsWith('/')) router.push(item.link as never);
-    else if (item.link) Linking.openURL(item.link);
   }
 
   if (loading) {
