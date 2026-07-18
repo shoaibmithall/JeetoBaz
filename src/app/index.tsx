@@ -4,7 +4,7 @@ import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useSta
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
-  BadgeDollarSign, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
+  BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
   Megaphone, ShieldCheck, Target, Ticket, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
@@ -363,6 +363,20 @@ export default function HomeScreen() {
     ? homeAdImages[activeAdIndex % homeAdImages.length]
     : null;
 
+  const showPreviousAd = useCallback(() => {
+    setActiveAdIndex((current) =>
+      homeAdImages.length > 0
+        ? (current - 1 + homeAdImages.length) % homeAdImages.length
+        : 0
+    );
+  }, [homeAdImages.length]);
+
+  const showNextAd = useCallback(() => {
+    setActiveAdIndex((current) =>
+      homeAdImages.length > 0 ? (current + 1) % homeAdImages.length : 0
+    );
+  }, [homeAdImages.length]);
+
   useEffect(() => {
     setHasHydratedLayout(true);
     fetchProducts();
@@ -384,7 +398,7 @@ export default function HomeScreen() {
       setActiveAdIndex((current) => (current + 1) % homeAdImages.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [homeAdImages.length]);
+  }, [activeAdIndex, homeAdImages.length]);
 
   useFocusEffect(
     useCallback(() => {
@@ -785,17 +799,35 @@ export default function HomeScreen() {
             style={styles.adBannerImage}
           />
           {homeAdImages.length > 1 ? (
-            <View style={styles.adDots}>
-              {homeAdImages.map((image, index) => (
-                <View
-                  key={`${image}-${index}`}
-                  style={[
-                    styles.adDot,
-                    { backgroundColor: index === activeAdIndex % homeAdImages.length ? colors.gold : colors.border },
-                  ]}
-                />
-              ))}
-            </View>
+            <>
+              <TouchableOpacity
+                style={[styles.adArrow, styles.adArrowLeft, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={showPreviousAd}
+                accessibilityRole="button"
+                accessibilityLabel="Show previous offer"
+              >
+                <ChevronLeft color={colors.gold} size={isCompact ? 24 : 28} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.adArrow, styles.adArrowRight, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={showNextAd}
+                accessibilityRole="button"
+                accessibilityLabel="Show next offer"
+              >
+                <ChevronRight color={colors.gold} size={isCompact ? 24 : 28} />
+              </TouchableOpacity>
+              <View style={styles.adDots} pointerEvents="none">
+                {homeAdImages.map((image, index) => (
+                  <View
+                    key={`${image}-${index}`}
+                    style={[
+                      styles.adDot,
+                      { backgroundColor: index === activeAdIndex % homeAdImages.length ? colors.gold : colors.border },
+                    ]}
+                  />
+                ))}
+              </View>
+            </>
           ) : null}
         </View>
       ) : adsLoading ? (
@@ -1033,6 +1065,9 @@ const styles = StyleSheet.create({
   adBannerCard: { marginHorizontal: 15, marginTop: 16, borderRadius: 18, borderWidth: 1, height: 260, overflow: 'hidden', position: 'relative' },
   adBannerCardCompact: { height: 205 },
   adBannerImage: { width: '100%', height: '100%' },
+  adArrow: { position: 'absolute', top: '50%', width: 44, height: 44, marginTop: -22, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center', opacity: 0.92 },
+  adArrowLeft: { left: 12 },
+  adArrowRight: { right: 12 },
   adBannerLoading: { alignItems: 'center', justifyContent: 'center', gap: 12, padding: 18 },
   adBannerLoadingBar: { width: '72%', height: 18 },
   adBannerLoadingTitle: { width: '42%', height: 28 },
