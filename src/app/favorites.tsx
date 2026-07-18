@@ -1,17 +1,30 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
-import { getStoredStringArray, setStoredValue } from '@/lib/storage';
+import { getStoredStringArray, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Heart } from 'lucide-react-native';
+import { useAuth } from '@/providers/AuthProvider';
+
+function favoritesStorageKey(userId: string) {
+  return `favorites:${userId}`;
+}
 
 export default function FavoritesScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
+  const { user, loading: authLoading } = useAuth();
+  const { width } = useWindowDimensions();
+  const columnCount = width >= 1100 ? 3 : width >= 700 ? 2 : 1;
+  const gridGap = 16;
+  const gridPadding = 16;
+  const cardWidth = columnCount > 1
+    ? (width - (gridPadding * 2) - (gridGap * (columnCount - 1))) / columnCount
+    : undefined;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -25,7 +38,25 @@ export default function FavoritesScreen() {
       async function loadFavorites() {
         setLoading(true);
         setLoadError(false);
-        const favoriteIds = await getStoredStringArray('favorites');
+        if (authLoading) return;
+        if (!user) {
+          if (active) {
+            setProducts([]);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const accountKey = favoritesStorageKey(user.id);
+        let favoriteIds = await getStoredStringArray(accountKey);
+        if (favoriteIds.length === 0) {
+          const legacyFavoriteIds = await getStoredStringArray('favorites');
+          if (legacyFavoriteIds.length > 0) {
+            favoriteIds = legacyFavoriteIds;
+            await setStoredValue(accountKey, JSON.stringify(legacyFavoriteIds));
+            await removeStoredValues(['favorites']);
+          }
+        }
 
         if (favoriteIds.length === 0) {
           if (active) {
@@ -50,16 +81,18 @@ export default function FavoritesScreen() {
 
       loadFavorites();
       return () => { active = false; };
-    }, [retryKey])
+    }, [authLoading, retryKey, user])
   );
 
   async function removeFavorite(productId: string) {
-    const favoriteIds = await getStoredStringArray('favorites');
-    await setStoredValue('favorites', JSON.stringify(favoriteIds.filter((id) => id !== productId)));
+    if (!user) return;
+    const accountKey = favoritesStorageKey(user.id);
+    const favoriteIds = await getStoredStringArray(accountKey);
+    await setStoredValue(accountKey, JSON.stringify(favoriteIds.filter((id) => id !== productId)));
     setProducts((current) => current.filter((product) => product.id !== productId));
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
@@ -89,8 +122,9 @@ export default function FavoritesScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        products.map((product) => (
-          <View key={product.id} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
+        {products.map((product) => (
+          <View key={product.id} style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
@@ -109,7 +143,8 @@ export default function FavoritesScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        ))
+        ))}
+        </View>
       )}
     </ScrollView>
   );
@@ -127,7 +162,9 @@ const styles = StyleSheet.create({
   emptyText: { color: '#aaa', fontSize: 14, textAlign: 'center', marginBottom: 24 },
   browseButton: { backgroundColor: '#18a663', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 14 },
   browseButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  card: { backgroundColor: '#071b13', margin: 15, marginBottom: 0, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
+  grid: { width: '100%', padding: 15, gap: 16 },
+  gridMultiColumn: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
+  card: { backgroundColor: '#071b13', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
   image: { width: '100%', height: 180 },
   cardBody: { padding: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

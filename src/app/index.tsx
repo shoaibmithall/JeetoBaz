@@ -12,7 +12,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
-import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
+import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
@@ -391,12 +391,23 @@ export default function HomeScreen() {
       let active = true;
 
       async function loadStoredState() {
-        const [storedPhone, storedFavorites, readNotificationIds] = await Promise.all([
+        const favoritesKey = user ? `favorites:${user.id}` : null;
+        const [storedPhone, accountFavorites, readNotificationIds] = await Promise.all([
           getStoredValue('userPhone'),
-          getStoredStringArray('favorites'),
+          favoritesKey ? getStoredStringArray(favoritesKey) : Promise.resolve([]),
           getStoredStringArray('readNotificationIds'),
         ]);
         if (!active) return;
+
+        let storedFavorites = accountFavorites;
+        if (favoritesKey && storedFavorites.length === 0) {
+          const legacyFavorites = await getStoredStringArray('favorites');
+          if (legacyFavorites.length > 0) {
+            storedFavorites = legacyFavorites;
+            await setStoredValue(favoritesKey, JSON.stringify(legacyFavorites));
+            await removeStoredValues(['favorites']);
+          }
+        }
 
         let resolvedPhone = storedPhone || '';
 
@@ -589,10 +600,14 @@ export default function HomeScreen() {
   }
 
   async function toggleFavorite(productId: string) {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
     const updated = favorites.includes(productId)
       ? favorites.filter((id) => id !== productId)
       : [...favorites, productId];
-    await setStoredValue('favorites', JSON.stringify(updated));
+    await setStoredValue(`favorites:${user.id}`, JSON.stringify(updated));
     setFavorites(updated);
   }
 

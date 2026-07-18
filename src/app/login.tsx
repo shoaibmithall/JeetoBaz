@@ -536,7 +536,7 @@ export default function ProfileScreen() {
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
           <View style={styles.logoRow}>
             <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
-            <Text style={[styles.logo, { color: theme.text }]}>JeetoBaz</Text>
+            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
           </View>
           <Text style={[styles.tagline, { color: theme.muted }]}>Pakistan's Transparent Prize Campaign Platform</Text>
         </View>
@@ -547,7 +547,7 @@ export default function ProfileScreen() {
             <Text style={styles.secureBadgeText}>Secure Account Access</Text>
           </View>
 
-          <Text style={[styles.welcomeTitle, { color: theme.text }]}>Welcome Back</Text>
+          <Text style={[styles.welcomeTitle, { color: theme.gold }]}>Welcome Back</Text>
           <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Sign in to your account</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>

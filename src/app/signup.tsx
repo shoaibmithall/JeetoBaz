@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { signUpWithEmail } from '@/lib/auth';
@@ -101,7 +101,8 @@ export default function SignupScreen() {
             <ChevronLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <Text style={[styles.logo, { color: theme.text }]}>JeetoBaz</Text>
+            <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
+            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
           </View>
         </View>
 
@@ -111,7 +112,7 @@ export default function SignupScreen() {
             <Text style={styles.secureBadgeText}>Create Your Account</Text>
           </View>
 
-          <Text style={[styles.welcomeTitle, { color: theme.text }]}>Join JeetoBaz</Text>
+          <Text style={[styles.welcomeTitle, { color: theme.gold }]}>Join JeetoBaz</Text>
           <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Start winning prizes today!</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>
@@ -327,7 +328,8 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12 },
   backBtn: { padding: 4 },
-  logoRow: { flex: 1, alignItems: 'center' },
+  logoRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  logoImage: { width: 40, height: 40, borderRadius: 8 },
   logo: { fontSize: 28, fontWeight: 'bold', color: 'white' },
 
   signupCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24 },
