@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { requestHomeScrollToTop } from '@/lib/home-scroll';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { TawkToWidget } from '@/components/TawkToWidget';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -31,6 +32,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
     <>
+      <TawkToWidget />
       <Head>
         <title>{siteTitle}</title>
         <style>{`
