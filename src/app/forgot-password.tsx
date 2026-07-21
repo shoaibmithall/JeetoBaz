@@ -1,10 +1,11 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
-import { ChevronLeft, LockKeyhole, Mail, Shield, Send } from 'lucide-react-native';
+import { AuthRecoveryLayout, Badge, PrimaryButton } from '@/components/auth-recovery-layout';
+import { LockKeyhole, Mail, Send, Shield } from 'lucide-react-native';
 
 const STORAGE_KEY = 'otp_last_sent_at';
 const MAX_RESENDS = 3;
@@ -102,207 +103,127 @@ export default function ForgotPasswordScreen() {
     router.push({ pathname: '/verify-reset-otp' as never, params: { email: email.trim().toLowerCase() } });
   }
 
+  const trustItems = [
+    { icon: <Shield color={theme.primary} size={14} />, text: 'Secure Reset' },
+    { icon: <LockKeyhole color={theme.primary} size={14} />, text: 'Code Expires Soon' },
+  ];
+
   if (sent) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.replace('/forgot-password')} style={styles.backBtn}>
-              <ChevronLeft color="white" size={24} />
-            </TouchableOpacity>
-            <View style={styles.logoRow}>
-              <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
-              <Text style={styles.logo}>JeetoBaz</Text>
-            </View>
-          </View>
+      <AuthRecoveryLayout
+        showBack
+        onBack={() => router.replace('/forgot-password')}
+        trustItems={trustItems}
+        showFooter={false}
+      >
+        <Badge icon={<Mail color={theme.gold} size={16} />} text="OTP Sent!" />
 
-          <View style={styles.card}>
-            <View style={styles.secureBadge}>
-              <Mail color="#FFD700" size={16} />
-              <Text style={styles.secureBadgeText}>OTP Sent!</Text>
-            </View>
+        <Text style={[styles.title, { color: theme.text }]}>Check Your Email</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>
+          We sent a 6-digit verification code to:
+        </Text>
+        <Text style={[styles.emailDisplay, { color: theme.gold }]}>{email.trim().toLowerCase()}</Text>
 
-            <Text style={styles.title}>Check Your Email</Text>
-            <Text style={styles.subtitle}>
-              We sent a 6-digit verification code to:
+        <PrimaryButton
+          onPress={handleContinue}
+          icon={<LockKeyhole color={theme.buttonText} size={18} />}
+          text="Enter OTP Code"
+        />
+
+        <View style={styles.resendRow}>
+          {countdown > 0 ? (
+            <Text style={[styles.countdownText, { color: theme.muted }]}>
+              Resend OTP in {countdown}s
             </Text>
-            <Text style={styles.email}>{email.trim().toLowerCase()}</Text>
-
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleContinue}
-            >
-              <LockKeyhole color="#000" size={18} />
-              <Text style={styles.primaryButtonText}>Enter OTP Code</Text>
+          ) : resendCount >= MAX_RESENDS ? (
+            <Text style={[styles.maxResendText, { color: theme.muted }]}>
+              Maximum resend attempts reached
+            </Text>
+          ) : (
+            <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
+              <Text style={[styles.resendLink, { color: theme.primary }]}>
+                {loading ? 'Sending...' : 'Resend OTP'}
+              </Text>
             </TouchableOpacity>
+          )}
+        </View>
 
-            <View style={styles.resendRow}>
-              {countdown > 0 ? (
-                <Text style={[styles.countdownText, { color: theme.muted }]}>
-                  Resend OTP in {countdown}s
-                </Text>
-              ) : resendCount >= MAX_RESENDS ? (
-                <Text style={[styles.maxResendText, { color: theme.muted }]}>
-                  Maximum resend attempts reached
-                </Text>
-              ) : (
-                <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
-                  <Text style={styles.resendLink}>
-                    {loading ? 'Sending...' : 'Resend OTP'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {rateLimitError ? (
-              <Text style={styles.rateLimitText}>{rateLimitError}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.trustStrip}>
-            <View style={styles.trustItem}>
-              <Shield color="#18a663" size={14} />
-              <Text style={styles.trustText}>Secure Reset</Text>
-            </View>
-            <View style={styles.trustItem}>
-              <LockKeyhole color="#18a663" size={14} />
-              <Text style={styles.trustText}>Code Expires Soon</Text>
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+        {rateLimitError ? (
+          <Text style={styles.rateLimitText}>{rateLimitError}</Text>
+        ) : null}
+      </AuthRecoveryLayout>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft color="white" size={24} />
-          </TouchableOpacity>
-          <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
-            <Text style={styles.logo}>JeetoBaz</Text>
-          </View>
-        </View>
+    <AuthRecoveryLayout trustItems={trustItems}>
+      <Badge icon={<LockKeyhole color={theme.primary} size={16} />} text="Password Recovery" />
 
-        <View style={styles.card}>
-          <View style={styles.secureBadge}>
-            <LockKeyhole color="#18a663" size={16} />
-            <Text style={styles.secureBadgeText}>Password Recovery</Text>
-          </View>
+      <Text style={[styles.title, { color: theme.text }]}>Forgot Password?</Text>
+      <Text style={[styles.subtitle, { color: theme.muted }]}>
+        Enter your email address and we'll send you a 6-digit verification code.
+      </Text>
 
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
-            Enter your email address and we'll send you a 6-digit verification code.
-          </Text>
+      <View style={[
+        styles.inputContainer,
+        { backgroundColor: theme.surface, borderColor: emailError ? theme.danger : theme.border }
+      ]}>
+        <Mail color={theme.muted} size={18} />
+        <TextInput
+          style={[styles.inputField, { color: theme.text }]}
+          placeholder="you@example.com"
+          placeholderTextColor={theme.muted}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={email}
+          onChangeText={(v) => { setEmail(v); setEmailError(''); setRateLimitError(''); }}
+        />
+      </View>
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-          <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
-            <Mail color={theme.muted} size={18} />
-            <TextInput
-              style={[styles.inputField, { color: theme.text }]}
-              placeholder="you@example.com"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={(v) => { setEmail(v); setEmailError(''); setRateLimitError(''); }}
-            />
-          </View>
-          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+      <PrimaryButton
+        onPress={handleSendOTP}
+        loading={loading}
+        icon={<Send color={theme.buttonText} size={18} />}
+        text="Send Verification Code"
+      />
 
-          <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={handleSendOTP}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#000" size="small" />
-            ) : (
-              <>
-                <Send color="#000" size={18} />
-                <Text style={styles.primaryButtonText}>Send Verification Code</Text>
-              </>
-            )}
-          </TouchableOpacity>
+      {rateLimitError ? (
+        <Text style={styles.rateLimitText}>{rateLimitError}</Text>
+      ) : null}
 
-          {rateLimitError ? (
-            <Text style={styles.rateLimitText}>{rateLimitError}</Text>
-          ) : null}
-
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLink}>← Back to Login</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.trustStrip}>
-          <View style={styles.trustItem}>
-            <Shield color="#18a663" size={14} />
-            <Text style={styles.trustText}>Secure Reset</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <LockKeyhole color="#18a663" size={14} />
-            <Text style={styles.trustText}>Code Expires Soon</Text>
-          </View>
-        </View>
-
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => router.push('/terms' as never)}>
-            <Text style={styles.footerLink}>Terms</Text>
-          </TouchableOpacity>
-          <Text style={styles.footerDot}>•</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy' as never)}>
-            <Text style={styles.footerLink}>Privacy</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+      <TouchableOpacity onPress={() => router.back()}>
+        <Text style={[styles.backLink, { color: theme.primary }]}>← Back to Login</Text>
+      </TouchableOpacity>
+    </AuthRecoveryLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d09' },
-  scrollContent: { paddingBottom: 40 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { padding: 4 },
-  logoRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoImage: { width: 40, height: 40, borderRadius: 8 },
-  logo: { fontSize: 28, fontWeight: 'bold', color: 'white' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
+  subtitle: { fontSize: 14, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
 
-  card: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24 },
-
-  secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
-  secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },
-
-  title: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#9aac9f', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
-
-  inputContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, marginBottom: 6, paddingHorizontal: 14, gap: 10 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 6,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
   inputField: { flex: 1, padding: 16, fontSize: 16 },
   errorText: { color: '#ff4444', fontSize: 12, marginBottom: 10, marginLeft: 4 },
 
-  primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 16 },
-  buttonDisabled: { backgroundColor: '#555' },
-  primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
+  backLink: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
 
-  backLink: { color: '#18a663', fontSize: 14, fontWeight: '600', textAlign: 'center' },
-
-  email: { fontSize: 16, fontWeight: '700', color: '#FFD700', marginBottom: 20, textAlign: 'center' },
+  emailDisplay: { fontSize: 16, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
 
   resendRow: { alignItems: 'center', marginTop: 8 },
   countdownText: { fontSize: 13 },
   maxResendText: { fontSize: 13, fontStyle: 'italic' },
-  resendLink: { color: '#18a663', fontSize: 14, fontWeight: '600' },
+  resendLink: { fontSize: 14, fontWeight: '600' },
 
   rateLimitText: { color: '#ff4444', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 18 },
-
-  trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustText: { color: '#5e7468', fontSize: 11, fontWeight: '500' },
-
-  footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 },
-  footerLink: { color: '#5e7468', fontSize: 12 },
-  footerDot: { color: '#5e7468', fontSize: 12 },
 });
