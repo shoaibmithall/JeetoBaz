@@ -103,7 +103,8 @@ export default function VerifyResetOtpScreen() {
     setError('');
 
     const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase()
+      email.trim().toLowerCase(),
+      { redirectTo: 'https://jeetobaz.pk/reset-password' }
     );
 
     if (error) {

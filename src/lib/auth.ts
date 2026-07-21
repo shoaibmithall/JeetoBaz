@@ -1,13 +1,5 @@
-import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
-
-function getOrigin(): string {
-  if (Platform.OS === 'web') {
-    return window.location.origin;
-  }
-  return 'jeetobaz://';
-}
 
 export type AuthUser = User;
 export type AuthSession = Session;
@@ -31,7 +23,7 @@ export async function signUpWithEmail(
     email,
     password,
     options: {
-      emailRedirectTo: `${getOrigin()}/auth/callback`,
+      emailRedirectTo: 'https://jeetobaz.pk/auth/callback',
       data: options?.data,
     },
   });
@@ -64,7 +56,7 @@ export async function signOut() {
  */
 export async function resetPassword(email: string) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${getOrigin()}/auth/reset-password`,
+    redirectTo: 'https://jeetobaz.pk/reset-password',
   });
 
   return { data, error };
