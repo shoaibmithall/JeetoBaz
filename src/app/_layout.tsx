@@ -49,6 +49,7 @@ export default function RootLayout() {
             position: fixed;
             z-index: 2147483647;
           }
+          #root, #root * { -webkit-user-select: text; user-select: text; }
         `}</style>
         <meta name="description" content={siteDescription} />
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
