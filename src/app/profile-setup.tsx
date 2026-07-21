@@ -42,7 +42,7 @@ export default function ProfileSetupScreen() {
 
     if (error) {
       if (error.message.includes('already')) {
-        setErrors({ phone: 'This phone number is already registered.' });
+        setErrors({ phone: 'This phone number is already linked to another JeetoBaz account. Please use a different number or contact support.' });
       } else {
         alert('Error: ' + error.message);
       }
