@@ -16,7 +16,7 @@ export default function RootLayout() {
   const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
   const isCompact = !hasHydratedLayout || width < 480;
   const siteUrl = 'https://jeetobaz.pk/';
-  const siteTitle = 'JeetoBaz - Pakistan Lucky Draw Platform';
+  const siteTitle = 'JeetoBaz - Pakistan\u2019s Most Trusted Premium Rewards Platform';
   const siteDescription = 'JeetoBaz is a transparent lucky draw platform for Pakistan with live draws, verified winners, simple support, and secure payment verification.';
   const iconVersion = '20260710';
 
