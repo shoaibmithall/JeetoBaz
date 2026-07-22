@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
+import Head from 'expo-router/head';
 import type { Entry, Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Medal, Target, Trophy } from 'lucide-react-native';
@@ -85,6 +86,10 @@ export default function WinnersScreen() {
   if (loadError) return <DataErrorState onRetry={fetchWinners} />;
 
   return (
+    <>
+    <Head>
+      <title>Explore Prize Campaigns | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text style={styles.title}>{t('pastWinners')}</Text></View>
@@ -154,6 +159,7 @@ export default function WinnersScreen() {
         <Text style={styles.footerText}>{t('allDrawsFair')}</Text>
       </View>
     </ScrollView>
+    </>
   );
 }
 

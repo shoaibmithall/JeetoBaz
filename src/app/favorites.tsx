@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredStringArray, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -106,6 +107,10 @@ export default function FavoritesScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>My Favorites | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text style={styles.title}>{t('favorites')}</Text></View>
@@ -147,6 +152,7 @@ export default function FavoritesScreen() {
         </View>
       )}
     </ScrollView>
+    </>
   );
 }
 

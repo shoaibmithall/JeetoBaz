@@ -1,6 +1,7 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share } from 'react-native';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
@@ -537,6 +538,10 @@ export default function ProfileScreen() {
   );
 
   return (
+    <>
+    <Head>
+      <title>Login | JeetoBaz</title>
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -662,6 +667,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
     </View>
+    </>
   );
 }
 
