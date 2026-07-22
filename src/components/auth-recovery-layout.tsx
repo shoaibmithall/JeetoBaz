@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Image, View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import type { ReactNode } from 'react';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -26,16 +26,13 @@ export function AuthRecoveryLayout({
 }: AuthRecoveryLayoutProps) {
   const { theme } = useAppTheme();
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollDesktop]}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.wrapper, isDesktop && styles.desktopWrapper]}>
+        <View style={styles.wrapper}>
           <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
             {showBack && (
               <TouchableOpacity onPress={onBack || (() => router.back())} style={styles.backBtn}>
@@ -108,7 +105,7 @@ export function PrimaryButton({
   const { theme } = useAppTheme();
   return (
     <TouchableOpacity
-      style={[styles.primaryButton, { backgroundColor: theme.gold }, disabled && { backgroundColor: theme.muted }]}
+      style={[styles.primaryButton, { backgroundColor: '#FFD700' }, disabled && { backgroundColor: theme.muted }]}
       onPress={onPress}
       disabled={disabled || loading}
     >
@@ -127,14 +124,7 @@ export function PrimaryButton({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 40 },
-  scrollDesktop: { paddingVertical: 40 },
-  wrapper: {},
-
-  desktopWrapper: {
-    maxWidth: 800,
-    alignSelf: 'center',
-    width: '100%',
-  },
+  wrapper: { width: '100%' },
 
   header: {
     paddingTop: 50,
