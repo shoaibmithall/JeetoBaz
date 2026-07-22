@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 import { getStoredValue } from '@/lib/storage';
 
 const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
@@ -48,11 +49,21 @@ export default function PrivacyScreen() {
     }
   }
 
+  const privacySchema = pageSchema('WebPage', '/privacy', 'Privacy Policy', 'Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services.');
   return (
     <>
     <Head>
       <title>Privacy Policy | JeetoBaz</title>
       <meta name="description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Privacy Policy | JeetoBaz" />
+      <meta property="og:description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
+      <meta property="og:url" content="https://jeetobaz.pk/privacy" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/privacy" />
+      <script type="application/ld+json">{JSON.stringify(privacySchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

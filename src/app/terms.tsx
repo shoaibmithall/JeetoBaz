@@ -3,17 +3,28 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ClipboardList, TriangleAlert } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 
 export default function TermsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
   const { theme } = useAppTheme();
 
+  const termsSchema = pageSchema('WebPage', '/terms', 'Terms & Conditions', 'Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities.');
   return (
     <>
     <Head>
       <title>Terms &amp; Conditions | JeetoBaz</title>
       <meta name="description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Terms &amp; Conditions | JeetoBaz" />
+      <meta property="og:description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
+      <meta property="og:url" content="https://jeetobaz.pk/terms" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/terms" />
+      <script type="application/ld+json">{JSON.stringify(termsSchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

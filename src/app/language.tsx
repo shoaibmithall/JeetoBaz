@@ -4,6 +4,7 @@ import Head from 'expo-router/head';
 import { LANGUAGE_OPTIONS, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { Check } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 
 const SAMPLE_TEXT: Record<LanguageCode, string> = {
   en: 'JeetoBaz will use English across the app.',
@@ -21,11 +22,21 @@ export default function LanguageScreen() {
     router.back();
   }
 
+  const langSchema = pageSchema('WebPage', '/language', 'Language', 'Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use.');
   return (
     <>
     <Head>
       <title>Language | JeetoBaz</title>
       <meta name="description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Language | JeetoBaz" />
+      <meta property="og:description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
+      <meta property="og:url" content="https://jeetobaz.pk/language" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/language" />
+      <script type="application/ld+json">{JSON.stringify(langSchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

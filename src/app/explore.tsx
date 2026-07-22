@@ -6,6 +6,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import Head from 'expo-router/head';
 import type { Entry, Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 import { Medal, Target, Trophy } from 'lucide-react-native';
 
 export default function WinnersScreen() {
@@ -76,11 +77,21 @@ export default function WinnersScreen() {
     });
   }
 
+  const exploreSchema = pageSchema('CollectionPage', '/explore', 'Explore Prize Campaigns', 'Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan.');
   if (loading) return (
     <>
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta property="og:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:url" content="https://jeetobaz.pk/explore" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/explore" />
+      <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -100,6 +111,15 @@ export default function WinnersScreen() {
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta property="og:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:url" content="https://jeetobaz.pk/explore" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/explore" />
+      <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -116,6 +136,15 @@ export default function WinnersScreen() {
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta property="og:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
+      <meta property="og:url" content="https://jeetobaz.pk/explore" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/explore" />
+      <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

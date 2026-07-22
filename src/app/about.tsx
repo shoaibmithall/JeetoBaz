@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
+import { pageSchema } from '@/lib/structured-data';
 import {
   AppWindow,
   Award,
@@ -553,11 +554,21 @@ export default function AboutJeetoBazScreen() {
     );
   }
 
+  const aboutSchema = pageSchema('AboutPage', '/about', 'About Us', 'Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan.');
   return (
     <>
     <Head>
       <title>About Us | JeetoBaz</title>
       <meta name="description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="About Us | JeetoBaz" />
+      <meta property="og:description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
+      <meta property="og:url" content="https://jeetobaz.pk/about" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/about" />
+      <script type="application/ld+json">{JSON.stringify(aboutSchema)}</script>
     </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}

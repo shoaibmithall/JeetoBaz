@@ -6,6 +6,7 @@ import { signUpWithEmail } from '@/lib/auth';
 import { validateEmail, validatePassword, validateName, validatePhone } from '@/lib/auth-validation';
 import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
@@ -94,11 +95,21 @@ export default function SignupScreen() {
     setLoading(false);
   }
 
+  const signupSchema = pageSchema('WebPage', '/signup', 'Sign Up', 'Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely.');
   return (
     <>
     <Head>
       <title>Sign Up | JeetoBaz</title>
       <meta name="description" content="Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Sign Up | JeetoBaz" />
+      <meta property="og:description" content="Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely." />
+      <meta property="og:url" content="https://jeetobaz.pk/signup" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/signup" />
+      <script type="application/ld+json">{JSON.stringify(signupSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">

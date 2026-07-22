@@ -52,14 +52,24 @@ const PULL_TO_REFRESH_THRESHOLD = 64;
 const HOME_URL = 'https://jeetobaz.pk/';
 const HOME_TITLE = 'Transparent Prize Campaigns in Pakistan | JeetoBaz';
 const HOME_DESCRIPTION = 'Explore JeetoBaz prize campaigns, review participation details, follow draw updates, and view verified winners in Pakistan.';
-const HOME_SOCIAL_IMAGE = 'https://jeetobaz.pk/icon-512.png';
+const HOME_OG_IMAGE = 'https://jeetobaz.pk/og-image.png';
+const HOME_TWITTER_IMAGE = 'https://jeetobaz.pk/twitter-image.png';
 const ORGANIZATION_STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   '@id': 'https://jeetobaz.pk/#organization',
   name: 'JeetoBaz',
   url: HOME_URL,
-  logo: HOME_SOCIAL_IMAGE,
+  logo: 'https://jeetobaz.pk/icon-512.png',
+  sameAs: [
+    'https://www.facebook.com/share/17uAJE6AQY/',
+    'https://www.instagram.com/jeetobaz',
+    'https://www.tiktok.com/@jeetobaz',
+    'https://youtube.com/@jeetobaz',
+    'https://snapchat.com/t/ZM4Q6K11',
+    'https://x.com/jeetobaz',
+    'https://t.me/jeetobaz',
+  ],
 };
 const WEBSITE_STRUCTURED_DATA = {
   '@context': 'https://schema.org',
@@ -71,6 +81,16 @@ const WEBSITE_STRUCTURED_DATA = {
   publisher: {
     '@id': 'https://jeetobaz.pk/#organization',
   },
+};
+const HOMEPAGE_WEBPAGE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': HOME_URL + '#webpage',
+  name: 'Transparent Prize Campaigns in Pakistan',
+  url: HOME_URL,
+  description: HOME_DESCRIPTION,
+  isPartOf: { '@id': 'https://jeetobaz.pk/#website' },
+  about: { '@id': 'https://jeetobaz.pk/#organization' },
 };
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
@@ -787,13 +807,14 @@ export default function HomeScreen() {
       <meta property="og:url" content={HOME_URL} />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta property="og:type" content="website" />
-      <meta property="og:image" content={HOME_SOCIAL_IMAGE} />
+      <meta property="og:image" content={HOME_OG_IMAGE} />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={HOME_TITLE} />
       <meta name="twitter:description" content={HOME_DESCRIPTION} />
-      <meta name="twitter:image" content={HOME_SOCIAL_IMAGE} />
+      <meta name="twitter:image" content={HOME_TWITTER_IMAGE} />
       <script type="application/ld+json">{JSON.stringify(ORGANIZATION_STRUCTURED_DATA)}</script>
       <script type="application/ld+json">{JSON.stringify(WEBSITE_STRUCTURED_DATA)}</script>
+      <script type="application/ld+json">{JSON.stringify(HOMEPAGE_WEBPAGE_SCHEMA)}</script>
     </Head>
     <HomeSkipLink />
     <ScrollView

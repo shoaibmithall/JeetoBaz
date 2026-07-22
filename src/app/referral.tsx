@@ -34,6 +34,7 @@ import {
   savePendingReferralCode,
 } from '@/lib/referrals';
 import { supabase } from '@/lib/supabase';
+import { pageSchema } from '@/lib/structured-data';
 import type { Product } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -201,11 +202,21 @@ export default function ReferralScreen() {
     }
   }
 
+  const referralSchema = pageSchema('WebPage', '/referral', 'Refer & Earn', 'Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions.');
   return (
     <>
     <Head>
       <title>Refer &amp; Earn | JeetoBaz</title>
       <meta name="description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Refer &amp; Earn | JeetoBaz" />
+      <meta property="og:description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
+      <meta property="og:url" content="https://jeetobaz.pk/referral" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/referral" />
+      <script type="application/ld+json">{JSON.stringify(referralSchema)}</script>
     </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}

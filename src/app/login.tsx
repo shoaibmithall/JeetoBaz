@@ -11,6 +11,7 @@ import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 import {
   CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
@@ -537,11 +538,21 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 
+  const loginSchema = pageSchema('WebPage', '/login', 'Login', 'Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities.');
   return (
     <>
     <Head>
       <title>Login | JeetoBaz</title>
       <meta name="description" content="Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Login | JeetoBaz" />
+      <meta property="og:description" content="Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities." />
+      <meta property="og:url" content="https://jeetobaz.pk/login" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/login" />
+      <script type="application/ld+json">{JSON.stringify(loginSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>

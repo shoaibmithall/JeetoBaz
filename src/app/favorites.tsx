@@ -10,6 +10,7 @@ import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { Heart } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
+import { pageSchema } from '@/lib/structured-data';
 
 function favoritesStorageKey(userId: string) {
   return `favorites:${userId}`;
@@ -93,12 +94,22 @@ export default function FavoritesScreen() {
     setProducts((current) => current.filter((product) => product.id !== productId));
   }
 
+  const favoritesSchema = pageSchema('WebPage', '/favorites', 'My Favorites', 'Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation.');
   if (loading || authLoading) {
     return (
       <>
       <Head>
-        <title>My Favorites | JeetoBaz</title>
-        <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <title>My Favorites | JeetoBaz</title>
+      <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="My Favorites | JeetoBaz" />
+      <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:url" content="https://jeetobaz.pk/favorites" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/favorites" />
+      <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
       </Head>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -118,8 +129,17 @@ export default function FavoritesScreen() {
     return (
       <>
       <Head>
-        <title>My Favorites | JeetoBaz</title>
-        <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <title>My Favorites | JeetoBaz</title>
+      <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="My Favorites | JeetoBaz" />
+      <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:url" content="https://jeetobaz.pk/favorites" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/favorites" />
+      <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
       </Head>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -137,6 +157,15 @@ export default function FavoritesScreen() {
     <Head>
       <title>My Favorites | JeetoBaz</title>
       <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="My Favorites | JeetoBaz" />
+      <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
+      <meta property="og:url" content="https://jeetobaz.pk/favorites" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/favorites" />
+      <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

@@ -6,6 +6,7 @@ import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getPublicVerificationDocuments } from '@/lib/verification-documents';
 import type { VerificationDocument } from '@/types/database';
+import { pageSchema } from '@/lib/structured-data';
 
 export default function RegisteredVerifiedScreen() {
   const { theme } = useAppTheme();
@@ -31,11 +32,21 @@ export default function RegisteredVerifiedScreen() {
     loadDocuments();
   }, [loadDocuments]));
 
+  const regSchema = pageSchema('WebPage', '/registered-verified', 'Registered & Verified', 'View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust.');
   return (
     <>
     <Head>
       <title>Registered &amp; Verified | JeetoBaz</title>
       <meta name="description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Registered &amp; Verified | JeetoBaz" />
+      <meta property="og:description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
+      <meta property="og:url" content="https://jeetobaz.pk/registered-verified" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/registered-verified" />
+      <script type="application/ld+json">{JSON.stringify(regSchema)}</script>
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>

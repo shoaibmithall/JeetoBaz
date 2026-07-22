@@ -6,6 +6,7 @@ import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
 import { getStoredValue } from '@/lib/storage';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -76,11 +77,21 @@ export default function HelpCenterScreen() {
     );
   }
 
+  const helpSchema = pageSchema('WebPage', '/help', 'Help Center', 'Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center.');
   return (
     <>
     <Head>
       <title>Help Center | JeetoBaz</title>
       <meta name="description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Help Center | JeetoBaz" />
+      <meta property="og:description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
+      <meta property="og:url" content="https://jeetobaz.pk/help" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/help" />
+      <script type="application/ld+json">{JSON.stringify(helpSchema)}</script>
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]} keyboardShouldPersistTaps="handled">
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

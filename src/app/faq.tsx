@@ -15,6 +15,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
+import { pageSchema } from '@/lib/structured-data';
 
 const FAQS = [
   {
@@ -121,11 +122,26 @@ export default function FaqScreen() {
     );
   }, [query]);
 
+  const faqSchema = pageSchema('FAQPage', '/faq', 'Frequently Asked Questions', 'Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support.');
+  faqSchema.mainEntity = FAQS.map(({ question, answer }) => ({
+    '@type': 'Question',
+    name: question,
+    acceptedAnswer: { '@type': 'Answer', text: answer },
+  }));
   return (
     <>
     <Head>
       <title>Frequently Asked Questions | JeetoBaz</title>
       <meta name="description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Frequently Asked Questions | JeetoBaz" />
+      <meta property="og:description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
+      <meta property="og:url" content="https://jeetobaz.pk/faq" />
+      <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
+      <link rel="canonical" href="https://jeetobaz.pk/faq" />
+      <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}
