@@ -82,9 +82,15 @@ export default function WinnersScreen() {
       <title>Explore Prize Campaigns | JeetoBaz</title>
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
     </Head>
-    <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} />
-      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+        <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text role="heading" aria-level={1} style={styles.title}>{t('pastWinners')}</Text></View>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>Verified Draw Records</Text>
+      </View>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
+      </View>
     </View>
     </>
   );
@@ -95,7 +101,13 @@ export default function WinnersScreen() {
       <title>Explore Prize Campaigns | JeetoBaz</title>
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
     </Head>
-    <DataErrorState onRetry={fetchWinners} />
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+        <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text role="heading" aria-level={1} style={styles.title}>{t('pastWinners')}</Text></View>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>Verified Draw Records</Text>
+      </View>
+      <DataErrorState onRetry={fetchWinners} />
+    </View>
     </>
   );
 
@@ -107,7 +119,7 @@ export default function WinnersScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text style={styles.title}>{t('pastWinners')}</Text></View>
+        <View style={styles.titleRow}><Medal color="#FFD700" size={28} /><Text role="heading" aria-level={1} style={styles.title}>{t('pastWinners')}</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>Verified Draw Records</Text>
       </View>
 

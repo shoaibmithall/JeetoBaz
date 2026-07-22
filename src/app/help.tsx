@@ -87,7 +87,7 @@ export default function HelpCenterScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.gold }]}>{t('helpCenter')}</Text>
+        <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>{t('helpCenter')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 

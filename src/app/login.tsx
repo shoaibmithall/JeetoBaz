@@ -559,7 +559,7 @@ export default function ProfileScreen() {
             <Text style={styles.secureBadgeText}>Secure Account Access</Text>
           </View>
 
-          <Text style={[styles.welcomeTitle, { color: theme.gold }]}>Welcome Back</Text>
+          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Welcome Back</Text>
           <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Sign in to your account</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>

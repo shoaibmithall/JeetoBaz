@@ -144,7 +144,7 @@ export default function FaqScreen() {
       </View>
 
       <View style={styles.hero}>
-        <Text style={[styles.heroTitle, { color: theme.gold }]}>How can we help?</Text>
+        <Text role="heading" aria-level={1} style={[styles.heroTitle, { color: theme.gold }]}>How can we help?</Text>
         <Text style={[styles.heroText, { color: theme.muted }]}>
           Quick answers about entries, payments, draws, winners, and account security.
         </Text>

@@ -17,7 +17,7 @@ export default function TermsScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <View style={styles.titleRow}><ClipboardList color={theme.gold} size={25} /><Text style={[styles.title, { color: theme.gold }]}>Terms & Conditions</Text></View>
+        <View style={styles.titleRow}><ClipboardList color={theme.gold} size={25} /><Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>Terms & Conditions</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>JeetoBaz — Lucky Draw Platform</Text>
       </View>
 

@@ -45,7 +45,7 @@ export default function RegisteredVerifiedScreen() {
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <BadgeCheck color={theme.gold} size={23} />
-          <Text style={styles.headerTitle}>Registered &amp; Verified</Text>
+          <Text role="heading" aria-level={1} style={styles.headerTitle}>Registered &amp; Verified</Text>
         </View>
         <View style={styles.headerSpacer} />
       </View>

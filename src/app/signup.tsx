@@ -118,7 +118,7 @@ export default function SignupScreen() {
             <Text style={styles.secureBadgeText}>Create Your Account</Text>
           </View>
 
-          <Text style={[styles.welcomeTitle, { color: theme.gold }]}>Join JeetoBaz</Text>
+          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Join JeetoBaz</Text>
           <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Start winning prizes today!</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>

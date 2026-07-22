@@ -100,9 +100,15 @@ export default function FavoritesScreen() {
         <title>My Favorites | JeetoBaz</title>
         <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       </Head>
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+          <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text role="heading" aria-level={1} style={styles.title}>{t('favorites')}</Text></View>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
+        </View>
+        <View style={[styles.center, { backgroundColor: theme.background }]}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
+        </View>
       </View>
       </>
     );
@@ -115,7 +121,13 @@ export default function FavoritesScreen() {
         <title>My Favorites | JeetoBaz</title>
         <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       </Head>
-      <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+          <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text role="heading" aria-level={1} style={styles.title}>{t('favorites')}</Text></View>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
+        </View>
+        <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />
+      </View>
       </>
     );
   }
@@ -128,7 +140,7 @@ export default function FavoritesScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text style={styles.title}>{t('favorites')}</Text></View>
+        <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text role="heading" aria-level={1} style={styles.title}>{t('favorites')}</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
       </View>
 

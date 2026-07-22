@@ -504,7 +504,7 @@ export default function AboutJeetoBazScreen() {
     return (
       <View style={[styles.detailHero, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
         {icon}
-        <Text selectable style={[styles.detailTitle, { color: theme.gold }]}>{title}</Text>
+        <Text role="heading" aria-level={1} selectable style={[styles.detailTitle, { color: theme.gold }]}>{title}</Text>
       </View>
     );
   }
@@ -578,7 +578,7 @@ export default function AboutJeetoBazScreen() {
           <>
             <View style={[styles.introCard, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
               <Trophy color={theme.gold} size={42} />
-              <Text selectable style={[styles.introTitle, { color: theme.gold }]}>Discover JeetoBaz</Text>
+              <Text role="heading" aria-level={1} selectable style={[styles.introTitle, { color: theme.gold }]}>Discover JeetoBaz</Text>
               <Text selectable style={[styles.introText, { color: theme.muted }]}>
                 Learn about our purpose, platform, trust standards, support and policies.
               </Text>

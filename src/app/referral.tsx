@@ -218,7 +218,7 @@ export default function ReferralScreen() {
           <ArrowLeft color={theme.primary} size={22} />
           <Text style={[styles.backText, { color: theme.primary }]}>Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.gold }]}>Refer & Earn</Text>
+        <Text role="heading" aria-level={1} style={[styles.headerTitle, { color: theme.gold }]}>Refer & Earn</Text>
         <View style={styles.headerSpacer} />
       </View>
 

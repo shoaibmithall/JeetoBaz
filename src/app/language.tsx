@@ -32,7 +32,7 @@ export default function LanguageScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.gold }]}>{t('language')}</Text>
+        <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>{t('language')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 

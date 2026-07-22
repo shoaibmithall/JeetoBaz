@@ -59,7 +59,7 @@ export default function PrivacyScreen() {
         <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.gold }]}>Privacy Policy</Text>
+        <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>Privacy Policy</Text>
         <View style={styles.headerSpacer} />
       </View>
 
