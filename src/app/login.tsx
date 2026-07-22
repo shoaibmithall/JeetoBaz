@@ -13,7 +13,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import {
   CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
-  Medal, Pencil, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy,
+  Medal, Pencil, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy, BadgeCheck,
   UserPlus, UsersRound,
 } from 'lucide-react-native';
 
@@ -466,6 +466,12 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/referral', params: { source: 'profile' } })}>
           <UserPlus color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Refer & Earn</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/registered-verified' as never)}>
+          <BadgeCheck color="#18a663" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>Registered &amp; Verified</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />

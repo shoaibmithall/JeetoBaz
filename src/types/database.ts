@@ -107,6 +107,18 @@ export type AppSetting = {
   updated_at: string;
 };
 
+export type VerificationDocument = {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  image_path: string;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -173,6 +185,12 @@ export type Database = {
         AppSetting,
         Pick<AppSetting, 'key' | 'value'>,
         Partial<Pick<AppSetting, 'value'>>
+      >;
+      verification_documents: Table<
+        VerificationDocument,
+        Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path'> &
+          Partial<Pick<VerificationDocument, 'is_visible' | 'sort_order'>>,
+        Partial<Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path' | 'is_visible' | 'sort_order'>>
       >;
       auth_migration_config: Table<AuthMigrationConfig>;
     };

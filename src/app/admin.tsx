@@ -9,9 +9,15 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
 import { getAnnouncement, getHomeAdImages, saveAnnouncement as saveAnnouncementSetting, saveHomeAdImages } from '@/lib/app-settings';
-import type { Entry, Product, ProductFormData, Transaction, User } from '@/types/database';
 import {
-  BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
+  createVerificationDocument,
+  deleteVerificationDocument,
+  getAllVerificationDocuments,
+  updateVerificationDocument,
+} from '@/lib/verification-documents';
+import type { Entry, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+import {
+  BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
   Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, X,
@@ -21,6 +27,7 @@ const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
+const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
 
 function confirmAsync(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') {
@@ -71,6 +78,14 @@ export default function AdminScreen() {
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([]);
+  const [verificationTitle, setVerificationTitle] = useState('');
+  const [verificationDescription, setVerificationDescription] = useState('');
+  const [verificationImageUrl, setVerificationImageUrl] = useState('');
+  const [verificationImagePath, setVerificationImagePath] = useState('');
+  const [verificationEditingId, setVerificationEditingId] = useState<string | null>(null);
+  const [verificationUploading, setVerificationUploading] = useState(false);
+  const [verificationSaving, setVerificationSaving] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -102,6 +117,7 @@ export default function AdminScreen() {
       fetchTransactions();
       loadAnnouncement();
       loadHomeAdImages();
+      loadVerificationDocuments();
     }
   }, [authenticated]);
 
@@ -501,6 +517,139 @@ export default function AdminScreen() {
     } finally {
       setHomeAdUploading(false);
     }
+  }
+
+  async function loadVerificationDocuments() {
+    const { data, error } = await getAllVerificationDocuments();
+    if (error) {
+      console.warn('Unable to load verification documents:', error.message);
+      return;
+    }
+    setVerificationDocuments(data || []);
+  }
+
+  function resetVerificationForm() {
+    setVerificationTitle('');
+    setVerificationDescription('');
+    setVerificationImageUrl('');
+    setVerificationImagePath('');
+    setVerificationEditingId(null);
+  }
+
+  function startVerificationEdit(document: VerificationDocument) {
+    setVerificationEditingId(document.id);
+    setVerificationTitle(document.title);
+    setVerificationDescription(document.description);
+    setVerificationImageUrl(document.image_url);
+    setVerificationImagePath(document.image_path);
+  }
+
+  async function uploadVerificationImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload a document image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.9,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      alert('Please select an image smaller than 5 MB.');
+      return;
+    }
+
+    setVerificationUploading(true);
+    try {
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `documents/${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(VERIFICATION_DOCUMENTS_BUCKET)
+        .upload(filePath, fileData, { contentType: mimeType, upsert: false });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(VERIFICATION_DOCUMENTS_BUCKET).getPublicUrl(filePath);
+      setVerificationImageUrl(data.publicUrl);
+      setVerificationImagePath(filePath);
+      alert('Document image uploaded. Save the document to publish it.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Document image upload failed.';
+      alert(message);
+    } finally {
+      setVerificationUploading(false);
+    }
+  }
+
+  async function saveVerificationDocument() {
+    const title = verificationTitle.trim();
+    const documentDescription = verificationDescription.trim();
+    if (!title || !documentDescription || !verificationImageUrl || !verificationImagePath) {
+      alert('Title, description and document image are required.');
+      return;
+    }
+
+    setVerificationSaving(true);
+    const wasEditing = Boolean(verificationEditingId);
+    const payload = {
+      title,
+      description: documentDescription,
+      image_url: verificationImageUrl,
+      image_path: verificationImagePath,
+    };
+    const { error } = verificationEditingId
+      ? await updateVerificationDocument(verificationEditingId, payload)
+      : await createVerificationDocument(payload);
+    setVerificationSaving(false);
+
+    if (error) {
+      alert('Document could not be saved. Error: ' + error.message);
+      return;
+    }
+
+    resetVerificationForm();
+    await loadVerificationDocuments();
+    alert(wasEditing ? 'Document updated.' : 'Document published.');
+  }
+
+  async function toggleVerificationVisibility(document: VerificationDocument) {
+    const { error } = await updateVerificationDocument(document.id, { is_visible: !document.is_visible });
+    if (error) {
+      alert('Document visibility could not be changed. Error: ' + error.message);
+      return;
+    }
+    await loadVerificationDocuments();
+  }
+
+  async function removeVerificationDocument(document: VerificationDocument) {
+    const confirmed = await confirmAsync('Delete document', `Delete “${document.title}”?`);
+    if (!confirmed) return;
+
+    const { error } = await deleteVerificationDocument(document.id);
+    if (error) {
+      alert('Document could not be deleted. Error: ' + error.message);
+      return;
+    }
+
+    if (document.image_path) {
+      const { error: storageError } = await supabase.storage
+        .from(VERIFICATION_DOCUMENTS_BUCKET)
+        .remove([document.image_path]);
+      if (storageError) console.warn('Document record deleted but image cleanup failed:', storageError.message);
+    }
+    if (verificationEditingId === document.id) resetVerificationForm();
+    await loadVerificationDocuments();
   }
 
   async function sendGlobalNotification() {
@@ -957,6 +1106,92 @@ export default function AdminScreen() {
 
             <View style={styles.divider} />
 
+            <View style={styles.settingLabelRow}><BadgeCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Registered &amp; Verified Documents</Text></View>
+            <Text style={styles.settingHint}>Upload and manage documents shown on the public Registered &amp; Verified page.</Text>
+            {verificationEditingId ? (
+              <View style={styles.editBanner}>
+                <Pencil color={theme.gold} size={15} />
+                <Text style={styles.editBannerText}>Editing document</Text>
+              </View>
+            ) : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Document title"
+              placeholderTextColor={theme.subtle}
+              value={verificationTitle}
+              onChangeText={setVerificationTitle}
+              maxLength={120}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Document description"
+              placeholderTextColor={theme.subtle}
+              value={verificationDescription}
+              onChangeText={setVerificationDescription}
+              multiline
+              numberOfLines={4}
+              maxLength={2000}
+            />
+            <TouchableOpacity
+              style={[styles.photoUploadButton, verificationUploading && styles.photoUploadDisabled]}
+              onPress={uploadVerificationImage}
+              disabled={verificationUploading}
+            >
+              {!verificationUploading && <Camera color={theme.info} size={18} />}
+              <Text style={styles.photoUploadText}>{verificationUploading ? 'Uploading...' : verificationImageUrl ? 'Replace Document Image' : 'Upload Document Image'}</Text>
+            </TouchableOpacity>
+            {verificationImageUrl ? <Image source={{ uri: verificationImageUrl }} style={styles.verificationPreviewImage} resizeMode="contain" /> : null}
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity
+                style={[styles.addButton, styles.settingsHalfButton, verificationSaving && styles.photoUploadDisabled]}
+                onPress={saveVerificationDocument}
+                disabled={verificationSaving}
+              >
+                {!verificationSaving && <Save color="white" size={18} />}
+                <Text style={styles.addButtonText}>{verificationSaving ? 'Saving...' : verificationEditingId ? 'Save Changes' : 'Publish Document'}</Text>
+              </TouchableOpacity>
+              {verificationEditingId ? (
+                <TouchableOpacity style={[styles.cancelButton, styles.settingsHalfButton]} onPress={resetVerificationForm}>
+                  <X color={theme.danger} size={17} />
+                  <Text style={styles.cancelButtonText}>Cancel Edit</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <View style={styles.verificationList}>
+              {verificationDocuments.length === 0 ? (
+                <Text style={styles.emptyText}>No verification documents added yet.</Text>
+              ) : verificationDocuments.map((document) => (
+                <View key={document.id} style={[styles.verificationAdminCard, !document.is_visible && styles.verificationAdminCardHidden]}>
+                  <Image source={{ uri: document.image_url }} style={styles.verificationAdminImage} resizeMode="contain" />
+                  <View style={styles.verificationAdminContent}>
+                    <View style={styles.productHeader}>
+                      <Text style={styles.productName}>{document.title}</Text>
+                      <View style={[styles.statusBadge, document.is_visible ? styles.activeBadge : styles.completedBadge]}>
+                        <Circle color={document.is_visible ? theme.primary : theme.gold} size={8} fill={document.is_visible ? theme.primary : theme.gold} />
+                        <Text style={styles.statusText}>{document.is_visible ? 'Visible' : 'Hidden'}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.verificationAdminDescription}>{document.description}</Text>
+                    <View style={styles.verificationActionRow}>
+                      <TouchableOpacity style={styles.editButton} onPress={() => startVerificationEdit(document)}>
+                        <Pencil color={theme.info} size={16} /><Text style={styles.editButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => toggleVerificationVisibility(document)}>
+                        {document.is_visible ? <EyeOff color={theme.gold} size={16} /> : <Eye color={theme.gold} size={16} />}
+                        <Text style={styles.visibilityButtonText}>{document.is_visible ? 'Hide' : 'Show'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeVerificationDocument(document)}>
+                        <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.divider} />
+
             <View style={styles.settingLabelRow}><Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Announcement Banner</Text></View>
             <Text style={styles.settingHint}>This message will appear near the top of the home page for all users.</Text>
             <TextInput
@@ -1101,6 +1336,18 @@ function createStyles(theme: AdminTheme) {
   settingsHalfButton: { flex: 1 },
   adPreviewRow: { marginBottom: 4 },
   adPreviewImage: { width: 150, height: 72, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: theme.border },
+  verificationPreviewImage: { width: '100%', height: 260, borderRadius: 10, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border, marginBottom: 12 },
+  verificationList: { marginTop: 14 },
+  verificationAdminCard: { backgroundColor: theme.surface, borderRadius: 12, borderWidth: 1, borderColor: theme.border, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 12 },
+  verificationAdminCardHidden: { opacity: 0.68 },
+  verificationAdminImage: { width: 120, height: 110, borderRadius: 8, backgroundColor: theme.surfaceAlt },
+  verificationAdminContent: { flex: 1 },
+  verificationAdminDescription: { color: theme.muted, fontSize: 13, lineHeight: 19, marginBottom: 10 },
+  verificationActionRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  visibilityButton: { flex: 1, minWidth: 90, backgroundColor: theme.goldSoft, padding: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.gold, flexDirection: 'row', gap: 5 },
+  visibilityButtonText: { color: theme.gold, fontWeight: 'bold', fontSize: 13 },
+  deleteWideButton: { flex: 1, minWidth: 90, backgroundColor: theme.dangerSoft, padding: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.danger, flexDirection: 'row', gap: 5 },
+  deleteWideButtonText: { color: theme.danger, fontWeight: 'bold', fontSize: 13 },
   saveButton: { backgroundColor: theme.gold },
   addButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   cancelButton: { backgroundColor: theme.dangerSoft, padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.danger, flexDirection: 'row', gap: 7 },
