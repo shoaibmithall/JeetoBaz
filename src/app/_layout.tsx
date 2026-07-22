@@ -31,6 +31,7 @@ export default function RootLayout() {
     <>
       <TawkToWidget />
       <Head>
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <style>{`
           html:not(.jeetobaz-theme-ready) #root { visibility: hidden; }
           html:not(.jeetobaz-theme-ready) body::before {
