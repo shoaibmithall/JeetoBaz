@@ -35,6 +35,7 @@ export default function RegisteredVerifiedScreen() {
     <>
     <Head>
       <title>Registered &amp; Verified | JeetoBaz</title>
+      <meta name="description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>

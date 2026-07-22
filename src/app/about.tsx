@@ -557,6 +557,7 @@ export default function AboutJeetoBazScreen() {
     <>
     <Head>
       <title>About Us | JeetoBaz</title>
+      <meta name="description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
     </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}

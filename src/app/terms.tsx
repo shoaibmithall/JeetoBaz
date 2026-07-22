@@ -13,6 +13,7 @@ export default function TermsScreen() {
     <>
     <Head>
       <title>Terms &amp; Conditions | JeetoBaz</title>
+      <meta name="description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

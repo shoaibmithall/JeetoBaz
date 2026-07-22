@@ -52,6 +52,7 @@ export default function PrivacyScreen() {
     <>
     <Head>
       <title>Privacy Policy | JeetoBaz</title>
+      <meta name="description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

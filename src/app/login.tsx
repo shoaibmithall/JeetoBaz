@@ -541,6 +541,7 @@ export default function ProfileScreen() {
     <>
     <Head>
       <title>Login | JeetoBaz</title>
+      <meta name="description" content="Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities." />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>

@@ -98,6 +98,7 @@ export default function FavoritesScreen() {
       <>
       <Head>
         <title>My Favorites | JeetoBaz</title>
+        <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
@@ -112,6 +113,7 @@ export default function FavoritesScreen() {
       <>
       <Head>
         <title>My Favorites | JeetoBaz</title>
+        <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       </Head>
       <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />
       </>
@@ -122,6 +124,7 @@ export default function FavoritesScreen() {
     <>
     <Head>
       <title>My Favorites | JeetoBaz</title>
+      <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

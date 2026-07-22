@@ -80,6 +80,7 @@ export default function WinnersScreen() {
     <>
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
+      <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
     </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
       <ActivityIndicator size="large" color={theme.primary} />
@@ -92,6 +93,7 @@ export default function WinnersScreen() {
     <>
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
+      <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
     </Head>
     <DataErrorState onRetry={fetchWinners} />
     </>
@@ -101,6 +103,7 @@ export default function WinnersScreen() {
     <>
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
+      <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

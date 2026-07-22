@@ -98,6 +98,7 @@ export default function SignupScreen() {
     <>
     <Head>
       <title>Sign Up | JeetoBaz</title>
+      <meta name="description" content="Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely." />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">

@@ -80,6 +80,7 @@ export default function HelpCenterScreen() {
     <>
     <Head>
       <title>Help Center | JeetoBaz</title>
+      <meta name="description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]} keyboardShouldPersistTaps="handled">
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

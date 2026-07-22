@@ -25,6 +25,7 @@ export default function LanguageScreen() {
     <>
     <Head>
       <title>Language | JeetoBaz</title>
+      <meta name="description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>

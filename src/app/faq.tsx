@@ -125,6 +125,7 @@ export default function FaqScreen() {
     <>
     <Head>
       <title>Frequently Asked Questions | JeetoBaz</title>
+      <meta name="description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}

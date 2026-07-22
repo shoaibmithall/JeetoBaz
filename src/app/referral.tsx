@@ -205,6 +205,7 @@ export default function ReferralScreen() {
     <>
     <Head>
       <title>Refer &amp; Earn | JeetoBaz</title>
+      <meta name="description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
     </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
