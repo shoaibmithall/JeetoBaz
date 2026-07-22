@@ -6,19 +6,21 @@ const TAWK_WIDGET_ID = '1jtt3u7ge';
 const SCRIPT_ID = 'tawkto-script';
 
 function positionTawkLauncher() {
-  const isMobile = window.innerWidth <= 768;
+  const isMobile =
+    window.matchMedia('(max-width: 768px)').matches ||
+    window.matchMedia('(pointer: coarse)').matches;
   const launcherBottom = isMobile ? 116 : 92;
 
   document.querySelectorAll<HTMLIFrameElement>('iframe').forEach((frame) => {
     const siblingFrames = frame.parentElement?.querySelectorAll(':scope > iframe').length ?? 0;
     if (siblingFrames < 3) return;
 
-    const minHeight = frame.style.minHeight;
+    const minHeight = Number.parseFloat(frame.style.minHeight);
     const zIndex = frame.style.zIndex;
     const desiredBottom =
-      minHeight === '60px' && zIndex === '1000003'
+      Number.isFinite(minHeight) && minHeight <= 100 && zIndex === '1000003'
         ? launcherBottom
-        : minHeight === '95px' && zIndex === '1000004'
+        : Number.isFinite(minHeight) && minHeight <= 120 && zIndex === '1000004'
           ? launcherBottom + 10
           : null;
 
