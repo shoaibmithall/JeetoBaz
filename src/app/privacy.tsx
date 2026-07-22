@@ -1,6 +1,7 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue } from '@/lib/storage';
 
@@ -48,6 +49,10 @@ export default function PrivacyScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Privacy Policy | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
@@ -117,6 +122,7 @@ export default function PrivacyScreen() {
         </Text>
       </View>
     </ScrollView>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
 import { getStoredValue } from '@/lib/storage';
 import { useLanguage } from '@/lib/i18n';
@@ -76,6 +77,10 @@ export default function HelpCenterScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Help Center | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]} keyboardShouldPersistTaps="handled">
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -138,6 +143,7 @@ export default function HelpCenterScreen() {
         <Text style={[styles.ticketNote, { color: theme.subtle }]}>{t('emailAppTicket')}</Text>
       </View>
     </ScrollView>
+    </>
   );
 }
 

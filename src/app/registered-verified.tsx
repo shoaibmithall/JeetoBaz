@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getPublicVerificationDocuments } from '@/lib/verification-documents';
@@ -31,6 +32,10 @@ export default function RegisteredVerifiedScreen() {
   }, [loadDocuments]));
 
   return (
+    <>
+    <Head>
+      <title>Registered &amp; Verified | JeetoBaz</title>
+    </Head>
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back to Profile">
@@ -71,6 +76,7 @@ export default function RegisteredVerifiedScreen() {
         ))}
       </ScrollView>
     </View>
+    </>
   );
 }
 

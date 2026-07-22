@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import {
   ArrowLeft,
@@ -201,6 +202,10 @@ export default function ReferralScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Refer &amp; Earn | JeetoBaz</title>
+    </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.scrollContent}
@@ -350,6 +355,7 @@ export default function ReferralScreen() {
         )}
       </View>
     </ScrollView>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { LANGUAGE_OPTIONS, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { Check } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -21,6 +22,10 @@ export default function LanguageScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Language | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -55,6 +60,7 @@ export default function LanguageScreen() {
         })}
       </View>
     </ScrollView>
+    </>
   );
 }
 

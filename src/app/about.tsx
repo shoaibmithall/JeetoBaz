@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import {
   AppWindow,
   Award,
@@ -553,6 +554,10 @@ export default function AboutJeetoBazScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>About Us | JeetoBaz</title>
+    </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.scrollContent}
@@ -601,6 +606,7 @@ export default function AboutJeetoBazScreen() {
         )}
       </View>
     </ScrollView>
+    </>
   );
 }
 

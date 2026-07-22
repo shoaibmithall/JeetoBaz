@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { ClipboardList, TriangleAlert } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 
@@ -9,6 +10,10 @@ export default function TermsScreen() {
   const { theme } = useAppTheme();
 
   return (
+    <>
+    <Head>
+      <title>Terms &amp; Conditions | JeetoBaz</title>
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <View style={styles.titleRow}><ClipboardList color={theme.gold} size={25} /><Text style={[styles.title, { color: theme.gold }]}>Terms & Conditions</Text></View>
@@ -128,6 +133,7 @@ export default function TermsScreen() {
         <Text style={[styles.backBtnText, { color: theme.muted }]}>← Go Back</Text>
       </TouchableOpacity>
     </ScrollView>
+    </>
   );
 }
 

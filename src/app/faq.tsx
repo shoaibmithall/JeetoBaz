@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import {
   ChevronDown,
   ChevronRight,
@@ -121,6 +122,10 @@ export default function FaqScreen() {
   }, [query]);
 
   return (
+    <>
+    <Head>
+      <title>Frequently Asked Questions | JeetoBaz</title>
+    </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
@@ -202,6 +207,7 @@ export default function FaqScreen() {
         </View>
       ) : null}
     </ScrollView>
+    </>
   );
 }
 

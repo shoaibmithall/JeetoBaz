@@ -1,6 +1,7 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { signUpWithEmail } from '@/lib/auth';
 import { validateEmail, validatePassword, validateName, validatePhone } from '@/lib/auth-validation';
 import { normalizePakistaniMobile } from '@/lib/validation';
@@ -94,6 +95,10 @@ export default function SignupScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Sign Up | JeetoBaz</title>
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
@@ -320,6 +325,7 @@ export default function SignupScreen() {
         </View>
       </ScrollView>
     </View>
+    </>
   );
 }
 
