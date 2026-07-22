@@ -207,6 +207,7 @@ export default function ReferralScreen() {
     <>
     <Head>
       <title>Refer &amp; Earn | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Refer &amp; Earn | JeetoBaz" />
@@ -214,6 +215,10 @@ export default function ReferralScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/referral" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Refer &amp; Earn | JeetoBaz" />
+      <meta name="twitter:description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/referral" />
       <script type="application/ld+json">{JSON.stringify(referralSchema)}</script>

@@ -27,6 +27,7 @@ export default function LanguageScreen() {
     <>
     <Head>
       <title>Language | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Language | JeetoBaz" />
@@ -34,6 +35,10 @@ export default function LanguageScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/language" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Language | JeetoBaz" />
+      <meta name="twitter:description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/language" />
       <script type="application/ld+json">{JSON.stringify(langSchema)}</script>

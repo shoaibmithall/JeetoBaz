@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAuth } from '@/providers/AuthProvider';
 import { createUserProfile } from '@/lib/auth';
 import { validatePhone, validateName } from '@/lib/auth-validation';
@@ -57,6 +58,12 @@ export default function ProfileSetupScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Complete Profile | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Complete your JeetoBaz profile setup to start participating in prize campaigns." />
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Text style={styles.logo}>JeetoBaz</Text>
@@ -110,6 +117,7 @@ export default function ProfileSetupScreen() {
         </TouchableOpacity>
       </ScrollView>
     </View>
+    </>
   );
 }
 

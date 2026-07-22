@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
 
 type PaymentResponseParams = {
@@ -54,6 +55,12 @@ export default function PaymentResponseScreen() {
   }, [params]);
 
   return (
+    <>
+    <Head>
+      <title>Payment Response | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz payment response received for prize campaign entry." />
+    </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
@@ -119,6 +126,7 @@ export default function PaymentResponseScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </>
   );
 }
 

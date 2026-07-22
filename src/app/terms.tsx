@@ -15,6 +15,7 @@ export default function TermsScreen() {
     <>
     <Head>
       <title>Terms &amp; Conditions | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Terms &amp; Conditions | JeetoBaz" />
@@ -22,6 +23,10 @@ export default function TermsScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/terms" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Terms &amp; Conditions | JeetoBaz" />
+      <meta name="twitter:description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/terms" />
       <script type="application/ld+json">{JSON.stringify(termsSchema)}</script>

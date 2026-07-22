@@ -559,6 +559,7 @@ export default function AboutJeetoBazScreen() {
     <>
     <Head>
       <title>About Us | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="About Us | JeetoBaz" />
@@ -566,6 +567,10 @@ export default function AboutJeetoBazScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/about" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="About Us | JeetoBaz" />
+      <meta name="twitter:description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/about" />
       <script type="application/ld+json">{JSON.stringify(aboutSchema)}</script>
@@ -589,7 +594,7 @@ export default function AboutJeetoBazScreen() {
           <>
             <View style={[styles.introCard, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
               <Trophy color={theme.gold} size={42} />
-              <Text role="heading" aria-level={1} selectable style={[styles.introTitle, { color: theme.gold }]}>Discover JeetoBaz</Text>
+              <Text role="heading" aria-level={2} selectable style={[styles.introTitle, { color: theme.gold }]}>Discover JeetoBaz</Text>
               <Text selectable style={[styles.introText, { color: theme.muted }]}>
                 Learn about our purpose, platform, trust standards, support and policies.
               </Text>

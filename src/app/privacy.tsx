@@ -54,6 +54,7 @@ export default function PrivacyScreen() {
     <>
     <Head>
       <title>Privacy Policy | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Privacy Policy | JeetoBaz" />
@@ -61,6 +62,10 @@ export default function PrivacyScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/privacy" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Privacy Policy | JeetoBaz" />
+      <meta name="twitter:description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/privacy" />
       <script type="application/ld+json">{JSON.stringify(privacySchema)}</script>

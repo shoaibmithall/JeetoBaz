@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -110,6 +111,12 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
+      <>
+      <Head>
+        <title>Forgot Password | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+        <meta name="description" content="Reset your JeetoBaz account password using email verification." />
+      </Head>
       <AuthRecoveryLayout
         showBack
         onBack={() => router.replace('/forgot-password')}
@@ -152,10 +159,17 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.rateLimitText}>{rateLimitError}</Text>
         ) : null}
       </AuthRecoveryLayout>
+      </>
     );
   }
 
   return (
+    <>
+    <Head>
+      <title>Forgot Password | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Reset your JeetoBaz account password using email verification." />
+    </Head>
     <AuthRecoveryLayout trustItems={trustItems}>
       <Badge icon={<LockKeyhole color={theme.primary} size={16} />} text="Password Recovery" />
 
@@ -197,6 +211,7 @@ export default function ForgotPasswordScreen() {
         <Text style={[styles.backLink, { color: theme.primary }]}>← Back to Login</Text>
       </TouchableOpacity>
     </AuthRecoveryLayout>
+    </>
   );
 }
 

@@ -132,6 +132,7 @@ export default function FaqScreen() {
     <>
     <Head>
       <title>Frequently Asked Questions | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Frequently Asked Questions | JeetoBaz" />
@@ -139,6 +140,10 @@ export default function FaqScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/faq" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Frequently Asked Questions | JeetoBaz" />
+      <meta name="twitter:description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/faq" />
       <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>

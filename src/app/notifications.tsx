@@ -1,6 +1,7 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -89,15 +90,28 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
+      <>
+      <Head>
+        <title>Notifications | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+        <meta name="description" content="View your JeetoBaz notifications for account updates, draw results, and platform announcements." />
+      </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator color={theme.primary} />
         <Text style={[styles.centerText, { color: theme.muted }]}>Loading notifications...</Text>
       </View>
+      </>
     );
   }
 
   if (!phone) {
     return (
+      <>
+      <Head>
+        <title>Notifications | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+        <meta name="description" content="View your JeetoBaz notifications for account updates, draw results, and platform announcements." />
+      </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <Bell color={theme.gold} size={42} />
         <Text style={[styles.title, { color: theme.text }]}>Notifications</Text>
@@ -106,10 +120,17 @@ export default function NotificationsScreen() {
           <Text style={styles.primaryButtonText}>Login</Text>
         </TouchableOpacity>
       </View>
+      </>
     );
   }
 
   return (
+    <>
+    <Head>
+      <title>Notifications | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View your JeetoBaz notifications for account updates, draw results, and platform announcements." />
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -160,6 +181,7 @@ export default function NotificationsScreen() {
         );
       })}
     </ScrollView>
+    </>
   );
 }
 

@@ -800,6 +800,7 @@ export default function HomeScreen() {
     <>
     <Head>
       <title>{HOME_TITLE}</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content={HOME_DESCRIPTION} />
       <link rel="canonical" href={HOME_URL} />
       <meta property="og:title" content={HOME_TITLE} />
@@ -808,7 +809,8 @@ export default function HomeScreen() {
       <meta property="og:site_name" content="JeetoBaz" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={HOME_OG_IMAGE} />
-      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content={HOME_TITLE} />
       <meta name="twitter:description" content={HOME_DESCRIPTION} />
       <meta name="twitter:image" content={HOME_TWITTER_IMAGE} />
@@ -991,30 +993,30 @@ export default function HomeScreen() {
       )}
 
       <View style={[styles.howItWorks, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={styles.sectionHeading}><Ticket color={colors.gold} size={20} /><Text style={[styles.howTitle, { color: colors.gold }]}>{t('howItWorks')}</Text></View>
+        <View style={styles.sectionHeading}><Ticket color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.howTitle, { color: colors.gold }]}>{t('howItWorks')}</Text></View>
         <View style={styles.steps}>
           <View style={styles.step}>
             <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>1</Text></View>
-            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('entryStepTitle')}</Text>
+            <Text role="heading" aria-level={3} style={[styles.stepTitle, { color: colors.gold }]}>{t('entryStepTitle')}</Text>
             <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('entryStepDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><ArrowRight color={colors.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
             <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>2</Text></View>
-            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('liveDrawTitle')}</Text>
+            <Text role="heading" aria-level={3} style={[styles.stepTitle, { color: colors.gold }]}>{t('liveDrawTitle')}</Text>
             <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('liveDrawDesc')}</Text>
           </View>
           <View style={styles.stepArrow}><ArrowRight color={colors.primary} size={isCompact ? 15 : 20} /></View>
           <View style={styles.step}>
             <View style={[styles.stepNumber, { borderColor: colors.gold }]}><Text style={[styles.stepNumberText, { color: colors.gold }]}>3</Text></View>
-            <Text style={[styles.stepTitle, { color: colors.gold }]}>{t('prizeTitle')}</Text>
+            <Text role="heading" aria-level={3} style={[styles.stepTitle, { color: colors.gold }]}>{t('prizeTitle')}</Text>
             <Text style={[styles.stepDesc, { color: colors.muted }]}>{t('prizeDesc')}</Text>
           </View>
         </View>
       </View>
 
       <View style={[styles.algorithmBox, { backgroundColor: colors.primarySoft, borderColor: colors.border }]}>
-        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={18} /><Text style={[styles.algoTitle, { color: colors.primary }]}>{t('winnerAlgorithm')}</Text></View>
+        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={18} /><Text role="heading" aria-level={2} style={[styles.algoTitle, { color: colors.primary }]}>{t('winnerAlgorithm')}</Text></View>
         <Text style={[styles.algoText, { color: colors.muted }]}>{t('winnerAlgorithmText')}</Text>
         <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
           <ShieldCheck color="white" size={15} /><Text style={styles.verifiedText}>{t('verifiedFairDraw')}</Text>
@@ -1026,7 +1028,7 @@ export default function HomeScreen() {
       <View style={styles.drawsLayout}>
         <View style={styles.drawsContent}>
           <View style={styles.resultsRow}>
-            <View style={[styles.iconText, { flex: 1 }]}><Flame color={colors.gold} size={21} /><Text style={[styles.sectionTitle, { color: colors.gold }]}>{t('activeDraws')}</Text></View>
+            <View style={[styles.iconText, { flex: 1 }]}><Flame color={colors.gold} size={21} /><Text role="heading" aria-level={2} style={[styles.sectionTitle, { color: colors.gold }]}>{t('activeDraws')}</Text></View>
             <View style={styles.resultsMeta}>
               <Text style={[styles.resultsText, { color: colors.muted }]}>{filteredProducts.length} {t('found')}</Text>
               <Text style={[styles.sortedBy, { color: colors.primary }]}>

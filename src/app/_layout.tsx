@@ -31,6 +31,8 @@ export default function RootLayout() {
     <>
       <TawkToWidget />
       <Head>
+        <link rel="dns-prefetch" href="https://jqjrfnhqqfymwfsdkwmv.supabase.co" />
+        <link rel="preconnect" href="https://jqjrfnhqqfymwfsdkwmv.supabase.co" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <style>{`
           html:not(.jeetobaz-theme-ready) #root { visibility: hidden; }

@@ -1,6 +1,7 @@
 import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
@@ -300,6 +301,12 @@ export default function PaymentScreen() {
   }
 
   if (step === 'success') return (
+    <>
+    <Head>
+      <title>Payment | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Submit your JeetoBaz prize campaign payment and upload payment receipt." />
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.successBox}>
         <PartyPopper color={theme.gold} size={80} />
@@ -311,9 +318,16 @@ export default function PaymentScreen() {
         <House color="white" size={18} /><Text style={styles.homeBtnText}>{t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 
   return (
+    <>
+    <Head>
+      <title>Payment | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Submit your JeetoBaz prize campaign payment and upload payment receipt." />
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -416,6 +430,7 @@ export default function PaymentScreen() {
         <Text style={[styles.noteText, { color: theme.muted }]}>• {t('oneEntry')}</Text>
       </View>
     </ScrollView>
+    </>
   );
 }
 

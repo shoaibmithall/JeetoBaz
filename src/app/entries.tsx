@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue } from '@/lib/storage';
@@ -121,15 +122,37 @@ export default function MyEntriesScreen() {
   }
 
   if (loading) return (
+    <>
+    <Head>
+      <title>My Entries | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
+    </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
       <ActivityIndicator size="large" color={theme.primary} />
       <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingEntries')}</Text>
     </View>
+    </>
   );
 
-  if (loadError) return <DataErrorState onRetry={() => fetchEntries(userPhone)} />;
+  if (loadError) return (
+    <>
+    <Head>
+      <title>My Entries | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
+    </Head>
+    <DataErrorState onRetry={() => fetchEntries(userPhone)} />
+    </>
+  );
 
   if (!userPhone) return (
+    <>
+    <Head>
+      <title>My Entries | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
+    </Head>
     <View style={[styles.notLoggedIn, { backgroundColor: theme.background }]}>
       <LockKeyhole color={theme.gold} size={60} />
       <Text style={[styles.notLoggedInText, { color: theme.text }]}>Please login to see your entries</Text>
@@ -137,9 +160,16 @@ export default function MyEntriesScreen() {
         <Text style={styles.loginBtnText}>{t('loginSignUp')}</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 
   return (
+    <>
+    <Head>
+      <title>My Entries | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
+    </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, isCompact && styles.headerCompact]}>
         <View style={styles.titleRow}><Target color="white" size={28} /><Text style={styles.title}>{t('myEntries')}</Text></View>
@@ -244,6 +274,7 @@ export default function MyEntriesScreen() {
         <Text style={styles.backBtnText}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
+    </>
   );
 }
 

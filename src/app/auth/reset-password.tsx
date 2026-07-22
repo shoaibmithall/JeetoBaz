@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
+import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
 
 export default function ResetPasswordCallbackScreen() {
@@ -74,20 +74,32 @@ export default function ResetPasswordCallbackScreen() {
 
   if (error) {
     return (
+      <>
+      <Head>
+        <title>Reset Password | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+      </Head>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.button} onPress={() => router.replace('/forgot-password')}>
           <Text style={styles.buttonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
+      </>
     );
   }
 
   return (
+    <>
+    <Head>
+      <title>Reset Password | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ActivityIndicator size="large" color="#FFD700" />
       <Text style={[styles.loadingText, { color: theme.muted }]}>Verifying reset link...</Text>
     </View>
+    </>
   );
 }
 

@@ -543,6 +543,7 @@ export default function ProfileScreen() {
     <>
     <Head>
       <title>Login | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Login | JeetoBaz" />
@@ -550,6 +551,10 @@ export default function ProfileScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/login" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Login | JeetoBaz" />
+      <meta name="twitter:description" content="Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/login" />
       <script type="application/ld+json">{JSON.stringify(loginSchema)}</script>

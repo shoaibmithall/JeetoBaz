@@ -100,6 +100,7 @@ export default function SignupScreen() {
     <>
     <Head>
       <title>Sign Up | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Sign Up | JeetoBaz" />
@@ -107,6 +108,10 @@ export default function SignupScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/signup" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Sign Up | JeetoBaz" />
+      <meta name="twitter:description" content="Create a JeetoBaz account to explore prize campaigns, manage entries, save favorites, receive updates, and access account features securely." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/signup" />
       <script type="application/ld+json">{JSON.stringify(signupSchema)}</script>

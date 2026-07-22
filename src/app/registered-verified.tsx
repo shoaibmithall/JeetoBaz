@@ -37,6 +37,7 @@ export default function RegisteredVerifiedScreen() {
     <>
     <Head>
       <title>Registered &amp; Verified | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Registered &amp; Verified | JeetoBaz" />
@@ -44,6 +45,10 @@ export default function RegisteredVerifiedScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/registered-verified" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Registered &amp; Verified | JeetoBaz" />
+      <meta name="twitter:description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/registered-verified" />
       <script type="application/ld+json">{JSON.stringify(regSchema)}</script>

@@ -100,6 +100,7 @@ export default function FavoritesScreen() {
       <>
       <Head>
       <title>My Favorites | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="My Favorites | JeetoBaz" />
@@ -107,6 +108,10 @@ export default function FavoritesScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="My Favorites | JeetoBaz" />
+      <meta name="twitter:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/favorites" />
       <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
@@ -137,6 +142,10 @@ export default function FavoritesScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="My Favorites | JeetoBaz" />
+      <meta name="twitter:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/favorites" />
       <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
@@ -163,6 +172,10 @@ export default function FavoritesScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="My Favorites | JeetoBaz" />
+      <meta name="twitter:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/favorites" />
       <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>

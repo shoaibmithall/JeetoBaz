@@ -1,6 +1,7 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
@@ -816,13 +817,26 @@ export default function AdminScreen() {
   }, [productSearch, products]);
 
   if (authLoading && !authenticated) return (
+    <>
+    <Head>
+      <title>Admin Panel | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz admin panel for managing products, payments, users, and platform settings." />
+    </Head>
     <View style={styles.loginContainer}>
       <LockKeyhole color={theme.gold} size={50} />
       <Text style={styles.loginSubtitle}>Checking secure session...</Text>
     </View>
+    </>
   );
 
   if (!authenticated) return (
+    <>
+    <Head>
+      <title>Admin Panel | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz admin panel for managing products, payments, users, and platform settings." />
+    </Head>
     <View style={styles.loginContainer}>
       <LockKeyhole color={theme.gold} size={50} />
       <Text style={styles.loginSubtitle}>Admin Panel</Text>
@@ -861,9 +875,16 @@ export default function AdminScreen() {
         {!authLoading && <Rocket color={theme.buttonText} size={19} />}<Text style={styles.loginBtnText}>{authLoading ? 'Signing in...' : 'Secure Login'}</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 
   return (
+    <>
+    <Head>
+      <title>Admin Panel | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz admin panel for managing products, payments, users, and platform settings." />
+    </Head>
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleRow}><Settings color={theme.gold} size={23} /><Text style={styles.title}>Admin Panel</Text></View>
@@ -1289,6 +1310,7 @@ export default function AdminScreen() {
 
       </ScrollView>
     </View>
+    </>
   );
 }
 

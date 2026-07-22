@@ -1,6 +1,7 @@
 import { ActivityIndicator, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/database';
@@ -69,13 +70,27 @@ export default function WinnerScreen() {
   }
 
   if (loading) return (
+    <>
+    <Head>
+      <title>Winner Result | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
+    </Head>
     <View style={styles.loading}>
       <ActivityIndicator size="large" color="#18a663" />
       <Text style={styles.loadingText}>{t('loadingWinners')}</Text>
     </View>
+    </>
   );
 
   return (
+    <>
+    <Head>
+      <title>Winner Result | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
+      <link rel="canonical" href="https://jeetobaz.pk/winner" />
+    </Head>
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Trophy color="#FFD700" size={80} />
@@ -132,6 +147,7 @@ export default function WinnerScreen() {
 
       <Text style={styles.footer}>JeetoBaz - {t('appTagline')}</Text>
     </ScrollView>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
@@ -139,12 +140,25 @@ export default function DrawScreen() {
   }
 
   if (authLoading) return (
+    <>
+    <Head>
+      <title>Live Draw | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz live draw session for prize campaigns." />
+    </Head>
     <View style={[styles.container, styles.center]}>
       <Text style={styles.readyTitle}>Verifying admin access...</Text>
     </View>
+    </>
   );
 
   if (!isAdmin) return (
+    <>
+    <Head>
+      <title>Live Draw | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz live draw session for prize campaigns." />
+    </Head>
     <View style={[styles.container, styles.center]}>
       <LockKeyhole color="#FFD700" size={80} />
       <Text style={styles.readyTitle}>Admin access required</Text>
@@ -152,9 +166,16 @@ export default function DrawScreen() {
         <Text style={styles.loadButtonText}>Go to Admin Login</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 
   return (
+    <>
+    <Head>
+      <title>Live Draw | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="JeetoBaz live draw session for prize campaigns." />
+    </Head>
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -252,6 +273,7 @@ export default function DrawScreen() {
         </ScrollView>
       )}
     </View>
+    </>
   );
 }
 

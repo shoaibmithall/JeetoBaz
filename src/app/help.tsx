@@ -82,6 +82,7 @@ export default function HelpCenterScreen() {
     <>
     <Head>
       <title>Help Center | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Help Center | JeetoBaz" />
@@ -89,6 +90,10 @@ export default function HelpCenterScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/help" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Help Center | JeetoBaz" />
+      <meta name="twitter:description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/help" />
       <script type="application/ld+json">{JSON.stringify(helpSchema)}</script>

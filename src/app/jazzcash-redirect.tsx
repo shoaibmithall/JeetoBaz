@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { ShieldCheck } from 'lucide-react-native';
 
 const JAZZCASH_CHECKOUT_URL =
@@ -66,6 +67,12 @@ export default function JazzCashRedirectScreen() {
   }, [params.name, params.phone, params.productId]);
 
   return (
+    <>
+    <Head>
+      <title>JazzCash Checkout | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Complete your secure JazzCash payment for JeetoBaz prize campaign entry." />
+    </Head>
     <View style={styles.screen}>
       <View style={styles.card}>
         <ShieldCheck color="#18a663" size={42} />
@@ -82,6 +89,7 @@ export default function JazzCashRedirectScreen() {
         )}
       </View>
     </View>
+    </>
   );
 }
 

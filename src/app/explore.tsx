@@ -82,6 +82,7 @@ export default function WinnersScreen() {
     <>
     <Head>
       <title>Explore Prize Campaigns | JeetoBaz</title>
+      <meta name="robots" content="index, follow" />
       <meta name="description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Explore Prize Campaigns | JeetoBaz" />
@@ -89,6 +90,10 @@ export default function WinnersScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/explore" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta name="twitter:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/explore" />
       <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>
@@ -117,6 +122,10 @@ export default function WinnersScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/explore" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta name="twitter:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/explore" />
       <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>
@@ -142,6 +151,10 @@ export default function WinnersScreen() {
       <meta property="og:url" content="https://jeetobaz.pk/explore" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@jeetobaz" />
+      <meta name="twitter:title" content="Explore Prize Campaigns | JeetoBaz" />
+      <meta name="twitter:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/explore" />
       <script type="application/ld+json">{JSON.stringify(exploreSchema)}</script>

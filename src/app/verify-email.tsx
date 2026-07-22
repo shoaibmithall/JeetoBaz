@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAuth } from '@/providers/AuthProvider';
 import { signOut } from '@/lib/auth';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -16,6 +17,12 @@ export default function VerifyEmailScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Verify Email | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Verify your JeetoBaz account email address to activate your account and access prize campaigns." />
+    </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleLogout} style={styles.backBtn}>
@@ -71,6 +78,7 @@ export default function VerifyEmailScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    </>
   );
 }
 

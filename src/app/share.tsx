@@ -1,5 +1,6 @@
 import { Alert, Linking, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -234,12 +235,19 @@ export default function ShareScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   return (
+    <>
+    <Head>
+      <title>Share JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Share JeetoBaz with friends and family via WhatsApp, Facebook, Instagram, Telegram, and more." />
+    </Head>
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <ShareModal visible onClose={() => router.push('/')} />
       <TouchableOpacity onPress={() => router.push('/')} style={styles.backHomeButton}>
         <Text style={styles.backHomeText}>← {t('backToHome')}</Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { AuthRecoveryLayout, Badge, PrimaryButton } from '@/components/auth-recovery-layout';
@@ -75,6 +76,12 @@ export default function ResetPasswordScreen() {
 
   if (success) {
     return (
+      <>
+      <Head>
+        <title>Reset Password | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+        <meta name="description" content="Set a new password for your JeetoBaz account." />
+      </Head>
       <View style={[styles.successContainer, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { borderBottomColor: theme.gold }]}>
           <View style={styles.logoRow}>
@@ -92,6 +99,7 @@ export default function ResetPasswordScreen() {
           </Text>
         </View>
       </View>
+      </>
     );
   }
 
@@ -103,6 +111,12 @@ export default function ResetPasswordScreen() {
   ];
 
   return (
+    <>
+    <Head>
+      <title>Reset Password | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Set a new password for your JeetoBaz account." />
+    </Head>
     <AuthRecoveryLayout
       trustItems={[
         { icon: <Shield color={theme.primary} size={14} />, text: 'Secure Update' },
@@ -199,6 +213,7 @@ export default function ResetPasswordScreen() {
         text="Update Password"
       />
     </AuthRecoveryLayout>
+    </>
   );
 }
 

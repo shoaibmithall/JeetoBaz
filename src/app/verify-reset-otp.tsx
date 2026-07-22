@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { AuthRecoveryLayout, Badge, PrimaryButton } from '@/components/auth-recovery-layout';
@@ -137,6 +138,12 @@ export default function VerifyResetOtpScreen() {
   }
 
   return (
+    <>
+    <Head>
+      <title>Verify OTP | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+      <meta name="description" content="Enter the verification code sent to your email to reset your JeetoBaz account password." />
+    </Head>
     <AuthRecoveryLayout
       trustItems={[
         { icon: <Shield color={theme.primary} size={14} />, text: 'Secure Verification' },
@@ -203,6 +210,7 @@ export default function VerifyResetOtpScreen() {
         )}
       </View>
     </AuthRecoveryLayout>
+    </>
   );
 }
 
