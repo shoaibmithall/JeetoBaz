@@ -115,6 +115,7 @@ export default function HelpCenterScreen() {
         <TextInput
           style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
           placeholder={t('issueSubject')}
+          accessibilityLabel={t('issueSubject')}
           placeholderTextColor={theme.subtle}
           value={subject}
           onChangeText={setSubject}
@@ -123,6 +124,7 @@ export default function HelpCenterScreen() {
         <TextInput
           style={[styles.input, styles.messageInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
           placeholder={t('describeIssue')}
+          accessibilityLabel={t('describeIssue')}
           placeholderTextColor={theme.subtle}
           value={message}
           onChangeText={setMessage}

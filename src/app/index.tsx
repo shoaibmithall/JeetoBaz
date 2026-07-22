@@ -10,6 +10,7 @@ import {
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
+import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -170,6 +171,7 @@ const HomeProductCard = memo(function HomeProductCard({
             ) : null}
             <ExpoImage
               source={{ uri: product.image_url || '' }}
+              accessibilityLabel={`${product.name} prize`}
               cachePolicy="disk"
               transition={160}
               contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
@@ -246,7 +248,12 @@ const HomeProductCard = memo(function HomeProductCard({
           <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{Math.round(progressPercent)}%</Text>
         </View>
 
-        <TouchableOpacity style={[styles.button, isCompactGrid && styles.buttonCompact]} onPress={() => onEnter(product)}>
+        <TouchableOpacity
+          style={[styles.button, isCompactGrid && styles.buttonCompact]}
+          onPress={() => onEnter(product)}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('enterFor')} Rs.${product.entry_fee || 1}: ${product.name}`}
+        >
           <Target color="#000" size={isCompactGrid ? 14 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
         </TouchableOpacity>
       </View>
@@ -746,6 +753,8 @@ export default function HomeScreen() {
   if (loadError) return <DataErrorState onRetry={fetchProducts} />;
 
   return (
+    <>
+    <HomeSkipLink />
     <ScrollView
       ref={scrollViewRef}
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -774,7 +783,9 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
+      <HomeMain>
       <HomeHeader unreadCount={unreadCount} />
+      <HomePageHeading />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
@@ -793,6 +804,7 @@ export default function HomeScreen() {
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
           <ExpoImage
             source={{ uri: activeAdImage }}
+            accessibilityLabel={`JeetoBaz featured offer ${activeAdIndex + 1} of ${homeAdImages.length}`}
             cachePolicy="disk"
             transition={180}
             contentFit="cover"
@@ -838,11 +850,13 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      <CategoryBrowser
-        selectedCategory={category}
-        onSelectCategory={setCategory}
-        colors={colors}
-      />
+      <HomeNavigation>
+        <CategoryBrowser
+          selectedCategory={category}
+          onSelectCategory={setCategory}
+          colors={colors}
+        />
+      </HomeNavigation>
 
       {cacheInfo ? (
         <View style={[styles.cacheBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
@@ -1028,7 +1042,9 @@ export default function HomeScreen() {
         <View style={styles.iconText}><LockKeyhole color="#666" size={14} /><Text style={styles.footerText}>{t('fairTransparent')}</Text></View>
         <Text style={styles.footerText}>{t('footerPakistan')}</Text>
       </View>
+      </HomeMain>
     </ScrollView>
+    </>
   );
 }
 
@@ -1081,7 +1097,7 @@ const styles = StyleSheet.create({
   clearBtn: { color: '#aaa', fontSize: 16, padding: 5 },
   filterBtn: { width: 46, height: 46, backgroundColor: '#071b13', borderRadius: 8, borderWidth: 1, borderColor: '#174a35', alignItems: 'center', justifyContent: 'center' },
   entryFilterButton: { minHeight: 46, borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  entryFilterText: { fontSize: 11, fontWeight: '800' },
+  entryFilterText: { fontSize: 12, fontWeight: '800' },
   filterBtnActive: { borderColor: '#FFD700', backgroundColor: '#2a2105' },
   filterBtnText: { fontSize: 18 },
   sortContainer: { backgroundColor: '#04140e', paddingHorizontal: 12, paddingBottom: 12 },
@@ -1098,7 +1114,7 @@ const styles = StyleSheet.create({
   stepNumber: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   stepNumberText: { fontSize: 15, fontWeight: 'bold' },
   stepTitle: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
-  stepDesc: { color: '#aaa', fontSize: 11, textAlign: 'center', lineHeight: 16 },
+  stepDesc: { color: '#aaa', fontSize: 12, textAlign: 'center', lineHeight: 17 },
   stepArrow: { paddingHorizontal: 5 },
   arrow: { color: '#18a663', fontSize: 20 },
   algorithmBox: { backgroundColor: '#082d1e', margin: 15, marginTop: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#18a663' },
@@ -1113,23 +1129,23 @@ const styles = StyleSheet.create({
   pricePanelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   pricePanelTitle: { fontSize: 12, fontWeight: '800' },
   pricePanelTitleCompact: { fontSize: 18 },
-  pricePanelHint: { fontSize: 9, lineHeight: 12, marginTop: 4, marginBottom: 10 },
-  pricePanelHintCompact: { fontSize: 11, lineHeight: 15, marginBottom: 12 },
+  pricePanelHint: { fontSize: 12, lineHeight: 16, marginTop: 4, marginBottom: 10 },
+  pricePanelHintCompact: { fontSize: 12, lineHeight: 16, marginBottom: 12 },
   allPriceButton: { minHeight: 38, borderRadius: 8, borderWidth: 1, paddingHorizontal: 5, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  allPriceText: { fontSize: 9, fontWeight: '800' },
+  allPriceText: { fontSize: 12, fontWeight: '800' },
   allPriceTextCompact: { fontSize: 13 },
-  priceCount: { fontSize: 8, fontWeight: '700' },
-  priceCountCompact: { fontSize: 11 },
+  priceCount: { fontSize: 12, fontWeight: '700' },
+  priceCountCompact: { fontSize: 12 },
   priceGroup: { marginTop: 15 },
-  priceGroupTitle: { fontSize: 8, fontWeight: '800', marginBottom: 7 },
-  priceGroupTitleCompact: { fontSize: 11, letterSpacing: 0.4, marginBottom: 8 },
+  priceGroupTitle: { fontSize: 12, fontWeight: '800', marginBottom: 7 },
+  priceGroupTitleCompact: { fontSize: 12, letterSpacing: 0.4, marginBottom: 8 },
   priceOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   priceOption: { width: '100%', minHeight: 34, borderRadius: 8, borderWidth: 1, paddingHorizontal: 5, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   priceOptionDisabled: { opacity: 0.36 },
-  priceOptionText: { fontSize: 9, fontWeight: '800' },
+  priceOptionText: { fontSize: 12, fontWeight: '800' },
   priceOptionTextCompact: { fontSize: 12 },
-  priceOptionCount: { fontSize: 8, fontWeight: '700' },
-  priceOptionCountCompact: { fontSize: 10 },
+  priceOptionCount: { fontSize: 12, fontWeight: '700' },
+  priceOptionCountCompact: { fontSize: 12 },
   clearPriceButton: { minHeight: 38, borderRadius: 9, borderWidth: 1, marginTop: 15, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
   clearPriceText: { fontSize: 12, fontWeight: '800' },
   horizontalPriceBar: { marginHorizontal: 15, borderWidth: 1, borderRadius: 13, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -1137,8 +1153,8 @@ const styles = StyleSheet.create({
   horizontalPriceTitle: { fontSize: 13, fontWeight: '800' },
   horizontalPriceOptions: { gap: 6, paddingRight: 2 },
   horizontalPriceOption: { minWidth: 68, minHeight: 36, borderRadius: 9, borderWidth: 1, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 7 },
-  horizontalPriceText: { fontSize: 11, fontWeight: '800' },
-  horizontalPriceCount: { fontSize: 9, fontWeight: '700' },
+  horizontalPriceText: { fontSize: 12, fontWeight: '800' },
+  horizontalPriceCount: { fontSize: 12, fontWeight: '700' },
   horizontalClearButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   drawsLayout: { width: '100%' },
   drawsLayoutDesktop: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 15, gap: 15 },
@@ -1148,7 +1164,7 @@ const styles = StyleSheet.create({
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
   resultsMeta: { alignItems: 'flex-end', marginLeft: 12 },
   resultsText: { color: '#aaa', fontSize: 12 },
-  sortedBy: { color: '#18a663', fontSize: 11, marginTop: 2 },
+  sortedBy: { color: '#18a663', fontSize: 12, marginTop: 2 },
   emptyBox: { alignItems: 'center', padding: 50 },
   emptyEmoji: { fontSize: 50, marginBottom: 15 },
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
@@ -1167,17 +1183,17 @@ const styles = StyleSheet.create({
   verifiedBanner: { backgroundColor: '#082d1e', padding: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   verifiedBannerCompact: { paddingHorizontal: 7, paddingVertical: 7, gap: 4 },
   verifiedBannerText: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
-  verifiedBannerTextCompact: { fontSize: 11, lineHeight: 14, maxWidth: 112 },
+  verifiedBannerTextCompact: { fontSize: 12, lineHeight: 16, maxWidth: 112 },
   liveBtn: { backgroundColor: '#2b0d0d', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', gap: 4, alignItems: 'center' },
   liveBtnCompact: { paddingHorizontal: 5, paddingVertical: 3, borderRadius: 6, gap: 2 },
   liveBtnText: { color: '#ff4444', fontSize: 12, fontWeight: 'bold' },
-  liveBtnTextCompact: { fontSize: 10, lineHeight: 13, maxWidth: 48 },
+  liveBtnTextCompact: { fontSize: 12, lineHeight: 16, maxWidth: 48 },
   productImage: { width: '100%', height: 200 },
   productImageMultiColumn: { height: 250 },
   productImageFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 7 },
   productImageSkeleton: { width: '54%', height: '46%' },
   productImageFallbackText: { fontSize: 12, fontWeight: '800' },
-  productImageFallbackTextCompact: { fontSize: 10.5 },
+  productImageFallbackTextCompact: { fontSize: 12 },
   cardBody: { padding: 15 },
   cardBodyCompact: { padding: 9 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
@@ -1186,17 +1202,17 @@ const styles = StyleSheet.create({
   productNameCompact: { fontSize: 14, lineHeight: 18, minHeight: 36 },
   heartBtn: { fontSize: 24, marginLeft: 10 },
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
-  descriptionCompact: { fontSize: 11, lineHeight: 15, marginBottom: 8 },
+  descriptionCompact: { fontSize: 12, lineHeight: 17, marginBottom: 8 },
   countdownBox: { backgroundColor: '#2a2105', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
   countdownBoxCompact: { borderRadius: 7, paddingHorizontal: 7, paddingVertical: 7, marginBottom: 7, flexDirection: 'column', alignItems: 'flex-start', gap: 2 },
   countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
-  countdownLabelCompact: { fontSize: 10.5, lineHeight: 14, marginRight: 0, flex: 0 },
+  countdownLabelCompact: { fontSize: 12, lineHeight: 16, marginRight: 0, flex: 0 },
   countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
   countdownTimeCompact: { fontSize: 12, lineHeight: 16, textAlign: 'left' },
   drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
-  drawScheduleNoteCompact: { fontSize: 9.5, lineHeight: 12, marginBottom: 5 },
+  drawScheduleNoteCompact: { fontSize: 12, lineHeight: 16, marginBottom: 5 },
   drawDate: { color: '#4a9eff', fontSize: 12 },
-  drawDateCompact: { fontSize: 10.5 },
+  drawDateCompact: { fontSize: 12 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   priceRowCompact: { flexDirection: 'column', alignItems: 'flex-start', gap: 4, marginBottom: 6 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
@@ -1204,9 +1220,9 @@ const styles = StyleSheet.create({
   entryBadge: { backgroundColor: '#082d1e', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   entryBadgeCompact: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 5, maxWidth: '100%' },
   entryFee: { fontSize: 13, color: '#18a663', fontWeight: 'bold' },
-  entryFeeCompact: { fontSize: 11 },
+  entryFeeCompact: { fontSize: 12 },
   participants: { fontSize: 13, color: '#aaa' },
-  participantsCompact: { fontSize: 10.5, lineHeight: 14, flexShrink: 1 },
+  participantsCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
   progressBar: { backgroundColor: '#174a35', height: 8, borderRadius: 4, marginBottom: 6 },
   progressBarCompact: { height: 5, borderRadius: 3, marginBottom: 4 },
   progress: { backgroundColor: '#18a663', height: 8, borderRadius: 4 },
@@ -1214,13 +1230,13 @@ const styles = StyleSheet.create({
   spotsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   spotsRowCompact: { marginBottom: 7, gap: 3 },
   spots: { color: '#ff6b6b', fontSize: 12 },
-  spotsCompact: { fontSize: 10.5, lineHeight: 14, flexShrink: 1 },
+  spotsCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
   percent: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
-  percentCompact: { fontSize: 11 },
+  percentCompact: { fontSize: 12 },
   button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonCompact: { minHeight: 38, paddingHorizontal: 7, paddingVertical: 9, borderRadius: 7, gap: 4 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  buttonTextCompact: { fontSize: 11.5, lineHeight: 15, flexShrink: 1 },
+  buttonTextCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
   footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 30 },
   footerText: { color: '#444', fontSize: 12, marginBottom: 5 },
 });

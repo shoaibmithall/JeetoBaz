@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   brandNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   brandLogo: { width: 30, height: 30, borderRadius: 8 },
   brandName: { fontSize: 22, fontWeight: '900', textAlign: 'center', letterSpacing: 0.4 },
-  tagline: { fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 2 },
+  tagline: { fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 2 },
   notificationBadge: {
     position: 'absolute',
     top: -3,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notificationBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  notificationBadgeText: { color: 'white', fontSize: 12, fontWeight: '900', fontVariant: ['tabular-nums'] },
   modalRoot: { flex: 1, justifyContent: 'flex-start' },
   backdrop: {
     ...StyleSheet.absoluteFill,
