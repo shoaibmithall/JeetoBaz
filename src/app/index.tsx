@@ -2,6 +2,7 @@ import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity
 import { Image as ExpoImage } from 'expo-image';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
@@ -48,6 +49,29 @@ const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
 const PULL_TO_REFRESH_THRESHOLD = 64;
+const HOME_URL = 'https://jeetobaz.pk/';
+const HOME_TITLE = 'JeetoBaz | Transparent Prize Campaigns in Pakistan';
+const HOME_DESCRIPTION = 'Explore JeetoBaz prize campaigns, review participation details, follow draw updates, and view verified winners in Pakistan.';
+const HOME_SOCIAL_IMAGE = 'https://jeetobaz.pk/icon-512.png';
+const ORGANIZATION_STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': 'https://jeetobaz.pk/#organization',
+  name: 'JeetoBaz',
+  url: HOME_URL,
+  logo: HOME_SOCIAL_IMAGE,
+};
+const WEBSITE_STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': 'https://jeetobaz.pk/#website',
+  name: 'JeetoBaz',
+  url: HOME_URL,
+  description: HOME_DESCRIPTION,
+  publisher: {
+    '@id': 'https://jeetobaz.pk/#organization',
+  },
+};
 const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] = [
   { key: 'popular', labels: { en: 'Most Popular', ur: 'سب سے مقبول', roman: 'Most Popular' } },
   { key: 'newest', labels: { en: 'Newest', ur: 'تازہ ترین', roman: 'Newest' } },
@@ -754,6 +778,23 @@ export default function HomeScreen() {
 
   return (
     <>
+    <Head>
+      <title>{HOME_TITLE}</title>
+      <meta name="description" content={HOME_DESCRIPTION} />
+      <link rel="canonical" href={HOME_URL} />
+      <meta property="og:title" content={HOME_TITLE} />
+      <meta property="og:description" content={HOME_DESCRIPTION} />
+      <meta property="og:url" content={HOME_URL} />
+      <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content={HOME_SOCIAL_IMAGE} />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={HOME_TITLE} />
+      <meta name="twitter:description" content={HOME_DESCRIPTION} />
+      <meta name="twitter:image" content={HOME_SOCIAL_IMAGE} />
+      <script type="application/ld+json">{JSON.stringify(ORGANIZATION_STRUCTURED_DATA)}</script>
+      <script type="application/ld+json">{JSON.stringify(WEBSITE_STRUCTURED_DATA)}</script>
+    </Head>
     <HomeSkipLink />
     <ScrollView
       ref={scrollViewRef}
