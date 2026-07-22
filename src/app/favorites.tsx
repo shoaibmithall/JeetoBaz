@@ -95,15 +95,27 @@ export default function FavoritesScreen() {
 
   if (loading || authLoading) {
     return (
+      <>
+      <Head>
+        <title>My Favorites | JeetoBaz</title>
+      </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
       </View>
+      </>
     );
   }
 
   if (loadError) {
-    return <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />;
+    return (
+      <>
+      <Head>
+        <title>My Favorites | JeetoBaz</title>
+      </Head>
+      <DataErrorState onRetry={() => setRetryKey((key) => key + 1)} />
+      </>
+    );
   }
 
   return (

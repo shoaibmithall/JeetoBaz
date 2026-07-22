@@ -77,13 +77,25 @@ export default function WinnersScreen() {
   }
 
   if (loading) return (
+    <>
+    <Head>
+      <title>Explore Prize Campaigns | JeetoBaz</title>
+    </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
       <ActivityIndicator size="large" color={theme.primary} />
       <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
     </View>
+    </>
   );
 
-  if (loadError) return <DataErrorState onRetry={fetchWinners} />;
+  if (loadError) return (
+    <>
+    <Head>
+      <title>Explore Prize Campaigns | JeetoBaz</title>
+    </Head>
+    <DataErrorState onRetry={fetchWinners} />
+    </>
+  );
 
   return (
     <>
