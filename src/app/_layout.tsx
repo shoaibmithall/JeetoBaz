@@ -35,6 +35,11 @@ export default function RootLayout() {
         <link rel="preconnect" href="https://jqjrfnhqqfymwfsdkwmv.supabase.co" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <style>{`
+          html,
+          body,
+          #root{
+            height:100%;
+          }
           #root, #root * { -webkit-user-select: text; user-select: text; }
         `}</style>
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
@@ -105,6 +110,10 @@ export default function RootLayout() {
         <Tabs.Screen name="profile-setup" options={{ href: null }} />
         <Tabs.Screen name="auth/callback" options={{ href: null }} />
         <Tabs.Screen name="auth/reset-password" options={{ href: null }} />
+        <Tabs.Screen
+          name="+not-found"
+          options={{ href: null }}
+        />
       </Tabs>
     </>
     </AuthProvider>
