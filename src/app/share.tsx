@@ -16,7 +16,9 @@ import {
 
 const APP_URL = 'https://jeetobaz.pk/';
 
-type ShareUrlType = 'message' | 'facebook' | 'messenger' | 'telegram' | 'x' | 'threads';
+type ShareUrlType = 'message' | 'facebook' | 'messenger' | 'telegram' | 'x' | 'threads' | 'instagram' | 'tiktok' | 'snapchat' | 'discord';
+
+const COPY_FIRST_TYPES: ShareUrlType[] = ['instagram', 'tiktok', 'snapchat', 'discord'];
 type SharePlatform = {
   name: string;
   icon: React.ReactNode;
@@ -97,13 +99,13 @@ const platforms: SharePlatform[] = [
   { name: 'WhatsApp Business', icon: <WABusinessIcon size={28} />, urlType: 'message' },
   { name: 'Facebook', icon: <FacebookIcon size={28} />, urlType: 'facebook' },
   { name: 'Messenger', icon: <MessengerIcon size={28} />, urlType: 'messenger' },
-  { name: 'Instagram', icon: <InstagramIcon size={28} /> },
+  { name: 'Instagram', icon: <InstagramIcon size={28} />, urlType: 'instagram' },
   { name: 'Threads', icon: <ThreadsIcon size={28} />, urlType: 'threads' },
   { name: 'X', icon: <XIcon size={28} />, urlType: 'x' },
   { name: 'Telegram', icon: <TelegramIcon size={28} />, urlType: 'telegram' },
-  { name: 'TikTok', icon: <TikTokIcon size={28} /> },
-  { name: 'Snapchat', icon: <SnapchatIcon size={28} /> },
-  { name: 'Discord', icon: <DiscordIcon size={28} /> },
+  { name: 'TikTok', icon: <TikTokIcon size={28} />, urlType: 'tiktok' },
+  { name: 'Snapchat', icon: <SnapchatIcon size={28} />, urlType: 'snapchat' },
+  { name: 'Discord', icon: <DiscordIcon size={28} />, urlType: 'discord' },
 ];
 
 type ShareModalProps = {
@@ -126,6 +128,10 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
     if (type === 'telegram') return `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(shareMessage)}`;
     if (type === 'x') return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(APP_URL)}`;
     if (type === 'threads') return `https://www.threads.net/intent/post?text=${encodeURIComponent(fullMessage)}`;
+    if (type === 'instagram') return `https://www.instagram.com/`;
+    if (type === 'tiktok') return `https://www.tiktok.com/`;
+    if (type === 'snapchat') return `https://www.snapchat.com/`;
+    if (type === 'discord') return `https://discord.com/channels/@me`;
     return null;
   }
 
@@ -144,6 +150,10 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
 
       // If platform has a direct URL, always use it (e.g. Facebook, WhatsApp, Telegram, X, etc.)
       if (platformUrl) {
+        // For platforms without pre-fill share URLs (Instagram, TikTok, etc.), copy message first
+        if (platform.urlType && COPY_FIRST_TYPES.includes(platform.urlType)) {
+          await Clipboard.setStringAsync(fullMessage);
+        }
         if (Platform.OS === 'web') {
           const win = window.open(platformUrl, '_blank');
           if (!win) {
