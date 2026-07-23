@@ -155,9 +155,15 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
           await Clipboard.setStringAsync(fullMessage);
         }
         if (Platform.OS === 'web') {
-          const win = window.open(platformUrl, '_blank');
-          if (!win) {
+          // Facebook sharer.php shows blank on mobile when opened via window.open
+          // Use direct navigation for Facebook on mobile for best results
+          if (platform.urlType === 'facebook' && typeof window !== 'undefined' && ('ontouchstart' in window || window.innerWidth < 768)) {
             window.location.href = platformUrl;
+          } else {
+            const win = window.open(platformUrl, '_blank');
+            if (!win) {
+              window.location.href = platformUrl;
+            }
           }
         } else {
           await Linking.openURL(platformUrl);
