@@ -18,7 +18,7 @@ import {
 } from '@/lib/verification-documents';
 import type { Entry, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
 import {
-  BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, Circle, ClipboardList,
+  BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
   Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, X,
@@ -68,6 +68,15 @@ export default function AdminScreen() {
   const [liveLink, setLiveLink] = useState('');
   const [winnerPhoto, setWinnerPhoto] = useState('');
   const [winnerPhotoUploading, setWinnerPhotoUploading] = useState(false);
+  const seoDefaults = {
+    seo_title: '',
+    meta_description: '',
+    meta_keywords: '',
+    slug: '',
+    indexable: true,
+  };
+  const [seoData, setSeoData] = useState({ ...seoDefaults });
+  const [seoExpanded, setSeoExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const editingIdRef = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -269,6 +278,13 @@ export default function AdminScreen() {
     setDrawDate(p.draw_date || '');
     setLiveLink(p.live_link || '');
     setWinnerPhoto(p.winner_photo || '');
+    setSeoData({
+      seo_title: p.seo_title ?? '',
+      meta_description: p.meta_description ?? '',
+      meta_keywords: p.meta_keywords ?? '',
+      slug: p.slug ?? '',
+      indexable: p.indexable ?? true,
+    });
     setActiveTab('products');
     if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') window.scrollTo(0, 0);
   }
@@ -280,6 +296,7 @@ export default function AdminScreen() {
     setMaxEntries(''); setImageUrl(''); setDescription(''); setDrawDate('');
     setLiveLink('');
     setWinnerPhoto('');
+    setSeoData({ ...seoDefaults });
   }
 
   async function uploadWinnerPhoto() {
@@ -356,6 +373,11 @@ export default function AdminScreen() {
       draw_date: drawDate || null,
       live_link: liveLink || null,
       winner_photo: winnerPhoto || null,
+      seo_title: seoData.seo_title || null,
+      meta_description: seoData.meta_description || null,
+      meta_keywords: seoData.meta_keywords || null,
+      slug: seoData.slug || null,
+      indexable: seoData.indexable,
     };
 
     if (currentEditId) {
@@ -937,6 +959,26 @@ export default function AdminScreen() {
                 <Image source={{ uri: winnerPhoto }} style={styles.winnerPhotoPreview} resizeMode="cover" />
               ) : null}
         <TextInput style={styles.input} placeholder="Draw Date after full (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
+
+              <TouchableOpacity style={styles.seoToggle} onPress={() => setSeoExpanded((prev) => !prev)}>
+                <ChevronDown size={18} color={theme.text} style={{ transform: [{ rotate: seoExpanded ? '0deg' : '-90deg' }] }} />
+                <Text style={styles.seoSectionTitle}>SEO & Search</Text>
+              </TouchableOpacity>
+              {seoExpanded && (
+                <>
+                  <TextInput style={styles.input} placeholder="SEO Title (leave empty to use product name)" placeholderTextColor="#666" value={seoData.seo_title} onChangeText={(v) => setSeoData((prev) => ({ ...prev, seo_title: v }))} />
+                  <TextInput style={[styles.input, styles.textArea]} placeholder="Meta Description" placeholderTextColor="#666" value={seoData.meta_description} onChangeText={(v) => setSeoData((prev) => ({ ...prev, meta_description: v }))} multiline numberOfLines={3} />
+                  <TextInput style={styles.input} placeholder="Meta Keywords (comma separated)" placeholderTextColor="#666" value={seoData.meta_keywords} onChangeText={(v) => setSeoData((prev) => ({ ...prev, meta_keywords: v }))} />
+                  <TextInput style={styles.input} placeholder="Slug (e.g. honda-70-draw)" placeholderTextColor="#666" value={seoData.slug} onChangeText={(v) => setSeoData((prev) => ({ ...prev, slug: v }))} />
+                  <TouchableOpacity style={styles.seoCheckRow} onPress={() => setSeoData((prev) => ({ ...prev, indexable: !prev.indexable }))}>
+                    <View style={[styles.seoCheckbox, seoData.indexable && styles.seoCheckboxActive]}>
+                      {seoData.indexable && <Check size={14} color="white" />}
+                    </View>
+                    <Text style={styles.seoCheckLabel}>Indexable (allow search engines to index this product)</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
               <TouchableOpacity style={[styles.addButton, editingId && styles.saveButton]} onPress={saveProduct} disabled={loading}>
                 {!loading && (editingId ? <Save color="white" size={18} /> : <Plus color="white" size={18} />)}
                 <Text style={styles.addButtonText}>{loading ? 'Saving...' : editingId ? 'Save Changes' : 'Add Product'}</Text>
@@ -1433,5 +1475,11 @@ function createStyles(theme: AdminTheme) {
   themeOptionTextSelected: { color: theme.buttonText },
   quickStats: { backgroundColor: theme.surface, borderRadius: 12, padding: 15, borderWidth: 1, borderColor: theme.border },
   quickStat: { color: theme.muted, fontSize: 14, marginBottom: 8 },
+  seoToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 4, marginBottom: 8, borderTopWidth: 1, borderTopColor: theme.border, marginTop: 4 },
+  seoSectionTitle: { color: theme.text, fontSize: 15, fontWeight: '600' },
+  seoCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 8, marginBottom: 8, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border },
+  seoCheckbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: theme.primary, alignItems: 'center', justifyContent: 'center' },
+  seoCheckboxActive: { backgroundColor: theme.primary },
+  seoCheckLabel: { color: theme.text, fontSize: 14, flex: 1 },
  });
 }

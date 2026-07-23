@@ -13,6 +13,11 @@ export type Product = {
   draw_date?: string | null;
   live_link?: string | null;
   winner_photo?: string | null;
+  seo_title?: string | null;
+  meta_description?: string | null;
+  meta_keywords?: string | null;
+  slug?: string | null;
+  indexable?: boolean;
 };
 
 export type Entry = {
@@ -129,6 +134,11 @@ export type ProductFormData = {
   draw_date: string | null;
   live_link: string | null;
   winner_photo: string | null;
+  seo_title: string | null;
+  meta_description: string | null;
+  meta_keywords: string | null;
+  slug: string | null;
+  indexable: boolean;
 };
 
 export type AuthMigrationConfig = {
