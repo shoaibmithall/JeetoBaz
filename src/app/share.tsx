@@ -121,7 +121,7 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
 
   function getPlatformUrl(type?: ShareUrlType) {
     if (type === 'message') return `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
-    if (type === 'facebook') return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}`;
+    if (type === 'facebook') return `https://www.facebook.com/sharer.php?u=${encodeURIComponent(APP_URL)}`;
     if (type === 'messenger') return `https://www.facebook.com/dialog/send?link=${encodeURIComponent(APP_URL)}&app_id=291494419107518`;
     if (type === 'telegram') return `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(shareMessage)}`;
     if (type === 'x') return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(APP_URL)}`;
@@ -141,13 +141,27 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
   async function handleShare(platform: SharePlatform) {
     try {
       const platformUrl = getPlatformUrl(platform.urlType);
+
+      // If platform has a direct URL, always use it (e.g. Facebook, WhatsApp, Telegram, X, etc.)
       if (platformUrl) {
-        await Linking.openURL(platformUrl);
+        if (Platform.OS === 'web') {
+          const win = window.open(platformUrl, '_blank');
+          if (!win) {
+            window.location.href = platformUrl;
+          }
+        } else {
+          await Linking.openURL(platformUrl);
+        }
         return;
       }
 
+      // Platforms without a direct URL (Instagram, TikTok, Snapchat, Discord)
       if (Platform.OS === 'web') {
-        await copyText(fullMessage, `Message copied. Paste it in ${platform.name}.`);
+        if (navigator.share) {
+          await navigator.share({ title: 'JeetoBaz', text: shareMessage + ' ' + APP_URL, url: APP_URL });
+        } else {
+          await copyText(fullMessage, `Message copied. Paste it in ${platform.name}.`);
+        }
         return;
       }
 

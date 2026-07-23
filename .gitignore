@@ -41,3 +41,13 @@ example
 # generated native folders
 /ios
 /android
+
+# backups and large artifacts
+.codex-backups/
+*.aab
+chrome-net-export-log.json
+screenshot-verified.png
+jeetobaz.pk.txt
+
+# supabase temp files
+supabase/.temp/
