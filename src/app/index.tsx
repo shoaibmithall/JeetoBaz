@@ -11,7 +11,7 @@ import {
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
-import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
+import { HomeMain, HomeNavigation, HomeSkipLink } from '@/components/home-semantics';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -849,7 +849,6 @@ export default function HomeScreen() {
 
       <HomeMain>
       <HomeHeader unreadCount={unreadCount} />
-      <HomePageHeading />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
