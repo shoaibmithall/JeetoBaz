@@ -35,19 +35,6 @@ export default function RootLayout() {
         <link rel="preconnect" href="https://jqjrfnhqqfymwfsdkwmv.supabase.co" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <style>{`
-          html:not(.jeetobaz-theme-ready) #root { visibility: hidden; }
-          html:not(.jeetobaz-theme-ready) body::before {
-            align-items: center;
-            background: #f4f7f5;
-            color: #b38a00;
-            content: 'Loading JeetoBaz...';
-            display: flex;
-            font: 800 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            inset: 0;
-            justify-content: center;
-            position: fixed;
-            z-index: 2147483647;
-          }
           #root, #root * { -webkit-user-select: text; user-select: text; }
         `}</style>
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
