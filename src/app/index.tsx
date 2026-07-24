@@ -12,6 +12,7 @@ import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { HomeMain, HomeNavigation, HomeSkipLink } from '@/components/home-semantics';
+import JeetoBazFooter from '@/components/jeetobaz-footer';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -1101,10 +1102,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.footer}>
-        <View style={styles.iconText}><LockKeyhole color="#666" size={14} /><Text style={styles.footerText}>{t('fairTransparent')}</Text></View>
-        <Text style={styles.footerText}>{t('footerPakistan')}</Text>
-      </View>
+      <JeetoBazFooter />
       </HomeMain>
     </ScrollView>
     </>
@@ -1300,6 +1298,5 @@ const styles = StyleSheet.create({
   buttonCompact: { minHeight: 38, paddingHorizontal: 7, paddingVertical: 9, borderRadius: 7, gap: 4 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   buttonTextCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
-  footer: { padding: 20, alignItems: 'center', marginTop: 10, marginBottom: 30 },
-  footerText: { color: '#444', fontSize: 12, marginBottom: 5 },
+
 });
