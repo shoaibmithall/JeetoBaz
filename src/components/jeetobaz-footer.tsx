@@ -22,7 +22,7 @@ type AccordionSection = {
 const QUICK_LINKS: FooterLink[] = [
   { label: 'All Draws', route: '/' },
   { label: 'How It Works', route: '/help' },
-  { label: 'Past Winners', route: '/winner' },
+  { label: 'Past Winners', route: '/explore' },
   { label: 'FAQs', route: '/faq' },
   { label: 'Contact Us', route: '/help' },
 ];
