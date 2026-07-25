@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { AuthRecoveryLayout, Badge, PrimaryButton } from '@/components/auth-recovery-layout';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { LockKeyhole, Mail, Send, Shield } from 'lucide-react-native';
 
 const STORAGE_KEY = 'otp_last_sent_at';
@@ -21,7 +22,10 @@ export default function ForgotPasswordScreen() {
   const [rateLimitError, setRateLimitError] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState('');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   useEffect(() => {
     const lastSent = localStorage.getItem(STORAGE_KEY);
@@ -48,14 +52,23 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
+    if (Platform.OS === 'web' && !turnstileToken) {
+      setTurnstileError('Please complete the verification.');
+      return;
+    }
+
     setLoading(true);
     setEmailError('');
     setRateLimitError('');
+    setTurnstileError('');
 
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      { redirectTo: 'https://jeetobaz.pk/reset-password' }
+      { redirectTo: 'https://jeetobaz.pk/reset-password', captchaToken: turnstileToken || undefined }
     );
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
 
     if (error) {
       const msg = error.message || '';
@@ -78,13 +91,23 @@ export default function ForgotPasswordScreen() {
 
   async function handleResendOTP() {
     if (countdown > 0 || resendCount >= MAX_RESENDS) return;
+
+    if (Platform.OS === 'web' && !turnstileToken) {
+      setTurnstileError('Please complete the verification.');
+      return;
+    }
+
     setLoading(true);
     setRateLimitError('');
+    setTurnstileError('');
 
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      { redirectTo: 'https://jeetobaz.pk/reset-password' }
+      { redirectTo: 'https://jeetobaz.pk/reset-password', captchaToken: turnstileToken || undefined }
     );
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
 
     if (error) {
       const msg = error.message || '';
@@ -136,6 +159,13 @@ export default function ForgotPasswordScreen() {
           icon={<LockKeyhole color={theme.buttonText} size={18} />}
           text="Enter OTP Code"
         />
+
+        <TurnstileWidget
+          ref={turnstileRef}
+          onVerify={(token) => { setTurnstileToken(token); setTurnstileError(''); }}
+          onExpire={() => setTurnstileToken('')}
+        />
+        {turnstileError ? <Text style={styles.errorText}>{turnstileError}</Text> : null}
 
         <View style={styles.resendRow}>
           {countdown > 0 ? (
@@ -195,6 +225,13 @@ export default function ForgotPasswordScreen() {
         />
       </View>
       {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+      <TurnstileWidget
+        ref={turnstileRef}
+        onVerify={(token) => { setTurnstileToken(token); setTurnstileError(''); }}
+        onExpire={() => setTurnstileToken('')}
+      />
+      {turnstileError ? <Text style={styles.errorText}>{turnstileError}</Text> : null}
 
       <PrimaryButton
         onPress={handleSendOTP}

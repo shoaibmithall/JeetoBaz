@@ -1,5 +1,5 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share } from 'react-native';
-import { useState, useEffect, useMemo } from 'react';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform } from 'react-native';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
@@ -12,6 +12,7 @@ import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storag
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
   CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
@@ -57,6 +58,9 @@ export default function ProfileScreen() {
   const [totalEntries, setTotalEntries] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -180,9 +184,18 @@ export default function ProfileScreen() {
       return;
     }
 
+    if (Platform.OS === 'web' && !turnstileToken) {
+      setTurnstileError('Please complete the verification.');
+      return;
+    }
+
     setLoading(true);
     setEmailError('');
-    const { error } = await signInWithEmail(email.trim().toLowerCase(), password);
+    setTurnstileError('');
+    const { error } = await signInWithEmail(email.trim().toLowerCase(), password, turnstileToken || undefined);
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
 
     if (error) {
       if (error.message.includes('Invalid login credentials')) {
@@ -622,6 +635,13 @@ export default function ProfileScreen() {
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
+
+          <TurnstileWidget
+            ref={turnstileRef}
+            onVerify={(token) => { setTurnstileToken(token); setTurnstileError(''); }}
+            onExpire={() => setTurnstileToken('')}
+          />
+          {turnstileError ? <Text style={styles.errorText}>{turnstileError}</Text> : null}
 
           <TouchableOpacity
             style={[styles.primaryButton, loading && styles.buttonDisabled]}

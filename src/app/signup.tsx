@@ -1,5 +1,5 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { signUpWithEmail } from '@/lib/auth';
@@ -7,6 +7,7 @@ import { validateEmail, validatePassword, validateName, validatePhone } from '@/
 import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
@@ -38,6 +39,8 @@ export default function SignupScreen() {
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const passwordStrength = getPasswordStrength(password);
   const isEmailValid = email.length > 0 && isValidEmailFormat(email);
@@ -66,6 +69,10 @@ export default function SignupScreen() {
       newErrors.age = 'You must accept Terms & Privacy Policy';
     }
 
+    if (Platform.OS === 'web' && !turnstileToken) {
+      newErrors.turnstile = 'Please complete the verification.';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -78,8 +85,11 @@ export default function SignupScreen() {
     const { error } = await signUpWithEmail(
       email.trim().toLowerCase(),
       password,
-      { data: { name: name.trim(), phone: normalizedPhoneFull } }
+      { data: { name: name.trim(), phone: normalizedPhoneFull }, captchaToken: turnstileToken }
     );
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
 
     if (error) {
       const msg = error.message || String(error) || 'Unknown error';
@@ -292,6 +302,13 @@ export default function SignupScreen() {
             </Text>
           </TouchableOpacity>
           {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
+
+          <TurnstileWidget
+            ref={turnstileRef}
+            onVerify={(token) => { setTurnstileToken(token); setErrors((e) => ({ ...e, turnstile: '' })); }}
+            onExpire={() => setTurnstileToken('')}
+          />
+          {errors.turnstile ? <Text style={styles.errorText}>{errors.turnstile}</Text> : null}
 
           <TouchableOpacity
             style={[styles.primaryButton, (loading || !ageAccepted) && styles.buttonDisabled]}
