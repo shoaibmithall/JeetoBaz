@@ -199,7 +199,8 @@ export default function SignupScreen() {
           </View>
           {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           {email.length > 0 && (
-            <Text style={[styles.fieldHint, { color: isEmailValid ? '#18a663' : '#ff4444' }]}>\n              {isEmailValid ? '✓ Valid email address' : '✕ Invalid email address'}
+            <Text style={[styles.fieldHint, { color: isEmailValid ? '#18a663' : '#ff4444' }]}>
+              {isEmailValid ? '✓ Valid email address' : '✕ Invalid email address'}
             </Text>
           )}
 
@@ -232,7 +233,8 @@ export default function SignupScreen() {
                   />
                 ))}
               </View>
-              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>\n                {passwordStrength.label}
+              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                {passwordStrength.label}
               </Text>
             </View>
           )}
@@ -263,21 +265,24 @@ export default function SignupScreen() {
               <Text style={[styles.reqDot, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>
                 {password.length >= 8 ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>\n                Minimum 8 characters
+              <Text style={[styles.reqText, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>
+                Minimum 8 characters
               </Text>
             </View>
             <View style={styles.reqRow}>
               <Text style={[styles.reqDot, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>
                 {/[A-Z]/.test(password) ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>\n                One uppercase letter
+              <Text style={[styles.reqText, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>
+                One uppercase letter
               </Text>
             </View>
             <View style={styles.reqRow}>
               <Text style={[styles.reqDot, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>
                 {/[0-9]/.test(password) ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>\n                One number
+              <Text style={[styles.reqText, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>
+                One number
               </Text>
             </View>
           </View>
@@ -289,7 +294,8 @@ export default function SignupScreen() {
             <View style={[styles.checkbox, ageAccepted && styles.checkboxChecked]}>
               {ageAccepted ? <Check color="white" size={12} strokeWidth={3} /> : null}
             </View>
-            <Text style={[styles.consentText, { color: theme.muted }]}>\n              I agree to the{' '}
+            <Text style={[styles.consentText, { color: theme.muted }]}>
+              I agree to the{' '}
               <Text style={styles.consentLink} onPress={() => router.push('/terms')}>Terms of Use</Text>
               {' '}and{' '}
               <Text style={styles.consentLink} onPress={() => router.push('/privacy')}>Privacy Policy</Text>
@@ -320,7 +326,8 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.replace('/login')}>
-            <Text style={[styles.switchText, { color: theme.muted }]}>\n              Already have an account?{' '}
+            <Text style={[styles.switchText, { color: theme.muted }]}>
+              Already have an account?{' '}
               <Text style={styles.switchHighlight}>Sign In</Text>
             </Text>
           </TouchableOpacity>

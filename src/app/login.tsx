@@ -671,7 +671,8 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push('/signup' as never)}>
-            <Text style={[styles.switchText, { color: theme.muted }]}>\n              New to JeetoBaz?{' '}
+            <Text style={[styles.switchText, { color: theme.muted }]}>
+              New to JeetoBaz?{' '}
               <Text style={styles.switchHighlight}>Create Account</Text>
             </Text>
           </TouchableOpacity>

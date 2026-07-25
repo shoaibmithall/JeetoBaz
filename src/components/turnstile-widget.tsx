@@ -7,6 +7,7 @@ export type TurnstileWidgetHandle = {
 type TurnstileWidgetProps = {
   onVerify: (token: string) => void;
   onExpire?: () => void;
+  onError?: (message: string) => void;
 };
 
 // Cloudflare Turnstile only ships a web widget. Native builds render nothing
