@@ -1,5 +1,5 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { signUpWithEmail } from '@/lib/auth';
@@ -7,6 +7,7 @@ import { validateEmail, validatePassword, validateName, validatePhone } from '@/
 import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
@@ -38,6 +39,8 @@ export default function SignupScreen() {
   const [ageAccepted, setAgeAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const passwordStrength = getPasswordStrength(password);
   const isEmailValid = email.length > 0 && isValidEmailFormat(email);
@@ -66,6 +69,10 @@ export default function SignupScreen() {
       newErrors.age = 'You must accept Terms & Privacy Policy';
     }
 
+    if (Platform.OS === 'web' && !turnstileToken) {
+      newErrors.turnstile = 'Please complete the verification.';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -78,8 +85,11 @@ export default function SignupScreen() {
     const { error } = await signUpWithEmail(
       email.trim().toLowerCase(),
       password,
-      { data: { name: name.trim(), phone: normalizedPhoneFull } }
+      { data: { name: name.trim(), phone: normalizedPhoneFull }, captchaToken: turnstileToken }
     );
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
 
     if (error) {
       const msg = error.message || String(error) || 'Unknown error';
@@ -189,8 +199,7 @@ export default function SignupScreen() {
           </View>
           {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
           {email.length > 0 && (
-            <Text style={[styles.fieldHint, { color: isEmailValid ? '#18a663' : '#ff4444' }]}>
-              {isEmailValid ? '✓ Valid email address' : '✕ Invalid email address'}
+            <Text style={[styles.fieldHint, { color: isEmailValid ? '#18a663' : '#ff4444' }]}>\n              {isEmailValid ? '✓ Valid email address' : '✕ Invalid email address'}
             </Text>
           )}
 
@@ -223,8 +232,7 @@ export default function SignupScreen() {
                   />
                 ))}
               </View>
-              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                {passwordStrength.label}
+              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>\n                {passwordStrength.label}
               </Text>
             </View>
           )}
@@ -255,24 +263,21 @@ export default function SignupScreen() {
               <Text style={[styles.reqDot, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>
                 {password.length >= 8 ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>
-                Minimum 8 characters
+              <Text style={[styles.reqText, { color: password.length >= 8 ? '#18a663' : '#5e7468' }]}>\n                Minimum 8 characters
               </Text>
             </View>
             <View style={styles.reqRow}>
               <Text style={[styles.reqDot, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>
                 {/[A-Z]/.test(password) ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>
-                One uppercase letter
+              <Text style={[styles.reqText, { color: /[A-Z]/.test(password) ? '#18a663' : '#5e7468' }]}>\n                One uppercase letter
               </Text>
             </View>
             <View style={styles.reqRow}>
               <Text style={[styles.reqDot, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>
                 {/[0-9]/.test(password) ? '✓' : '○'}
               </Text>
-              <Text style={[styles.reqText, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>
-                One number
+              <Text style={[styles.reqText, { color: /[0-9]/.test(password) ? '#18a663' : '#5e7468' }]}>\n                One number
               </Text>
             </View>
           </View>
@@ -284,14 +289,20 @@ export default function SignupScreen() {
             <View style={[styles.checkbox, ageAccepted && styles.checkboxChecked]}>
               {ageAccepted ? <Check color="white" size={12} strokeWidth={3} /> : null}
             </View>
-            <Text style={[styles.consentText, { color: theme.muted }]}>
-              I agree to the{' '}
+            <Text style={[styles.consentText, { color: theme.muted }]}>\n              I agree to the{' '}
               <Text style={styles.consentLink} onPress={() => router.push('/terms')}>Terms of Use</Text>
               {' '}and{' '}
               <Text style={styles.consentLink} onPress={() => router.push('/privacy')}>Privacy Policy</Text>
             </Text>
           </TouchableOpacity>
           {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
+
+          <TurnstileWidget
+            ref={turnstileRef}
+            onVerify={(token) => { setTurnstileToken(token); setErrors((e) => ({ ...e, turnstile: '' })); }}
+            onExpire={() => setTurnstileToken('')}
+          />
+          {errors.turnstile ? <Text style={styles.errorText}>{errors.turnstile}</Text> : null}
 
           <TouchableOpacity
             style={[styles.primaryButton, (loading || !ageAccepted) && styles.buttonDisabled]}
@@ -309,8 +320,7 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.replace('/login')}>
-            <Text style={[styles.switchText, { color: theme.muted }]}>
-              Already have an account?{' '}
+            <Text style={[styles.switchText, { color: theme.muted }]}>\n              Already have an account?{' '}
               <Text style={styles.switchHighlight}>Sign In</Text>
             </Text>
           </TouchableOpacity>
