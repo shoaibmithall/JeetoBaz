@@ -42,10 +42,11 @@ type TurnstileWidgetProps = {
   onVerify: (token: string) => void;
   onExpire?: () => void;
   onError?: (message: string) => void;
+  action?: string;
 };
 
 export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
-  function TurnstileWidget({ onVerify, onExpire, onError }, ref) {
+  function TurnstileWidget({ onVerify, onExpire, onError, action }, ref) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const widgetIdRef = useRef<string | null>(null);
     const onVerifyRef = useRef(onVerify);
@@ -93,6 +94,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           }
           widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: SITE_KEY,
+            ...(action ? { action } : {}),
             callback: (token: string) => {
               setErrorMessage('');
               onVerifyRef.current(token);
@@ -116,7 +118,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           widgetIdRef.current = null;
         }
       };
-    }, [retryCount]);
+    }, [action, retryCount]);
 
     if (errorMessage) {
       return (
