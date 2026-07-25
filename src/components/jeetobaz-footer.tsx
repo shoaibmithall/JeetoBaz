@@ -1,10 +1,33 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions, Linking } from 'react-native';
-import { useState, useMemo } from 'react';
-import { useRouter } from 'expo-router';
-import { ChevronDown, ChevronUp, ShieldCheck, LockKeyhole, Headphones, Heart, CheckCircle2, Award } from 'lucide-react-native';
-import { useAppTheme } from '@/hooks/use-theme';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
-  FacebookIcon, InstagramIcon, YouTubeIcon, TikTokIcon, XIcon, TelegramIcon, WhatsAppIcon,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Grid2X2,
+  Headphones,
+  Heart,
+  Link2,
+  LockKeyhole,
+  Scale,
+  ShieldCheck,
+  UsersRound,
+} from 'lucide-react-native';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  TikTokIcon,
+  WhatsAppIcon,
+  YouTubeIcon,
 } from '@/components/social-icons';
 
 type FooterLink = {
@@ -13,10 +36,32 @@ type FooterLink = {
   external?: string;
 };
 
-type AccordionSection = {
-  key: string;
+type FooterSection = {
+  key: 'quick' | 'help' | 'categories' | 'follow';
   title: string;
+  icon: ReactNode;
   items: FooterLink[];
+};
+
+type TrustItem = {
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
+};
+
+const COLORS = {
+  background: '#001b14',
+  backgroundDeep: '#001710',
+  panel: '#00261c',
+  panelSoft: '#073426',
+  border: '#305c46',
+  borderGold: 'rgba(201, 160, 0, 0.38)',
+  gold: '#ffd400',
+  brandGold: '#d8a900',
+  green: '#79df50',
+  text: '#ffffff',
+  muted: '#d0d9d4',
+  subtle: '#a8b8b0',
 };
 
 const QUICK_LINKS: FooterLink[] = [
@@ -45,506 +90,872 @@ const CATEGORY_ITEMS: FooterLink[] = [
   { label: 'And More' },
 ];
 
-const SOCIAL_LINKS: { icon: React.ReactNode; url: string; label: string }[] = [
-  { icon: <FacebookIcon size={22} />, url: 'https://facebook.com/', label: 'Facebook' },
-  { icon: <InstagramIcon size={22} />, url: 'https://instagram.com/', label: 'Instagram' },
-  { icon: <YouTubeIcon size={22} />, url: 'https://youtube.com/', label: 'YouTube' },
-  { icon: <TikTokIcon size={22} />, url: 'https://tiktok.com/', label: 'TikTok' },
-  { icon: <XIcon size={22} />, url: 'https://x.com/', label: 'X' },
-  { icon: <TelegramIcon size={22} />, url: 'https://t.me/', label: 'Telegram' },
-  { icon: <WhatsAppIcon size={22} />, url: 'https://wa.me/', label: 'WhatsApp' },
+const SOCIAL_LINKS: { icon: ReactNode; url: string; label: string }[] = [
+  { icon: <FacebookIcon size={38} />, url: 'https://facebook.com/', label: 'Facebook' },
+  { icon: <InstagramIcon size={38} />, url: 'https://instagram.com/', label: 'Instagram' },
+  { icon: <TikTokIcon size={38} />, url: 'https://tiktok.com/', label: 'TikTok' },
+  { icon: <YouTubeIcon size={38} />, url: 'https://youtube.com/', label: 'YouTube' },
+  { icon: <WhatsAppIcon size={38} />, url: 'https://wa.me/', label: 'WhatsApp' },
 ];
 
-const TRUST_ITEMS: { icon: React.ReactNode; label: string }[] = [
-  { icon: <ShieldCheck size={14} />, label: 'Secure Payments' },
-  { icon: <LockKeyhole size={14} />, label: 'Data Protection' },
-  { icon: <Headphones size={14} />, label: '24/7 Support' },
-  { icon: <Heart size={14} />, label: 'Made in Pakistan' },
-  { icon: <CheckCircle2 size={14} />, label: 'Fair & Transparent' },
-  { icon: <Award size={14} />, label: 'SSL Encrypted' },
+const TRUST_ITEMS: TrustItem[] = [
+  {
+    icon: <LockKeyhole color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    title: 'Secure Payments',
+    subtitle: '100% Secure & Safe',
+  },
+  {
+    icon: <ShieldCheck color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    title: 'Data Protection',
+    subtitle: 'Your data is protected',
+  },
+  {
+    icon: <Headphones color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    title: '24/7 Support',
+    subtitle: "We're here to help",
+  },
+  {
+    icon: <Text style={{ fontSize: 24, lineHeight: 28 }}>🇵🇰</Text>,
+    title: 'Made in Pakistan',
+    subtitle: 'Proudly built in Pakistan',
+  },
+  {
+    icon: <Scale color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    title: 'Fair & Transparent',
+    subtitle: 'Trust is our priority',
+  },
+  {
+    icon: <LockKeyhole color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    title: 'SSL Encrypted',
+    subtitle: 'Secure connections',
+  },
 ];
 
-const ACCORDION_SECTIONS: AccordionSection[] = [
-  { key: 'quick', title: 'Quick Links', items: QUICK_LINKS },
-  { key: 'help', title: 'Help & Support', items: HELP_LINKS },
-  { key: 'categories', title: 'Categories', items: CATEGORY_ITEMS },
-  { key: 'follow', title: 'Follow Us', items: [] },
+const MOBILE_SECTIONS: FooterSection[] = [
+  {
+    key: 'quick',
+    title: 'Quick Links',
+    icon: <Link2 color={COLORS.gold} size={18} />,
+    items: QUICK_LINKS,
+  },
+  {
+    key: 'help',
+    title: 'Help & Support',
+    icon: <Headphones color={COLORS.gold} size={18} />,
+    items: HELP_LINKS,
+  },
+  {
+    key: 'categories',
+    title: 'Categories',
+    icon: <Grid2X2 color={COLORS.gold} size={18} />,
+    items: CATEGORY_ITEMS,
+  },
+  {
+    key: 'follow',
+    title: 'Follow Us',
+    icon: <UsersRound color={COLORS.gold} size={18} />,
+    items: [],
+  },
 ];
 
-const PAYMENT_METHODS = ['Visa', 'Mastercard', 'JazzCash', 'EasyPaisa', 'NayaPay', 'SadaPay'];
+function FooterLinkItem({
+  link,
+  onPress,
+  showChevron = true,
+}: {
+  link: FooterLink;
+  onPress: (link: FooterLink) => void;
+  showChevron?: boolean;
+}) {
+  const isClickable = Boolean(link.route || link.external);
 
-function FooterLinkItem({ link, onPress }: { link: FooterLink; onPress: (link: FooterLink) => void }) {
-  const { theme } = useAppTheme();
-  const isClickable = !!link.route || !!link.external;
   return (
     <TouchableOpacity
-      onPress={() => onPress(link)}
+      accessibilityRole={isClickable ? 'link' : undefined}
+      activeOpacity={isClickable ? 0.65 : 1}
       disabled={!isClickable}
-      activeOpacity={isClickable ? 0.6 : 1}
+      onPress={() => onPress(link)}
       style={styles.linkItem}
     >
-      <Text
-        style={[
-          styles.linkItemText,
-          { color: isClickable ? theme.muted : theme.subtle },
-          !isClickable && styles.linkItemTextDisabled,
-        ]}
-      >
-        {link.label}
-      </Text>
+      <Text style={[styles.linkText, !isClickable && styles.disabledLink]}>{link.label}</Text>
+      {showChevron && isClickable ? (
+        <ChevronRight color={COLORS.green} size={15} strokeWidth={2.2} />
+      ) : null}
     </TouchableOpacity>
   );
 }
 
-function AccordionPanel({ section, onLinkPress, isOpen, onToggle }: {
-  section: AccordionSection;
+function LinkColumn({
+  title,
+  links,
+  onLinkPress,
+  bordered,
+}: {
+  title: string;
+  links: FooterLink[];
   onLinkPress: (link: FooterLink) => void;
-  isOpen: boolean;
-  onToggle: () => void;
+  bordered?: boolean;
 }) {
-  const { theme } = useAppTheme();
   return (
-    <View style={[styles.accordionSection, { borderColor: theme.border }]}>
-      <TouchableOpacity
-        style={styles.accordionHeader}
-        onPress={onToggle}
-        activeOpacity={0.6}
-      >
-        <Text style={[styles.accordionTitle, { color: theme.text }]}>{section.title}</Text>
-        {isOpen
-          ? <ChevronUp color={theme.gold} size={18} />
-          : <ChevronDown color={theme.subtle} size={18} />
-        }
-      </TouchableOpacity>
-      {isOpen && section.items.length > 0 && (
-        <View style={styles.accordionContent}>
-          {section.items.map((link, idx) => (
-            <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-          ))}
+    <View style={[styles.linkColumn, bordered && styles.columnDivider]}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.linkList}>
+        {links.map((link) => (
+          <FooterLinkItem key={link.label} link={link} onPress={onLinkPress} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function BrandBlock({ compact = false }: { compact?: boolean }) {
+  return (
+    <View style={[styles.brandBlock, compact && styles.brandBlockCompact]}>
+      {compact ? (
+        <View style={styles.mobileBrandLockup}>
+          <Image
+            accessibilityLabel="JeetoBaz logo"
+            contentFit="contain"
+            source={require('@/assets/images/icon.png')}
+            style={styles.mobileBrandLogo}
+          />
+          <Text style={styles.mobileBrandName}>
+            <Text style={styles.brandGold}>Jeeto</Text>
+            <Text style={styles.brandWhite}>Baz</Text>
+          </Text>
         </View>
+      ) : (
+        <Text style={styles.sectionTitle}>JeetoBaz</Text>
       )}
-      {isOpen && section.key === 'follow' && (
-        <View style={styles.socialRowMobile}>
-          {SOCIAL_LINKS.map((social, idx) => (
-            <TouchableOpacity
-              key={idx}
-              onPress={() => Linking.openURL(social.url)}
-              activeOpacity={0.6}
-              style={styles.socialIconBtn}
-            >
-              {social.icon}
-            </TouchableOpacity>
-          ))}
+
+      <Text style={[styles.brandDescription, compact && styles.brandDescriptionCompact]}>
+        Pakistan&apos;s most trusted{'\n'}transparent prize platform.
+      </Text>
+      <Text style={[styles.brandPromise, compact && styles.brandPromiseCompact]}>
+        <Text style={styles.brandGold}>Enter</Text>
+        <Text style={styles.brandWhite}> fair, win big!</Text>
+      </Text>
+
+      {!compact ? (
+        <View style={styles.brandLockup}>
+          <Image
+            accessibilityLabel="JeetoBaz logo"
+            contentFit="contain"
+            source={require('@/assets/images/icon.png')}
+            style={styles.brandLogo}
+          />
+          <Text style={styles.brandName}>
+            <Text style={styles.brandGold}>Jeeto</Text>
+            <Text style={styles.brandWhite}>Baz</Text>
+          </Text>
         </View>
-      )}
+      ) : null}
+    </View>
+  );
+}
+
+function SocialLinks({ showLabels }: { showLabels: boolean }) {
+  return (
+    <View style={styles.socialRow}>
+      {SOCIAL_LINKS.map((social) => (
+        <TouchableOpacity
+          accessibilityLabel={`Follow JeetoBaz on ${social.label}`}
+          accessibilityRole="link"
+          activeOpacity={0.7}
+          key={social.label}
+          onPress={() => Linking.openURL(social.url)}
+          style={styles.socialItem}
+        >
+          {social.icon}
+          {showLabels ? <Text style={styles.socialLabel}>{social.label}</Text> : null}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+function PaymentLogo({
+  brand,
+}: {
+  brand: 'JazzCash' | 'easypaisa' | 'VISA' | 'mastercard' | 'UnionPay';
+}) {
+  if (brand === 'JazzCash') {
+    return (
+      <View style={[styles.paymentLogo, styles.jazzCashLogo]}>
+        <Text style={styles.jazzCashText}>JazzCash</Text>
+      </View>
+    );
+  }
+
+  if (brand === 'easypaisa') {
+    return (
+      <View style={styles.paymentLogo}>
+        <Text style={styles.easypaisaText}>easypaisa</Text>
+      </View>
+    );
+  }
+
+  if (brand === 'VISA') {
+    return (
+      <View style={styles.paymentLogo}>
+        <Text style={styles.visaText}>VISA</Text>
+      </View>
+    );
+  }
+
+  if (brand === 'mastercard') {
+    return (
+      <View style={styles.paymentLogo}>
+        <View style={styles.mastercardMark}>
+          <View style={[styles.mastercardCircle, styles.mastercardRed]} />
+          <View style={[styles.mastercardCircle, styles.mastercardOrange]} />
+        </View>
+        <Text style={styles.mastercardText}>mastercard</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.paymentLogo}>
+      <View style={styles.unionPayMark}>
+        <View style={styles.unionPayRed} />
+        <View style={styles.unionPayBlue} />
+        <Text style={styles.unionPayText}>UnionPay</Text>
+      </View>
+    </View>
+  );
+}
+
+function PaymentMethods() {
+  return (
+    <View style={styles.paymentRow}>
+      <PaymentLogo brand="JazzCash" />
+      <PaymentLogo brand="easypaisa" />
+      <PaymentLogo brand="VISA" />
+      <PaymentLogo brand="mastercard" />
+      <PaymentLogo brand="UnionPay" />
+    </View>
+  );
+}
+
+function FollowAndPayments({ desktop }: { desktop: boolean }) {
+  return (
+    <View style={[styles.followPayments, desktop && styles.columnDivider]}>
+      <Text style={styles.sectionTitle}>Follow Us</Text>
+      <SocialLinks showLabels={desktop} />
+      <Text style={[styles.sectionTitle, styles.acceptTitle]}>We Accept</Text>
+      <PaymentMethods />
     </View>
   );
 }
 
 function DesktopFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void }) {
-  const { theme } = useAppTheme();
   return (
-    <View style={styles.desktopGrid}>
-      <View style={styles.footerColumn}>
-        <JeetoBazBranding />
-        <View style={styles.socialRowDesktop}>
-          {SOCIAL_LINKS.map((social, idx) => (
-            <TouchableOpacity
-              key={idx}
-              onPress={() => Linking.openURL(social.url)}
-              activeOpacity={0.6}
-              style={styles.socialIconBtn}
-            >
-              {social.icon}
-            </TouchableOpacity>
-          ))}
-        </View>
+    <View style={styles.desktopTop}>
+      <View style={styles.desktopBrandColumn}>
+        <BrandBlock />
       </View>
-      <View style={styles.footerColumn}>
-        <Text style={[styles.columnTitle, { color: theme.gold }]}>Quick Links</Text>
-        {QUICK_LINKS.map((link, idx) => (
-          <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-        ))}
-      </View>
-      <View style={styles.footerColumn}>
-        <Text style={[styles.columnTitle, { color: theme.gold }]}>Help & Support</Text>
-        {HELP_LINKS.map((link, idx) => (
-          <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-        ))}
-      </View>
-      <View style={styles.footerColumn}>
-        <Text style={[styles.columnTitle, { color: theme.gold }]}>Categories</Text>
-        {CATEGORY_ITEMS.map((link, idx) => (
-          <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-        ))}
-      </View>
-      <View style={styles.footerColumn}>
-        <Text style={[styles.columnTitle, { color: theme.gold }]}>Follow Us</Text>
-        <View style={styles.socialRowDesktop}>
-          {SOCIAL_LINKS.map((social, idx) => (
-            <TouchableOpacity
-              key={idx}
-              onPress={() => Linking.openURL(social.url)}
-              activeOpacity={0.6}
-              style={styles.socialIconBtn}
-            >
-              {social.icon}
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={{ height: 20 }} />
-        <Text style={[styles.columnTitle, { color: theme.gold }]}>We Accept</Text>
-        <View style={styles.paymentRow}>
-          {PAYMENT_METHODS.map((method, idx) => (
-            <View key={idx} style={[styles.paymentBadge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.paymentBadgeText, { color: theme.muted }]}>{method}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      <LinkColumn bordered title="Quick Links" links={QUICK_LINKS} onLinkPress={onLinkPress} />
+      <LinkColumn bordered title="Help & Support" links={HELP_LINKS} onLinkPress={onLinkPress} />
+      <LinkColumn bordered title="Categories" links={CATEGORY_ITEMS} onLinkPress={onLinkPress} />
+      <FollowAndPayments desktop />
     </View>
   );
 }
 
 function TabletFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void }) {
-  const { theme } = useAppTheme();
   return (
-    <View>
-      <View style={styles.tabletBrandRow}>
-        <JeetoBazBranding />
+    <>
+      <View style={styles.tabletTop}>
+        <View style={styles.tabletBrandColumn}>
+          <BrandBlock />
+        </View>
+        <LinkColumn bordered title="Quick Links" links={QUICK_LINKS} onLinkPress={onLinkPress} />
+        <LinkColumn bordered title="Help & Support" links={HELP_LINKS} onLinkPress={onLinkPress} />
+        <LinkColumn bordered title="Categories" links={CATEGORY_ITEMS} onLinkPress={onLinkPress} />
       </View>
-      <View style={styles.tabletColumnsRow}>
-        <View style={styles.tabletColumn}>
-          <Text style={[styles.columnTitle, { color: theme.gold }]}>Quick Links</Text>
-          {QUICK_LINKS.map((link, idx) => (
-            <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-          ))}
+      <View style={styles.tabletFollowRow}>
+        <View style={styles.tabletFollowBlock}>
+          <Text style={styles.sectionTitle}>Follow Us</Text>
+          <SocialLinks showLabels />
         </View>
-        <View style={styles.tabletColumn}>
-          <Text style={[styles.columnTitle, { color: theme.gold }]}>Help & Support</Text>
-          {HELP_LINKS.map((link, idx) => (
-            <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-          ))}
-        </View>
-        <View style={styles.tabletColumn}>
-          <Text style={[styles.columnTitle, { color: theme.gold }]}>Categories</Text>
-          {CATEGORY_ITEMS.map((link, idx) => (
-            <FooterLinkItem key={idx} link={link} onPress={onLinkPress} />
-          ))}
+        <View style={styles.tabletPaymentBlock}>
+          <Text style={styles.sectionTitle}>We Accept</Text>
+          <PaymentMethods />
         </View>
       </View>
-      <View style={styles.tabletSocialRow}>
-        <View style={styles.socialRowDesktop}>
-          {SOCIAL_LINKS.map((social, idx) => (
-            <TouchableOpacity
-              key={idx}
-              onPress={() => Linking.openURL(social.url)}
-              activeOpacity={0.6}
-              style={styles.socialIconBtn}
-            >
-              {social.icon}
-            </TouchableOpacity>
-          ))}
+    </>
+  );
+}
+
+function MobileAccordion({
+  section,
+  isOpen,
+  onLinkPress,
+  onToggle,
+}: {
+  section: FooterSection;
+  isOpen: boolean;
+  onLinkPress: (link: FooterLink) => void;
+  onToggle: () => void;
+}) {
+  return (
+    <View style={styles.mobileAccordion}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isOpen }}
+        activeOpacity={0.7}
+        onPress={onToggle}
+        style={styles.mobileAccordionHeader}
+      >
+        <View style={styles.mobileAccordionTitleRow}>
+          {section.icon}
+          <Text style={styles.mobileAccordionTitle}>{section.title}</Text>
         </View>
-      </View>
-      <View style={styles.tabletPaymentRow}>
-        <Text style={[styles.paymentLabel, { color: theme.gold }]}>We Accept</Text>
-        <View style={styles.paymentRow}>
-          {PAYMENT_METHODS.map((method, idx) => (
-            <View key={idx} style={[styles.paymentBadge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.paymentBadgeText, { color: theme.muted }]}>{method}</Text>
-            </View>
-          ))}
+        {isOpen ? (
+          <ChevronUp color={COLORS.gold} size={18} />
+        ) : (
+          <ChevronDown color={COLORS.gold} size={18} />
+        )}
+      </TouchableOpacity>
+
+      {isOpen ? (
+        <View style={styles.mobileAccordionContent}>
+          {section.key === 'follow' ? (
+            <SocialLinks showLabels={false} />
+          ) : (
+            section.items.map((link) => (
+              <FooterLinkItem
+                key={link.label}
+                link={link}
+                onPress={onLinkPress}
+                showChevron={false}
+              />
+            ))
+          )}
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }
 
 function MobileFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void }) {
-  const { theme } = useAppTheme();
-  const [openSection, setOpenSection] = useState<string | null>(null);
-
-  const toggleSection = (key: string) => {
-    setOpenSection((prev) => (prev === key ? null : key));
-  };
+  const [openSection, setOpenSection] = useState<FooterSection['key'] | null>(null);
 
   return (
-    <View>
-      <View style={styles.mobileBrandRow}>
-        <JeetoBazBranding />
-      </View>
-      {ACCORDION_SECTIONS.map((section) => (
-        <AccordionPanel
-          key={section.key}
-          section={section}
-          onLinkPress={onLinkPress}
-          isOpen={openSection === section.key}
-          onToggle={() => toggleSection(section.key)}
-        />
-      ))}
-      <View style={[styles.mobilePaymentSection, { borderColor: theme.border }]}>
-        <Text style={[styles.paymentLabel, { color: theme.gold, textAlign: 'center', marginBottom: 10 }]}>We Accept</Text>
-        <View style={styles.paymentRow}>
-          {PAYMENT_METHODS.map((method, idx) => (
-            <View key={idx} style={[styles.paymentBadge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.paymentBadgeText, { color: theme.muted }]}>{method}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function TrustStrip() {
-  const { theme } = useAppTheme();
-  return (
-    <View style={[styles.trustStrip, { borderColor: theme.border }]}>
-      <View style={styles.trustGrid}>
-        {TRUST_ITEMS.map((item, idx) => (
-          <View key={idx} style={styles.trustItem}>
-            <View>{item.icon}</View>
-            <Text style={[styles.trustItemLabel, { color: theme.muted }]}>{item.label}</Text>
-          </View>
+    <View style={styles.mobileTop}>
+      <BrandBlock compact />
+      <View style={styles.mobileAccordionList}>
+        {MOBILE_SECTIONS.map((section) => (
+          <MobileAccordion
+            isOpen={openSection === section.key}
+            key={section.key}
+            onLinkPress={onLinkPress}
+            onToggle={() => {
+              setOpenSection((current) => (current === section.key ? null : section.key));
+            }}
+            section={section}
+          />
         ))}
       </View>
+      <View style={styles.mobilePaymentBlock}>
+        <Text style={styles.sectionTitle}>We Accept</Text>
+        <PaymentMethods />
+      </View>
     </View>
   );
 }
 
-function JeetoBazBranding() {
-  const { theme } = useAppTheme();
+function TrustStrip({ mobile, tablet }: { mobile: boolean; tablet: boolean }) {
   return (
-    <View style={styles.brandingContainer}>
-      <Image
-        source={require('@/assets/images/icon.png')}
-        style={styles.footerLogo}
-        resizeMode="contain"
-      />
-      <Text style={[styles.brandName, { color: theme.gold }]}>JeetoBaz</Text>
-      <Text style={[styles.brandTagline, { color: theme.muted }]}>
-        Pakistan&apos;s most trusted transparent prize platform. Enter fair, win big!
-      </Text>
+    <View style={[styles.trustStrip, mobile && styles.trustStripMobile]}>
+      {TRUST_ITEMS.map((item, index) => (
+        <View
+          key={item.title}
+          style={[
+            styles.trustItem,
+            tablet && styles.trustItemTablet,
+            mobile && styles.trustItemMobile,
+            !mobile && !tablet && index > 0 && styles.trustDivider,
+          ]}
+        >
+          <View style={[styles.trustIconCircle, mobile && styles.trustIconCircleMobile]}>
+            {item.icon}
+          </View>
+          <View style={styles.trustCopy}>
+            <Text style={[styles.trustTitle, mobile && styles.trustTitleMobile]}>{item.title}</Text>
+            <Text style={[styles.trustSubtitle, mobile && styles.trustSubtitleMobile]}>
+              {item.subtitle}
+            </Text>
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
 
-function CopyrightBar() {
-  const { theme } = useAppTheme();
+function CopyrightBar({ mobile }: { mobile: boolean }) {
   const year = new Date().getFullYear();
+
   return (
-    <View style={[styles.copyrightBar, { borderColor: theme.border }]}>
-      <Text style={[styles.copyrightText, { color: theme.subtle }]}>
-        &copy; {year} JeetoBaz. All rights reserved.
-      </Text>
-      <Text style={[styles.copyrightText, { color: theme.subtle }]}>
-        Made with <Heart size={10} color="#ff4d67" /> in Pakistan
-      </Text>
+    <View style={[styles.copyrightBar, mobile && styles.copyrightBarMobile]}>
+      <Text style={styles.copyrightText}>© {year} JeetoBaz. All rights reserved.</Text>
+      <View style={styles.madeWithRow}>
+        <Text style={styles.copyrightText}>Made with </Text>
+        <Heart color="#ff4d67" fill="#ff4d67" size={11} />
+        <Text style={styles.copyrightText}> in Pakistan</Text>
+      </View>
     </View>
   );
 }
 
 export default function JeetoBazFooter() {
-  const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const router = useRouter();
-  const isDesktop = width >= 1024;
-  const isTablet = width >= 768 && width < 1024;
   const isMobile = width < 768;
+  const isTablet = width >= 768 && width < 1200;
 
-  const onLinkPress = useMemo(() => (link: FooterLink) => {
-    if (link.external) {
-      Linking.openURL(link.external);
-    } else if (link.route) {
-      router.push(link.route as any);
-    }
-  }, [router]);
+  const onLinkPress = useMemo(
+    () => (link: FooterLink) => {
+      if (link.external) {
+        Linking.openURL(link.external);
+      } else if (link.route) {
+        router.push(link.route as never);
+      }
+    },
+    [router],
+  );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, borderTopColor: theme.border }]}>
-      <View style={styles.inner}>
-        {isDesktop && <DesktopFooter onLinkPress={onLinkPress} />}
-        {isTablet && <TabletFooter onLinkPress={onLinkPress} />}
-        {isMobile && <MobileFooter onLinkPress={onLinkPress} />}
+    <View style={styles.outer}>
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
+        <View style={[styles.mainArea, isMobile && styles.mainAreaMobile]}>
+          {isMobile ? (
+            <MobileFooter onLinkPress={onLinkPress} />
+          ) : isTablet ? (
+            <TabletFooter onLinkPress={onLinkPress} />
+          ) : (
+            <DesktopFooter onLinkPress={onLinkPress} />
+          )}
+        </View>
+        <TrustStrip mobile={isMobile} tablet={isTablet} />
+        <CopyrightBar mobile={isMobile} />
       </View>
-      <TrustStrip />
-      <CopyrightBar />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: {
+    backgroundColor: COLORS.backgroundDeep,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 12,
+  },
   container: {
-    borderTopWidth: 1,
-    marginTop: 12,
+    alignSelf: 'center',
+    backgroundColor: COLORS.background,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    maxWidth: 1600,
+    overflow: 'hidden',
+    width: '100%',
   },
-  inner: {
-    padding: 20,
-    paddingBottom: 8,
+  containerMobile: {
+    borderRadius: 18,
   },
-  desktopGrid: {
+  mainArea: {
+    paddingHorizontal: 48,
+    paddingVertical: 36,
+  },
+  mainAreaMobile: {
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 0,
+  },
+  desktopTop: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
   },
-  footerColumn: {
-    flex: 1,
+  desktopBrandColumn: {
+    flex: 1.05,
+    minWidth: 190,
+    paddingRight: 34,
+  },
+  linkColumn: {
+    flex: 0.9,
     minWidth: 160,
-    maxWidth: 240,
+    paddingHorizontal: 34,
   },
-  columnTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 12,
-    letterSpacing: 0.3,
+  columnDivider: {
+    borderLeftColor: COLORS.borderGold,
+    borderLeftWidth: 1,
+  },
+  sectionTitle: {
+    color: COLORS.gold,
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 15,
+  },
+  linkList: {
+    gap: 5,
   },
   linkItem: {
-    paddingVertical: 4,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 27,
   },
-  linkItemText: {
-    fontSize: 13,
+  linkText: {
+    color: COLORS.text,
+    fontSize: 14,
     lineHeight: 20,
   },
-  linkItemTextDisabled: {
-    opacity: 0.5,
+  disabledLink: {
+    color: COLORS.muted,
+    opacity: 0.7,
   },
-  brandingContainer: {
-    marginBottom: 16,
+  brandBlock: {
+    flex: 1,
   },
-  footerLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    marginBottom: 10,
+  brandBlockCompact: {
+    alignItems: 'center',
+  },
+  brandDescription: {
+    color: COLORS.text,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 7,
+  },
+  brandDescriptionCompact: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  brandPromise: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  brandPromiseCompact: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  brandGold: {
+    color: COLORS.gold,
+  },
+  brandWhite: {
+    color: COLORS.text,
+  },
+  brandLockup: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 26,
+  },
+  brandLogo: {
+    borderColor: COLORS.brandGold,
+    borderRadius: 13,
+    borderWidth: 1,
+    height: 80,
+    width: 68,
   },
   brandName: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 6,
+    fontSize: 30,
+    fontWeight: '900',
+    letterSpacing: -1.2,
   },
-  brandTagline: {
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  socialRowDesktop: {
+  mobileBrandLockup: {
+    alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
+    marginBottom: 10,
   },
-  socialIconBtn: {
-    padding: 2,
+  mobileBrandLogo: {
+    borderColor: COLORS.brandGold,
+    borderRadius: 9,
+    borderWidth: 1,
+    height: 54,
+    width: 46,
+  },
+  mobileBrandName: {
+    fontSize: 27,
+    fontWeight: '900',
+    letterSpacing: -0.8,
+  },
+  followPayments: {
+    flex: 1.45,
+    minWidth: 270,
+    paddingLeft: 34,
+  },
+  socialRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: 20,
+  },
+  socialItem: {
+    alignItems: 'center',
+    gap: 7,
+  },
+  socialLabel: {
+    color: COLORS.text,
+    fontSize: 12,
+  },
+  acceptTitle: {
+    marginBottom: 13,
+    marginTop: 33,
   },
   paymentRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 10,
   },
-  paymentBadge: {
-    borderRadius: 6,
-    borderWidth: 1,
+  paymentLogo: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    height: 44,
+    justifyContent: 'center',
+    minWidth: 82,
+    overflow: 'hidden',
     paddingHorizontal: 8,
-    paddingVertical: 4,
   },
-  paymentBadgeText: {
+  jazzCashLogo: {
+    backgroundColor: '#521b11',
+  },
+  jazzCashText: {
+    color: '#ffcf00',
+    fontSize: 17,
+    fontStyle: 'italic',
+    fontWeight: '900',
+    transform: [{ skewX: '-8deg' }],
+  },
+  easypaisaText: {
+    color: '#111111',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: -0.7,
+  },
+  visaText: {
+    color: '#1a1f71',
+    fontSize: 25,
+    fontStyle: 'italic',
+    fontWeight: '900',
+  },
+  mastercardMark: {
+    flexDirection: 'row',
+    height: 22,
+    width: 37,
+  },
+  mastercardCircle: {
+    borderRadius: 11,
+    height: 22,
+    position: 'absolute',
+    width: 22,
+  },
+  mastercardRed: {
+    backgroundColor: '#eb001b',
+    left: 0,
+  },
+  mastercardOrange: {
+    backgroundColor: '#f79e1b',
+    right: 0,
+  },
+  mastercardText: {
+    color: '#111111',
+    fontSize: 7,
+    marginTop: -1,
+  },
+  unionPayMark: {
+    height: 28,
+    justifyContent: 'center',
+    transform: [{ skewX: '-8deg' }],
+    width: 59,
+  },
+  unionPayRed: {
+    backgroundColor: '#d71920',
+    borderRadius: 3,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    top: 0,
+    width: 35,
+  },
+  unionPayBlue: {
+    backgroundColor: '#007b84',
+    borderRadius: 3,
+    bottom: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 35,
+  },
+  unionPayText: {
+    color: '#ffffff',
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '900',
+    textAlign: 'center',
+    transform: [{ skewX: '8deg' }],
   },
-  paymentLabel: {
-    fontSize: 12,
+  tabletTop: {
+    flexDirection: 'row',
+  },
+  tabletBrandColumn: {
+    flex: 1.1,
+    minWidth: 180,
+    paddingRight: 25,
+  },
+  tabletFollowRow: {
+    borderTopColor: COLORS.borderGold,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    marginHorizontal: -48,
+    marginTop: 32,
+    paddingHorizontal: 48,
+    paddingTop: 24,
+  },
+  tabletFollowBlock: {
+    flex: 1,
+    paddingRight: 26,
+  },
+  tabletPaymentBlock: {
+    borderLeftColor: COLORS.borderGold,
+    borderLeftWidth: 1,
+    flex: 1.05,
+    paddingLeft: 28,
+  },
+  mobileTop: {
+    width: '100%',
+  },
+  mobileAccordionList: {
+    borderTopColor: COLORS.borderGold,
+    borderTopWidth: 1,
+  },
+  mobileAccordion: {
+    borderBottomColor: COLORS.borderGold,
+    borderBottomWidth: 1,
+  },
+  mobileAccordionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 51,
+    paddingHorizontal: 7,
+  },
+  mobileAccordionTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 14,
+  },
+  mobileAccordionTitle: {
+    color: COLORS.text,
+    fontSize: 14,
     fontWeight: '700',
-    marginBottom: 8,
+  },
+  mobileAccordionContent: {
+    paddingBottom: 12,
+    paddingHorizontal: 39,
+  },
+  mobilePaymentBlock: {
+    paddingHorizontal: 7,
+    paddingVertical: 18,
   },
   trustStrip: {
+    borderTopColor: COLORS.borderGold,
     borderTopWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  trustGrid: {
     flexDirection: 'row',
+    paddingHorizontal: 36,
+    paddingVertical: 19,
+  },
+  trustStripMobile: {
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
   },
   trustItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    minWidth: 140,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  trustItemLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  copyrightBar: {
-    borderTopWidth: 1,
+    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
+    minWidth: 170,
+    paddingHorizontal: 16,
+  },
+  trustItemTablet: {
+    flexBasis: '33.333%',
+    minHeight: 78,
+  },
+  trustItemMobile: {
+    flexBasis: '50%',
+    gap: 8,
+    minHeight: 62,
+    minWidth: 0,
+    paddingHorizontal: 5,
+  },
+  trustDivider: {
+    borderLeftColor: COLORS.borderGold,
+    borderLeftWidth: 1,
+  },
+  trustIconCircle: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexWrap: 'wrap',
-    gap: 6,
+    borderColor: COLORS.brandGold,
+    borderRadius: 25,
+    borderWidth: 1,
+    height: 50,
+    justifyContent: 'center',
+    width: 50,
   },
-  copyrightText: {
-    fontSize: 11,
+  trustIconCircleMobile: {
+    borderRadius: 20,
+    height: 40,
+    width: 40,
   },
-  tabletBrandRow: {
-    alignItems: 'center',
-    marginBottom: 24,
+  flagIcon: {
+    fontSize: 24,
   },
-  tabletColumnsRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  tabletColumn: {
+  trustCopy: {
     flex: 1,
   },
-  tabletSocialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 12,
+  trustTitle: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 19,
   },
-  tabletPaymentRow: {
+  trustTitleMobile: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  trustSubtitle: {
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  trustSubtitleMobile: {
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  copyrightBar: {
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  mobileBrandRow: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  accordionSection: {
+    borderTopColor: COLORS.borderGold,
     borderTopWidth: 1,
-  },
-  accordionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    minHeight: 48,
+    paddingHorizontal: 34,
+  },
+  copyrightBarMobile: {
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
+    gap: 4,
+    justifyContent: 'center',
+    minHeight: 62,
   },
-  accordionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+  copyrightText: {
+    color: COLORS.subtle,
+    fontSize: 11,
   },
-  accordionContent: {
-    paddingBottom: 10,
-    paddingHorizontal: 4,
-  },
-  socialRowMobile: {
+  madeWithRow: {
+    alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingBottom: 14,
-    paddingHorizontal: 4,
-  },
-  mobilePaymentSection: {
-    borderTopWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 4,
   },
 });

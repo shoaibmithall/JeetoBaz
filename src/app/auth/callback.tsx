@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
+import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackScreen() {
   const { theme } = useAppTheme();
