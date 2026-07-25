@@ -274,11 +274,11 @@ export default function PaymentScreen() {
       const { error } = await supabase.from('transactions').insert({
         product_id: productIdValue,
         phone: userPhone,
-        user_name: userName,
+        user_name: userName?.trim() || null,
         amount: product.entry_fee || 1,
         jazzcash_txn_id: `RECEIPT-${Date.now()}`,
         payment_method: selectedMethod,
-        sender_name: userName,
+        sender_name: userName?.trim() || null,
         sender_phone: userPhone,
         receipt_path: receiptPath,
         status: 'pending',
