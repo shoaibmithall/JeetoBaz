@@ -149,7 +149,7 @@ export default function ForgotPasswordScreen() {
         <Badge icon={<Mail color={theme.gold} size={16} />} text="OTP Sent!" />
 
         <Text style={[styles.title, { color: theme.text }]}>Check Your Email</Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}> 
+        <Text style={[styles.subtitle, { color: theme.muted }]}>
           We sent a 6-digit verification code to:
         </Text>
         <Text style={[styles.emailDisplay, { color: theme.gold }]}>{email.trim().toLowerCase()}</Text>
@@ -169,16 +169,16 @@ export default function ForgotPasswordScreen() {
 
         <View style={styles.resendRow}>
           {countdown > 0 ? (
-            <Text style={[styles.countdownText, { color: theme.muted }]}> 
+            <Text style={[styles.countdownText, { color: theme.muted }]}>
               Resend OTP in {countdown}s
             </Text>
           ) : resendCount >= MAX_RESENDS ? (
-            <Text style={[styles.maxResendText, { color: theme.muted }]}> 
+            <Text style={[styles.maxResendText, { color: theme.muted }]}>
               Maximum resend attempts reached
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
-              <Text style={[styles.resendLink, { color: theme.primary }]}> 
+              <Text style={[styles.resendLink, { color: theme.primary }]}>
                 {loading ? 'Sending...' : 'Resend OTP'}
               </Text>
             </TouchableOpacity>
@@ -204,7 +204,7 @@ export default function ForgotPasswordScreen() {
       <Badge icon={<LockKeyhole color={theme.primary} size={16} />} text="Password Recovery" />
 
       <Text style={[styles.title, { color: theme.text }]}>Forgot Password?</Text>
-      <Text style={[styles.subtitle, { color: theme.muted }]}> 
+      <Text style={[styles.subtitle, { color: theme.muted }]}>
         Enter your email address and we'll send you a 6-digit verification code.
       </Text>
 
