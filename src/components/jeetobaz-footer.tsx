@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import {
   Linking,
   StyleSheet,
@@ -29,6 +29,7 @@ import {
   WhatsAppIcon,
   YouTubeIcon,
 } from '@/components/social-icons';
+import { useAppTheme } from '@/hooks/use-theme';
 
 type FooterLink = {
   label: string;
@@ -39,14 +40,14 @@ type FooterLink = {
 type FooterSection = {
   key: 'quick' | 'help' | 'categories' | 'follow';
   title: string;
-  icon: ReactNode;
+  icon: (color: string) => ReactNode;
   items: FooterLink[];
 };
 
 type TrustItem = {
   title: string;
   subtitle: string;
-  icon: ReactNode;
+  icon: (color: string) => ReactNode;
 };
 
 const COLORS = {
@@ -63,6 +64,14 @@ const COLORS = {
   muted: '#d0d9d4',
   subtle: '#a8b8b0',
 };
+
+type FooterColors = typeof COLORS;
+
+const FooterThemeContext = createContext<FooterColors>(COLORS);
+
+function useFooterColors() {
+  return useContext(FooterThemeContext);
+}
 
 const QUICK_LINKS: FooterLink[] = [
   { label: 'All Draws', route: '/' },
@@ -100,32 +109,32 @@ const SOCIAL_LINKS: { icon: ReactNode; url: string; label: string }[] = [
 
 const TRUST_ITEMS: TrustItem[] = [
   {
-    icon: <LockKeyhole color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    icon: (color) => <LockKeyhole color={color} size={25} strokeWidth={1.8} />,
     title: 'Secure Payments',
     subtitle: '100% Secure & Safe',
   },
   {
-    icon: <ShieldCheck color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    icon: (color) => <ShieldCheck color={color} size={25} strokeWidth={1.8} />,
     title: 'Data Protection',
     subtitle: 'Your data is protected',
   },
   {
-    icon: <Headphones color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    icon: (color) => <Headphones color={color} size={25} strokeWidth={1.8} />,
     title: '24/7 Support',
     subtitle: "We're here to help",
   },
   {
-    icon: <Text style={{ fontSize: 24, lineHeight: 28 }}>🇵🇰</Text>,
+    icon: () => <Text style={{ fontSize: 24, lineHeight: 28 }}>🇵🇰</Text>,
     title: 'Made in Pakistan',
     subtitle: 'Proudly built in Pakistan',
   },
   {
-    icon: <Scale color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    icon: (color) => <Scale color={color} size={25} strokeWidth={1.8} />,
     title: 'Fair & Transparent',
     subtitle: 'Trust is our priority',
   },
   {
-    icon: <LockKeyhole color={COLORS.gold} size={25} strokeWidth={1.8} />,
+    icon: (color) => <LockKeyhole color={color} size={25} strokeWidth={1.8} />,
     title: 'SSL Encrypted',
     subtitle: 'Secure connections',
   },
@@ -135,25 +144,25 @@ const MOBILE_SECTIONS: FooterSection[] = [
   {
     key: 'quick',
     title: 'Quick Links',
-    icon: <Link2 color={COLORS.gold} size={18} />,
+    icon: (color) => <Link2 color={color} size={18} />,
     items: QUICK_LINKS,
   },
   {
     key: 'help',
     title: 'Help & Support',
-    icon: <Headphones color={COLORS.gold} size={18} />,
+    icon: (color) => <Headphones color={color} size={18} />,
     items: HELP_LINKS,
   },
   {
     key: 'categories',
     title: 'Categories',
-    icon: <Grid2X2 color={COLORS.gold} size={18} />,
+    icon: (color) => <Grid2X2 color={color} size={18} />,
     items: CATEGORY_ITEMS,
   },
   {
     key: 'follow',
     title: 'Follow Us',
-    icon: <UsersRound color={COLORS.gold} size={18} />,
+    icon: (color) => <UsersRound color={color} size={18} />,
     items: [],
   },
 ];
@@ -168,6 +177,7 @@ function FooterLinkItem({
   showChevron?: boolean;
 }) {
   const isClickable = Boolean(link.route || link.external);
+  const colors = useFooterColors();
 
   return (
     <TouchableOpacity
@@ -177,9 +187,18 @@ function FooterLinkItem({
       onPress={() => onPress(link)}
       style={styles.linkItem}
     >
-      <Text style={[styles.linkText, !isClickable && styles.disabledLink]}>{link.label}</Text>
+      <Text
+        style={[
+          styles.linkText,
+          { color: colors.text },
+          !isClickable && styles.disabledLink,
+          !isClickable && { color: colors.muted },
+        ]}
+      >
+        {link.label}
+      </Text>
       {showChevron && isClickable ? (
-        <ChevronRight color={COLORS.green} size={15} strokeWidth={2.2} />
+        <ChevronRight color={colors.green} size={15} strokeWidth={2.2} />
       ) : null}
     </TouchableOpacity>
   );
@@ -196,9 +215,17 @@ function LinkColumn({
   onLinkPress: (link: FooterLink) => void;
   bordered?: boolean;
 }) {
+  const colors = useFooterColors();
+
   return (
-    <View style={[styles.linkColumn, bordered && styles.columnDivider]}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View
+      style={[
+        styles.linkColumn,
+        bordered && styles.columnDivider,
+        bordered && { borderLeftColor: colors.borderGold },
+      ]}
+    >
+      <Text style={[styles.sectionTitle, { color: colors.gold }]}>{title}</Text>
       <View style={styles.linkList}>
         {links.map((link) => (
           <FooterLinkItem key={link.label} link={link} onPress={onLinkPress} />
@@ -209,6 +236,8 @@ function LinkColumn({
 }
 
 function BrandBlock({ compact = false }: { compact?: boolean }) {
+  const colors = useFooterColors();
+
   return (
     <View style={[styles.brandBlock, compact && styles.brandBlockCompact]}>
       {compact ? (
@@ -220,20 +249,26 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
             style={styles.mobileBrandLogo}
           />
           <Text style={styles.mobileBrandName}>
-            <Text style={styles.brandGold}>Jeeto</Text>
-            <Text style={styles.brandWhite}>Baz</Text>
+            <Text style={{ color: colors.gold }}>Jeeto</Text>
+            <Text style={{ color: colors.text }}>Baz</Text>
           </Text>
         </View>
       ) : (
-        <Text style={styles.sectionTitle}>JeetoBaz</Text>
+        <Text style={[styles.sectionTitle, { color: colors.gold }]}>JeetoBaz</Text>
       )}
 
-      <Text style={[styles.brandDescription, compact && styles.brandDescriptionCompact]}>
+      <Text
+        style={[
+          styles.brandDescription,
+          { color: colors.text },
+          compact && styles.brandDescriptionCompact,
+        ]}
+      >
         Pakistan&apos;s most trusted{'\n'}transparent prize platform.
       </Text>
       <Text style={[styles.brandPromise, compact && styles.brandPromiseCompact]}>
-        <Text style={styles.brandGold}>Enter</Text>
-        <Text style={styles.brandWhite}> fair, win big!</Text>
+        <Text style={{ color: colors.gold }}>Enter</Text>
+        <Text style={{ color: colors.text }}> fair, win big!</Text>
       </Text>
 
       {!compact ? (
@@ -245,8 +280,8 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
             style={styles.brandLogo}
           />
           <Text style={styles.brandName}>
-            <Text style={styles.brandGold}>Jeeto</Text>
-            <Text style={styles.brandWhite}>Baz</Text>
+            <Text style={{ color: colors.gold }}>Jeeto</Text>
+            <Text style={{ color: colors.text }}>Baz</Text>
           </Text>
         </View>
       ) : null}
@@ -255,6 +290,8 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
 }
 
 function SocialLinks({ showLabels }: { showLabels: boolean }) {
+  const colors = useFooterColors();
+
   return (
     <View style={styles.socialRow}>
       {SOCIAL_LINKS.map((social) => (
@@ -267,7 +304,9 @@ function SocialLinks({ showLabels }: { showLabels: boolean }) {
           style={styles.socialItem}
         >
           {social.icon}
-          {showLabels ? <Text style={styles.socialLabel}>{social.label}</Text> : null}
+          {showLabels ? (
+            <Text style={[styles.socialLabel, { color: colors.text }]}>{social.label}</Text>
+          ) : null}
         </TouchableOpacity>
       ))}
     </View>
@@ -339,11 +378,19 @@ function PaymentMethods() {
 }
 
 function FollowAndPayments({ desktop }: { desktop: boolean }) {
+  const colors = useFooterColors();
+
   return (
-    <View style={[styles.followPayments, desktop && styles.columnDivider]}>
-      <Text style={styles.sectionTitle}>Follow Us</Text>
+    <View
+      style={[
+        styles.followPayments,
+        desktop && styles.columnDivider,
+        desktop && { borderLeftColor: colors.borderGold },
+      ]}
+    >
+      <Text style={[styles.sectionTitle, { color: colors.gold }]}>Follow Us</Text>
       <SocialLinks showLabels={desktop} />
-      <Text style={[styles.sectionTitle, styles.acceptTitle]}>We Accept</Text>
+      <Text style={[styles.sectionTitle, styles.acceptTitle, { color: colors.gold }]}>We Accept</Text>
       <PaymentMethods />
     </View>
   );
@@ -364,6 +411,8 @@ function DesktopFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => voi
 }
 
 function TabletFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void }) {
+  const colors = useFooterColors();
+
   return (
     <>
       <View style={styles.tabletTop}>
@@ -374,13 +423,13 @@ function TabletFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void
         <LinkColumn bordered title="Help & Support" links={HELP_LINKS} onLinkPress={onLinkPress} />
         <LinkColumn bordered title="Categories" links={CATEGORY_ITEMS} onLinkPress={onLinkPress} />
       </View>
-      <View style={styles.tabletFollowRow}>
+      <View style={[styles.tabletFollowRow, { borderTopColor: colors.borderGold }]}>
         <View style={styles.tabletFollowBlock}>
-          <Text style={styles.sectionTitle}>Follow Us</Text>
+          <Text style={[styles.sectionTitle, { color: colors.gold }]}>Follow Us</Text>
           <SocialLinks showLabels />
         </View>
-        <View style={styles.tabletPaymentBlock}>
-          <Text style={styles.sectionTitle}>We Accept</Text>
+        <View style={[styles.tabletPaymentBlock, { borderLeftColor: colors.borderGold }]}>
+          <Text style={[styles.sectionTitle, { color: colors.gold }]}>We Accept</Text>
           <PaymentMethods />
         </View>
       </View>
@@ -399,8 +448,10 @@ function MobileAccordion({
   onLinkPress: (link: FooterLink) => void;
   onToggle: () => void;
 }) {
+  const colors = useFooterColors();
+
   return (
-    <View style={styles.mobileAccordion}>
+    <View style={[styles.mobileAccordion, { borderBottomColor: colors.borderGold }]}>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityState={{ expanded: isOpen }}
@@ -409,13 +460,15 @@ function MobileAccordion({
         style={styles.mobileAccordionHeader}
       >
         <View style={styles.mobileAccordionTitleRow}>
-          {section.icon}
-          <Text style={styles.mobileAccordionTitle}>{section.title}</Text>
+          {section.icon(colors.gold)}
+          <Text style={[styles.mobileAccordionTitle, { color: colors.text }]}>
+            {section.title}
+          </Text>
         </View>
         {isOpen ? (
-          <ChevronUp color={COLORS.gold} size={18} />
+          <ChevronUp color={colors.gold} size={18} />
         ) : (
-          <ChevronDown color={COLORS.gold} size={18} />
+          <ChevronDown color={colors.gold} size={18} />
         )}
       </TouchableOpacity>
 
@@ -441,11 +494,12 @@ function MobileAccordion({
 
 function MobileFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void }) {
   const [openSection, setOpenSection] = useState<FooterSection['key'] | null>(null);
+  const colors = useFooterColors();
 
   return (
     <View style={styles.mobileTop}>
       <BrandBlock compact />
-      <View style={styles.mobileAccordionList}>
+      <View style={[styles.mobileAccordionList, { borderTopColor: colors.borderGold }]}>
         {MOBILE_SECTIONS.map((section) => (
           <MobileAccordion
             isOpen={openSection === section.key}
@@ -459,7 +513,7 @@ function MobileFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void
         ))}
       </View>
       <View style={styles.mobilePaymentBlock}>
-        <Text style={styles.sectionTitle}>We Accept</Text>
+        <Text style={[styles.sectionTitle, { color: colors.gold }]}>We Accept</Text>
         <PaymentMethods />
       </View>
     </View>
@@ -467,8 +521,16 @@ function MobileFooter({ onLinkPress }: { onLinkPress: (link: FooterLink) => void
 }
 
 function TrustStrip({ mobile, tablet }: { mobile: boolean; tablet: boolean }) {
+  const colors = useFooterColors();
+
   return (
-    <View style={[styles.trustStrip, mobile && styles.trustStripMobile]}>
+    <View
+      style={[
+        styles.trustStrip,
+        { borderTopColor: colors.borderGold },
+        mobile && styles.trustStripMobile,
+      ]}
+    >
       {TRUST_ITEMS.map((item, index) => (
         <View
           key={item.title}
@@ -477,14 +539,35 @@ function TrustStrip({ mobile, tablet }: { mobile: boolean; tablet: boolean }) {
             tablet && styles.trustItemTablet,
             mobile && styles.trustItemMobile,
             !mobile && !tablet && index > 0 && styles.trustDivider,
+            !mobile && !tablet && index > 0 && { borderLeftColor: colors.borderGold },
           ]}
         >
-          <View style={[styles.trustIconCircle, mobile && styles.trustIconCircleMobile]}>
-            {item.icon}
+          <View
+            style={[
+              styles.trustIconCircle,
+              { borderColor: colors.brandGold },
+              mobile && styles.trustIconCircleMobile,
+            ]}
+          >
+            {item.icon(colors.gold)}
           </View>
           <View style={styles.trustCopy}>
-            <Text style={[styles.trustTitle, mobile && styles.trustTitleMobile]}>{item.title}</Text>
-            <Text style={[styles.trustSubtitle, mobile && styles.trustSubtitleMobile]}>
+            <Text
+              style={[
+                styles.trustTitle,
+                { color: colors.text },
+                mobile && styles.trustTitleMobile,
+              ]}
+            >
+              {item.title}
+            </Text>
+            <Text
+              style={[
+                styles.trustSubtitle,
+                { color: colors.muted },
+                mobile && styles.trustSubtitleMobile,
+              ]}
+            >
               {item.subtitle}
             </Text>
           </View>
@@ -496,14 +579,23 @@ function TrustStrip({ mobile, tablet }: { mobile: boolean; tablet: boolean }) {
 
 function CopyrightBar({ mobile }: { mobile: boolean }) {
   const year = new Date().getFullYear();
+  const colors = useFooterColors();
 
   return (
-    <View style={[styles.copyrightBar, mobile && styles.copyrightBarMobile]}>
-      <Text style={styles.copyrightText}>© {year} JeetoBaz. All rights reserved.</Text>
+    <View
+      style={[
+        styles.copyrightBar,
+        { borderTopColor: colors.borderGold },
+        mobile && styles.copyrightBarMobile,
+      ]}
+    >
+      <Text style={[styles.copyrightText, { color: colors.subtle }]}>
+        © {year} JeetoBaz. All rights reserved.
+      </Text>
       <View style={styles.madeWithRow}>
-        <Text style={styles.copyrightText}>Made with </Text>
+        <Text style={[styles.copyrightText, { color: colors.subtle }]}>Made with </Text>
         <Heart color="#ff4d67" fill="#ff4d67" size={11} />
-        <Text style={styles.copyrightText}> in Pakistan</Text>
+        <Text style={[styles.copyrightText, { color: colors.subtle }]}> in Pakistan</Text>
       </View>
     </View>
   );
@@ -512,8 +604,29 @@ function CopyrightBar({ mobile }: { mobile: boolean }) {
 export default function JeetoBazFooter() {
   const { width } = useWindowDimensions();
   const router = useRouter();
+  const { mode, theme } = useAppTheme();
   const isMobile = width < 768;
   const isTablet = width >= 768 && width < 1200;
+  const footerColors = useMemo<FooterColors>(
+    () =>
+      mode === 'light'
+        ? {
+            background: theme.surface,
+            backgroundDeep: theme.background,
+            panel: theme.surfaceAlt,
+            panelSoft: theme.primarySoft,
+            border: theme.border,
+            borderGold: 'rgba(179, 138, 0, 0.34)',
+            gold: theme.gold,
+            brandGold: theme.gold,
+            green: theme.primary,
+            text: theme.text,
+            muted: theme.muted,
+            subtle: theme.subtle,
+          }
+        : COLORS,
+    [mode, theme],
+  );
 
   const onLinkPress = useMemo(
     () => (link: FooterLink) => {
@@ -527,21 +640,32 @@ export default function JeetoBazFooter() {
   );
 
   return (
-    <View style={styles.outer}>
-      <View style={[styles.container, isMobile && styles.containerMobile]}>
-        <View style={[styles.mainArea, isMobile && styles.mainAreaMobile]}>
-          {isMobile ? (
-            <MobileFooter onLinkPress={onLinkPress} />
-          ) : isTablet ? (
-            <TabletFooter onLinkPress={onLinkPress} />
-          ) : (
-            <DesktopFooter onLinkPress={onLinkPress} />
-          )}
+    <FooterThemeContext.Provider value={footerColors}>
+      <View style={[styles.outer, { backgroundColor: footerColors.backgroundDeep }]}>
+        <View
+          style={[
+            styles.container,
+            {
+              backgroundColor: footerColors.background,
+              borderColor: footerColors.border,
+            },
+            isMobile && styles.containerMobile,
+          ]}
+        >
+          <View style={[styles.mainArea, isMobile && styles.mainAreaMobile]}>
+            {isMobile ? (
+              <MobileFooter onLinkPress={onLinkPress} />
+            ) : isTablet ? (
+              <TabletFooter onLinkPress={onLinkPress} />
+            ) : (
+              <DesktopFooter onLinkPress={onLinkPress} />
+            )}
+          </View>
+          <TrustStrip mobile={isMobile} tablet={isTablet} />
+          <CopyrightBar mobile={isMobile} />
         </View>
-        <TrustStrip mobile={isMobile} tablet={isTablet} />
-        <CopyrightBar mobile={isMobile} />
       </View>
-    </View>
+    </FooterThemeContext.Provider>
   );
 }
 
