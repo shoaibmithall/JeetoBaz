@@ -12,12 +12,40 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_PATH = path.join(__dirname, '..', 'src', 'generated', 'product-seo-manifest.json');
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// CI secret values are pasted by hand and can pick up stray formatting that a browser or shell
+// would silently tolerate but the WHATWG URL parser (used by fetch) rejects outright — e.g. a
+// trailing space, the value wrapped in quotes, or a trailing slash. Sanitize defensively so a
+// same-length-looking secret value doesn't fail with an unhelpful native ERR_INVALID_URL.
+function sanitizeEnvValue(value) {
+  if (!value) return value;
+  let cleaned = value.trim();
+  if (
+    cleaned.length >= 2 &&
+    ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'")))
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+  return cleaned;
+}
+
+const SUPABASE_URL = sanitizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_URL)?.replace(/\/+$/, '');
+const SUPABASE_ANON_KEY = sanitizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error(
     '[generate-product-seo-manifest] Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
+      'Cannot generate the product SEO manifest. Aborting build.'
+  );
+  process.exit(1);
+}
+
+try {
+  new URL(SUPABASE_URL);
+} catch {
+  console.error(
+    `[generate-product-seo-manifest] EXPO_PUBLIC_SUPABASE_URL is not a valid URL after trimming whitespace ` +
+      `and surrounding quotes (length ${SUPABASE_URL.length}, starts with "${SUPABASE_URL.slice(0, 12)}"). ` +
+      'Check the secret\'s value for stray characters, such as the "KEY=" prefix pasted in by mistake. ' +
       'Cannot generate the product SEO manifest. Aborting build.'
   );
   process.exit(1);
