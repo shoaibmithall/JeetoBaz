@@ -1,5 +1,5 @@
 [build]
-  command = "npx expo export -p web"
+  command = "node ./scripts/generate-product-seo-manifest.mjs && npx expo export -p web"
   publish = "dist"
 
 [[redirects]]

@@ -20,3 +20,17 @@ export function normalizeTransactionId(value: string) {
 export function isValidTransactionId(value: string) {
   return /^[A-Z0-9/_-]{6,50}$/.test(value);
 }
+
+const DIACRITIC_MARKS = /[̀-ͯ]/g;
+
+export function slugify(value: string): string {
+  const withoutDiacritics = value.normalize('NFKD').replace(DIACRITIC_MARKS, '');
+  return withoutDiacritics
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function isValidSlug(value: string): boolean {
+  return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(value);
+}
