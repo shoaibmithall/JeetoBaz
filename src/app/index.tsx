@@ -1,7 +1,7 @@
 import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, RefreshControl, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
@@ -47,7 +47,7 @@ const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 120;
-const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo';
+const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
 const PULL_TO_REFRESH_THRESHOLD = 64;
 const HOME_URL = 'https://jeetobaz.pk/';
@@ -244,12 +244,25 @@ const HomeProductCard = memo(function HomeProductCard({
 
       <View style={[styles.cardBody, isCompactGrid && styles.cardBodyCompact]}>
         <View style={[styles.cardHeader, isCompactGrid && styles.cardHeaderCompact]}>
-          <Text
-            numberOfLines={isCompactGrid ? 2 : undefined}
-            style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
-          >
-            {product.name}
-          </Text>
+          {product.slug ? (
+            <Link href={`/product/${product.slug}`} asChild>
+              <TouchableOpacity style={styles.productNameLink} accessibilityRole="link">
+                <Text
+                  numberOfLines={isCompactGrid ? 2 : undefined}
+                  style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
+                >
+                  {product.name}
+                </Text>
+              </TouchableOpacity>
+            </Link>
+          ) : (
+            <Text
+              numberOfLines={isCompactGrid ? 2 : undefined}
+              style={[styles.productName, isCompactGrid && styles.productNameCompact, { color: colors.text }]}
+            >
+              {product.name}
+            </Text>
+          )}
           <TouchableOpacity onPress={() => onToggleFavorite(product.id)} accessibilityLabel={`${isFavorite ? t('removeFavorite') : t('addFavorite')}: ${product.name}`}>
             <Heart color={isFavorite ? '#ff4d67' : colors.muted} fill={isFavorite ? '#ff4d67' : 'transparent'} size={isCompactGrid ? 17 : 25} />
           </TouchableOpacity>
@@ -1258,6 +1271,7 @@ const styles = StyleSheet.create({
   cardBody: { padding: 15 },
   cardBodyCompact: { padding: 9 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
+  productNameLink: { flex: 1 },
   cardHeaderCompact: { alignItems: 'flex-start', gap: 4, marginBottom: 5 },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
   productNameCompact: { fontSize: 14, lineHeight: 18, minHeight: 36 },

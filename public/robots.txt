@@ -4,5 +4,6 @@ Disallow: /admin
 Disallow: /draw
 Disallow: /payment
 Disallow: /winner
+Disallow: /_sitemap
 
 Sitemap: https://jeetobaz.pk/sitemap.xml

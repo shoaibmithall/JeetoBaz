@@ -110,6 +110,7 @@ export default function RootLayout() {
         <Tabs.Screen name="profile-setup" options={{ href: null }} />
         <Tabs.Screen name="auth/callback" options={{ href: null }} />
         <Tabs.Screen name="auth/reset-password" options={{ href: null }} />
+        <Tabs.Screen name="product/[slug]" options={{ href: null }} />
         <Tabs.Screen
           name="+not-found"
           options={{ href: null }}

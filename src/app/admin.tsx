@@ -17,11 +17,12 @@ import {
   updateVerificationDocument,
 } from '@/lib/verification-documents';
 import type { Entry, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+import { isValidSlug, slugify } from '@/lib/validation';
 import {
   BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
-  Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, X,
+  Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, Wand2, X,
 } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
@@ -360,8 +361,40 @@ export default function AdminScreen() {
     if (!productName || !productPrice || !entryFee || !maxEntries) {
       alert('Please fill all required fields!'); return;
     }
-    setLoading(true);
     const currentEditId = editingIdRef.current;
+
+    const willBeActive = currentEditId
+      ? products.find((p) => p.id === currentEditId)?.status === 'active'
+      : true;
+
+    const normalizedSlug = slugify(seoData.slug || '');
+
+    if (willBeActive && !normalizedSlug) {
+      alert('Slug is required for an active product.');
+      return;
+    }
+    if (normalizedSlug && !isValidSlug(normalizedSlug)) {
+      alert('Slug is invalid. Use lowercase letters, numbers and hyphens only.');
+      return;
+    }
+
+    if (normalizedSlug) {
+      let duplicateQuery = supabase.from('products').select('id').eq('slug', normalizedSlug);
+      if (currentEditId) {
+        duplicateQuery = duplicateQuery.neq('id', currentEditId);
+      }
+      const { data: duplicateRows, error: duplicateError } = await duplicateQuery.limit(1);
+      if (duplicateError) {
+        alert('Could not verify slug uniqueness: ' + duplicateError.message);
+        return;
+      }
+      if (duplicateRows && duplicateRows.length > 0) {
+        alert('This slug is already used by another product. Choose a different one.');
+        return;
+      }
+    }
+
+    setLoading(true);
 
     const productData: ProductFormData = {
       name: productName,
@@ -376,7 +409,7 @@ export default function AdminScreen() {
       seo_title: seoData.seo_title || null,
       meta_description: seoData.meta_description || null,
       meta_keywords: seoData.meta_keywords || null,
-      slug: seoData.slug || null,
+      slug: normalizedSlug || null,
       indexable: seoData.indexable,
     };
 
@@ -969,7 +1002,30 @@ export default function AdminScreen() {
                   <TextInput style={styles.input} placeholder="SEO Title (leave empty to use product name)" placeholderTextColor="#666" value={seoData.seo_title} onChangeText={(v) => setSeoData((prev) => ({ ...prev, seo_title: v }))} />
                   <TextInput style={[styles.input, styles.textArea]} placeholder="Meta Description" placeholderTextColor="#666" value={seoData.meta_description} onChangeText={(v) => setSeoData((prev) => ({ ...prev, meta_description: v }))} multiline numberOfLines={3} />
                   <TextInput style={styles.input} placeholder="Meta Keywords (comma separated)" placeholderTextColor="#666" value={seoData.meta_keywords} onChangeText={(v) => setSeoData((prev) => ({ ...prev, meta_keywords: v }))} />
-                  <TextInput style={styles.input} placeholder="Slug (e.g. honda-70-draw)" placeholderTextColor="#666" value={seoData.slug} onChangeText={(v) => setSeoData((prev) => ({ ...prev, slug: v }))} />
+                  <View style={styles.slugRow}>
+                    <TextInput
+                      style={[styles.input, styles.slugInput]}
+                      placeholder="Slug (e.g. honda-70-draw)"
+                      placeholderTextColor="#666"
+                      value={seoData.slug}
+                      onChangeText={(v) => setSeoData((prev) => ({ ...prev, slug: v }))}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity
+                      style={styles.slugAutoButton}
+                      onPress={() => {
+                        if (seoData.slug.trim()) return;
+                        if (!productName.trim()) {
+                          alert('Enter the product name first.');
+                          return;
+                        }
+                        setSeoData((prev) => (prev.slug.trim() ? prev : { ...prev, slug: slugify(productName) }));
+                      }}
+                    >
+                      <Wand2 color={theme.primary} size={16} />
+                      <Text style={styles.slugAutoButtonText}>Auto-generate</Text>
+                    </TouchableOpacity>
+                  </View>
                   <TouchableOpacity style={styles.seoCheckRow} onPress={() => setSeoData((prev) => ({ ...prev, indexable: !prev.indexable }))}>
                     <View style={[styles.seoCheckbox, seoData.indexable && styles.seoCheckboxActive]}>
                       {seoData.indexable && <Check size={14} color="white" />}
@@ -1475,6 +1531,10 @@ function createStyles(theme: AdminTheme) {
   themeOptionTextSelected: { color: theme.buttonText },
   quickStats: { backgroundColor: theme.surface, borderRadius: 12, padding: 15, borderWidth: 1, borderColor: theme.border },
   quickStat: { color: theme.muted, fontSize: 14, marginBottom: 8 },
+  slugRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  slugInput: { flex: 1, marginBottom: 0 },
+  slugAutoButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface },
+  slugAutoButtonText: { color: theme.primary, fontSize: 12, fontWeight: '600' },
   seoToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 4, marginBottom: 8, borderTopWidth: 1, borderTopColor: theme.border, marginTop: 4 },
   seoSectionTitle: { color: theme.text, fontSize: 15, fontWeight: '600' },
   seoCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 8, marginBottom: 8, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border },
