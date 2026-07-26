@@ -5,7 +5,8 @@ import Head from 'expo-router/head';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
-import { resetPassword } from '@/lib/auth';
+import { resetPassword, signInWithEmail } from '@/lib/auth';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
@@ -52,6 +53,9 @@ export default function AdminScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resetSending, setResetSending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
@@ -144,15 +148,21 @@ export default function AdminScreen() {
       return;
     }
 
-    setAuthLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
+    if (Platform.OS === 'web' && !turnstileToken) {
+      setTurnstileError('Please complete the verification.');
+      return;
+    }
 
-    if (error) {
+    setAuthLoading(true);
+    setTurnstileError('');
+    const { data, error } = await signInWithEmail(normalizedEmail, password, turnstileToken || undefined);
+
+    turnstileRef.current?.reset();
+    setTurnstileToken('');
+
+    if (error || !data.user) {
       setAuthLoading(false);
-      alert('Admin login failed: ' + error.message);
+      alert('Admin login failed: ' + (error?.message ?? 'Unknown error'));
       return;
     }
 
@@ -926,6 +936,12 @@ export default function AdminScreen() {
       <TouchableOpacity style={styles.forgotButton} onPress={handleForgotPassword} disabled={resetSending}>
         <Text style={styles.forgotText}>{resetSending ? 'Sending reset email...' : 'Forgot Password?'}</Text>
       </TouchableOpacity>
+      <TurnstileWidget
+        ref={turnstileRef}
+        onVerify={(token) => { setTurnstileToken(token); setTurnstileError(''); }}
+        onExpire={() => setTurnstileToken('')}
+      />
+      {turnstileError ? <Text style={styles.errorText}>{turnstileError}</Text> : null}
       <TouchableOpacity style={[styles.loginBtn, authLoading && styles.loginBtnDisabled]} onPress={handleLogin} disabled={authLoading}>
         {!authLoading && <Rocket color={theme.buttonText} size={19} />}<Text style={styles.loginBtnText}>{authLoading ? 'Signing in...' : 'Secure Login'}</Text>
       </TouchableOpacity>
@@ -1423,6 +1439,7 @@ function createStyles(theme: AdminTheme) {
   loginInput: { color: theme.text, paddingVertical: 15, fontSize: 16, flex: 1, outlineStyle: 'none' } as never,
   forgotButton: { alignSelf: 'flex-end', marginBottom: 18, paddingVertical: 3 },
   forgotText: { color: theme.gold, fontSize: 14, fontWeight: 'bold' },
+  errorText: { color: '#ff4444', fontSize: 12, marginBottom: 10, marginLeft: 4 },
   loginBtn: { backgroundColor: theme.gold, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', width: '100%', flexDirection: 'row', gap: 7 },
   loginBtnDisabled: { opacity: 0.55 },
   loginBtnText: { fontSize: 18, fontWeight: 'bold', color: theme.buttonText },
