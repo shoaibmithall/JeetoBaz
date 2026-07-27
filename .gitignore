@@ -54,3 +54,6 @@ supabase/.temp/
 
 # generated at build time by scripts/generate-product-seo-manifest.mjs
 /src/generated/product-seo-manifest.json
+
+# generated at build time by scripts/generate-sitemap.mjs
+/public/sitemap.xml
