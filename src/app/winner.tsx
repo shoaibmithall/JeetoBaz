@@ -1,6 +1,6 @@
 import { ActivityIndicator, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -112,6 +112,13 @@ export default function WinnerScreen() {
         <Text style={styles.productLabel}>{t('prizeWon')}</Text>
         <Text style={styles.productName}>{product?.name || t('unknownProduct')}</Text>
         <Text style={styles.productPrice}>Price: Rs. {(product?.price || 0).toLocaleString()}</Text>
+        {product?.slug ? (
+          <Link href={`/product/${product.slug}`} asChild>
+            <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
+              <Text style={styles.productDetailLink}>View Prize Details →</Text>
+            </TouchableOpacity>
+          </Link>
+        ) : null}
       </View>
 
       <View style={styles.detailCard}>
@@ -145,6 +152,10 @@ export default function WinnerScreen() {
         <Medal color="#000" size={19} /><Text style={styles.buttonText}>{t('newDrawJoin')}</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/explore')}>
+        <Trophy color="#FFD700" size={19} /><Text style={styles.secondaryButtonText}>{t('pastWinners')}</Text>
+      </TouchableOpacity>
+
       <Text style={styles.footer}>JeetoBaz - {t('appTagline')}</Text>
     </ScrollView>
     </>
@@ -169,6 +180,7 @@ const styles = StyleSheet.create({
   productLabel: { fontSize: 14, color: '#aaa' },
   productName: { fontSize: 24, fontWeight: 'bold', color: '#18a663', marginTop: 5 },
   productPrice: { fontSize: 16, color: '#FFD700', marginTop: 5 },
+  productDetailLink: { color: '#18a663', fontSize: 14, fontWeight: 'bold', marginTop: 12 },
   detailCard: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   detailTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   detailTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
@@ -181,5 +193,7 @@ const styles = StyleSheet.create({
   verifyText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
   button: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+  secondaryButton: { backgroundColor: '#071b13', marginHorizontal: 15, marginBottom: 15, padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderWidth: 1, borderColor: '#FFD700' },
+  secondaryButtonText: { fontSize: 16, fontWeight: 'bold', color: '#FFD700' },
   footer: { textAlign: 'center', color: '#444', fontSize: 12, marginBottom: 30 },
 });
