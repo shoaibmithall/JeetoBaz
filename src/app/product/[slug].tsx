@@ -7,6 +7,7 @@ import { House, Target, Ticket, UsersRound } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage, type TranslationKey } from '@/lib/i18n';
+import { getProductCategory } from '@/lib/product-categories';
 import type { Product } from '@/types/database';
 import productSeoManifest from '@/generated/product-seo-manifest.json';
 
@@ -16,8 +17,10 @@ const DEFAULT_TWITTER_IMAGE = `${BASE_URL}/twitter-image.png`;
 const PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, description, draw_date, live_link, seo_title, meta_description, meta_keywords, slug, indexable';
 
 // Only fields that already exist on `products` (verified live schema, Phase 3.5 audit) are used
-// here — no category/featured/display_order columns exist, so related products are selected
-// purely from status + entry_fee + entries counters. Fetches the full active set (well under
+// here — no featured/display_order column exists, so there is no secondary ordering signal beyond
+// category + entry_fee. `getProductCategory` is the existing, already-in-production classifier
+// used by the Home category filters (src/lib/product-categories.ts) — this reuses it as-is rather
+// than adding a second classifier or parsing slugs. Fetches the full active set (well under
 // Supabase's default row cap for this table's current size) rather than a small `limit`, because
 // truncating the candidate pool before sorting by entry_fee proximity could silently drop the
 // actual closest match.
@@ -117,7 +120,9 @@ export default function ProductDetailScreen() {
 
     async function loadRelatedProducts() {
       if (!slug) return;
-      const currentEntryFee = staticProductBySlug.get(slug)?.entryFee ?? 1;
+      const staticEntry = staticProductBySlug.get(slug);
+      const currentEntryFee = staticEntry?.entryFee ?? 1;
+      const currentCategory = staticEntry?.name ? getProductCategory(staticEntry.name) : null;
 
       const { data, error } = await supabase
         .from('products')
@@ -134,19 +139,43 @@ export default function ProductDetailScreen() {
       }
 
       // "Open" = active status (already filtered above) and spots still remaining — a full
-      // product isn't accepting entries anymore, so it isn't a useful recommendation. Sorted by
-      // closest entry_fee to the current product, with a stable id tie-break so the result is
-      // deterministic for a given underlying data set.
+      // product isn't accepting entries anymore, so it isn't a useful recommendation.
       const openCandidates = (data as Product[]).filter(
         (candidate) => (candidate.current_entries || 0) < candidate.max_entries
       );
-      const sorted = openCandidates.sort((a, b) => {
+
+      // Stable id tie-break so the result is deterministic for a given underlying data set.
+      function byEntryFeeProximity(a: Product, b: Product) {
         const feeDiffA = Math.abs((a.entry_fee || 1) - currentEntryFee);
         const feeDiffB = Math.abs((b.entry_fee || 1) - currentEntryFee);
         if (feeDiffA !== feeDiffB) return feeDiffA - feeDiffB;
         return a.id.localeCompare(b.id);
-      });
-      setRelatedProducts(sorted.slice(0, RELATED_PRODUCTS_MAX));
+      }
+
+      let picked: Product[];
+      if (currentCategory) {
+        // Category-first: prefer candidates the existing classifier resolves to the same
+        // category as the current product, ranked by closest entry_fee. If that doesn't fill
+        // all 4 slots, top up with the next-closest entry_fee matches from any other category.
+        const sameCategory = openCandidates
+          .filter((candidate) => getProductCategory(candidate.name) === currentCategory)
+          .sort(byEntryFeeProximity);
+        picked = sameCategory.slice(0, RELATED_PRODUCTS_MAX);
+
+        if (picked.length < RELATED_PRODUCTS_MAX) {
+          const pickedIds = new Set(picked.map((item) => item.id));
+          const otherCandidates = openCandidates
+            .filter((candidate) => !pickedIds.has(candidate.id))
+            .sort(byEntryFeeProximity);
+          picked = picked.concat(otherCandidates.slice(0, RELATED_PRODUCTS_MAX - picked.length));
+        }
+      } else {
+        // The current product doesn't resolve to any known category — skip category matching
+        // entirely and fall back directly to closest entry_fee across all open candidates.
+        picked = [...openCandidates].sort(byEntryFeeProximity).slice(0, RELATED_PRODUCTS_MAX);
+      }
+
+      setRelatedProducts(picked);
     }
 
     loadRelatedProducts();

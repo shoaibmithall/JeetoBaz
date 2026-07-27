@@ -199,30 +199,30 @@ export default function FavoritesScreen() {
         <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
         {products.map((product) => (
           <View key={product.id} style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <TouchableOpacity
+              style={styles.heartButton}
+              onPress={() => removeFavorite(product.id)}
+              accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}
+            >
+              <Heart color="#ff4d67" fill="#ff4d67" size={22} />
+            </TouchableOpacity>
+
+            {/* Image + title share a single link so the card never has two links to the same
+                destination — the remove-favorite button above is a separate action, not a link. */}
             {product.slug ? (
               <Link href={`/product/${product.slug}`} asChild>
                 <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
                   {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+                  <Text style={[styles.productName, styles.productNameInLink, { color: theme.text }]}>{product.name}</Text>
                 </TouchableOpacity>
               </Link>
             ) : (
-              product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />
+              <>
+                {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+                <Text style={[styles.productName, styles.productNameInLink, { color: theme.text }]}>{product.name}</Text>
+              </>
             )}
             <View style={styles.cardBody}>
-              <View style={styles.cardHeader}>
-                {product.slug ? (
-                  <Link href={`/product/${product.slug}`} asChild>
-                    <TouchableOpacity style={styles.productNameLink} accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
-                      <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
-                    </TouchableOpacity>
-                  </Link>
-                ) : (
-                  <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
-                )}
-                <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}>
-                  <Heart color="#ff4d67" fill="#ff4d67" size={25} />
-                </TouchableOpacity>
-              </View>
               <Text style={styles.price}>Rs. {product.price?.toLocaleString()}</Text>
               <Text style={[styles.entries, { color: theme.muted }]}>{(product.current_entries || 0).toLocaleString()} / {product.max_entries.toLocaleString()} entries</Text>
               <TouchableOpacity
@@ -255,12 +255,12 @@ const styles = StyleSheet.create({
   browseButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
   grid: { width: '100%', padding: 15, gap: 16 },
   gridMultiColumn: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
-  card: { backgroundColor: '#071b13', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
+  card: { backgroundColor: '#071b13', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35', position: 'relative' },
+  heartButton: { position: 'absolute', top: 10, right: 10, zIndex: 2, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 20, padding: 6 },
   image: { width: '100%', height: 180 },
-  cardBody: { padding: 16 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  productNameLink: { flex: 1 },
-  productName: { color: 'white', fontSize: 19, fontWeight: 'bold', flex: 1 },
+  cardBody: { padding: 16, paddingTop: 0 },
+  productName: { color: 'white', fontSize: 19, fontWeight: 'bold' },
+  productNameInLink: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   price: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginTop: 8 },
   entries: { color: '#aaa', fontSize: 13, marginTop: 5, marginBottom: 14 },
   enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center' },
