@@ -426,7 +426,7 @@ function RelatedProductCard({
   return (
     <Link href={`/product/${product.slug}`} asChild>
       <TouchableOpacity
-        style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        style={StyleSheet.flatten([styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }])}
         accessibilityRole="link"
         accessibilityLabel={`${product.name}: ${t('entryFee')} Rs.${product.entry_fee || 1}`}
       >
