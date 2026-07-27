@@ -54,7 +54,7 @@ try {
 async function main() {
   const endpoint =
     `${SUPABASE_URL}/rest/v1/products` +
-    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee' +
+    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee,created_at,updated_at' +
     '&slug=not.is.null';
 
   let response;
@@ -83,6 +83,15 @@ async function main() {
     process.exit(1);
   }
 
+  // Sitemap <lastmod> must reflect when the product actually changed, not when the build ran.
+  // Only accept genuinely parseable dates from Supabase; anything else is left out rather than
+  // silently substituting today's date, which would be a fabricated signal to search engines.
+  function toValidIsoDateOrNull(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+  }
+
   const manifest = rows
     .filter((row) => Boolean(row.slug && String(row.slug).trim()))
     .map((row) => ({
@@ -95,6 +104,7 @@ async function main() {
       imageUrl: row.image_url || '',
       description: row.description || '',
       entryFee: typeof row.entry_fee === 'number' ? row.entry_fee : 1,
+      lastModified: toValidIsoDateOrNull(row.updated_at) || toValidIsoDateOrNull(row.created_at),
     }));
 
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });

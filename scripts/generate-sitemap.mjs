@@ -61,12 +61,13 @@ async function main() {
     process.exit(1);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-
   const staticEntries = STATIC_PAGES.map((page) =>
     urlEntry({ loc: `${BASE_URL}${page.path}`, changefreq: page.changefreq, priority: page.priority })
   );
 
+  // lastmod comes from the product's own updated_at/created_at (resolved in
+  // generate-product-seo-manifest.mjs), never the build date — an unchanged product must keep
+  // the same lastmod across every future build, no matter which day that build runs on.
   const productEntries = manifestEntries
     .filter((entry) => entry.indexable !== false && Boolean(entry.slug))
     .map((entry) =>
@@ -74,7 +75,7 @@ async function main() {
         loc: `${BASE_URL}/product/${entry.slug}`,
         changefreq: 'daily',
         priority: '0.8',
-        lastmod: today,
+        lastmod: entry.lastModified || undefined,
       })
     );
 
