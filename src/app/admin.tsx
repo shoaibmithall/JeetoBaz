@@ -155,6 +155,9 @@ export default function AdminScreen() {
 
     setAuthLoading(true);
     setTurnstileError('');
+    // TEMP DIAGNOSTIC — remove once the empty gotrue_meta_security regression is confirmed fixed.
+    // Never logs the token itself, only whether one is present and its length.
+    console.log('[admin-login] turnstileToken present:', Boolean(turnstileToken), 'length:', turnstileToken.length);
     const { data, error } = await signInWithEmail(normalizedEmail, password, turnstileToken || undefined);
 
     turnstileRef.current?.reset();
