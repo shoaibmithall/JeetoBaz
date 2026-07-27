@@ -54,7 +54,7 @@ try {
 async function main() {
   const endpoint =
     `${SUPABASE_URL}/rest/v1/products` +
-    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee,created_at,updated_at' +
+    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee,created_at' +
     '&slug=not.is.null';
 
   let response;
@@ -84,8 +84,10 @@ async function main() {
   }
 
   // Sitemap <lastmod> must reflect when the product actually changed, not when the build ran.
-  // Only accept genuinely parseable dates from Supabase; anything else is left out rather than
-  // silently substituting today's date, which would be a fabricated signal to search engines.
+  // The `products` table has no `updated_at` column (verified against the live schema), only
+  // `created_at` — so this is a "when the product was created" signal, not "last edited". Only
+  // accept a genuinely parseable date; anything else is left out rather than silently
+  // substituting today's date, which would be a fabricated signal to search engines.
   function toValidIsoDateOrNull(value) {
     if (!value) return null;
     const date = new Date(value);
@@ -104,7 +106,7 @@ async function main() {
       imageUrl: row.image_url || '',
       description: row.description || '',
       entryFee: typeof row.entry_fee === 'number' ? row.entry_fee : 1,
-      lastModified: toValidIsoDateOrNull(row.updated_at) || toValidIsoDateOrNull(row.created_at),
+      lastModified: toValidIsoDateOrNull(row.created_at),
     }));
 
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
