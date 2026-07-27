@@ -68,6 +68,52 @@ function firstParam(value: string | string[] | undefined): string {
   return value || '';
 }
 
+// Expo Router auto-detects a named `ErrorBoundary` export from a route file and wraps that
+// route's component with it (src/lib: node_modules/expo-router/build/useScreens.js `fromImport`).
+// Scoped to this route only — if this component throws during render (e.g. Incident 001, a bad
+// style prop crashing web hydration), this replaces the blank/unmounted page with a recoverable
+// fallback instead of a permanent white screen. Never render `error.message`/stack to the user —
+// it may contain internal details — only log it, and only outside production.
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
+  const { theme } = useAppTheme();
+  const router = useRouter();
+
+  if (process.env.NODE_ENV === 'development') {
+    console.error('[product/[slug]] ErrorBoundary caught an error:', error);
+  }
+
+  return (
+    <>
+    <Head>
+      <meta name="robots" content="noindex, follow" />
+    </Head>
+    <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+      <Text style={[styles.notFoundTitle, { color: theme.text }]}>Something went wrong</Text>
+      <Text style={[styles.notFoundMessage, { color: theme.muted }]}>
+        This prize page couldn&apos;t be loaded right now. Please try again.
+      </Text>
+      <TouchableOpacity
+        style={[styles.notFoundButton, { backgroundColor: theme.gold }]}
+        onPress={retry}
+        accessibilityRole="button"
+        accessibilityLabel="Try again"
+      >
+        <Text style={styles.notFoundButtonText}>Try Again</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.notFoundButton, styles.notFoundButtonSecondary, { borderColor: theme.border }]}
+        onPress={() => router.replace('/')}
+        accessibilityRole="button"
+        accessibilityLabel="Back to Home"
+      >
+        <House color={theme.text} size={20} />
+        <Text style={[styles.notFoundButtonText, { color: theme.text }]}>Back to Home</Text>
+      </TouchableOpacity>
+    </View>
+    </>
+  );
+}
+
 export default function ProductDetailScreen() {
   const { theme } = useAppTheme();
   const { t } = useLanguage();
@@ -461,6 +507,7 @@ const styles = StyleSheet.create({
   notFoundTitle: { fontSize: 26, fontWeight: '700', marginBottom: 12 },
   notFoundMessage: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 32, maxWidth: 400 },
   notFoundButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 12 },
+  notFoundButtonSecondary: { backgroundColor: 'transparent', borderWidth: 1, marginTop: 12 },
   notFoundButtonText: { color: '#000', fontSize: 16, fontWeight: '700' },
 
   header: { padding: 20, borderBottomWidth: 2 },
