@@ -54,7 +54,7 @@ try {
 async function main() {
   const endpoint =
     `${SUPABASE_URL}/rest/v1/products` +
-    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description' +
+    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee' +
     '&slug=not.is.null';
 
   let response;
@@ -94,6 +94,7 @@ async function main() {
       indexable: row.indexable !== false,
       imageUrl: row.image_url || '',
       description: row.description || '',
+      entryFee: typeof row.entry_fee === 'number' ? row.entry_fee : 1,
     }));
 
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
