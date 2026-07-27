@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Linking,
   StyleSheet,
@@ -603,10 +603,22 @@ function CopyrightBar({ mobile }: { mobile: boolean }) {
 
 export default function JeetoBazFooter() {
   const { width } = useWindowDimensions();
+  // `useWindowDimensions()` has no real viewport during server-side static rendering, so it
+  // reports a value that differs from the client's actual width — without this guard, the
+  // isMobile/isTablet branch below (and therefore BrandBlock's Image-vs-Text output) could differ
+  // between server and client, causing a hydration mismatch. `useLayoutEffect` (not `useEffect`)
+  // flips to the real width synchronously before the browser paints, so the fixed-width first
+  // render is never actually shown on screen, matching the pattern's intent more precisely than
+  // a plain `useEffect` would (which would paint the wrong-width layout for one frame first).
+  const [hasHydratedLayout, setHasHydratedLayout] = useState(false);
+  useLayoutEffect(() => {
+    setHasHydratedLayout(true);
+  }, []);
+  const responsiveWidth = hasHydratedLayout ? width : 390;
   const router = useRouter();
   const { mode, theme } = useAppTheme();
-  const isMobile = width < 768;
-  const isTablet = width >= 768 && width < 1200;
+  const isMobile = responsiveWidth < 768;
+  const isTablet = responsiveWidth >= 768 && responsiveWidth < 1200;
   const footerColors = useMemo<FooterColors>(
     () =>
       mode === 'light'
