@@ -1,5 +1,6 @@
 import { Image, Linking, View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
+import { Link } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
@@ -192,7 +193,15 @@ export default function WinnersScreen() {
               <Text style={styles.verifiedRecord}>Verified Draw Record</Text>
               <Text style={[styles.winnerName, { color: theme.text }]}>{winnerEntry?.name || t('notProvided')}</Text>
               <Text style={[styles.winnerPhone, { color: theme.text }]}>{maskPhone(product.winner_phone)}</Text>
-              <Text style={styles.productName}>{product.name}</Text>
+              {product.slug ? (
+                <Link href={`/product/${product.slug}`} asChild>
+                  <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
+                    <Text style={[styles.productName, styles.productNameLink]}>{product.name}</Text>
+                  </TouchableOpacity>
+                </Link>
+              ) : (
+                <Text style={styles.productName}>{product.name}</Text>
+              )}
               <Text style={styles.productPrice}>Prize Value: Rs. {product.price?.toLocaleString()}</Text>
 
               <View style={styles.recordGrid}>
@@ -252,6 +261,7 @@ const styles = StyleSheet.create({
   winnerName: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
   winnerPhone: { color: 'white', fontSize: 18, fontWeight: 'bold', fontFamily: 'monospace', marginBottom: 8 },
   productName: { color: '#18a663', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  productNameLink: { textDecorationLine: 'underline' },
   productPrice: { color: '#FFD700', fontSize: 16, marginBottom: 4 },
   date: { color: '#aaa', fontSize: 12 },
   recordGrid: { width: '100%', marginTop: 14, gap: 8 },

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
@@ -22,6 +22,7 @@ export default function DrawScreen() {
   const [winner, setWinner] = useState<Entry | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [productSlug, setProductSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -43,7 +44,7 @@ export default function DrawScreen() {
 
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('id, status, winner_phone')
+      .select('id, status, winner_phone, slug')
       .eq('id', productIdValue)
       .maybeSingle();
 
@@ -51,6 +52,8 @@ export default function DrawScreen() {
       alert('This draw could not be verified.');
       return;
     }
+
+    setProductSlug(product.slug || null);
 
     if (product.status === 'completed' && product.winner_phone) {
       router.push({ pathname: '/winner', params: { productId: productIdValue } });
@@ -188,6 +191,13 @@ export default function DrawScreen() {
       </View>
 
       <Text style={styles.productTitle}>{productNameValue || t('liveDrawTitle')}</Text>
+      {productSlug ? (
+        <Link href={`/product/${productSlug}`} asChild>
+          <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${productNameValue}`}>
+            <Text style={styles.productDetailLink}>View Prize Details →</Text>
+          </TouchableOpacity>
+        </Link>
+      ) : null}
 
       {phase === 'ready' && (
         <View style={styles.center}>
@@ -287,6 +297,7 @@ const styles = StyleSheet.create({
   liveBox: { backgroundColor: '#2b0d0d', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveText: { color: '#ff4444', fontWeight: 'bold', fontSize: 12 },
   productTitle: { color: 'white', fontSize: 16, textAlign: 'center', padding: 12, backgroundColor: '#04140e', borderBottomWidth: 1, borderBottomColor: '#174a35' },
+  productDetailLink: { color: '#18a663', fontSize: 13, fontWeight: 'bold', textAlign: 'center', paddingVertical: 8, backgroundColor: '#04140e' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
   readyTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 10 },
   readySubtitle: { fontSize: 14, color: '#aaa', marginBottom: 30 },

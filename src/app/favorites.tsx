@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -199,10 +199,26 @@ export default function FavoritesScreen() {
         <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
         {products.map((product) => (
           <View key={product.id} style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+            {product.slug ? (
+              <Link href={`/product/${product.slug}`} asChild>
+                <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
+                  {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+                </TouchableOpacity>
+              </Link>
+            ) : (
+              product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />
+            )}
             <View style={styles.cardBody}>
               <View style={styles.cardHeader}>
-                <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
+                {product.slug ? (
+                  <Link href={`/product/${product.slug}`} asChild>
+                    <TouchableOpacity style={styles.productNameLink} accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
+                      <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
+                    </TouchableOpacity>
+                  </Link>
+                ) : (
+                  <Text style={[styles.productName, { color: theme.text }]}>{product.name}</Text>
+                )}
                 <TouchableOpacity onPress={() => removeFavorite(product.id)} accessibilityLabel={`${t('removeFavorite')}: ${product.name}`}>
                   <Heart color="#ff4d67" fill="#ff4d67" size={25} />
                 </TouchableOpacity>
@@ -243,6 +259,7 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: 180 },
   cardBody: { padding: 16 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  productNameLink: { flex: 1 },
   productName: { color: 'white', fontSize: 19, fontWeight: 'bold', flex: 1 },
   price: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginTop: 8 },
   entries: { color: '#aaa', fontSize: 13, marginTop: 5, marginBottom: 14 },

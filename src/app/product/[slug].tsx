@@ -1,12 +1,12 @@
 import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { House, Target, Ticket, UsersRound } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, type TranslationKey } from '@/lib/i18n';
 import type { Product } from '@/types/database';
 import productSeoManifest from '@/generated/product-seo-manifest.json';
 
@@ -14,6 +14,16 @@ const BASE_URL = 'https://jeetobaz.pk';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const DEFAULT_TWITTER_IMAGE = `${BASE_URL}/twitter-image.png`;
 const PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, description, draw_date, live_link, seo_title, meta_description, meta_keywords, slug, indexable';
+
+// Only fields that already exist on `products` (verified live schema, Phase 3.5 audit) are used
+// here — no category/featured/display_order columns exist, so related products are selected
+// purely from status + entry_fee + entries counters. Fetches the full active set (well under
+// Supabase's default row cap for this table's current size) rather than a small `limit`, because
+// truncating the candidate pool before sorting by entry_fee proximity could silently drop the
+// actual closest match.
+const RELATED_PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, slug';
+const RELATED_PRODUCTS_QUERY_LIMIT = 300;
+const RELATED_PRODUCTS_MAX = 4;
 
 type StaticProductEntry = {
   slug: string;
@@ -65,6 +75,7 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +106,50 @@ export default function ProductDetailScreen() {
     }
 
     loadProduct();
+    return () => { active = false; };
+  }, [slug]);
+
+  // Independent of the main product fetch above so related products don't wait on it — the
+  // current product's entry fee (needed for proximity sorting) is already available synchronously
+  // from the static manifest, even before the live product row resolves.
+  useEffect(() => {
+    let active = true;
+
+    async function loadRelatedProducts() {
+      if (!slug) return;
+      const currentEntryFee = staticProductBySlug.get(slug)?.entryFee ?? 1;
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(RELATED_PRODUCT_COLUMNS)
+        .eq('status', 'active')
+        .neq('slug', slug)
+        .not('slug', 'is', null)
+        .limit(RELATED_PRODUCTS_QUERY_LIMIT);
+
+      if (!active) return;
+      if (error || !data) {
+        setRelatedProducts([]);
+        return;
+      }
+
+      // "Open" = active status (already filtered above) and spots still remaining — a full
+      // product isn't accepting entries anymore, so it isn't a useful recommendation. Sorted by
+      // closest entry_fee to the current product, with a stable id tie-break so the result is
+      // deterministic for a given underlying data set.
+      const openCandidates = (data as Product[]).filter(
+        (candidate) => (candidate.current_entries || 0) < candidate.max_entries
+      );
+      const sorted = openCandidates.sort((a, b) => {
+        const feeDiffA = Math.abs((a.entry_fee || 1) - currentEntryFee);
+        const feeDiffB = Math.abs((b.entry_fee || 1) - currentEntryFee);
+        if (feeDiffA !== feeDiffB) return feeDiffA - feeDiffB;
+        return a.id.localeCompare(b.id);
+      });
+      setRelatedProducts(sorted.slice(0, RELATED_PRODUCTS_MAX));
+    }
+
+    loadRelatedProducts();
     return () => { active = false; };
   }, [slug]);
 
@@ -310,8 +365,62 @@ export default function ProductDetailScreen() {
           <ActivityIndicator color={theme.gold} style={{ marginTop: 8 }} />
         )}
       </View>
+
+      {relatedProducts.length > 0 ? (
+        <View style={styles.relatedSection}>
+          <Text style={[styles.relatedTitle, { color: theme.text }]}>{t('relatedProducts')}</Text>
+          <View style={styles.relatedGrid}>
+            {relatedProducts.map((related) => (
+              <RelatedProductCard key={related.id} product={related} theme={theme} t={t} />
+            ))}
+          </View>
+        </View>
+      ) : null}
     </ScrollView>
     </>
+  );
+}
+
+function RelatedProductCard({
+  product,
+  theme,
+  t,
+}: {
+  product: Product;
+  theme: ReturnType<typeof useAppTheme>['theme'];
+  t: (key: TranslationKey) => string;
+}) {
+  const spotsLeft = Math.max(product.max_entries - (product.current_entries || 0), 0);
+
+  if (!product.slug) return null;
+
+  return (
+    <Link href={`/product/${product.slug}`} asChild>
+      <TouchableOpacity
+        style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        accessibilityRole="link"
+        accessibilityLabel={`${product.name}: ${t('entryFee')} Rs.${product.entry_fee || 1}`}
+      >
+        {product.image_url ? (
+          <ExpoImage
+            source={{ uri: product.image_url }}
+            accessibilityLabel={`${product.name} prize`}
+            contentFit="contain"
+            cachePolicy="disk"
+            style={styles.relatedImage}
+          />
+        ) : (
+          <View style={[styles.relatedImageFallback, { backgroundColor: theme.surfaceAlt }]}>
+            <Ticket color={theme.gold} size={26} />
+          </View>
+        )}
+        <Text numberOfLines={2} style={[styles.relatedName, { color: theme.text }]}>{product.name}</Text>
+        <View style={[styles.relatedEntryBadge, { backgroundColor: theme.goldSoft }]}>
+          <Text style={[styles.relatedEntryFee, { color: theme.gold }]}>{t('entryFee')}: Rs. {product.entry_fee || 1}</Text>
+        </View>
+        <Text numberOfLines={1} style={[styles.relatedSpots, { color: theme.muted }]}>{spotsLeft.toLocaleString()} {t('spotsLeft')}</Text>
+      </TouchableOpacity>
+    </Link>
   );
 }
 
@@ -332,6 +441,17 @@ const styles = StyleSheet.create({
   productImageFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   body: { margin: 15, borderRadius: 16, borderWidth: 1, padding: 20 },
+
+  relatedSection: { paddingHorizontal: 15, marginTop: 5, marginBottom: 30 },
+  relatedTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
+  relatedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  relatedCard: { width: '47%', borderRadius: 12, borderWidth: 1, padding: 10 },
+  relatedImage: { width: '100%', height: 90, marginBottom: 8 },
+  relatedImageFallback: { width: '100%', height: 90, marginBottom: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+  relatedName: { fontSize: 13, fontWeight: '700', marginBottom: 8, minHeight: 34 },
+  relatedEntryBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 6 },
+  relatedEntryFee: { fontSize: 11, fontWeight: '700' },
+  relatedSpots: { fontSize: 11 },
   productName: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
   description: { fontSize: 14, lineHeight: 20, marginBottom: 16 },
 
