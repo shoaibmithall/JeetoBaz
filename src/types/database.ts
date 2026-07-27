@@ -48,7 +48,8 @@ export type DrawResult = {
 
 export type User = {
   id: string;
-  name: string | null;
+  // Live schema (verified 2026-07-27): NOT NULL, no default — was incorrectly `string | null` here.
+  name: string;
   phone: string;
   created_at: string;
   auth_user_id?: string | null;
@@ -57,6 +58,10 @@ export type User = {
   referral_code?: string | null;
   referral_device_token?: string | null;
   referred_by?: string | null;
+  // Added 2026-07-27 (Phase 3.5 schema audit): real columns, previously missing from this type.
+  cnic?: string | null;
+  email?: string | null;
+  auth_provider?: string;
 };
 
 export type ReferralClaim = {
@@ -94,6 +99,8 @@ export type Transaction = {
   sender_phone?: string | null;
   user_name?: string | null;
   receipt_path?: string | null;
+  // Added 2026-07-27 (Phase 3.5 schema audit): real column, previously missing from this type.
+  user_id?: string | null;
 };
 
 export type AppNotification = {
@@ -104,11 +111,21 @@ export type AppNotification = {
   link: string | null;
   kind: string | null;
   created_at: string;
+  // Added 2026-07-27 (Phase 3.5 schema audit): real column, previously missing from this type.
+  is_read?: boolean | null;
 };
 
 export type AppSetting = {
   key: string;
   value: unknown;
+  updated_at: string;
+};
+
+// Added 2026-07-27 (Phase 3.5 schema audit): real table, not previously represented here.
+// Not currently queried from application code (see supabase/*.sql for its origin).
+export type AdminSetting = {
+  key: string;
+  value: string;
   updated_at: string;
 };
 
@@ -195,6 +212,11 @@ export type Database = {
         AppSetting,
         Pick<AppSetting, 'key' | 'value'>,
         Partial<Pick<AppSetting, 'value'>>
+      >;
+      admin_settings: Table<
+        AdminSetting,
+        Pick<AdminSetting, 'key' | 'value'>,
+        Partial<Pick<AdminSetting, 'value'>>
       >;
       verification_documents: Table<
         VerificationDocument,
