@@ -5,12 +5,20 @@
 // available data — no reliance on shared in-memory state between build steps.
 //
 // Run before `expo export`. Only public anon-key REST access is used; no service-role key.
+//
+// Invoked two ways:
+//   node generate-product-seo-manifest.mjs         (npm run build — strict: any failure aborts)
+//   node generate-product-seo-manifest.mjs --dev    (npm start / npm run web — resilient: falls
+//                                                     back to an existing manifest on disk with a
+//                                                     warning, only hard-fails if none exists)
 import { writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_PATH = path.join(__dirname, '..', 'src', 'generated', 'product-seo-manifest.json');
+const DEV_MODE = process.argv.includes('--dev');
 
 // CI secret values are pasted by hand and can pick up stray formatting that a browser or shell
 // would silently tolerate but the WHATWG URL parser (used by fetch) rejects outright — e.g. a
@@ -28,27 +36,49 @@ function sanitizeEnvValue(value) {
   return cleaned;
 }
 
+// Strict (`npm run build`) behavior is unchanged: log the error and exit 1.
+// Resilient (`--dev`) behavior: if a manifest already exists on disk, leave it untouched and
+// exit 0 with a warning so the dev server can start; only exit 1 if no manifest exists at all,
+// since the app then has nothing to read from `src/app/product/[slug].tsx`.
+function fail(message) {
+  console.error(`[generate-product-seo-manifest] ${message}`);
+
+  if (DEV_MODE && existsSync(OUTPUT_PATH)) {
+    console.warn(
+      '[generate-product-seo-manifest] Keeping the existing manifest on disk and continuing (dev mode). ' +
+        'Product SEO data may be stale until you run `npm run build` or restart once the issue above is fixed.'
+    );
+    process.exit(0);
+  }
+
+  if (DEV_MODE) {
+    console.error(
+      '[generate-product-seo-manifest] No manifest exists yet at ' +
+        `${path.relative(process.cwd(), OUTPUT_PATH)}, so there is nothing to fall back to. ` +
+        'Fix the issue above, then run `npm run build` (or re-run this script) to generate one before starting the dev server.'
+    );
+  }
+
+  process.exit(1);
+}
+
 const SUPABASE_URL = sanitizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_URL)?.replace(/\/+$/, '');
 const SUPABASE_ANON_KEY = sanitizeEnvValue(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error(
-    '[generate-product-seo-manifest] Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
-      'Cannot generate the product SEO manifest. Aborting build.'
+  fail(
+    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Cannot generate the product SEO manifest.'
   );
-  process.exit(1);
 }
 
 try {
   new URL(SUPABASE_URL);
 } catch {
-  console.error(
-    `[generate-product-seo-manifest] EXPO_PUBLIC_SUPABASE_URL is not a valid URL after trimming whitespace ` +
-      `and surrounding quotes (length ${SUPABASE_URL.length}, starts with "${SUPABASE_URL.slice(0, 12)}"). ` +
-      'Check the secret\'s value for stray characters, such as the "KEY=" prefix pasted in by mistake. ' +
-      'Cannot generate the product SEO manifest. Aborting build.'
+  fail(
+    `EXPO_PUBLIC_SUPABASE_URL is not a valid URL after trimming whitespace and surrounding quotes ` +
+      `(length ${SUPABASE_URL.length}, starts with "${SUPABASE_URL.slice(0, 12)}"). ` +
+      'Check the secret\'s value for stray characters, such as the "KEY=" prefix pasted in by mistake.'
   );
-  process.exit(1);
 }
 
 async function main() {
@@ -66,21 +96,19 @@ async function main() {
       },
     });
   } catch (e) {
-    console.error('[generate-product-seo-manifest] Network error reaching Supabase:', e);
-    process.exit(1);
+    fail(`Network error reaching Supabase: ${e}`);
+    return;
   }
 
   if (!response.ok) {
-    console.error(
-      `[generate-product-seo-manifest] Supabase REST request failed: HTTP ${response.status} ${response.statusText}`
-    );
-    process.exit(1);
+    fail(`Supabase REST request failed: HTTP ${response.status} ${response.statusText}`);
+    return;
   }
 
   const rows = await response.json();
   if (!Array.isArray(rows)) {
-    console.error('[generate-product-seo-manifest] Unexpected response shape (expected an array).');
-    process.exit(1);
+    fail('Unexpected response shape (expected an array).');
+    return;
   }
 
   // Sitemap <lastmod> must reflect when the product actually changed, not when the build ran.
