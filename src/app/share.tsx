@@ -18,7 +18,7 @@ const APP_URL = 'https://jeetobaz.pk/';
 
 type ShareUrlType = 'message' | 'facebook' | 'messenger' | 'telegram' | 'x' | 'threads' | 'instagram' | 'tiktok' | 'snapchat' | 'discord';
 
-const COPY_FIRST_TYPES: ShareUrlType[] = ['instagram', 'tiktok', 'snapchat', 'discord'];
+const COPY_FIRST_TYPES: ShareUrlType[] = ['messenger', 'instagram', 'tiktok', 'snapchat', 'discord'];
 type SharePlatform = {
   name: string;
   icon: React.ReactNode;
@@ -124,7 +124,9 @@ export function ShareModal({ visible, onClose }: ShareModalProps) {
   function getPlatformUrl(type?: ShareUrlType) {
     if (type === 'message') return `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
     if (type === 'facebook') return `https://www.facebook.com/sharer.php?u=${encodeURIComponent(APP_URL)}`;
-    if (type === 'messenger') return `https://www.facebook.com/dialog/send?link=${encodeURIComponent(APP_URL)}&app_id=291494419107518`;
+    // Messenger's prefilled web dialog requires a verified Meta app ID and
+    // redirect URI. Copy the message first, then open Messenger directly.
+    if (type === 'messenger') return 'https://www.messenger.com/';
     if (type === 'telegram') return `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(shareMessage)}`;
     if (type === 'x') return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(APP_URL)}`;
     if (type === 'threads') return `https://www.threads.net/intent/post?text=${encodeURIComponent(fullMessage)}`;
