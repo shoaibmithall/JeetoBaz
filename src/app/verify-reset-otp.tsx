@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
@@ -10,6 +10,36 @@ import { KeyRound, LockKeyhole, Shield } from 'lucide-react-native';
 const OTP_STORAGE_KEY = 'otp_verify_last_sent_at';
 const MAX_RESENDS = 3;
 const OTP_LENGTH = 6;
+
+// Must match forgot-password.tsx — web-only, keeps the recovery email out of the URL.
+const RESET_EMAIL_STORAGE_KEY = 'password_reset_email';
+const RESET_EMAIL_EXPIRY_MS = 15 * 60 * 1000;
+
+function readStoredResetEmail(): string | null {
+  if (Platform.OS !== 'web') return null;
+  try {
+    const raw = sessionStorage.getItem(RESET_EMAIL_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { email?: string; storedAt?: number };
+    if (!parsed.email || typeof parsed.storedAt !== 'number') return null;
+    if (Date.now() - parsed.storedAt > RESET_EMAIL_EXPIRY_MS) {
+      sessionStorage.removeItem(RESET_EMAIL_STORAGE_KEY);
+      return null;
+    }
+    return parsed.email;
+  } catch {
+    return null;
+  }
+}
+
+function clearStoredResetEmail() {
+  if (Platform.OS !== 'web') return;
+  try {
+    sessionStorage.removeItem(RESET_EMAIL_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
@@ -24,7 +54,12 @@ export default function VerifyResetOtpScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string }>();
-  const email = params.email || '';
+  // Snapshot once at mount, not recomputed on every render: clearing sessionStorage after a
+  // successful verify (below) must not flip this back to empty and race the redirect effect
+  // against the navigate-to-reset-password call that follows it.
+  const [email] = useState(() =>
+    Platform.OS === 'web' ? readStoredResetEmail() || '' : params.email || ''
+  );
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
@@ -34,6 +69,12 @@ export default function VerifyResetOtpScreen() {
   const [resendCount, setResendCount] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && !email) {
+      router.replace({ pathname: '/forgot-password' as never, params: { sessionExpired: '1' } });
+    }
+  }, [email, router]);
 
   useEffect(() => {
     const lastSent = localStorage.getItem(OTP_STORAGE_KEY);
@@ -93,10 +134,17 @@ export default function VerifyResetOtpScreen() {
       } else {
         setError('Verification failed: ' + msg);
       }
+      // Terminal: this was their last usable code (no resends left) and it just failed —
+      // nothing left to try from this screen, so clear the stored email now rather than
+      // leaving it sitting in sessionStorage until the 15-minute expiry catches up.
+      if (resendCount >= MAX_RESENDS) {
+        clearStoredResetEmail();
+      }
       setLoading(false);
       return;
     }
 
+    clearStoredResetEmail();
     router.replace('/reset-password' as never);
     setLoading(false);
   }

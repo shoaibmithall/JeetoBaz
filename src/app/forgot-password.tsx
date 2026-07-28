@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
@@ -12,9 +12,16 @@ import { LockKeyhole, Mail, Send, Shield } from 'lucide-react-native';
 const STORAGE_KEY = 'otp_last_sent_at';
 const MAX_RESENDS = 3;
 
+// Web-only: keeps the recovery email out of the URL (see verify-reset-otp.tsx for the
+// read/expire/clear side of this). Native never puts it in the URL to begin with, so
+// native keeps passing it via router params, unchanged.
+const RESET_EMAIL_STORAGE_KEY = 'password_reset_email';
+
 export default function ForgotPasswordScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ sessionExpired?: string }>();
+  const showExpiredNotice = params.sessionExpired === '1';
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -124,7 +131,23 @@ export default function ForgotPasswordScreen() {
   }
 
   function handleContinue() {
-    router.push({ pathname: '/verify-reset-otp' as never, params: { email: email.trim().toLowerCase() } });
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (Platform.OS === 'web') {
+      try {
+        sessionStorage.setItem(
+          RESET_EMAIL_STORAGE_KEY,
+          JSON.stringify({ email: trimmedEmail, storedAt: Date.now() })
+        );
+      } catch {
+        // sessionStorage unavailable (e.g. private browsing) — verify-reset-otp redirects
+        // back here with a clear message if it can't find a stored email.
+      }
+      router.push('/verify-reset-otp' as never);
+      return;
+    }
+
+    router.push({ pathname: '/verify-reset-otp' as never, params: { email: trimmedEmail } });
   }
 
   const trustItems = [
@@ -207,6 +230,11 @@ export default function ForgotPasswordScreen() {
       <Text style={[styles.subtitle, { color: theme.muted }]}>
         Enter your email address and we'll send you a 6-digit verification code.
       </Text>
+      {showExpiredNotice ? (
+        <Text style={styles.rateLimitText}>
+          Your verification session expired. Please request a new code.
+        </Text>
+      ) : null}
 
       <View style={[
         styles.inputContainer,
