@@ -345,44 +345,47 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <View style={[styles.profileIdentity, isWideProfile && styles.profileIdentityWide]}>
-            <Text style={[styles.profileName, { color: theme.text }]}>{name || 'JeetoBaz Member'}</Text>
+          <View style={styles.profileIdentity}>
+            <Text
+              style={[styles.profileName, { color: theme.text }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {name || 'JeetoBaz Member'}
+            </Text>
             <View style={styles.verifiedBadge}>
               <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
               <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
                 {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
               </Text>
             </View>
-
-            {user?.email ? <Text style={[styles.profileEmail, { color: theme.muted }]}>{user.email}</Text> : null}
-
-            {jbUserId ? (
-              <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
-                <Text style={[styles.jbIdText, { color: theme.muted }]}>{jbUserId}</Text>
-                <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={14} />
-                {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
-              </TouchableOpacity>
-            ) : null}
-
-            {memberSince ? (
-              <View style={styles.memberSinceRow}>
-                <CalendarDays color={theme.subtle} size={14} />
-                <Text style={[styles.memberSinceText, { color: theme.subtle }]}>Member Since {memberSince}</Text>
-              </View>
-            ) : null}
           </View>
         </View>
 
-        <View style={[styles.profileContactRow, isWideProfile && styles.profileContactRowWide]}>
-          <View style={[styles.profileContactCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
-            <Phone color="#18a663" size={21} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.profileDetailsScroller}
+          contentContainerStyle={[styles.profileDetailsRow, isWideProfile && styles.profileDetailsRowWide]}
+        >
+          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <Phone color="#18a663" size={22} />
             <View style={styles.profileContactText}>
               <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Phone Number</Text>
-              <Text style={[styles.profileContactValue, { color: theme.text }]}>{phone || 'Not added'}</Text>
+              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{phone || 'Not added'}</Text>
             </View>
           </View>
+
+          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <MailCheck color="#18a663" size={22} />
+            <View style={styles.profileContactText}>
+              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Email Address</Text>
+              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{user?.email || 'Not added'}</Text>
+            </View>
+          </View>
+
           <TouchableOpacity
-            style={[styles.profileContactCard, { backgroundColor: theme.background, borderColor: theme.border }]}
+            style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}
             onPress={() => router.push('/profile-location' as never)}
             accessibilityRole="button"
             accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
@@ -394,7 +397,32 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight color={theme.subtle} size={18} />
           </TouchableOpacity>
-        </View>
+
+          <TouchableOpacity
+            style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}
+            onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
+            disabled={!jbUserId}
+            accessibilityRole="button"
+            accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
+          >
+            <ShieldCheck color="#18a663" size={22} />
+            <View style={styles.profileContactText}>
+              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member ID</Text>
+              <Text style={[styles.profileContactValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
+                {jbUserId || 'Unavailable'}
+              </Text>
+            </View>
+            {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
+          </TouchableOpacity>
+
+          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <CalendarDays color="#18a663" size={22} />
+            <View style={styles.profileContactText}>
+              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member Since</Text>
+              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
+            </View>
+          </View>
+        </ScrollView>
       </View>
 
       <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -765,16 +793,16 @@ const styles = StyleSheet.create({
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
   profileHeader: { borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 32, paddingHorizontal: 20, alignItems: 'center' },
-  profileHero: { width: '100%', alignItems: 'center' },
-  profileHeroWide: { maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 32 },
-  avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', marginBottom: 10, position: 'relative' },
+  profileHero: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 18 },
+  profileHeroWide: { gap: 32 },
+  avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
   avatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2, borderColor: '#FFD700' },
   avatarImageWide: { width: 150, height: 150, borderRadius: 75 },
   cameraOverlay: { position: 'absolute', right: -3, bottom: -3, width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  profileIdentity: { alignItems: 'center' },
+  profileIdentity: { alignItems: 'flex-start', flexShrink: 1, minWidth: 0 },
   profileIdentityWide: { alignItems: 'flex-start' },
-  profileName: { fontSize: 26, fontWeight: 'bold', marginTop: 8, textAlign: 'center' },
+  profileName: { fontSize: 26, fontWeight: 'bold', textAlign: 'left', maxWidth: '100%' },
   profileEmail: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
 
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 20 },
@@ -787,6 +815,11 @@ const styles = StyleSheet.create({
   memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
   memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
 
+  profileDetailsScroller: { width: '100%', marginTop: 24 },
+  profileDetailsRow: { paddingHorizontal: 2, gap: 10 },
+  profileDetailsRowWide: { flexGrow: 1, justifyContent: 'center' },
+  profileDetailCard: { width: 220, minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
+  profileMemberId: { fontFamily: 'monospace', letterSpacing: 0.7 },
   profileContactRow: { width: '100%', maxWidth: 900, alignSelf: 'center', flexDirection: 'row', gap: 10, marginTop: 24 },
   profileContactRowWide: { marginTop: 28 },
   profileContactCard: { flex: 1, minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
