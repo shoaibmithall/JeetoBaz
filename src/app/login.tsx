@@ -1,12 +1,12 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform } from 'react-native';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions } from 'react-native';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { createUserProfile, signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
+import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
@@ -16,7 +16,7 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import {
   CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
-  Medal, Pencil, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy, BadgeCheck,
+  MapPin, Medal, Phone, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy, BadgeCheck,
   UserPlus, UsersRound,
 } from 'lucide-react-native';
 
@@ -38,14 +38,12 @@ function dataUrlToArrayBuffer(dataUrl: string) {
   return bytes.buffer;
 }
 
-function sanitizePhoneForPath(value: string) {
-  return value.replace(/\D/g, '') || 'profile';
-}
-
 export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
-  const { user, isEmailVerified } = useAuth();
+  const { width } = useWindowDimensions();
+  const isWideProfile = width >= 768;
+  const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,6 +61,8 @@ export default function ProfileScreen() {
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [city, setCity] = useState('');
+  const [profileExists, setProfileExists] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
 
@@ -84,93 +84,107 @@ export default function ProfileScreen() {
     setTimeout(() => setCopiedField(null), 2000);
   }
 
+  const loadLocation = useCallback(async () => {
+    if (!user?.id) {
+      setCity('');
+      return;
+    }
+    const { data } = await supabase
+      .from('user_profile_details')
+      .select('city')
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
+    setCity(data?.city || '');
+  }, [user?.id]);
+
+  useFocusEffect(useCallback(() => {
+    if (!authLoading && user?.id) void loadLocation();
+  }, [authLoading, loadLocation, user?.id]));
+
   useEffect(() => {
     let active = true;
 
     async function loadProfile() {
-      if (user && isEmailVerified) {
-        const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
-        const legacyAvatar = scopedAvatar ? null : await getStoredValue(USER_AVATAR_STORAGE_KEY);
-        const cachedAvatar = scopedAvatar || legacyAvatar;
-        if (cachedAvatar && active) {
-          setAvatarUrl(cachedAvatar);
-          if (!scopedAvatar) await setStoredValue(avatarStorageKey(user.id), cachedAvatar);
-        }
+      if (authLoading) {
+        if (active) setStep('check');
+        return;
+      }
 
-        const { data: profile } = await supabase
-          .from('users')
-          .select('name, phone, avatar_url, referral_code, created_at')
-          .eq('auth_user_id', user.id)
-          .maybeSingle();
+      if (user) {
+        if (active) setStep('check');
+        const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
+        if (scopedAvatar && active) setAvatarUrl(scopedAvatar);
+
+        const [{ data: profile }, { data: location }] = await Promise.all([
+          supabase
+            .from('users')
+            .select('name, phone, avatar_url, referral_code, created_at')
+            .eq('auth_user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('user_profile_details')
+            .select('city')
+            .eq('auth_user_id', user.id)
+            .maybeSingle(),
+        ]);
 
         if (profile && active) {
+          setProfileExists(true);
           setPhone(profile.phone || '');
           setName(profile.name || '');
-          if (profile.avatar_url) {
-            setAvatarUrl(profile.avatar_url);
-            setStoredValue(avatarStorageKey(user.id), profile.avatar_url);
-          }
+          setEmail(user.email || '');
+          setCity(location?.city || '');
+          setAvatarUrl(profile.avatar_url || scopedAvatar || '');
+          if (profile.avatar_url) void setStoredValue(avatarStorageKey(user.id), profile.avatar_url);
           setReferralCode(profile.referral_code || null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
           if (profile.phone) {
-            fetchStats(profile.phone);
-            setStoredValue('userPhone', profile.phone);
-            setStoredValue('userName', profile.name || '');
+            void fetchStats(profile.phone);
+            void setStoredValue('userPhone', profile.phone);
+            void setStoredValue('userName', profile.name || '');
           }
         } else if (active) {
           const metadataPhone = typeof user.user_metadata?.phone === 'string'
             ? user.user_metadata.phone.trim()
             : '';
+          setProfileExists(false);
           setStep('profile');
           setEmail(user.email || '');
           setName(user.user_metadata?.name || '');
+          setPhone(/^\+92[0-9]{10}$/.test(metadataPhone) ? metadataPhone : '');
+          setCity(location?.city || '');
+          setReferralCode(null);
+          setProfileCreatedAt(null);
           if (/^\+92[0-9]{10}$/.test(metadataPhone)) {
-            setPhone(metadataPhone);
-            fetchStats(metadataPhone);
-            fetchProfileAvatar(metadataPhone);
-            setStoredValue('userPhone', metadataPhone);
+            void fetchStats(metadataPhone);
+            void setStoredValue('userPhone', metadataPhone);
           }
         }
         return;
       }
 
-      const savedPhone = await getStoredValue('userPhone');
-      if (!active) return;
-
-      if (savedPhone) {
-        const savedName = await getStoredValue('userName');
-        const savedAvatar = await getStoredValue(USER_AVATAR_STORAGE_KEY);
-        setPhone(savedPhone);
-        setName(savedName || '');
-        if (savedAvatar) setAvatarUrl(savedAvatar);
-        setStep('profile');
-        fetchStats(savedPhone);
-        fetchProfileAvatar(savedPhone);
-      } else {
+      if (active) {
+        setProfileExists(false);
+        setPhone('');
+        setName('');
+        setEmail('');
+        setAvatarUrl('');
+        setCity('');
+        setReferralCode(null);
+        setProfileCreatedAt(null);
+        setTotalEntries(0);
         setStep('login');
       }
     }
 
-    loadProfile();
+    void loadProfile();
     return () => { active = false; };
-  }, [user, isEmailVerified]);
+  }, [authLoading, user?.id]);
 
   async function fetchStats(phone: string) {
     const { data } = await supabase.from('entries').select('*').eq('phone', phone);
     if (data) setTotalEntries(data.length);
-  }
-
-  async function fetchProfileAvatar(phone: string) {
-    const { data } = await supabase
-      .from('users')
-      .select('avatar_url')
-      .eq('phone', phone)
-      .maybeSingle();
-    if (data?.avatar_url) {
-      setAvatarUrl(data.avatar_url);
-      await setStoredValue(USER_AVATAR_STORAGE_KEY, data.avatar_url);
-    }
   }
 
   async function handleEmailLogin() {
@@ -208,21 +222,31 @@ export default function ProfileScreen() {
   }
 
   async function logout() {
+    const scopedKey = user?.id ? avatarStorageKey(user.id) : null;
     if (user) {
       await signOut();
     }
-    await removeStoredValues(['userPhone', 'userName', USER_AVATAR_STORAGE_KEY]);
+    await removeStoredValues(['userPhone', 'userName', USER_AVATAR_STORAGE_KEY, ...(scopedKey ? [scopedKey] : [])]);
     setStep('login');
+    setProfileExists(false);
     setPhone('');
     setName('');
     setEmail('');
     setPassword('');
     setAvatarUrl('');
+    setCity('');
+    setReferralCode(null);
+    setProfileCreatedAt(null);
+    setTotalEntries(0);
   }
 
   async function uploadProfilePhoto() {
-    const identifier = phone || user?.id;
-    if (!identifier || avatarUploading) return;
+    if (!user?.id || avatarUploading) return;
+    if (!profileExists) {
+      alert('Please complete your phone profile before uploading a photo.');
+      router.push('/profile-setup');
+      return;
+    }
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -241,6 +265,7 @@ export default function ProfileScreen() {
     if (result.canceled || !result.assets[0]) return;
 
     setAvatarUploading(true);
+    let uploadedPath = '';
     try {
       const asset = result.assets[0];
       const mimeType = asset.mimeType || 'image/jpeg';
@@ -249,7 +274,8 @@ export default function ProfileScreen() {
         : mimeType === 'image/webp'
           ? 'webp'
           : 'jpg';
-      const filePath = `${sanitizePhoneForPath(identifier)}/avatar-${Date.now()}.${extension}`;
+      const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
+      uploadedPath = filePath;
       const fileData = asset.base64
         ? dataUrlToArrayBuffer(`data:${mimeType};base64,${asset.base64}`)
         : await fetch(asset.uri).then((response) => response.arrayBuffer());
@@ -268,62 +294,16 @@ export default function ProfileScreen() {
         .getPublicUrl(filePath);
       const nextAvatarUrl = publicUrlData.publicUrl;
 
-      if (user?.id) {
-        let { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
-
-        if (updateError?.message.includes('Profile not found')) {
-          const metadataName = typeof user.user_metadata?.name === 'string'
-            ? user.user_metadata.name.trim()
-            : name.trim();
-          const metadataPhone = typeof user.user_metadata?.phone === 'string'
-            ? user.user_metadata.phone.trim()
-            : '';
-
-          if (!metadataName || !/^\+92[0-9]{10}$/.test(metadataPhone)) {
-            router.push('/profile-setup');
-            throw new Error('Please complete your phone profile, then upload the photo again.');
-          }
-
-          const { error: profileError } = await createUserProfile(metadataName, metadataPhone);
-
-          if (profileError) {
-            const isExistingLegacyPhone = profileError.code === '23505'
-              || profileError.message.includes('users_phone_key');
-            if (!isExistingLegacyPhone) throw profileError;
-
-            const { data: legacyUpdated, error: legacyUpdateError } = await supabase
-              .rpc('update_profile_avatar', {
-                requested_phone: metadataPhone,
-                requested_avatar_url: nextAvatarUrl,
-              });
-            if (legacyUpdateError) throw legacyUpdateError;
-            if (!legacyUpdated) throw new Error('Existing profile could not be updated.');
-            updateError = null;
-          } else {
-            ({ error: updateError } = await updateUserProfile(undefined, nextAvatarUrl));
-          }
-
-          setName(metadataName);
-          setPhone(metadataPhone);
-          await setStoredValue('userName', metadataName);
-          await setStoredValue('userPhone', metadataPhone);
-        }
-
-        if (updateError) throw updateError;
-      } else if (phone) {
-        const { error: updateError } = await supabase
-          .rpc('update_profile_avatar', {
-            requested_phone: phone,
-            requested_avatar_url: nextAvatarUrl,
-          });
-        if (updateError) throw updateError;
-      }
+      const { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
+      if (updateError) throw updateError;
 
       setAvatarUrl(nextAvatarUrl);
-      if (user?.id) await setStoredValue(avatarStorageKey(user.id), nextAvatarUrl);
-      await setStoredValue(USER_AVATAR_STORAGE_KEY, nextAvatarUrl);
+      await setStoredValue(avatarStorageKey(user.id), nextAvatarUrl);
       alert('Profile photo updated.');
     } catch (error) {
+      if (uploadedPath) {
+        await supabase.storage.from(PROFILE_AVATAR_BUCKET).remove([uploadedPath]);
+      }
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
         : 'Profile photo upload failed.';
@@ -337,60 +317,82 @@ export default function ProfileScreen() {
     router.push({ pathname: '/about', params: { section, source: 'profile' } });
   }
 
+  if (authLoading || step === 'check') return (
+    <View style={[styles.profileLoading, { backgroundColor: theme.background }]}>
+      <ActivityIndicator color={theme.gold} size="large" />
+      <Text style={[styles.profileLoadingText, { color: theme.muted }]}>Loading profile...</Text>
+    </View>
+  );
+
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.profileHeader, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity
-          style={styles.avatarButton}
-          onPress={uploadProfilePhoto}
-          disabled={avatarUploading}
-          accessibilityRole="button"
-          accessibilityLabel="Change profile photo"
-        >
-          {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-          ) : (
-            <CircleUserRound color={theme.text} size={60} />
-          )}
-        </TouchableOpacity>
-        <Text style={[styles.profileName, { color: theme.text }]}>{name}</Text>
+        <View style={[styles.profileHero, isWideProfile && styles.profileHeroWide]}>
+          <TouchableOpacity
+            style={[styles.avatarButton, isWideProfile && styles.avatarButtonWide]}
+            onPress={uploadProfilePhoto}
+            disabled={avatarUploading}
+            accessibilityRole="button"
+            accessibilityLabel="Change profile photo"
+          >
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, isWideProfile && styles.avatarImageWide]} />
+            ) : (
+              <CircleUserRound color={theme.text} size={isWideProfile ? 96 : 60} />
+            )}
+            <View style={[styles.cameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
+              {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={17} />}
+            </View>
+          </TouchableOpacity>
 
-        <View style={styles.verifiedBadge}>
-          <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
-          <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
-            {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
-          </Text>
+          <View style={[styles.profileIdentity, isWideProfile && styles.profileIdentityWide]}>
+            <Text style={[styles.profileName, { color: theme.text }]}>{name || 'JeetoBaz Member'}</Text>
+            <View style={styles.verifiedBadge}>
+              <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
+              <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+                {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
+              </Text>
+            </View>
+
+            {user?.email ? <Text style={[styles.profileEmail, { color: theme.muted }]}>{user.email}</Text> : null}
+
+            {jbUserId ? (
+              <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
+                <Text style={[styles.jbIdText, { color: theme.muted }]}>{jbUserId}</Text>
+                <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={14} />
+                {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
+              </TouchableOpacity>
+            ) : null}
+
+            {memberSince ? (
+              <View style={styles.memberSinceRow}>
+                <CalendarDays color={theme.subtle} size={14} />
+                <Text style={[styles.memberSinceText, { color: theme.subtle }]}>Member Since {memberSince}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
-        {user ? (
-          <Text style={[styles.profileEmail, { color: theme.muted }]}>{user.email}</Text>
-        ) : phone ? (
-          <Text style={[styles.profileEmail, { color: theme.muted }]}>{phone}</Text>
-        ) : null}
-
-        {jbUserId ? (
-          <TouchableOpacity style={styles.jbIdRow} onPress={() => copyToClipboard(jbUserId, 'jbId')} activeOpacity={0.7}>
-            <Text style={[styles.jbIdText, { color: theme.muted }]}>{jbUserId}</Text>
-            <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={14} />
-            {copiedField === 'jbId' ? <Text style={styles.copiedLabel}>Copied!</Text> : null}
-          </TouchableOpacity>
-        ) : null}
-
-        {memberSince ? (
-          <View style={styles.memberSinceRow}>
-            <CalendarDays color={theme.subtle} size={14} />
-            <Text style={[styles.memberSinceText, { color: theme.subtle }]}>Member Since {memberSince}</Text>
+        <View style={[styles.profileContactRow, isWideProfile && styles.profileContactRowWide]}>
+          <View style={[styles.profileContactCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <Phone color="#18a663" size={21} />
+            <View style={styles.profileContactText}>
+              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Phone Number</Text>
+              <Text style={[styles.profileContactValue, { color: theme.text }]}>{phone || 'Not added'}</Text>
+            </View>
           </View>
-        ) : null}
-
-        <View style={styles.btnRow}>
-          <TouchableOpacity style={[styles.editProfileBtn, { borderColor: theme.gold }]} onPress={() => router.push('/profile-setup' as never)} activeOpacity={0.7}>
-            <Pencil color={theme.gold} size={15} />
-            <Text style={[styles.editProfileText, { color: theme.gold }]}>Edit Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.changePhotoBtn, { borderColor: theme.border }]} onPress={uploadProfilePhoto} disabled={avatarUploading} activeOpacity={0.7}>
-            <Camera color={theme.muted} size={15} />
-            <Text style={[styles.changePhotoBtnText, { color: theme.muted }]}>{avatarUploading ? 'Uploading...' : 'Change Photo'}</Text>
+          <TouchableOpacity
+            style={[styles.profileContactCard, { backgroundColor: theme.background, borderColor: theme.border }]}
+            onPress={() => router.push('/profile-location' as never)}
+            accessibilityRole="button"
+            accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
+          >
+            <MapPin color="#18a663" size={21} />
+            <View style={styles.profileContactText}>
+              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>City</Text>
+              <Text style={[styles.profileContactValue, { color: theme.text }]}>{city || 'Add city'}</Text>
+            </View>
+            <ChevronRight color={theme.subtle} size={18} />
           </TouchableOpacity>
         </View>
       </View>
@@ -760,10 +762,19 @@ const styles = StyleSheet.create({
   footerLink: { color: '#5e7468', fontSize: 12 },
   footerDot: { color: '#5e7468', fontSize: 12 },
 
-  profileHeader: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, padding: 40, alignItems: 'center' },
-  avatarButton: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 10 },
-  avatarImage: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, borderColor: '#FFD700' },
-  profileName: { fontSize: 26, fontWeight: 'bold', color: 'white', marginTop: 8 },
+  profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  profileLoadingText: { fontSize: 14, fontWeight: '600' },
+  profileHeader: { borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 32, paddingHorizontal: 20, alignItems: 'center' },
+  profileHero: { width: '100%', alignItems: 'center' },
+  profileHeroWide: { maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 32 },
+  avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', marginBottom: 10, position: 'relative' },
+  avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
+  avatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2, borderColor: '#FFD700' },
+  avatarImageWide: { width: 150, height: 150, borderRadius: 75 },
+  cameraOverlay: { position: 'absolute', right: -3, bottom: -3, width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  profileIdentity: { alignItems: 'center' },
+  profileIdentityWide: { alignItems: 'flex-start' },
+  profileName: { fontSize: 26, fontWeight: 'bold', marginTop: 8, textAlign: 'center' },
   profileEmail: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
 
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 20 },
@@ -776,11 +787,12 @@ const styles = StyleSheet.create({
   memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
   memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
 
-  btnRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  editProfileBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)' },
-  editProfileText: { fontSize: 13, fontWeight: '700', color: '#FFD700' },
-  changePhotoBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
-  changePhotoBtnText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
+  profileContactRow: { width: '100%', maxWidth: 900, alignSelf: 'center', flexDirection: 'row', gap: 10, marginTop: 24 },
+  profileContactRowWide: { marginTop: 28 },
+  profileContactCard: { flex: 1, minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
+  profileContactText: { flex: 1 },
+  profileContactLabel: { fontSize: 11, fontWeight: '500', marginBottom: 3 },
+  profileContactValue: { fontSize: 14, fontWeight: '700' },
 
   verifyRow: { flexDirection: 'row', marginHorizontal: 15, marginTop: 12, gap: 10 },
   verifyPill: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#071b13', borderRadius: 12, padding: 14, borderWidth: 1 },

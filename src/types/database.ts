@@ -64,6 +64,15 @@ export type User = {
   auth_provider?: string;
 };
 
+export type UserProfileDetails = {
+  auth_user_id: string;
+  city: string | null;
+  province: string | null;
+  country: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ReferralClaim = {
   id: string;
   referrer_user_id: string;
@@ -195,6 +204,12 @@ export type Database = {
         User,
         Pick<User, 'name' | 'phone'> &
           Partial<Pick<User, 'jazzcash_number' | 'avatar_url' | 'referral_code' | 'referral_device_token' | 'referred_by'>>
+      >;
+      user_profile_details: Table<
+        UserProfileDetails,
+        Pick<UserProfileDetails, 'auth_user_id'> &
+          Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'created_at' | 'updated_at'>>,
+        Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'updated_at'>>
       >;
       referral_claims: Table<ReferralClaim>;
       referral_rewards: Table<ReferralReward>;
