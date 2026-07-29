@@ -537,8 +537,8 @@ export default function AboutJeetoBazScreen() {
   function InfoLine({ label, value }: { label: string; value: string }) {
     return (
       <View style={[styles.infoLine, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text selectable style={[styles.infoLabel, { color: theme.muted }]}>{label}</Text>
-        <Text selectable style={[styles.infoValue, { color: theme.gold }]}>{value}</Text>
+        <Text selectable style={[styles.infoLabel, { color: theme.gold }]}>{label}</Text>
+        <Text selectable style={[styles.infoValue, { color: theme.muted }]}>{value}</Text>
       </View>
     );
   }
