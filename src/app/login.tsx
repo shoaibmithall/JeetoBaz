@@ -16,8 +16,8 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import {
   CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
-  MapPin, Medal, Phone, Rocket, Shield, ShieldCheck, Smartphone, Target, Trophy, BadgeCheck,
-  UserPlus, UsersRound,
+  MapPin, Medal, Phone, Rocket, RotateCcw, Shield, ShieldCheck, Smartphone, Target, Trophy,
+  BadgeCheck, Truck, UserPlus, UsersRound,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
@@ -720,6 +720,18 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/privacy', params: { source: 'profile' } })}>
           <LockKeyhole color="#EC4899" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('privacyAccountData')}</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/refund-policy' as never, params: { source: 'profile' } })}>
+          <RotateCcw color="#F59E0B" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>Refund & Cancellation</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/shipping-policy' as never, params: { source: 'profile' } })}>
+          <Truck color="#18a663" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>Shipping Policy</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
