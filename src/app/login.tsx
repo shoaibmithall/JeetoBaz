@@ -42,11 +42,12 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
+  const isMobileProfile = width < 700;
   const profileCardAvailableWidth = Math.max(width - 24, 1);
-  const profileCardCanvasWidth = Math.max(1160, profileCardAvailableWidth);
-  const profileCardScale = Math.min(1, profileCardAvailableWidth / 1160);
-  const profileCardViewportHeight = Math.max(210, 300 * profileCardScale);
-  const profileCardCanvasHeight = profileCardViewportHeight / profileCardScale;
+  const profileCardCanvasWidth = isMobileProfile ? profileCardAvailableWidth : Math.max(1160, profileCardAvailableWidth);
+  const profileCardScale = isMobileProfile ? 1 : Math.min(1, profileCardAvailableWidth / 1160);
+  const profileCardViewportHeight = isMobileProfile ? 480 : 300 * profileCardScale;
+  const profileCardCanvasHeight = isMobileProfile ? 480 : profileCardViewportHeight / profileCardScale;
   const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
@@ -335,7 +336,7 @@ export default function ProfileScreen() {
           style={[
             styles.profileCardViewport,
             {
-              width: profileCardAvailableWidth,
+              width: isMobileProfile ? '100%' : profileCardAvailableWidth,
               height: profileCardViewportHeight,
             },
           ]}
@@ -344,8 +345,9 @@ export default function ProfileScreen() {
             style={[
               styles.profileCard,
               styles.profileCardWide,
+              isMobileProfile && styles.profileCardMobile,
               {
-                width: profileCardCanvasWidth,
+                width: isMobileProfile ? '100%' : profileCardCanvasWidth,
                 height: profileCardCanvasHeight,
                 transformOrigin: [0, 0, 0],
                 transform: [{ scale: profileCardScale }],
@@ -354,14 +356,14 @@ export default function ProfileScreen() {
             ]}
           >
             <TouchableOpacity
-              style={[styles.avatarButton, styles.avatarButtonWide]}
+              style={[styles.avatarButton, styles.avatarButtonWide, isMobileProfile && styles.avatarButtonMobile]}
               onPress={uploadProfilePhoto}
               disabled={avatarUploading}
               accessibilityRole="button"
               accessibilityLabel="Change profile photo"
             >
               {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, styles.avatarImageWide]} />
+                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, styles.avatarImageWide, isMobileProfile && styles.avatarImageMobile]} />
               ) : (
                 <CircleUserRound color={theme.text} size={96} />
               )}
@@ -370,7 +372,7 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
 
-            <View style={styles.profileCardContent}>
+            <View style={[styles.profileCardContent, isMobileProfile && styles.profileCardContentMobile]}>
               <View style={styles.profileIdentity}>
                 <Text
                   style={[styles.profileName, { color: theme.text }]}
@@ -388,8 +390,8 @@ export default function ProfileScreen() {
                 <View style={[styles.profileAccent, { backgroundColor: theme.primary }]} />
               </View>
 
-              <View style={styles.profileDetailsRow}>
-                <View style={styles.profileDetailItem}>
+              <View style={[styles.profileDetailsRow, isMobileProfile && styles.profileDetailsRowMobile]}>
+                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
                   <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                     <Phone color="#18a663" size={22} />
                   </View>
@@ -399,9 +401,9 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
-                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
 
-                <View style={styles.profileDetailItem}>
+                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
                   <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                     <MailCheck color="#18a663" size={22} />
                   </View>
@@ -411,10 +413,10 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
-                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
 
                 <TouchableOpacity
-                  style={styles.profileDetailItem}
+                  style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}
                   onPress={() => router.push('/profile-location' as never)}
                   accessibilityRole="button"
                   accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
@@ -428,10 +430,10 @@ export default function ProfileScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
 
                 <TouchableOpacity
-                  style={styles.profileDetailItem}
+                  style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}
                   onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
                   disabled={!jbUserId}
                   accessibilityRole="button"
@@ -449,9 +451,9 @@ export default function ProfileScreen() {
                   {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
                 </TouchableOpacity>
 
-                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
 
-                <View style={styles.profileDetailItem}>
+                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
                   <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                     <CalendarDays color="#18a663" size={22} />
                   </View>
@@ -837,11 +839,15 @@ const styles = StyleSheet.create({
   profileCardViewport: { overflow: 'hidden', alignSelf: 'center', position: 'relative' },
   profileCard: { minWidth: 980, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 22, paddingVertical: 24, paddingHorizontal: 28, borderRadius: 18, borderWidth: 1, borderCurve: 'continuous' },
   profileCardWide: { minWidth: 1160, height: 300, flex: 0, position: 'absolute', left: 0, top: 0, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
+  profileCardMobile: { minWidth: 0, height: 480, alignItems: 'flex-start', gap: 18, paddingVertical: 26, paddingHorizontal: 22 },
   profileCardContent: { flex: 1, minWidth: 0, gap: 20 },
+  profileCardContentMobile: { paddingTop: 8 },
   avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
+  avatarButtonMobile: { width: 116, height: 116, borderRadius: 58 },
   avatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2, borderColor: '#FFD700' },
   avatarImageWide: { width: 150, height: 150, borderRadius: 75 },
+  avatarImageMobile: { width: 116, height: 116, borderRadius: 58 },
   cameraOverlay: { position: 'absolute', right: -3, bottom: -3, width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   profileIdentity: { alignItems: 'flex-start', flexShrink: 1, minWidth: 0 },
   profileIdentityWide: { alignItems: 'flex-start' },
@@ -860,9 +866,12 @@ const styles = StyleSheet.create({
   memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
 
   profileDetailsRow: { flexDirection: 'row', alignItems: 'stretch', flex: 1 },
+  profileDetailsRowMobile: { position: 'absolute', left: -134, right: 0, top: 184, height: 224, flexWrap: 'wrap', alignContent: 'stretch', rowGap: 8 },
   profileDetailItem: { minWidth: 142, flex: 1, minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
+  profileDetailItemMobile: { minWidth: 0, flexBasis: '32%', flexGrow: 1, minHeight: 104, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 7, paddingHorizontal: 10, overflow: 'hidden' },
   profileDetailIcon: { width: 46, height: 46, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   profileDivider: { width: 1, marginVertical: 6 },
+  profileDividerMobile: { display: 'none' },
   profileMemberId: { fontFamily: 'monospace', letterSpacing: 0.7 },
   profileContactRow: { width: '100%', maxWidth: 900, alignSelf: 'center', flexDirection: 'row', gap: 10, marginTop: 24 },
   profileContactRowWide: { marginTop: 28 },
