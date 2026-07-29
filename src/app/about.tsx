@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   LayoutAnimation,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   UIManager,
   View,
@@ -18,11 +19,14 @@ import { pageSchema } from '@/lib/structured-data';
 import {
   AppWindow,
   Award,
+  CalendarClock,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleCheck,
   ContactRound,
+  CreditCard,
+  Eye,
   ExternalLink,
   FileCheck2,
   Gift,
@@ -35,12 +39,16 @@ import {
   PackageCheck,
   Rocket,
   Scale,
+  Search,
   ShieldCheck,
-  Smartphone,
   Sparkles,
   Target,
+  Ticket,
+  TriangleAlert,
   Trophy,
+  UserPlus,
   UsersRound,
+  Zap,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import {
@@ -77,6 +85,116 @@ const TRUST_ITEMS = [
   { title: 'Transparent Draw History', desc: 'Completed campaigns can display draw results, winning tickets, dates and available supporting proof.' },
   { title: 'Secure Payment Processing', desc: 'Payments are processed through approved payment channels, with transaction records stored for verification.' },
   { title: 'Data Protection', desc: 'Sensitive account and transaction information is protected using database permissions and security controls.' },
+];
+
+const WORKS_STEPS = [
+  {
+    icon: UserPlus,
+    iconColor: '#3B82F6',
+    title: '1. Create Your JeetoBaz Account',
+    text: 'Register using your mobile number, email address or an available social login method.\n\nAfter successful registration, your account receives a permanent and unique:\n• Member ID\n• Account reference number\n\nThese identifiers help JeetoBaz securely manage your participation, payments, support requests and winning records.',
+  },
+  {
+    icon: Gift,
+    iconColor: '#EC4899',
+    title: '2. Select a Prize Campaign',
+    text: 'Explore active prize campaigns and review the complete campaign information, including:\n• Prize details\n• Entry fee\n• Total participation spots\n• Available spots\n• Campaign terms\n• Eligibility requirements\n• Participation progress\n\nSelect the campaign you wish to join and submit your participation request.',
+  },
+  {
+    icon: CreditCard,
+    iconColor: '#F59E0B',
+    title: '3. Submit Your Payment',
+    text: "Complete the payment using an available JeetoBaz payment method and provide the required transaction details or payment receipt.\n\nSubmitting a payment does not immediately create a valid campaign entry. Every payment is reviewed through JeetoBaz's manual payment-verification process.",
+  },
+  {
+    icon: FileCheck2,
+    iconColor: '#10B981',
+    title: '4. Payment Verification and Ticket Issuance',
+    text: 'The JeetoBaz team checks the submitted payment information and confirms whether the transaction is valid.\n\nAfter successful verification:\n• Your participation is confirmed\n• A unique ticket number is generated\n• The ticket is linked to your Member ID\n• The ticket appears in your account\n• You become eligible for the selected campaign draw\n\nA ticket number is not issued for an unverified, failed, incomplete or rejected payment.',
+  },
+  {
+    icon: UsersRound,
+    iconColor: '#8B5CF6',
+    title: '5. Campaign Spots Are Filled',
+    text: 'Each campaign has a fixed number of participation spots.\n\nThe campaign page displays:\n• Total participation spots\n• Confirmed participants\n• Remaining spots\n• Completion percentage\n\nThe draw-scheduling process begins only after all available participation spots have been filled by verified entries.',
+  },
+  {
+    icon: CalendarClock,
+    iconColor: '#3B82F6',
+    title: '6. Draw Scheduling',
+    text: 'Once all participation spots are filled, JeetoBaz schedules the official draw for: seven days after campaign completion at 10:00 PM Pakistan Standard Time.\n\nThe scheduled date and time are displayed through:\n• Campaign page\n• User dashboard\n• Draw countdown\n• In-app notifications\n• Email\n• SMS\n• Other official JeetoBaz communication channels\n\nUsers should keep their registered contact information accurate to receive important draw updates.',
+  },
+  {
+    icon: Zap,
+    iconColor: '#FFD700',
+    title: '7. Live Automated Draw',
+    text: 'At the scheduled time, the draw takes place publicly within the JeetoBaz system.\n\nThe draw may begin automatically at the scheduled time or may be initiated by an authorized administrator where operationally required. However, the administrator cannot select, replace or control the winning ticket.\n\nThe JeetoBaz automated algorithm randomly selects one eligible ticket from all verified campaign entries. Every valid ticket has an equal opportunity to be selected.',
+  },
+  {
+    icon: Eye,
+    iconColor: '#14B8A6',
+    title: '8. Live Viewing and Draw Record',
+    text: "Active users can watch the draw through the JeetoBaz platform as it takes place.\n\nAfter completion, JeetoBaz may publish:\n• Live draw recording\n• Draw replay\n• Winning ticket\n• Winner's first name\n• Winner's city\n• Prize name\n• Draw date\n• Verification status\n• Winner certificate\n• Prize-delivery evidence\n\nThis record helps participants review the completed campaign and winner-selection process.",
+  },
+  {
+    icon: ShieldCheck,
+    iconColor: '#10B981',
+    title: '9. Winner Verification',
+    text: 'The selected participant is initially marked as a Pending Verification Winner.\n\nJeetoBaz contacts the selected winner and verifies:\n• Account ownership\n• Member ID\n• Winning ticket\n• Registered mobile number\n• Registered email address\n• CNIC and identity information\n• Age and eligibility\n• Payment and participation records\n• Compliance with campaign rules\n\nThe prize is released only after successful verification. Where the selected participant fails verification or is found ineligible, JeetoBaz may take action according to the applicable Terms and Conditions and campaign rules.',
+  },
+  {
+    icon: Trophy,
+    iconColor: '#F97316',
+    title: '10. Winner Announcement',
+    text: "After verification, the winner's public campaign record may display:\n• First name\n• City\n• Winning ticket number\n• Prize\n• Draw date\n• Verification status\n• Winner certificate\n• Live draw video or replay\n\nSensitive information such as the winner's complete CNIC number, full residential address or payment credentials will not be displayed publicly.",
+  },
+  {
+    icon: PackageCheck,
+    iconColor: '#EC4899',
+    title: '11. Prize Delivery or Official Handover',
+    text: 'After successful verification, JeetoBaz arranges the prize according to its category.\n\nSmall or Digital Prizes\nEligible small or digital prizes may be delivered through:\n• Courier\n• Digital delivery\n• Another approved delivery method\n\nLarge Physical Prizes\nVehicles, high-value items and other major prizes may be delivered or handed over through an official and documented process. The winner may be required to:\n• Present original identification\n• Sign receiving documents\n• Complete applicable legal formalities\n• Provide delivery confirmation\n• Participate in authorized winner documentation',
+  },
+] as const;
+
+const DRAW_TIMELINE = [
+  'Account Registration',
+  'Member ID and Reference Number Issued',
+  'Campaign Selected',
+  'Payment Submitted',
+  'Manual Payment Verification',
+  'Unique Ticket Issued',
+  'All Participation Spots Filled',
+  'Seven-Day Draw Countdown',
+  'Official Draw at 10:00 PM PKT',
+  'Automated Random Winner Selection',
+  'Winner Verification',
+  'Winner Certificate and Public Result',
+  'Prize Delivery or Official Handover',
+];
+
+const TRUST_PROCESS_ITEMS = [
+  { title: 'Unique Member Identity', desc: 'Every registered account receives a permanent Member ID and reference number.' },
+  { title: 'Verified Payments', desc: 'Only successfully verified payments create valid campaign entries.' },
+  { title: 'Unique Ticket Numbers', desc: "Every confirmed entry receives a unique ticket linked to the participant's account." },
+  { title: 'Transparent Campaign Progress', desc: 'Users can see total spots, filled spots, remaining spots and campaign completion progress.' },
+  { title: 'Advance Draw Notice', desc: 'The draw is scheduled seven days after all spots are filled, giving participants advance notice.' },
+  { title: 'Automated Winner Selection', desc: 'The winning ticket is randomly selected by the JeetoBaz algorithm rather than manually chosen by an administrator.' },
+  { title: 'Public Draw Access', desc: 'Active users can watch the official draw through the JeetoBaz platform.' },
+  { title: 'Verified Winners', desc: 'Every selected winner must complete identity and eligibility verification before receiving the prize.' },
+  { title: 'Documented Results', desc: 'Completed draws may include a replay, winner certificate, verification status and prize-delivery evidence.' },
+];
+
+const WORKS_IMPORTANT_INFO = [
+  'Creating an account does not automatically create a campaign entry.',
+  'Submitting a payment does not guarantee payment approval.',
+  'A unique ticket is issued only after successful payment verification.',
+  'Only verified tickets are included in the draw.',
+  'The draw is scheduled after all campaign participation spots are filled.',
+  'The official draw takes place seven days later at 10:00 PM Pakistan Standard Time.',
+  'Every eligible ticket has an equal chance of being selected.',
+  'An administrator may initiate the draw where required but cannot choose or modify the winning ticket.',
+  'The selected winner must complete verification before receiving the prize.',
+  'Prize delivery remains subject to JeetoBaz policies and campaign-specific terms.',
 ];
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
@@ -158,6 +276,16 @@ export default function AboutJeetoBazScreen() {
   });
   const contentWidth = Math.min(width - 30, 920);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [worksQuery, setWorksQuery] = useState('');
+  const [openWorksStep, setOpenWorksStep] = useState<string | null>(null);
+
+  const filteredWorksSteps = useMemo(() => {
+    const search = worksQuery.trim().toLowerCase();
+    if (!search) return WORKS_STEPS;
+    return WORKS_STEPS.filter(
+      (step) => step.title.toLowerCase().includes(search) || step.text.toLowerCase().includes(search),
+    );
+  }, [worksQuery]);
 
   function toggleExpand(title: string) {
     LayoutAnimation.configureNext(LayoutAnimation.create(
@@ -316,12 +444,104 @@ export default function AboutJeetoBazScreen() {
       return (
         <>
           <DetailHero icon={<Rocket color="#F97316" size={38} />} title="How JeetoBaz Works" />
-          <Step icon={<Gift color="#EC4899" size={23} />} title="1. Select a Campaign" text="Explore active promotional campaigns and review the prize, participation details, available spots and campaign conditions." />
-          <Step icon={<Smartphone color="#3B82F6" size={23} />} title="2. Participate" text="Choose an eligible campaign, complete the required details and submit your participation request through the JeetoBaz app." />
-          <Step icon={<FileCheck2 color="#10B981" size={23} />} title="3. Payment Verification" text="Your submitted payment details and receipt are reviewed. A confirmed entry and ticket are added only after successful verification." />
-          <Step icon={<Trophy color="#FFD700" size={23} />} title="4. Draw Process" text="After the published participation conditions are met, the draw is scheduled and an eligible winner is selected through the JeetoBaz draw process." />
-          <Step icon={<Award color="#F59E0B" size={23} />} title="5. Winner Verification" text="The selected winner is contacted and verified according to the campaign rules before a prize is released." />
-          <Step icon={<PackageCheck color="#8B5CF6" size={23} />} title="6. Prize Delivery" text="Eligible small or digital prizes may be delivered online. Larger physical prizes are handed over or delivered through a verified physical-delivery process, with appropriate confirmation and winner consent." />
+          <Text selectable style={[styles.leadText, { color: theme.text }]}>
+            Transparent Participation. Verified Draw. Secure Prize Delivery.
+          </Text>
+          <Text selectable style={[styles.bodyText, { color: theme.muted, marginBottom: 16 }]}>
+            JeetoBaz follows a clear and documented process from account registration to prize delivery. Every verified participant receives a unique ticket, and each winner is selected through the JeetoBaz automated random draw system.
+          </Text>
+
+          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Search color={theme.subtle} size={20} />
+            <TextInput
+              value={worksQuery}
+              onChangeText={setWorksQuery}
+              placeholder="Search the process..."
+              placeholderTextColor={theme.subtle}
+              style={[styles.worksSearchInput, { color: theme.text }]}
+            />
+          </View>
+
+          <View style={styles.worksList}>
+            {filteredWorksSteps.map((step) => {
+              const expanded = openWorksStep === step.title;
+              const Icon = step.icon;
+              return (
+                <View
+                  key={step.title}
+                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
+                >
+                  <TouchableOpacity
+                    style={styles.worksQuestionRow}
+                    onPress={() => setOpenWorksStep(expanded ? null : step.title)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded }}
+                  >
+                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
+                      <Icon color={step.iconColor} size={20} />
+                    </View>
+                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{step.title}</Text>
+                    {expanded ? (
+                      <ChevronDown color={theme.gold} size={21} />
+                    ) : (
+                      <ChevronRight color={theme.subtle} size={21} />
+                    )}
+                  </TouchableOpacity>
+                  {expanded ? (
+                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
+                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{step.text}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+
+          {filteredWorksSteps.length === 0 ? (
+            <View style={styles.worksEmpty}>
+              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching step found</Text>
+            </View>
+          ) : null}
+
+          <View style={[styles.timelineSection, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text selectable style={[styles.timelineTitle, { color: theme.gold }]}>Draw Timeline</Text>
+            {DRAW_TIMELINE.map((node, index) => (
+              <View key={node} style={styles.timelineNodeWrap}>
+                <View style={[styles.timelineNode, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
+                  <Text selectable style={[styles.timelineNodeText, { color: theme.text }]}>{node}</Text>
+                </View>
+                {index < DRAW_TIMELINE.length - 1 ? (
+                  <ChevronDown color={theme.subtle} size={20} style={styles.timelineArrow} />
+                ) : null}
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.trustSection}>
+            <Text selectable style={[styles.trustSectionTitle, { color: theme.gold }]}>Why Participants Can Trust the Process</Text>
+            {TRUST_PROCESS_ITEMS.map((item) => (
+              <View key={item.title} style={[styles.trustCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <ShieldCheck color={theme.gold} size={20} />
+                <View style={styles.trustCardText}>
+                  <Text selectable style={[styles.trustCardTitle, { color: theme.gold }]}>{item.title}</Text>
+                  <Text selectable style={[styles.trustCardDesc, { color: theme.muted }]}>{item.desc}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <View style={[styles.worksImportantBox, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
+            <View style={styles.worksImportantTitleRow}>
+              <TriangleAlert color={theme.gold} size={18} />
+              <Text style={[styles.worksImportantTitle, { color: theme.gold }]}>Important Information</Text>
+            </View>
+            {WORKS_IMPORTANT_INFO.map((line) => (
+              <View key={line} style={styles.worksImportantRow}>
+                <Text style={[styles.worksImportantBullet, { color: theme.gold }]}>•</Text>
+                <Text selectable style={[styles.worksImportantText, { color: theme.muted }]}>{line}</Text>
+              </View>
+            ))}
+          </View>
         </>
       );
     }
@@ -666,4 +886,33 @@ const styles = StyleSheet.create({
   infoLine: { minHeight: 70, borderWidth: 1, borderRadius: 14, padding: 15, marginBottom: 10 },
   infoLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
   infoValue: { fontSize: 17, fontWeight: '700', marginTop: 5 },
+  worksSearchBox: { borderWidth: 1, borderRadius: 12, minHeight: 52, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  worksSearchInput: { flex: 1, fontSize: 15, paddingVertical: 12, outlineStyle: 'none' } as never,
+  worksList: { gap: 10 },
+  worksCard: { borderWidth: 1, borderRadius: 13, overflow: 'hidden' },
+  worksQuestionRow: { minHeight: 72, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  worksIconBox: { width: 42, height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  worksQuestionText: { fontSize: 15, fontWeight: '700', lineHeight: 21 },
+  worksAnswerBox: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 15 },
+  worksAnswerText: { fontSize: 14, lineHeight: 22 },
+  worksEmpty: { alignItems: 'center', padding: 30 },
+  worksEmptyTitle: { fontSize: 16, fontWeight: '700' },
+  timelineSection: { borderWidth: 1, borderRadius: 18, padding: 18, marginTop: 22, alignItems: 'center' },
+  timelineTitle: { fontSize: 19, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
+  timelineNodeWrap: { alignItems: 'center', width: '100%' },
+  timelineNode: { borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', width: '100%', maxWidth: 460 },
+  timelineNodeText: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  timelineArrow: { marginVertical: 3 },
+  trustSection: { marginTop: 22 },
+  trustSectionTitle: { fontSize: 19, fontWeight: '800', marginBottom: 12, textAlign: 'center' },
+  trustCard: { borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
+  trustCardText: { flex: 1 },
+  trustCardTitle: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  trustCardDesc: { fontSize: 14, lineHeight: 21 },
+  worksImportantBox: { borderWidth: 1, borderRadius: 14, padding: 16, marginTop: 22 },
+  worksImportantTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 10 },
+  worksImportantTitle: { fontSize: 16, fontWeight: '800' },
+  worksImportantRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
+  worksImportantBullet: { fontSize: 14, lineHeight: 21 },
+  worksImportantText: { flex: 1, fontSize: 14, lineHeight: 21 },
 });
