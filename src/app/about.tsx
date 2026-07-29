@@ -29,7 +29,6 @@ import {
   Globe2,
   HeartHandshake,
   Info,
-  LockKeyhole,
   Mail,
   MapPin,
   MessageCircle,
@@ -380,16 +379,6 @@ export default function AboutJeetoBazScreen() {
       return (
         <>
           <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Legal & Policies" />
-          <TouchableOpacity style={[styles.linkRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/privacy')}>
-            <LockKeyhole color="#EC4899" size={22} />
-            <Text style={[styles.linkText, { color: theme.gold }]}>Privacy Policy</Text>
-            <ChevronRight color={theme.subtle} size={20} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.linkRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/terms')}>
-            <FileCheck2 color="#10B981" size={22} />
-            <Text style={[styles.linkText, { color: theme.gold }]}>Terms & Conditions</Text>
-            <ChevronRight color={theme.subtle} size={20} />
-          </TouchableOpacity>
           <View style={[styles.policyCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <Text selectable style={[styles.policyTitle, { color: theme.gold }]}>Responsible Use Policy</Text>
             <Text selectable style={[styles.policyDate, { color: theme.gold }]}>Effective from Official Launch</Text>
