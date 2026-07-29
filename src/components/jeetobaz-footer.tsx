@@ -313,54 +313,27 @@ function SocialLinks({ showLabels }: { showLabels: boolean }) {
   );
 }
 
-function PaymentLogo({
-  brand,
-}: {
-  brand: 'JazzCash' | 'easypaisa' | 'VISA' | 'mastercard' | 'UnionPay';
-}) {
-  if (brand === 'JazzCash') {
-    return (
-      <View style={[styles.paymentLogo, styles.jazzCashLogo]}>
-        <Text style={styles.jazzCashText}>JazzCash</Text>
-      </View>
-    );
-  }
+const PAYMENT_LOGO_SOURCES = {
+  JazzCash: require('@/assets/images/payments/jazzcash.jpeg'),
+  easypaisa: require('@/assets/images/payments/easypaisa.webp'),
+  SadaPay: require('@/assets/images/payments/sadapay.jpg'),
+  UPaisa: require('@/assets/images/payments/upaisa.jpg'),
+  NayaPay: require('@/assets/images/payments/nayapay.jpg'),
+  'JS Bank': require('@/assets/images/payments/jsbank.jpg'),
+  'Allied Bank': require('@/assets/images/payments/alliedbank.jpg'),
+} as const;
 
-  if (brand === 'easypaisa') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.easypaisaText}>easypaisa</Text>
-      </View>
-    );
-  }
+type PaymentBrand = keyof typeof PAYMENT_LOGO_SOURCES;
 
-  if (brand === 'VISA') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.visaText}>VISA</Text>
-      </View>
-    );
-  }
-
-  if (brand === 'mastercard') {
-    return (
-      <View style={styles.paymentLogo}>
-        <View style={styles.mastercardMark}>
-          <View style={[styles.mastercardCircle, styles.mastercardRed]} />
-          <View style={[styles.mastercardCircle, styles.mastercardOrange]} />
-        </View>
-        <Text style={styles.mastercardText}>mastercard</Text>
-      </View>
-    );
-  }
-
+function PaymentLogo({ brand }: { brand: PaymentBrand }) {
   return (
     <View style={styles.paymentLogo}>
-      <View style={styles.unionPayMark}>
-        <View style={styles.unionPayRed} />
-        <View style={styles.unionPayBlue} />
-        <Text style={styles.unionPayText}>UnionPay</Text>
-      </View>
+      <Image
+        source={PAYMENT_LOGO_SOURCES[brand]}
+        style={styles.paymentLogoImage}
+        contentFit="contain"
+        accessibilityLabel={`${brand} logo`}
+      />
     </View>
   );
 }
@@ -368,11 +341,9 @@ function PaymentLogo({
 function PaymentMethods() {
   return (
     <View style={styles.paymentRow}>
-      <PaymentLogo brand="JazzCash" />
-      <PaymentLogo brand="easypaisa" />
-      <PaymentLogo brand="VISA" />
-      <PaymentLogo brand="mastercard" />
-      <PaymentLogo brand="UnionPay" />
+      {(Object.keys(PAYMENT_LOGO_SOURCES) as PaymentBrand[]).map((brand) => (
+        <PaymentLogo key={brand} brand={brand} />
+      ))}
     </View>
   );
 }
@@ -856,82 +827,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: 8,
   },
-  jazzCashLogo: {
-    backgroundColor: '#521b11',
-  },
-  jazzCashText: {
-    color: '#ffcf00',
-    fontSize: 17,
-    fontStyle: 'italic',
-    fontWeight: '900',
-    transform: [{ skewX: '-8deg' }],
-  },
-  easypaisaText: {
-    color: '#111111',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: -0.7,
-  },
-  visaText: {
-    color: '#1a1f71',
-    fontSize: 25,
-    fontStyle: 'italic',
-    fontWeight: '900',
-  },
-  mastercardMark: {
-    flexDirection: 'row',
-    height: 22,
-    width: 37,
-  },
-  mastercardCircle: {
-    borderRadius: 11,
-    height: 22,
-    position: 'absolute',
-    width: 22,
-  },
-  mastercardRed: {
-    backgroundColor: '#eb001b',
-    left: 0,
-  },
-  mastercardOrange: {
-    backgroundColor: '#f79e1b',
-    right: 0,
-  },
-  mastercardText: {
-    color: '#111111',
-    fontSize: 7,
-    marginTop: -1,
-  },
-  unionPayMark: {
-    height: 28,
-    justifyContent: 'center',
-    transform: [{ skewX: '-8deg' }],
-    width: 59,
-  },
-  unionPayRed: {
-    backgroundColor: '#d71920',
-    borderRadius: 3,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    top: 0,
-    width: 35,
-  },
-  unionPayBlue: {
-    backgroundColor: '#007b84',
-    borderRadius: 3,
-    bottom: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 35,
-  },
-  unionPayText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '900',
-    textAlign: 'center',
-    transform: [{ skewX: '8deg' }],
+  paymentLogoImage: {
+    height: 26,
+    width: 66,
   },
   tabletTop: {
     flexDirection: 'row',
