@@ -6,7 +6,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { createUserProfile, signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
+import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
@@ -132,7 +132,10 @@ export default function ProfileScreen() {
       if (user) {
         if (active) setStep('check');
         const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
-        if (scopedAvatar && active) setAvatarUrl(scopedAvatar);
+        const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string'
+          ? user.user_metadata.avatar_url.trim()
+          : '';
+        if (active) setAvatarUrl(metadataAvatar || scopedAvatar || '');
 
         const [{ data: profile }, { data: location }] = await Promise.all([
           supabase
@@ -154,8 +157,9 @@ export default function ProfileScreen() {
           setEmail(user.email || '');
           setCity(location?.city || '');
           setDateOfBirth(location?.date_of_birth || '');
-          setAvatarUrl(profile.avatar_url || scopedAvatar || '');
-          if (profile.avatar_url) void setStoredValue(avatarStorageKey(user.id), profile.avatar_url);
+          const resolvedAvatar = profile.avatar_url || metadataAvatar || scopedAvatar || '';
+          setAvatarUrl(resolvedAvatar);
+          if (resolvedAvatar) void setStoredValue(avatarStorageKey(user.id), resolvedAvatar);
           setReferralCode(profile.referral_code || null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
@@ -173,6 +177,8 @@ export default function ProfileScreen() {
           setEmail(user.email || '');
           setName(user.user_metadata?.name || '');
           setPhone(/^\+92[0-9]{10}$/.test(metadataPhone) ? metadataPhone : '');
+          setAvatarUrl(metadataAvatar || scopedAvatar || '');
+          if (metadataAvatar) void setStoredValue(avatarStorageKey(user.id), metadataAvatar);
           setCity(location?.city || '');
           setDateOfBirth(location?.date_of_birth || '');
           setReferralCode(null);
@@ -263,18 +269,6 @@ export default function ProfileScreen() {
 
   async function uploadProfilePhoto() {
     if (!user?.id || avatarUploading) return;
-    if (!profileExists) {
-      if (!name.trim() || !/^\+92[0-9]{10}$/.test(phone)) {
-        alert('Your profile details could not be linked. Please refresh and try again.');
-        return;
-      }
-      const { error: createError } = await createUserProfile(name.trim(), phone);
-      if (createError) {
-        alert(createError.message || 'Your profile could not be prepared for photo upload.');
-        return;
-      }
-      setProfileExists(true);
-    }
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -322,7 +316,11 @@ export default function ProfileScreen() {
         .getPublicUrl(filePath);
       const nextAvatarUrl = publicUrlData.publicUrl;
 
-      const { error: updateError } = await updateUserProfile(undefined, nextAvatarUrl);
+      const { error: updateError } = profileExists
+        ? await updateUserProfile(undefined, nextAvatarUrl)
+        : await supabase.auth.updateUser({
+          data: { avatar_url: nextAvatarUrl },
+        });
       if (updateError) throw updateError;
 
       setAvatarUrl(nextAvatarUrl);
@@ -532,8 +530,8 @@ export default function ProfileScreen() {
                 <View style={[styles.profileAccent, { backgroundColor: theme.primary }]} />
               </View>
 
-              <View style={[styles.profileDetailsRow, isMobileProfile && styles.profileDetailsRowMobile]}>
-                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
+              <View style={styles.profileDetailsGridDesktop}>
+                <View style={styles.profileDetailItemDesktop}>
                   <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                     <Phone color="#18a663" size={22} />
                   </View>
@@ -543,22 +541,8 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
-                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
-
-                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
-                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                    <MailCheck color="#18a663" size={22} />
-                  </View>
-                  <View style={styles.profileContactText}>
-                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Email Address</Text>
-                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{user?.email || 'Not added'}</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
-
                 <TouchableOpacity
-                  style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}
+                  style={styles.profileDetailItemDesktop}
                   onPress={() => router.push('/profile-location' as never)}
                   accessibilityRole="button"
                   accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
@@ -572,10 +556,43 @@ export default function ProfileScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
+                <View style={styles.profileDetailItemDesktop}>
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <CalendarDays color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member Since</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.profileDetailItemDesktop}>
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <MailCheck color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Email Address</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{user?.email || 'Not added'}</Text>
+                  </View>
+                </View>
 
                 <TouchableOpacity
-                  style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}
+                  style={styles.profileDetailItemDesktop}
+                  onPress={() => router.push('/profile-date-of-birth' as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={dateOfBirth ? `Edit date of birth, currently ${formattedDateOfBirth}` : 'Add date of birth'}
+                >
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <CalendarDays color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Date of Birth</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{formattedDateOfBirth}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.profileDetailItemDesktop}
                   onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
                   disabled={!jbUserId}
                   accessibilityRole="button"
@@ -592,18 +609,6 @@ export default function ProfileScreen() {
                   </View>
                   {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
                 </TouchableOpacity>
-
-                <View style={[styles.profileDivider, isMobileProfile && styles.profileDividerMobile, { backgroundColor: theme.border }]} />
-
-                <View style={[styles.profileDetailItem, isMobileProfile && styles.profileDetailItemMobile]}>
-                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                    <CalendarDays color="#18a663" size={22} />
-                  </View>
-                  <View style={styles.profileContactText}>
-                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member Since</Text>
-                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
-                  </View>
-                </View>
               </View>
             </View>
           </View>
@@ -1026,6 +1031,8 @@ const styles = StyleSheet.create({
   memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
 
   profileDetailsRow: { flexDirection: 'row', alignItems: 'stretch', flex: 1 },
+  profileDetailsGridDesktop: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', rowGap: 8 },
+  profileDetailItemDesktop: { flexBasis: '33.333%', flexGrow: 0, minWidth: 0, minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, overflow: 'hidden' },
   profileDetailsRowMobile: { position: 'absolute', left: -134, right: 0, top: 184, height: 224, flexWrap: 'wrap', alignContent: 'stretch', rowGap: 8 },
   profileDetailItem: { minWidth: 142, flex: 1, minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
   profileDetailItemMobile: { minWidth: 0, flexBasis: '32%', flexGrow: 1, minHeight: 104, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 7, paddingHorizontal: 10, overflow: 'hidden' },
