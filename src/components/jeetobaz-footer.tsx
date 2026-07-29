@@ -313,62 +313,27 @@ function SocialLinks({ showLabels }: { showLabels: boolean }) {
   );
 }
 
-function PaymentLogo({
-  brand,
-}: {
-  brand: 'JazzCash' | 'easypaisa' | 'SadaPay' | 'UPaisa' | 'NayaPay' | 'JS Bank' | 'Allied Bank';
-}) {
-  if (brand === 'JazzCash') {
-    return (
-      <View style={[styles.paymentLogo, styles.jazzCashLogo]}>
-        <Text style={styles.jazzCashText}>JazzCash</Text>
-      </View>
-    );
-  }
+const PAYMENT_LOGO_SOURCES = {
+  JazzCash: require('@/assets/images/payments/jazzcash.jpeg'),
+  easypaisa: require('@/assets/images/payments/easypaisa.webp'),
+  SadaPay: require('@/assets/images/payments/sadapay.jpg'),
+  UPaisa: require('@/assets/images/payments/upaisa.jpg'),
+  NayaPay: require('@/assets/images/payments/nayapay.jpg'),
+  'JS Bank': require('@/assets/images/payments/jsbank.jpg'),
+  'Allied Bank': require('@/assets/images/payments/alliedbank.jpg'),
+} as const;
 
-  if (brand === 'easypaisa') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.easypaisaText}>easypaisa</Text>
-      </View>
-    );
-  }
+type PaymentBrand = keyof typeof PAYMENT_LOGO_SOURCES;
 
-  if (brand === 'SadaPay') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.sadaPayText}>SadaPay</Text>
-      </View>
-    );
-  }
-
-  if (brand === 'UPaisa') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.uPaisaText}>UPaisa</Text>
-      </View>
-    );
-  }
-
-  if (brand === 'NayaPay') {
-    return (
-      <View style={styles.paymentLogo}>
-        <Text style={styles.nayaPayText}>NayaPay</Text>
-      </View>
-    );
-  }
-
-  if (brand === 'JS Bank') {
-    return (
-      <View style={[styles.paymentLogo, styles.jsBankLogo]}>
-        <Text style={styles.jsBankText}>JS Bank</Text>
-      </View>
-    );
-  }
-
+function PaymentLogo({ brand }: { brand: PaymentBrand }) {
   return (
     <View style={styles.paymentLogo}>
-      <Text style={styles.alliedBankText}>Allied Bank</Text>
+      <Image
+        source={PAYMENT_LOGO_SOURCES[brand]}
+        style={styles.paymentLogoImage}
+        contentFit="contain"
+        accessibilityLabel={`${brand} logo`}
+      />
     </View>
   );
 }
@@ -376,13 +341,9 @@ function PaymentLogo({
 function PaymentMethods() {
   return (
     <View style={styles.paymentRow}>
-      <PaymentLogo brand="JazzCash" />
-      <PaymentLogo brand="easypaisa" />
-      <PaymentLogo brand="SadaPay" />
-      <PaymentLogo brand="UPaisa" />
-      <PaymentLogo brand="NayaPay" />
-      <PaymentLogo brand="JS Bank" />
-      <PaymentLogo brand="Allied Bank" />
+      {(Object.keys(PAYMENT_LOGO_SOURCES) as PaymentBrand[]).map((brand) => (
+        <PaymentLogo key={brand} brand={brand} />
+      ))}
     </View>
   );
 }
@@ -866,54 +827,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: 8,
   },
-  jazzCashLogo: {
-    backgroundColor: '#521b11',
-  },
-  jazzCashText: {
-    color: '#ffcf00',
-    fontSize: 17,
-    fontStyle: 'italic',
-    fontWeight: '900',
-    transform: [{ skewX: '-8deg' }],
-  },
-  easypaisaText: {
-    color: '#111111',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: -0.7,
-  },
-  sadaPayText: {
-    color: '#EF6F61',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: -0.3,
-  },
-  uPaisaText: {
-    color: '#F58220',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: -0.3,
-  },
-  nayaPayText: {
-    color: '#6639B7',
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: -0.3,
-  },
-  jsBankLogo: {
-    backgroundColor: '#161B2F',
-  },
-  jsBankText: {
-    color: '#41E6C1',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: -0.3,
-  },
-  alliedBankText: {
-    color: '#075AAA',
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: -0.3,
+  paymentLogoImage: {
+    height: 26,
+    width: 66,
   },
   tabletTop: {
     flexDirection: 'row',
