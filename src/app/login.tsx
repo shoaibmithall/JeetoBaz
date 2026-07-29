@@ -45,7 +45,8 @@ export default function ProfileScreen() {
   const profileCardAvailableWidth = Math.max(width - 24, 1);
   const profileCardCanvasWidth = Math.max(1160, profileCardAvailableWidth);
   const profileCardScale = Math.min(1, profileCardAvailableWidth / 1160);
-  const profileCardViewportHeight = 300 * profileCardScale;
+  const profileCardViewportHeight = Math.max(210, 300 * profileCardScale);
+  const profileCardCanvasHeight = profileCardViewportHeight / profileCardScale;
   const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
@@ -345,6 +346,7 @@ export default function ProfileScreen() {
               styles.profileCardWide,
               {
                 width: profileCardCanvasWidth,
+                height: profileCardCanvasHeight,
                 transformOrigin: [0, 0, 0],
                 transform: [{ scale: profileCardScale }],
               },
