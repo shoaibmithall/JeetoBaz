@@ -19,6 +19,7 @@ import { pageSchema } from '@/lib/structured-data';
 import {
   AppWindow,
   Award,
+  Bell,
   CalendarClock,
   ChevronDown,
   ChevronLeft,
@@ -29,16 +30,20 @@ import {
   ContactRound,
   CreditCard,
   Eye,
+  EyeOff,
   ExternalLink,
   FileCheck2,
   Gift,
   Globe2,
   HeartHandshake,
+  IdCard,
   Info,
+  Lock,
   Mail,
   MapPin,
   MessageCircle,
   PackageCheck,
+  Radio,
   Rocket,
   Scale,
   Search,
@@ -67,17 +72,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const WHY_ITEMS = [
-  { title: 'Transparent Process', desc: 'Users can clearly view entry progress, draw status, winners and available proof related to completed campaigns.' },
-  { title: 'Secure Platform', desc: 'JeetoBaz is designed with protected authentication, secure sessions and controlled access to user information.' },
-  { title: 'Verified Winners', desc: 'Winner details, certificates and supporting proof can be published after verification and permission.' },
-  { title: 'Live Draw Updates', desc: 'Users can receive timely information when a campaign completes and its draw is scheduled or conducted.' },
-  { title: 'Dedicated Customer Support', desc: 'Users can contact JeetoBaz through available support channels for account, entry and payment-related assistance.' },
-  { title: 'User-Friendly Experience', desc: 'The platform is designed to make browsing campaigns, purchasing entries and checking results simple.' },
-  { title: 'Fast Notifications', desc: 'Important campaign, payment, draw and winner updates can be delivered through in-app and supported notification channels.' },
-  { title: 'Fair Participation', desc: 'Entries are recorded with unique ticket numbers and all eligible entries follow the same draw process.' },
-];
-
 const TRUST_ITEMS = [
   { title: 'Secure Platform', desc: 'JeetoBaz uses protected systems and controlled access to reduce unauthorized activity.' },
   { title: 'Secure Login', desc: 'Account access is protected through verified authentication and secure session handling.' },
@@ -87,6 +81,152 @@ const TRUST_ITEMS = [
   { title: 'Transparent Draw History', desc: 'Completed campaigns can display draw results, winning tickets, dates and available supporting proof.' },
   { title: 'Secure Payment Processing', desc: 'Payments are processed through approved payment channels, with transaction records stored for verification.' },
   { title: 'Data Protection', desc: 'Sensitive account and transaction information is protected using database permissions and security controls.' },
+];
+
+const WHY_FAQS = [
+  {
+    icon: Eye,
+    iconColor: '#3B82F6',
+    question: '1. Transparent Process',
+    answer:
+      'Every campaign follows a clearly defined process from registration to prize delivery.\n\nParticipants can review:\n• Campaign details\n• Entry fee\n• Total participation spots\n• Confirmed entries\n• Remaining spots\n• Campaign progress\n• Draw schedule\n• Winner information\n• Prize-delivery status\n\nThis allows users to remain informed throughout the campaign journey.',
+  },
+  {
+    icon: CreditCard,
+    iconColor: '#10B981',
+    question: '2. Verified Payment Process',
+    answer:
+      'Every submitted payment is manually reviewed before participation is confirmed.\n\nA campaign ticket is issued only after:\n• Payment details are received\n• Transaction information is checked\n• The payment is successfully verified\n• The entry is approved\n\nUnverified, failed, incomplete or rejected payments are not included in the draw.',
+  },
+  {
+    icon: IdCard,
+    iconColor: '#8B5CF6',
+    question: '3. Permanent Member ID',
+    answer:
+      "Every registered JeetoBaz account receives a permanent and unique Member ID.\n\nThe Member ID helps connect the user's:\n• Account\n• Payments\n• Campaign entries\n• Ticket numbers\n• Support requests\n• Draw history\n• Winning records\n\nThis improves account identification, traceability and security.",
+  },
+  {
+    icon: Ticket,
+    iconColor: '#F59E0B',
+    question: '4. Unique Ticket Numbers',
+    answer:
+      "Every successfully verified campaign entry receives a unique ticket number linked to the participant's Member ID.\n\nUsers can view their confirmed tickets through their JeetoBaz account.\n\nOnly valid and verified ticket numbers are included in the official draw.",
+  },
+  {
+    icon: FileCheck2,
+    iconColor: '#14B8A6',
+    question: '5. Transparent Campaign Progress',
+    answer:
+      'Each campaign displays its participation progress, including:\n• Total available spots\n• Confirmed participants\n• Filled spots\n• Remaining spots\n• Completion percentage\n\nThe draw-scheduling process begins only after all campaign participation spots have been filled.',
+  },
+  {
+    icon: CalendarClock,
+    iconColor: '#3B82F6',
+    question: '6. Advance Draw Scheduling',
+    answer:
+      'Once all participation spots are filled, the official draw is scheduled for: seven days later at 10:00 PM Pakistan Standard Time.\n\nThe scheduled date and time are displayed on the Platform and communicated through available official channels.',
+  },
+  {
+    icon: Bell,
+    iconColor: '#EC4899',
+    question: '7. Fast Draw Notifications',
+    answer:
+      'Before the official draw, eligible participants may receive notifications through:\n• In-app notifications\n• Email\n• SMS\n• Platform announcements\n• Other official JeetoBaz communication channels\n\nUsers should keep their registered mobile number and email address accurate to receive important updates.',
+  },
+  {
+    icon: Zap,
+    iconColor: '#FFD700',
+    question: '8. Automated Fair Draw',
+    answer:
+      'At the scheduled time, the JeetoBaz automated random draw system selects one eligible winning ticket from all verified campaign entries.\n\nThe draw may begin automatically or may be initiated by an authorized administrator where operationally required.\n\nHowever, the administrator cannot:\n• Choose the winning participant\n• Replace the winning ticket\n• Modify verified tickets\n• Change the completed result\n• Control which eligible ticket is selected\n\nEvery valid ticket receives an equal opportunity to win.',
+  },
+  {
+    icon: Radio,
+    iconColor: '#14B8A6',
+    question: '9. Live Draw Experience',
+    answer:
+      "Active users can watch the official draw through the JeetoBaz Platform. The live draw experience is designed to allow participants to view the winner-selection process as it takes place.\n\nAfter the draw, JeetoBaz may also provide:\n• Live draw replay\n• Winning ticket number\n• Winner's first name\n• Winner's city\n• Prize information\n• Draw date\n• Verification status\n• Winner certificate\n• Prize-delivery evidence",
+  },
+  {
+    icon: ShieldCheck,
+    iconColor: '#10B981',
+    question: '10. Verified Winners',
+    answer:
+      'Every selected winner must complete identity and eligibility verification before receiving a prize.\n\nThe verification process may include:\n• Account ownership\n• Member ID\n• Winning ticket\n• Registered mobile number\n• Registered email address\n• CNIC verification\n• Age verification\n• Payment record\n• Campaign eligibility\n• Compliance with campaign rules\n\nA selected participant is not treated as a fully verified winner until all required checks have been successfully completed.',
+  },
+  {
+    icon: PackageCheck,
+    iconColor: '#8B5CF6',
+    question: '11. Secure Prize Delivery',
+    answer:
+      'After successful winner verification, JeetoBaz arranges prize delivery or official handover according to the prize category.\n\nSmall or Digital Prizes\nThese may be delivered through:\n• Courier\n• Digital delivery\n• An approved delivery method\n\nLarge or High-Value Prizes\nVehicles, premium products and other major prizes may require:\n• In-person verification\n• Original identification\n• Signed receiving documents\n• Legal or ownership formalities\n• Official handover\n• Delivery confirmation',
+  },
+  {
+    icon: ClipboardCheck,
+    iconColor: '#F59E0B',
+    question: '12. Documented Prize Handover',
+    answer:
+      'JeetoBaz may document completed prize deliveries through:\n• Winner certificate\n• Prize-handover photograph\n• Prize-handover video\n• Delivery confirmation\n• Winner statement\n• Verified winner status\n\nThis helps maintain accountability and public trust.',
+  },
+  {
+    icon: Lock,
+    iconColor: '#EF4444',
+    question: '13. Secure Platform',
+    answer:
+      'JeetoBaz uses controlled processes to protect:\n• User accounts\n• Payment records\n• Ticket information\n• Identity documents\n• Campaign data\n• Winner records\n• Administrative access\n\nSecurity monitoring and verification procedures may be used to prevent fraud, duplicate accounts, unauthorized payments and platform misuse.',
+  },
+  {
+    icon: EyeOff,
+    iconColor: '#8B5CF6',
+    question: '14. Privacy Protection',
+    answer:
+      'Personal information, verification documents and payment-related records are handled according to the JeetoBaz Privacy Policy.\n\nSensitive information such as complete CNIC numbers, passwords, OTPs, residential addresses and payment credentials is not intended to be displayed publicly.',
+  },
+  {
+    icon: ContactRound,
+    iconColor: '#14B8A6',
+    question: '15. Dedicated Customer Support',
+    answer:
+      'JeetoBaz provides official customer-support channels for assistance with:\n• Account registration\n• Login problems\n• Payment verification\n• Ticket confirmation\n• Campaign participation\n• Draw information\n• Winner verification\n• Prize claims\n• Delivery concerns\n• General platform inquiries\n\nUsers should contact JeetoBaz only through verified official channels.',
+  },
+  {
+    icon: Sparkles,
+    iconColor: '#EC4899',
+    question: '16. User-Friendly Experience',
+    answer:
+      'JeetoBaz is designed to make participation simple and understandable.\n\nUsers can manage and review important information through their account, including:\n• Member ID\n• Campaign entries\n• Unique tickets\n• Payment status\n• Draw countdown\n• Notifications\n• Participation history\n• Winning status\n• Support requests',
+  },
+] as const;
+
+const WHY_TRUST_ITEMS = [
+  { title: 'Secure Payment Verification', desc: 'Every payment is reviewed before a valid ticket is issued.' },
+  { title: 'Unique Member Identity', desc: 'Every registered account receives a permanent Member ID.' },
+  { title: 'Unique Campaign Tickets', desc: "Every verified entry receives a unique ticket linked to the participant's account." },
+  { title: 'Transparent Progress', desc: 'Campaign completion information remains visible to participants.' },
+  { title: 'Advance Draw Notice', desc: 'The official draw date is announced seven days before the draw.' },
+  { title: 'Automated Random Selection', desc: 'The winning ticket is selected by the JeetoBaz automated random draw system.' },
+  { title: 'Live Draw Access', desc: 'Active users can watch the draw through the JeetoBaz Platform.' },
+  { title: 'Verified Winners', desc: 'Identity and eligibility checks are completed before prize release.' },
+  { title: 'Documented Results', desc: 'Draw records, certificates and prize-delivery evidence may be published.' },
+  { title: 'Official Support', desc: 'Participants can receive assistance through verified JeetoBaz support channels.' },
+];
+
+const WHY_QUICK_FACTS: Array<[string, string]> = [
+  ['Business Name', 'JeetoBaz'],
+  ['Founded', '2026'],
+  ['Country', 'Pakistan'],
+  ['Business Type', 'Registered Digital Platform'],
+  ['Payment Verification', 'Manual Verification'],
+  ['Member Identification', 'Permanent Member ID'],
+  ['Ticket Issuance', 'After Payment Verification'],
+  ['Draw Scheduling', 'Seven Days After All Spots Are Filled'],
+  ['Draw Time', '10:00 PM Pakistan Standard Time'],
+  ['Draw Method', 'Automated Random Winner Selection'],
+  ['Live Draw', 'Available Through JeetoBaz'],
+  ['Winner Verification', 'Required'],
+  ['Prize Delivery', 'Verified and Documented'],
+  ['Notifications', 'In-App, Email and SMS'],
+  ['Customer Support', 'Available Through Official Channels'],
 ];
 
 const CORE_VALUES = [
@@ -298,6 +438,8 @@ export default function AboutJeetoBazScreen() {
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [worksQuery, setWorksQuery] = useState('');
   const [openWorksStep, setOpenWorksStep] = useState<string | null>(null);
+  const [whyQuery, setWhyQuery] = useState('');
+  const [openWhyItem, setOpenWhyItem] = useState<string | null>(null);
 
   const filteredWorksSteps = useMemo(() => {
     const search = worksQuery.trim().toLowerCase();
@@ -306,6 +448,14 @@ export default function AboutJeetoBazScreen() {
       (step) => step.title.toLowerCase().includes(search) || step.text.toLowerCase().includes(search),
     );
   }, [worksQuery]);
+
+  const filteredWhyFaqs = useMemo(() => {
+    const search = whyQuery.trim().toLowerCase();
+    if (!search) return WHY_FAQS;
+    return WHY_FAQS.filter(
+      (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
+    );
+  }, [whyQuery]);
 
   function toggleExpand(title: string) {
     LayoutAnimation.configureNext(LayoutAnimation.create(
@@ -507,11 +657,117 @@ export default function AboutJeetoBazScreen() {
         <>
           <DetailHero icon={<Sparkles color="#FBBF24" size={38} />} title="Why Choose JeetoBaz?" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
-            JeetoBaz is being built around the features that matter most to participants.
+            Built on Transparency, Security and Fairness
           </Text>
-          {WHY_ITEMS.map((item) => (
-            <ExpandableBullet key={item.title} title={item.title} desc={item.desc} />
+          <Text selectable style={[styles.bodyText, { color: theme.muted, marginBottom: 16 }]}>
+            JeetoBaz is designed to provide eligible participants with a clear, secure and trustworthy prize campaign experience.{'\n\n'}
+            From account registration and payment verification to live winner selection and documented prize delivery, every stage follows a transparent and structured process.
+          </Text>
+
+          <View style={[styles.promiseBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
+            <View style={styles.promiseTitleRow}>
+              <Award color={theme.primary} size={19} />
+              <Text style={[styles.promiseTitle, { color: theme.primary }]}>Our Promise</Text>
+            </View>
+            <Text selectable style={[styles.promiseText, { color: theme.text }]}>
+              Every verified participant receives an equal opportunity to win.{'\n\n'}
+              JeetoBaz does not manually choose winners, modify verified tickets or alter completed draw results. Winners are selected through the JeetoBaz automated random draw system from all eligible campaign tickets.
+            </Text>
+          </View>
+
+          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Search color={theme.subtle} size={20} />
+            <TextInput
+              value={whyQuery}
+              onChangeText={setWhyQuery}
+              placeholder="Search why JeetoBaz..."
+              placeholderTextColor={theme.subtle}
+              style={[styles.worksSearchInput, { color: theme.text }]}
+            />
+          </View>
+
+          <View style={styles.worksList}>
+            {filteredWhyFaqs.map((item) => {
+              const expanded = openWhyItem === item.question;
+              const Icon = item.icon;
+              return (
+                <View
+                  key={item.question}
+                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
+                >
+                  <TouchableOpacity
+                    style={styles.worksQuestionRow}
+                    onPress={() => setOpenWhyItem(expanded ? null : item.question)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded }}
+                  >
+                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
+                      <Icon color={item.iconColor} size={20} />
+                    </View>
+                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{item.question}</Text>
+                    {expanded ? (
+                      <ChevronDown color={theme.gold} size={21} />
+                    ) : (
+                      <ChevronRight color={theme.subtle} size={21} />
+                    )}
+                  </TouchableOpacity>
+                  {expanded ? (
+                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
+                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+
+          {filteredWhyFaqs.length === 0 ? (
+            <View style={styles.worksEmpty}>
+              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching reason found</Text>
+            </View>
+          ) : null}
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Why Participants Can Trust JeetoBaz</Text>
+          {WHY_TRUST_ITEMS.map((item) => (
+            <View key={item.title} style={[styles.trustCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <ShieldCheck color={theme.gold} size={20} />
+              <View style={styles.trustCardText}>
+                <Text selectable style={[styles.trustCardTitle, { color: theme.gold }]}>{item.title}</Text>
+                <Text selectable style={[styles.trustCardDesc, { color: theme.muted }]}>{item.desc}</Text>
+              </View>
+            </View>
           ))}
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Quick Facts</Text>
+          {WHY_QUICK_FACTS.map(([label, value]) => (
+            <InfoLine key={label} label={label} value={value} />
+          ))}
+
+          <SectionCard title="Our Commitment to Every Participant" icon={<HeartHandshake color="#14B8A6" size={22} />}>
+            {'JeetoBaz is committed to operating with transparency, fairness, security and accountability.\n\nWe aim to provide every verified participant with:\n• Clear campaign information\n• Accurate payment verification\n• A unique ticket number\n• Transparent campaign progress\n• Advance draw notifications\n• Equal participation opportunity\n• Automated winner selection\n• Verified winner records\n• Secure prize delivery\n• Reliable customer support'}
+          </SectionCard>
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Explore More</Text>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><Compass color="#3B82F6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Explore Campaigns</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setSelected('works')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><Rocket color="#F97316" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>How JeetoBaz Works</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/explore')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><Trophy color="#FFD700" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>View Past Winners</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setSelected('support')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><ContactRound color="#8B5CF6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Contact Support</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
         </>
       );
     }
@@ -1000,4 +1256,8 @@ const styles = StyleSheet.create({
   navButtonRow: { minHeight: 66, borderWidth: 1, borderRadius: 14, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   navButtonIcon: { width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   navButtonText: { flex: 1, fontSize: 15, fontWeight: '700' },
+  promiseBox: { borderWidth: 1, borderRadius: 16, padding: 18, marginBottom: 16 },
+  promiseTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 9 },
+  promiseTitle: { fontSize: 17, fontWeight: '800' },
+  promiseText: { fontSize: 14, lineHeight: 22 },
 });
