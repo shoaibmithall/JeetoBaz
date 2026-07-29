@@ -103,6 +103,7 @@ export default function RootLayout() {
         <Tabs.Screen name="referral" options={{ href: null }} />
         <Tabs.Screen name="registered-verified" options={{ href: null }} />
         <Tabs.Screen name="profile-location" options={{ href: null }} />
+        <Tabs.Screen name="profile-date-of-birth" options={{ href: null }} />
         <Tabs.Screen name="signup" options={{ href: null }} />
         <Tabs.Screen name="verify-email" options={{ href: null }} />
         <Tabs.Screen name="forgot-password" options={{ href: null }} />
