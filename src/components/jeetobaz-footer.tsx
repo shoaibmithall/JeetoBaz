@@ -84,8 +84,8 @@ const QUICK_LINKS: FooterLink[] = [
 const HELP_LINKS: FooterLink[] = [
   { label: 'Terms & Conditions', route: '/terms' },
   { label: 'Privacy Policy', route: '/privacy' },
-  { label: 'Refund & Cancellation' },
-  { label: 'Shipping Policy' },
+  { label: 'Refund & Cancellation', route: '/refund-policy' },
+  { label: 'Shipping Policy', route: '/shipping-policy' },
   { label: 'Support Center', route: '/help' },
 ];
 
