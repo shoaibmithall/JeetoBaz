@@ -42,7 +42,10 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const isWideProfile = width >= 768;
+  const profileCardAvailableWidth = Math.max(width - 24, 1);
+  const profileCardCanvasWidth = Math.max(1160, profileCardAvailableWidth);
+  const profileCardScale = Math.min(1, profileCardAvailableWidth / 1160);
+  const profileCardViewportHeight = 210 * profileCardScale;
   const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
@@ -327,30 +330,37 @@ export default function ProfileScreen() {
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.profileCardScroller}
-          contentContainerStyle={styles.profileCardScrollerContent}
+        <View
+          style={[
+            styles.profileCardViewport,
+            {
+              width: profileCardAvailableWidth,
+              height: profileCardViewportHeight,
+            },
+          ]}
         >
           <View
             style={[
               styles.profileCard,
-              isWideProfile && styles.profileCardWide,
+              styles.profileCardWide,
+              {
+                width: profileCardCanvasWidth,
+                transform: [{ scale: profileCardScale }],
+              },
               { backgroundColor: theme.surface, borderColor: theme.border },
             ]}
           >
             <TouchableOpacity
-              style={[styles.avatarButton, isWideProfile && styles.avatarButtonWide]}
+              style={[styles.avatarButton, styles.avatarButtonWide]}
               onPress={uploadProfilePhoto}
               disabled={avatarUploading}
               accessibilityRole="button"
               accessibilityLabel="Change profile photo"
             >
               {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, isWideProfile && styles.avatarImageWide]} />
+                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, styles.avatarImageWide]} />
               ) : (
-                <CircleUserRound color={theme.text} size={isWideProfile ? 96 : 60} />
+                <CircleUserRound color={theme.text} size={96} />
               )}
               <View style={[styles.cameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
                 {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={17} />}
@@ -450,7 +460,7 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
-        </ScrollView>
+        </View>
       </View>
 
       <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -821,10 +831,9 @@ const styles = StyleSheet.create({
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
   profileHeader: { paddingVertical: 20, paddingHorizontal: 12 },
-  profileCardScroller: { width: '100%' },
-  profileCardScrollerContent: { flexGrow: 1 },
+  profileCardViewport: { overflow: 'hidden', alignSelf: 'center' },
   profileCard: { minWidth: 980, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 22, paddingVertical: 24, paddingHorizontal: 28, borderRadius: 18, borderWidth: 1, borderCurve: 'continuous' },
-  profileCardWide: { minWidth: 1160, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
+  profileCardWide: { minWidth: 1160, height: 210, flex: 0, gap: 36, paddingVertical: 30, paddingHorizontal: 38, transformOrigin: 'top left' },
   profileCardContent: { flex: 1, minWidth: 0, gap: 20 },
   avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
