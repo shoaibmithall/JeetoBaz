@@ -8,6 +8,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { requestHomeScrollToTop } from '@/lib/home-scroll';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { TawkToWidget } from '@/components/TawkToWidget';
+import { PromoEntryInterstitial } from '@/components/promo-entry-interstitial';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -41,6 +42,11 @@ export default function RootLayout() {
             height:100%;
           }
           #root, #root * { -webkit-user-select: text; user-select: text; }
+          html.jeetobaz-promo-active body > iframe,
+          html.jeetobaz-promo-active body > div:not(#root),
+          html.jeetobaz-promo-active body > div:not(#root) * {
+            visibility: hidden !important;
+          }
         `}</style>
         <meta name="facebook-domain-verification" content="gct7fv6xph27g30vlhgynl91csagj1" />
         <meta name="theme-color" content={theme.background} />
@@ -118,6 +124,7 @@ export default function RootLayout() {
           options={{ href: null }}
         />
       </Tabs>
+      <PromoEntryInterstitial />
     </>
     </AuthProvider>
   );
