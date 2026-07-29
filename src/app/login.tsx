@@ -45,7 +45,7 @@ export default function ProfileScreen() {
   const profileCardAvailableWidth = Math.max(width - 24, 1);
   const profileCardCanvasWidth = Math.max(1160, profileCardAvailableWidth);
   const profileCardScale = Math.min(1, profileCardAvailableWidth / 1160);
-  const profileCardViewportHeight = 210 * profileCardScale;
+  const profileCardViewportHeight = 250 * profileCardScale;
   const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
@@ -831,10 +831,10 @@ const styles = StyleSheet.create({
 
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
-  profileHeader: { paddingVertical: 20, paddingHorizontal: 12 },
+  profileHeader: { paddingTop: 28, paddingBottom: 20, paddingHorizontal: 12 },
   profileCardViewport: { overflow: 'hidden', alignSelf: 'center', position: 'relative' },
   profileCard: { minWidth: 980, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 22, paddingVertical: 24, paddingHorizontal: 28, borderRadius: 18, borderWidth: 1, borderCurve: 'continuous' },
-  profileCardWide: { minWidth: 1160, height: 210, flex: 0, position: 'absolute', left: 0, top: 0, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
+  profileCardWide: { minWidth: 1160, height: 250, flex: 0, position: 'absolute', left: 0, top: 0, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
   profileCardContent: { flex: 1, minWidth: 0, gap: 20 },
   avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
