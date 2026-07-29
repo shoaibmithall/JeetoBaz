@@ -69,6 +69,7 @@ export type UserProfileDetails = {
   city: string | null;
   province: string | null;
   country: string | null;
+  date_of_birth: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -208,8 +209,8 @@ export type Database = {
       user_profile_details: Table<
         UserProfileDetails,
         Pick<UserProfileDetails, 'auth_user_id'> &
-          Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'created_at' | 'updated_at'>>,
-        Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'updated_at'>>
+          Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'date_of_birth' | 'created_at' | 'updated_at'>>,
+        Partial<Pick<UserProfileDetails, 'city' | 'province' | 'country' | 'date_of_birth' | 'updated_at'>>
       >;
       referral_claims: Table<ReferralClaim>;
       referral_rewards: Table<ReferralReward>;

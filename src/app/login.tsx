@@ -46,8 +46,8 @@ export default function ProfileScreen() {
   const profileCardAvailableWidth = Math.max(width - 24, 1);
   const profileCardCanvasWidth = isMobileProfile ? profileCardAvailableWidth : Math.max(1160, profileCardAvailableWidth);
   const profileCardScale = isMobileProfile ? 1 : Math.min(1, profileCardAvailableWidth / 1160);
-  const profileCardViewportHeight = isMobileProfile ? 480 : 300 * profileCardScale;
-  const profileCardCanvasHeight = isMobileProfile ? 480 : profileCardViewportHeight / profileCardScale;
+  const profileCardViewportHeight = 300 * profileCardScale;
+  const profileCardCanvasHeight = profileCardViewportHeight / profileCardScale;
   const { user, isEmailVerified, loading: authLoading } = useAuth();
   const [step, setStep] = useState<'check' | 'login' | 'profile'>('check');
   const [name, setName] = useState('');
@@ -67,6 +67,7 @@ export default function ProfileScreen() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const [city, setCity] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [profileExists, setProfileExists] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
@@ -83,6 +84,17 @@ export default function ProfileScreen() {
     return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }, [profileCreatedAt, user?.created_at]);
 
+  const formattedDateOfBirth = useMemo(() => {
+    if (!dateOfBirth) return 'Add DOB';
+    const [year, month, day] = dateOfBirth.split('-').map(Number);
+    if (!year || !month || !day) return 'Add DOB';
+    return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, [dateOfBirth]);
+
   async function copyToClipboard(text: string, field: string) {
     await Clipboard.setStringAsync(text);
     setCopiedField(field);
@@ -92,14 +104,16 @@ export default function ProfileScreen() {
   const loadLocation = useCallback(async () => {
     if (!user?.id) {
       setCity('');
+      setDateOfBirth('');
       return;
     }
     const { data } = await supabase
       .from('user_profile_details')
-      .select('city')
+      .select('city, date_of_birth')
       .eq('auth_user_id', user.id)
       .maybeSingle();
     setCity(data?.city || '');
+    setDateOfBirth(data?.date_of_birth || '');
   }, [user?.id]);
 
   useFocusEffect(useCallback(() => {
@@ -128,7 +142,7 @@ export default function ProfileScreen() {
             .maybeSingle(),
           supabase
             .from('user_profile_details')
-            .select('city')
+            .select('city, date_of_birth')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
         ]);
@@ -139,6 +153,7 @@ export default function ProfileScreen() {
           setName(profile.name || '');
           setEmail(user.email || '');
           setCity(location?.city || '');
+          setDateOfBirth(location?.date_of_birth || '');
           setAvatarUrl(profile.avatar_url || scopedAvatar || '');
           if (profile.avatar_url) void setStoredValue(avatarStorageKey(user.id), profile.avatar_url);
           setReferralCode(profile.referral_code || null);
@@ -159,6 +174,7 @@ export default function ProfileScreen() {
           setName(user.user_metadata?.name || '');
           setPhone(/^\+92[0-9]{10}$/.test(metadataPhone) ? metadataPhone : '');
           setCity(location?.city || '');
+          setDateOfBirth(location?.date_of_birth || '');
           setReferralCode(null);
           setProfileCreatedAt(null);
           if (/^\+92[0-9]{10}$/.test(metadataPhone)) {
@@ -332,6 +348,125 @@ export default function ProfileScreen() {
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.profileHeader}>
+        {isMobileProfile ? (
+          <View style={[styles.mobileProfileCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={styles.mobileProfileTop}>
+              <TouchableOpacity
+                style={styles.mobileAvatarButton}
+                onPress={uploadProfilePhoto}
+                disabled={avatarUploading}
+                accessibilityRole="button"
+                accessibilityLabel="Change profile photo"
+              >
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.mobileAvatarImage} />
+                ) : (
+                  <CircleUserRound color={theme.text} size={76} />
+                )}
+                <View style={[styles.mobileCameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
+                  {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={15} />}
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.mobileIdentity}>
+                <Text style={[styles.mobileProfileName, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {name || 'JeetoBaz Member'}
+                </Text>
+                <View style={styles.verifiedBadge}>
+                  <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={14} />
+                  <Text style={[styles.mobileVerifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+                    {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
+                  </Text>
+                </View>
+                <View style={[styles.mobileProfileAccent, { backgroundColor: theme.gold }]} />
+              </View>
+            </View>
+
+            <View style={styles.mobileDetailsGrid}>
+              <View style={styles.mobileDetailsRow}>
+                <View style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <Phone color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Phone Number</Text>
+                    <Text style={[styles.mobileDetailValue, { color: theme.text }]} numberOfLines={1}>{phone || 'Not added'}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
+                  onPress={() => router.push('/profile-location' as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
+                >
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <MapPin color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>City</Text>
+                    <Text style={[styles.mobileDetailValue, { color: theme.text }]} numberOfLines={1}>{city || 'Add city'}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.mobileDetailsRow}>
+                <View style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <MailCheck color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Email Address</Text>
+                    <Text style={[styles.mobileDetailValue, { color: theme.text }]} numberOfLines={1}>{user?.email || email || 'Not added'}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
+                  onPress={() => router.push('/profile-date-of-birth' as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={dateOfBirth ? `Edit date of birth, currently ${formattedDateOfBirth}` : 'Add date of birth'}
+                >
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <CalendarDays color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Date of Birth</Text>
+                    <Text style={[styles.mobileDetailValue, { color: theme.text }]} numberOfLines={1}>{formattedDateOfBirth}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.mobileDetailsRow}>
+                <TouchableOpacity
+                  style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
+                  onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
+                  disabled={!jbUserId}
+                  accessibilityRole="button"
+                  accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
+                >
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <ShieldCheck color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Member ID</Text>
+                    <Text style={[styles.mobileDetailValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
+                      {jbUserId || 'Unavailable'}
+                    </Text>
+                  </View>
+                  {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={12} /> : null}
+                </TouchableOpacity>
+                <View style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                  <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
+                    <CalendarDays color={theme.primary} size={18} />
+                  </View>
+                  <View style={styles.mobileDetailText}>
+                    <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Member Since</Text>
+                    <Text style={[styles.mobileDetailValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        ) : (
         <View
           style={[
             styles.profileCardViewport,
@@ -466,6 +601,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+        )}
       </View>
 
       <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -836,6 +972,22 @@ const styles = StyleSheet.create({
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
   profileHeader: { paddingTop: 28, paddingBottom: 20, paddingHorizontal: 12 },
+  mobileProfileCard: { width: '100%', borderRadius: 18, borderWidth: 1, padding: 14, gap: 14, overflow: 'hidden' },
+  mobileProfileTop: { minHeight: 112, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 18 },
+  mobileAvatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
+  mobileAvatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2.5, borderColor: '#FFD700' },
+  mobileCameraOverlay: { position: 'absolute', right: -3, bottom: -3, width: 31, height: 31, borderRadius: 16, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  mobileIdentity: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
+  mobileProfileName: { maxWidth: '100%', fontSize: 24, fontWeight: '800', textAlign: 'left' },
+  mobileVerifiedText: { fontSize: 12, fontWeight: '700' },
+  mobileProfileAccent: { width: 40, height: 4, borderRadius: 2, marginTop: 12 },
+  mobileDetailsGrid: { gap: 8 },
+  mobileDetailsRow: { flexDirection: 'row', gap: 8 },
+  mobileDetailTile: { flex: 1, minWidth: 0, minHeight: 70, borderRadius: 12, borderWidth: 1, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', gap: 8, overflow: 'hidden' },
+  mobileDetailIcon: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  mobileDetailText: { flex: 1, minWidth: 0 },
+  mobileDetailLabel: { fontSize: 9.5, fontWeight: '600', marginBottom: 3 },
+  mobileDetailValue: { fontSize: 12, fontWeight: '800' },
   profileCardViewport: { overflow: 'hidden', alignSelf: 'center', position: 'relative' },
   profileCard: { minWidth: 980, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 22, paddingVertical: 24, paddingHorizontal: 28, borderRadius: 18, borderWidth: 1, borderCurve: 'continuous' },
   profileCardWide: { minWidth: 1160, height: 300, flex: 0, position: 'absolute', left: 0, top: 0, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
