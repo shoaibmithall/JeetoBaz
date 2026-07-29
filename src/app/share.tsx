@@ -10,6 +10,7 @@ import {
   InstagramIcon,
   TikTokIcon,
   SnapchatIcon,
+  ThreadsIcon as OfficialThreadsIcon,
   XIcon,
   TelegramIcon,
 } from '@/components/social-icons';
@@ -100,7 +101,7 @@ const platforms: SharePlatform[] = [
   { name: 'Facebook', icon: <FacebookIcon size={28} />, urlType: 'facebook' },
   { name: 'Messenger', icon: <MessengerIcon size={28} />, urlType: 'messenger' },
   { name: 'Instagram', icon: <InstagramIcon size={28} />, urlType: 'instagram' },
-  { name: 'Threads', icon: <ThreadsIcon size={28} />, urlType: 'threads' },
+  { name: 'Threads', icon: <OfficialThreadsIcon size={28} />, urlType: 'threads' },
   { name: 'X', icon: <XIcon size={28} />, urlType: 'x' },
   { name: 'Telegram', icon: <TelegramIcon size={28} />, urlType: 'telegram' },
   { name: 'TikTok', icon: <TikTokIcon size={28} />, urlType: 'tiktok' },
