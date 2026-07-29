@@ -24,6 +24,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleCheck,
+  ClipboardCheck,
+  Compass,
   ContactRound,
   CreditCard,
   Eye,
@@ -85,6 +87,24 @@ const TRUST_ITEMS = [
   { title: 'Transparent Draw History', desc: 'Completed campaigns can display draw results, winning tickets, dates and available supporting proof.' },
   { title: 'Secure Payment Processing', desc: 'Payments are processed through approved payment channels, with transaction records stored for verification.' },
   { title: 'Data Protection', desc: 'Sensitive account and transaction information is protected using database permissions and security controls.' },
+];
+
+const CORE_VALUES = [
+  { icon: Eye, iconColor: '#3B82F6', title: 'Transparency', desc: 'Campaign details, participation progress, draw schedules, winner records and prize-delivery updates are presented clearly.' },
+  { icon: Scale, iconColor: '#F59E0B', title: 'Fairness', desc: 'Every verified ticket included in a campaign draw receives an equal opportunity to be selected.' },
+  { icon: ShieldCheck, iconColor: '#10B981', title: 'Security', desc: 'Accounts, payments, entries and verification records are handled through controlled processes designed to protect users and the Platform.' },
+  { icon: ClipboardCheck, iconColor: '#8B5CF6', title: 'Accountability', desc: 'Completed draws, winner verification and prize delivery are documented to maintain transparency and public trust.' },
+  { icon: HeartHandshake, iconColor: '#EC4899', title: 'Customer Trust', desc: 'JeetoBaz aims to provide clear information, responsive support and reliable communication throughout the user journey.' },
+];
+
+const DIFFERENTIATORS = [
+  { icon: UserPlus, iconColor: '#3B82F6', title: 'Unique Member Identity', desc: 'Every registered user receives a permanent Member ID and account reference number.' },
+  { icon: Ticket, iconColor: '#EC4899', title: 'Verified Ticket Issuance', desc: 'A unique ticket is generated only after the submitted payment has been manually reviewed and approved.' },
+  { icon: FileCheck2, iconColor: '#10B981', title: 'Transparent Campaign Progress', desc: 'Users can view total participation spots, confirmed entries, remaining spots and campaign completion percentage.' },
+  { icon: CalendarClock, iconColor: '#F59E0B', title: 'Scheduled Public Draws', desc: 'Once all campaign spots are filled, the draw is scheduled seven days later at 10:00 PM Pakistan Standard Time.' },
+  { icon: Zap, iconColor: '#FFD700', title: 'Automated Winner Selection', desc: 'The winning ticket is selected randomly through the JeetoBaz automated algorithm. An authorized administrator may initiate the process where required but cannot manually select or modify the winner.' },
+  { icon: Eye, iconColor: '#3B82F6', title: 'Live Draw Experience', desc: 'Active users can view the official draw through the JeetoBaz Platform. Draw notifications may also be sent through in-app alerts, email and SMS.' },
+  { icon: PackageCheck, iconColor: '#8B5CF6', title: 'Verified Prize Delivery', desc: 'The selected winner completes identity and eligibility verification before the prize is released or officially handed over.' },
 ];
 
 const WORKS_STEPS = [
@@ -411,17 +431,73 @@ export default function AboutJeetoBazScreen() {
         <>
           <DetailHero icon={<Trophy color="#FFD700" size={38} />} title="About JeetoBaz" />
           <Text selectable style={[styles.leadText, { color: theme.text }]}>
-            JeetoBaz is a modern digital platform designed to provide users with a simple, secure and transparent experience through promotional prize campaigns.
+            JeetoBaz is a Pakistan-based registered digital platform, founded in 2026, to provide eligible users with a secure, transparent and convenient way to participate in promotional prize campaigns.
           </Text>
           <Text selectable style={[styles.bodyText, { color: theme.muted }]}>
-            We combine technology, fair participation and a user-friendly mobile experience to make campaign discovery, participation updates and prize delivery clear and convenient.
+            Our platform brings together verified payments, unique ticket numbers, transparent campaign progress, scheduled public draws, automated random winner selection and documented prize delivery.{'\n\n'}
+            From account registration to prize handover, every stage is designed to remain clear, trackable and trustworthy.
           </Text>
+
           <SectionCard title="Our Mission" icon={<Target color="#FF6B6B" size={22} />}>
-            To create Pakistan&apos;s most trusted and transparent digital promotional platform, where every eligible participant receives a fair opportunity through secure and technology-driven processes.
+            {"To build Pakistan's most trusted digital prize campaign platform by providing every eligible participant with a fair, secure and transparent participation experience.\n\nWe aim to maintain trust through:\n• Verified campaign entries\n• Manual payment verification\n• Unique ticket numbers\n• Transparent campaign progress\n• Advance draw notifications\n• Automated random winner selection\n• Verified winners\n• Documented prize delivery"}
           </SectionCard>
+
           <SectionCard title="Our Vision" icon={<Award color="#F59E0B" size={22} />}>
-            To become Pakistan&apos;s leading digital promotional platform, recognized for innovation, transparency, customer trust and an outstanding user experience.
+            {"To become Pakistan's leading digital prize campaign platform, recognized for transparency, innovation, responsible operations, customer trust and a reliable user experience.\n\nOur long-term vision is to create a platform where every participant can clearly track their entry, ticket, campaign progress, draw schedule, winner verification and prize delivery."}
           </SectionCard>
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Our Core Values</Text>
+          {CORE_VALUES.map((value) => (
+            <View key={value.title} style={[styles.valueCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.valueIcon, { backgroundColor: theme.primarySoft }]}>
+                <value.icon color={value.iconColor} size={20} />
+              </View>
+              <View style={styles.valueText}>
+                <Text selectable style={[styles.valueTitle, { color: theme.gold }]}>{value.title}</Text>
+                <Text selectable style={[styles.valueDesc, { color: theme.muted }]}>{value.desc}</Text>
+              </View>
+            </View>
+          ))}
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>What Makes JeetoBaz Different?</Text>
+          {DIFFERENTIATORS.map((item) => (
+            <View key={item.title} style={[styles.valueCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.valueIcon, { backgroundColor: theme.primarySoft }]}>
+                <item.icon color={item.iconColor} size={20} />
+              </View>
+              <View style={styles.valueText}>
+                <Text selectable style={[styles.valueTitle, { color: theme.gold }]}>{item.title}</Text>
+                <Text selectable style={[styles.valueDesc, { color: theme.muted }]}>{item.desc}</Text>
+              </View>
+            </View>
+          ))}
+
+          <SectionCard title="Our Commitment" icon={<HeartHandshake color="#14B8A6" size={22} />}>
+            {'JeetoBaz is committed to providing:\n• Clear campaign information\n• Secure participation\n• Accurate payment verification\n• Fair winner selection\n• Timely user communication\n• Verified winner records\n• Documented prize delivery\n• Continuous platform improvement\n\nWe continuously work to strengthen security, transparency, customer support and the overall participant experience.'}
+          </SectionCard>
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Company Information</Text>
+          <InfoLine label="Business Name" value="JeetoBaz" />
+          <InfoLine label="Business Type" value="Pakistan-Based Registered Digital Platform" />
+          <InfoLine label="Founded" value="2026" />
+          <InfoLine label="Website" value="jeetobaz.pk" />
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Explore More</Text>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><Compass color="#3B82F6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Explore Campaigns</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setSelected('works')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><Rocket color="#F97316" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>How JeetoBaz Works</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setSelected('support')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><ContactRound color="#8B5CF6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Contact Support</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
         </>
       );
     }
@@ -915,4 +991,13 @@ const styles = StyleSheet.create({
   worksImportantRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   worksImportantBullet: { fontSize: 14, lineHeight: 21 },
   worksImportantText: { flex: 1, fontSize: 14, lineHeight: 21 },
+  subheading: { fontSize: 19, fontWeight: '800', marginTop: 22, marginBottom: 10 },
+  valueCard: { borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
+  valueIcon: { width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  valueText: { flex: 1 },
+  valueTitle: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  valueDesc: { fontSize: 14, lineHeight: 21 },
+  navButtonRow: { minHeight: 66, borderWidth: 1, borderRadius: 14, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  navButtonIcon: { width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  navButtonText: { flex: 1, fontSize: 15, fontWeight: '700' },
 });
