@@ -316,7 +316,7 @@ function SocialLinks({ showLabels }: { showLabels: boolean }) {
 function PaymentLogo({
   brand,
 }: {
-  brand: 'JazzCash' | 'easypaisa' | 'VISA' | 'mastercard' | 'UnionPay';
+  brand: 'JazzCash' | 'easypaisa' | 'SadaPay' | 'UPaisa' | 'NayaPay' | 'JS Bank' | 'Allied Bank';
 }) {
   if (brand === 'JazzCash') {
     return (
@@ -334,33 +334,41 @@ function PaymentLogo({
     );
   }
 
-  if (brand === 'VISA') {
+  if (brand === 'SadaPay') {
     return (
       <View style={styles.paymentLogo}>
-        <Text style={styles.visaText}>VISA</Text>
+        <Text style={styles.sadaPayText}>SadaPay</Text>
       </View>
     );
   }
 
-  if (brand === 'mastercard') {
+  if (brand === 'UPaisa') {
     return (
       <View style={styles.paymentLogo}>
-        <View style={styles.mastercardMark}>
-          <View style={[styles.mastercardCircle, styles.mastercardRed]} />
-          <View style={[styles.mastercardCircle, styles.mastercardOrange]} />
-        </View>
-        <Text style={styles.mastercardText}>mastercard</Text>
+        <Text style={styles.uPaisaText}>UPaisa</Text>
+      </View>
+    );
+  }
+
+  if (brand === 'NayaPay') {
+    return (
+      <View style={styles.paymentLogo}>
+        <Text style={styles.nayaPayText}>NayaPay</Text>
+      </View>
+    );
+  }
+
+  if (brand === 'JS Bank') {
+    return (
+      <View style={[styles.paymentLogo, styles.jsBankLogo]}>
+        <Text style={styles.jsBankText}>JS Bank</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.paymentLogo}>
-      <View style={styles.unionPayMark}>
-        <View style={styles.unionPayRed} />
-        <View style={styles.unionPayBlue} />
-        <Text style={styles.unionPayText}>UnionPay</Text>
-      </View>
+      <Text style={styles.alliedBankText}>Allied Bank</Text>
     </View>
   );
 }
@@ -370,9 +378,11 @@ function PaymentMethods() {
     <View style={styles.paymentRow}>
       <PaymentLogo brand="JazzCash" />
       <PaymentLogo brand="easypaisa" />
-      <PaymentLogo brand="VISA" />
-      <PaymentLogo brand="mastercard" />
-      <PaymentLogo brand="UnionPay" />
+      <PaymentLogo brand="SadaPay" />
+      <PaymentLogo brand="UPaisa" />
+      <PaymentLogo brand="NayaPay" />
+      <PaymentLogo brand="JS Bank" />
+      <PaymentLogo brand="Allied Bank" />
     </View>
   );
 }
@@ -872,66 +882,38 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.7,
   },
-  visaText: {
-    color: '#1a1f71',
-    fontSize: 25,
-    fontStyle: 'italic',
+  sadaPayText: {
+    color: '#EF6F61',
+    fontSize: 15,
     fontWeight: '900',
+    letterSpacing: -0.3,
   },
-  mastercardMark: {
-    flexDirection: 'row',
-    height: 22,
-    width: 37,
-  },
-  mastercardCircle: {
-    borderRadius: 11,
-    height: 22,
-    position: 'absolute',
-    width: 22,
-  },
-  mastercardRed: {
-    backgroundColor: '#eb001b',
-    left: 0,
-  },
-  mastercardOrange: {
-    backgroundColor: '#f79e1b',
-    right: 0,
-  },
-  mastercardText: {
-    color: '#111111',
-    fontSize: 7,
-    marginTop: -1,
-  },
-  unionPayMark: {
-    height: 28,
-    justifyContent: 'center',
-    transform: [{ skewX: '-8deg' }],
-    width: 59,
-  },
-  unionPayRed: {
-    backgroundColor: '#d71920',
-    borderRadius: 3,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    top: 0,
-    width: 35,
-  },
-  unionPayBlue: {
-    backgroundColor: '#007b84',
-    borderRadius: 3,
-    bottom: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 35,
-  },
-  unionPayText: {
-    color: '#ffffff',
-    fontSize: 10,
+  uPaisaText: {
+    color: '#F58220',
+    fontSize: 15,
     fontWeight: '900',
-    textAlign: 'center',
-    transform: [{ skewX: '8deg' }],
+    letterSpacing: -0.3,
+  },
+  nayaPayText: {
+    color: '#6639B7',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  jsBankLogo: {
+    backgroundColor: '#161B2F',
+  },
+  jsBankText: {
+    color: '#41E6C1',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  alliedBankText: {
+    color: '#075AAA',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   tabletTop: {
     flexDirection: 'row',
