@@ -326,100 +326,128 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.profileHeader, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <View style={[styles.profileHero, isWideProfile && styles.profileHeroWide]}>
-          <TouchableOpacity
-            style={[styles.avatarButton, isWideProfile && styles.avatarButtonWide]}
-            onPress={uploadProfilePhoto}
-            disabled={avatarUploading}
-            accessibilityRole="button"
-            accessibilityLabel="Change profile photo"
-          >
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, isWideProfile && styles.avatarImageWide]} />
-            ) : (
-              <CircleUserRound color={theme.text} size={isWideProfile ? 96 : 60} />
-            )}
-            <View style={[styles.cameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
-              {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={17} />}
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.profileIdentity}>
-            <Text
-              style={[styles.profileName, { color: theme.text }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {name || 'JeetoBaz Member'}
-            </Text>
-            <View style={styles.verifiedBadge}>
-              <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
-              <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
-                {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
+      <View style={styles.profileHeader}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.profileDetailsScroller}
-          contentContainerStyle={[styles.profileDetailsRow, isWideProfile && styles.profileDetailsRowWide]}
+          style={styles.profileCardScroller}
+          contentContainerStyle={styles.profileCardScrollerContent}
         >
-          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
-            <Phone color="#18a663" size={22} />
-            <View style={styles.profileContactText}>
-              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Phone Number</Text>
-              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{phone || 'Not added'}</Text>
-            </View>
-          </View>
-
-          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
-            <MailCheck color="#18a663" size={22} />
-            <View style={styles.profileContactText}>
-              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Email Address</Text>
-              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{user?.email || 'Not added'}</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}
-            onPress={() => router.push('/profile-location' as never)}
-            accessibilityRole="button"
-            accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
+          <View
+            style={[
+              styles.profileCard,
+              isWideProfile && styles.profileCardWide,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
           >
-            <MapPin color="#18a663" size={21} />
-            <View style={styles.profileContactText}>
-              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>City</Text>
-              <Text style={[styles.profileContactValue, { color: theme.text }]}>{city || 'Add city'}</Text>
-            </View>
-            <ChevronRight color={theme.subtle} size={18} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.avatarButton, isWideProfile && styles.avatarButtonWide]}
+              onPress={uploadProfilePhoto}
+              disabled={avatarUploading}
+              accessibilityRole="button"
+              accessibilityLabel="Change profile photo"
+            >
+              {avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, isWideProfile && styles.avatarImageWide]} />
+              ) : (
+                <CircleUserRound color={theme.text} size={isWideProfile ? 96 : 60} />
+              )}
+              <View style={[styles.cameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
+                {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={17} />}
+              </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}
-            onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
-            disabled={!jbUserId}
-            accessibilityRole="button"
-            accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
-          >
-            <ShieldCheck color="#18a663" size={22} />
-            <View style={styles.profileContactText}>
-              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member ID</Text>
-              <Text style={[styles.profileContactValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
-                {jbUserId || 'Unavailable'}
-              </Text>
-            </View>
-            {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
-          </TouchableOpacity>
+            <View style={styles.profileCardContent}>
+              <View style={styles.profileIdentity}>
+                <Text
+                  style={[styles.profileName, { color: theme.text }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {name || 'JeetoBaz Member'}
+                </Text>
+                <View style={styles.verifiedBadge}>
+                  <ShieldCheck color={isEmailVerified ? '#18a663' : '#F59E0B'} size={15} />
+                  <Text style={[styles.verifiedText, { color: isEmailVerified ? '#18a663' : '#F59E0B' }]}>
+                    {isEmailVerified ? 'Verified Member' : 'Verification Pending'}
+                  </Text>
+                </View>
+                <View style={[styles.profileAccent, { backgroundColor: theme.primary }]} />
+              </View>
 
-          <View style={[styles.profileDetailCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
-            <CalendarDays color="#18a663" size={22} />
-            <View style={styles.profileContactText}>
-              <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member Since</Text>
-              <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
+              <View style={styles.profileDetailsRow}>
+                <View style={styles.profileDetailItem}>
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <Phone color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Phone Number</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{phone || 'Not added'}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+
+                <View style={styles.profileDetailItem}>
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <MailCheck color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Email Address</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{user?.email || 'Not added'}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+
+                <TouchableOpacity
+                  style={styles.profileDetailItem}
+                  onPress={() => router.push('/profile-location' as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
+                >
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <MapPin color="#18a663" size={21} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>City</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{city || 'Add city'}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+
+                <TouchableOpacity
+                  style={styles.profileDetailItem}
+                  onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
+                  disabled={!jbUserId}
+                  accessibilityRole="button"
+                  accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
+                >
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <ShieldCheck color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member ID</Text>
+                    <Text style={[styles.profileContactValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
+                      {jbUserId || 'Unavailable'}
+                    </Text>
+                  </View>
+                  {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
+                </TouchableOpacity>
+
+                <View style={[styles.profileDivider, { backgroundColor: theme.border }]} />
+
+                <View style={styles.profileDetailItem}>
+                  <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
+                    <CalendarDays color="#18a663" size={22} />
+                  </View>
+                  <View style={styles.profileContactText}>
+                    <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member Since</Text>
+                    <Text style={[styles.profileContactValue, { color: theme.text }]} numberOfLines={1}>{memberSince || 'Unavailable'}</Text>
+                  </View>
+                </View>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -792,9 +820,12 @@ const styles = StyleSheet.create({
 
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
-  profileHeader: { borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 32, paddingHorizontal: 20, alignItems: 'center' },
-  profileHero: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 18 },
-  profileHeroWide: { gap: 32 },
+  profileHeader: { paddingVertical: 20, paddingHorizontal: 12 },
+  profileCardScroller: { width: '100%' },
+  profileCardScrollerContent: { flexGrow: 1 },
+  profileCard: { minWidth: 980, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 22, paddingVertical: 24, paddingHorizontal: 28, borderRadius: 18, borderWidth: 1, borderCurve: 'continuous' },
+  profileCardWide: { minWidth: 1160, gap: 36, paddingVertical: 30, paddingHorizontal: 38 },
+  profileCardContent: { flex: 1, minWidth: 0, gap: 20 },
   avatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   avatarButtonWide: { width: 150, height: 150, borderRadius: 75, marginBottom: 0 },
   avatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2, borderColor: '#FFD700' },
@@ -807,6 +838,7 @@ const styles = StyleSheet.create({
 
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(24,166,99,0.12)', borderRadius: 20 },
   verifiedText: { fontSize: 13, fontWeight: '700' },
+  profileAccent: { width: 40, height: 4, borderRadius: 2, marginTop: 12 },
 
   jbIdRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   jbIdText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', letterSpacing: 1 },
@@ -815,10 +847,10 @@ const styles = StyleSheet.create({
   memberSinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
   memberSinceText: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
 
-  profileDetailsScroller: { width: '100%', marginTop: 24 },
-  profileDetailsRow: { paddingHorizontal: 2, gap: 10 },
-  profileDetailsRowWide: { flexGrow: 1, justifyContent: 'center' },
-  profileDetailCard: { width: 220, minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, borderWidth: 1 },
+  profileDetailsRow: { flexDirection: 'row', alignItems: 'stretch', flex: 1 },
+  profileDetailItem: { minWidth: 142, flex: 1, minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
+  profileDetailIcon: { width: 46, height: 46, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  profileDivider: { width: 1, marginVertical: 6 },
   profileMemberId: { fontFamily: 'monospace', letterSpacing: 0.7 },
   profileContactRow: { width: '100%', maxWidth: 900, alignSelf: 'center', flexDirection: 'row', gap: 10, marginTop: 24 },
   profileContactRowWide: { marginTop: 28 },
