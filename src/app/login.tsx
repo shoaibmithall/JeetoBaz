@@ -6,7 +6,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
-import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
+import { createUserProfile, signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { validateEmail } from '@/lib/auth-validation';
@@ -264,9 +264,16 @@ export default function ProfileScreen() {
   async function uploadProfilePhoto() {
     if (!user?.id || avatarUploading) return;
     if (!profileExists) {
-      alert('Please complete your phone profile before uploading a photo.');
-      router.push('/profile-setup');
-      return;
+      if (!name.trim() || !/^\+92[0-9]{10}$/.test(phone)) {
+        alert('Your profile details could not be linked. Please refresh and try again.');
+        return;
+      }
+      const { error: createError } = await createUserProfile(name.trim(), phone);
+      if (createError) {
+        alert(createError.message || 'Your profile could not be prepared for photo upload.');
+        return;
+      }
+      setProfileExists(true);
     }
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -347,7 +354,7 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.profileHeader}>
+      <View style={[styles.profileHeader, isMobileProfile && styles.profileHeaderMobile]}>
         {isMobileProfile ? (
           <View style={[styles.mobileProfileCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <View style={styles.mobileProfileTop}>
@@ -604,7 +611,7 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      <View style={[styles.verifyRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <View style={[styles.verifyRow, isMobileProfile && styles.verifyRowMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={[styles.verifyPill, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <MailCheck color={theme.gold} size={18} />
           <View>
@@ -625,7 +632,7 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, isMobileProfile && styles.statsRowMobile]}>
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{totalEntries}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsEntered')}</Text>
@@ -668,7 +675,7 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <View style={[styles.menuBox, isMobileProfile && styles.menuBoxMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/entries', params: { source: 'profile' } })}>
           <Target color="#FF6B6B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('myEntries')}</Text>
@@ -972,6 +979,7 @@ const styles = StyleSheet.create({
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
   profileHeader: { paddingTop: 28, paddingBottom: 20, paddingHorizontal: 12 },
+  profileHeaderMobile: { paddingBottom: 4 },
   mobileProfileCard: { width: '100%', borderRadius: 18, borderWidth: 1, padding: 14, gap: 14, overflow: 'hidden' },
   mobileProfileTop: { minHeight: 112, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 18 },
   mobileAvatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
@@ -1033,14 +1041,17 @@ const styles = StyleSheet.create({
   profileContactValue: { fontSize: 14, fontWeight: '700' },
 
   verifyRow: { flexDirection: 'row', marginHorizontal: 15, marginTop: 12, gap: 10 },
+  verifyRowMobile: { marginTop: 4 },
   verifyPill: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#071b13', borderRadius: 12, padding: 14, borderWidth: 1 },
   verifyLabel: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
   verifyStatus: { fontSize: 14, fontWeight: '700' },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
+  statsRowMobile: { paddingTop: 6, paddingBottom: 6 },
   statCard: { flex: 1, backgroundColor: '#071b13', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#174a35' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
   menuBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35' },
+  menuBoxMobile: { marginTop: 4 },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18 },
   menuText: { color: 'white', fontSize: 16, flex: 1, marginLeft: 12 },
   divider: { height: 1, backgroundColor: '#174a35', marginHorizontal: 15 },
