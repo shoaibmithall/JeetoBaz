@@ -293,7 +293,7 @@ export type Database = {
         }>;
       };
       get_referral_dashboard: {
-        Args: { requested_phone: string; requested_device_token: string };
+        Args: { requested_device_token: string };
         Returns: Array<{
           referral_code: string;
           successful_referrals: number;
@@ -302,7 +302,7 @@ export type Database = {
         }>;
       };
       claim_referral_code: {
-        Args: { requested_phone: string; requested_code: string; requested_device_token: string };
+        Args: { requested_code: string; requested_device_token: string };
         Returns: string;
       };
       get_referral_eligible_products: {
@@ -310,12 +310,11 @@ export type Database = {
         Returns: Product[];
       };
       get_available_referral_rewards: {
-        Args: { requested_phone: string; requested_device_token: string };
+        Args: { requested_device_token: string };
         Returns: Array<{ reward_id: string; expires_at: string }>;
       };
       redeem_referral_reward: {
         Args: {
-          requested_phone: string;
           requested_device_token: string;
           requested_reward_id: string;
           requested_product_id: string;

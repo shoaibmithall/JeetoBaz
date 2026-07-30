@@ -27,7 +27,7 @@ import {
   UsersRound,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { getStoredValue } from '@/lib/storage';
+import { useAuth } from '@/providers/AuthProvider';
 import {
   getReferralDeviceToken,
   normalizeReferralCode,
@@ -66,7 +66,7 @@ export default function ReferralScreen() {
   const params = useLocalSearchParams<{ ref?: string; source?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const [phone, setPhone] = useState('');
+  const { user, loading: authLoading } = useAuth();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -83,28 +83,21 @@ export default function ReferralScreen() {
       setCodeInput(incomingCode);
       savePendingReferralCode(incomingCode);
     }
-    loadReferralData();
-  }, [params.ref]);
+    if (authLoading) return;
+    if (user) loadReferralData();
+    else setLoading(false);
+  }, [params.ref, authLoading, user]);
 
   async function loadReferralData() {
     setLoading(true);
     setErrorMessage('');
-    const savedPhone = await getStoredValue('userPhone');
-    setPhone(savedPhone || '');
-
-    if (!savedPhone) {
-      setLoading(false);
-      return;
-    }
 
     const deviceToken = await getReferralDeviceToken();
     const [dashboardResult, rewardsResult, productsResult] = await Promise.all([
       supabase.rpc('get_referral_dashboard', {
-        requested_phone: savedPhone,
         requested_device_token: deviceToken,
       }),
       supabase.rpc('get_available_referral_rewards', {
-        requested_phone: savedPhone,
         requested_device_token: deviceToken,
       }),
       supabase.rpc('get_referral_eligible_products', {}),
@@ -154,7 +147,7 @@ export default function ReferralScreen() {
       return;
     }
 
-    if (!phone) {
+    if (!user) {
       await savePendingReferralCode(code);
       router.push('/login');
       return;
@@ -163,7 +156,6 @@ export default function ReferralScreen() {
     setClaiming(true);
     const deviceToken = await getReferralDeviceToken();
     const { data, error } = await supabase.rpc('claim_referral_code', {
-      requested_phone: phone,
       requested_code: code,
       requested_device_token: deviceToken,
     });
@@ -184,7 +176,6 @@ export default function ReferralScreen() {
     try {
       const deviceToken = await getReferralDeviceToken();
       const { data, error } = await supabase.rpc('redeem_referral_reward', {
-        requested_phone: phone,
         requested_device_token: deviceToken,
         requested_reward_id: rewardId,
         requested_product_id: productId,
@@ -247,12 +238,12 @@ export default function ReferralScreen() {
           </Text>
         </View>
 
-        {loading ? (
+        {authLoading || loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator color={theme.primary} size="large" />
             <Text style={[styles.loadingText, { color: theme.muted }]}>Loading referral account...</Text>
           </View>
-        ) : !phone ? (
+        ) : !user ? (
           <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <UserPlus color={theme.gold} size={30} />
             <Text style={[styles.cardTitle, { color: theme.text }]}>Create or open your account</Text>
