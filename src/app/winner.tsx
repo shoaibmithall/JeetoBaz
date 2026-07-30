@@ -5,7 +5,8 @@ import Head from 'expo-router/head';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/database';
-import { BarChart3, Medal, ShieldCheck, Target, Trophy } from 'lucide-react-native';
+import { BarChart3, Medal, PackageCheck, ShieldCheck, Target, Trophy, Truck } from 'lucide-react-native';
+import type { PrizeStatus } from '@/types/database';
 
 type PublicDrawResult = {
   winner_name: string;
@@ -13,6 +14,15 @@ type PublicDrawResult = {
   winner_ticket_number: string;
   total_entries: number;
   drawn_at: string;
+  prize_status: PrizeStatus;
+  prize_tracking_note: string | null;
+};
+
+const PRIZE_STATUS_LABEL: Record<PrizeStatus, string> = {
+  pending: 'Preparing Your Prize',
+  processing: 'Processing',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
 };
 
 export default function WinnerScreen() {
@@ -114,6 +124,19 @@ export default function WinnerScreen() {
         ) : null}
       </View>
 
+      {result?.prize_status && (
+        <View style={styles.statusCard}>
+          <View style={styles.statusTitleRow}>
+            {result.prize_status === 'delivered' ? <PackageCheck color="#18a663" size={18} /> : <Truck color="#FFD700" size={18} />}
+            <Text style={styles.statusTitle}>Prize Delivery Status</Text>
+          </View>
+          <Text style={styles.statusValue}>{PRIZE_STATUS_LABEL[result.prize_status]}</Text>
+          {result.prize_tracking_note ? (
+            <Text style={styles.statusNote}>{result.prize_tracking_note}</Text>
+          ) : null}
+        </View>
+      )}
+
       <View style={styles.detailCard}>
         <View style={styles.detailTitleRow}><BarChart3 color="white" size={19} /><Text style={styles.detailTitle}>{t('drawDetails')}</Text></View>
         <View style={styles.detailRow}>
@@ -174,6 +197,11 @@ const styles = StyleSheet.create({
   productName: { fontSize: 24, fontWeight: 'bold', color: '#18a663', marginTop: 5 },
   productPrice: { fontSize: 16, color: '#FFD700', marginTop: 5 },
   productDetailLink: { color: '#18a663', fontSize: 14, fontWeight: 'bold', marginTop: 12 },
+  statusCard: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
+  statusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
+  statusTitle: { fontSize: 15, fontWeight: 'bold', color: 'white' },
+  statusValue: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
+  statusNote: { fontSize: 13, color: '#aaa', marginTop: 6, lineHeight: 18 },
   detailCard: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   detailTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   detailTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
