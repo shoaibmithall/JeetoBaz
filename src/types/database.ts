@@ -33,6 +33,8 @@ export type Entry = {
   referral_reward_id?: string | null;
 };
 
+export type PrizeStatus = 'pending' | 'processing' | 'shipped' | 'delivered';
+
 export type DrawResult = {
   id: string;
   product_id: string;
@@ -44,6 +46,9 @@ export type DrawResult = {
   total_entries: number;
   drawn_at: string;
   drawn_by: string;
+  prize_status: PrizeStatus;
+  prize_status_updated_at: string;
+  prize_tracking_note: string | null;
 };
 
 export type User = {
@@ -252,6 +257,8 @@ export type Database = {
           winner_ticket_number: string;
           total_entries: number;
           drawn_at: string;
+          prize_status: PrizeStatus;
+          prize_tracking_note: string | null;
         }>;
       };
       increment: {
@@ -345,6 +352,10 @@ export type Database = {
       get_my_pending_transactions: {
         Args: { p_phone: string };
         Returns: Array<Transaction & { products: Product | null }>;
+      };
+      update_prize_status: {
+        Args: { p_product_id: string; p_status: PrizeStatus; p_tracking_note?: string | null };
+        Returns: void;
       };
     };
     Enums: {};

@@ -17,13 +17,16 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { Entry, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+import type { DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+
+type DrawResultWithProduct = DrawResult & { products?: Product | null };
+const PRIZE_STATUSES: PrizeStatus[] = ['pending', 'processing', 'shipped', 'delivered'];
 import { isValidSlug, slugify } from '@/lib/validation';
 import {
   BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
-  Search, Sun, TriangleAlert, Trophy, UserRound, UsersRound, Wand2, X,
+  Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wand2, X,
 } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
@@ -101,6 +104,9 @@ export default function AdminScreen() {
   const [verificationEditingId, setVerificationEditingId] = useState<string | null>(null);
   const [verificationUploading, setVerificationUploading] = useState(false);
   const [verificationSaving, setVerificationSaving] = useState(false);
+  const [drawResults, setDrawResults] = useState<DrawResultWithProduct[]>([]);
+  const [prizeStatusDrafts, setPrizeStatusDrafts] = useState<Record<string, { status: PrizeStatus; note: string }>>({});
+  const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -130,6 +136,7 @@ export default function AdminScreen() {
       fetchUsers();
       fetchEntries();
       fetchTransactions();
+      fetchDrawResults();
       loadAnnouncement();
       loadHomeAdImages();
       loadVerificationDocuments();
@@ -482,6 +489,34 @@ export default function AdminScreen() {
         : 'Unknown notification error.';
       alert('Draw reminder could not be sent. Error: ' + message);
     }
+  }
+
+  async function fetchDrawResults() {
+    const { data } = await supabase
+      .from('draw_results')
+      .select('*, products(*)')
+      .order('drawn_at', { ascending: false });
+    if (data) setDrawResults(data as unknown as DrawResultWithProduct[]);
+  }
+
+  function getPrizeStatusDraft(result: DrawResultWithProduct) {
+    return prizeStatusDrafts[result.product_id] || { status: result.prize_status, note: result.prize_tracking_note || '' };
+  }
+
+  async function savePrizeStatus(result: DrawResultWithProduct) {
+    const draft = getPrizeStatusDraft(result);
+    setPrizeStatusSaving(result.product_id);
+    const { error } = await supabase.rpc('update_prize_status', {
+      p_product_id: result.product_id,
+      p_status: draft.status,
+      p_tracking_note: draft.note.trim() || null,
+    });
+    setPrizeStatusSaving(null);
+    if (error) {
+      alert('Could not update prize status: ' + error.message);
+      return;
+    }
+    await fetchDrawResults();
   }
 
   async function loadAnnouncement() {
@@ -968,9 +1003,10 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'payments', 'users', 'revenue', 'settings'].map(tab => (
+        {['products', 'draws', 'payments', 'users', 'revenue', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             {tab === 'products' ? <Package color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
+              : tab === 'draws' ? <Trophy color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'payments' ? <ReceiptText color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'users' ? <UsersRound color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'revenue' ? <DollarSign color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
@@ -1129,6 +1165,52 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+          </View>
+        )}
+
+        {activeTab === 'draws' && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}><Trophy color={theme.text} size={19} /><Text style={styles.sectionTitle}>Completed Draws ({drawResults.length})</Text></View>
+            {drawResults.length === 0 && <Text style={styles.emptyText}>No draws have been run yet.</Text>}
+            {drawResults.map((result) => {
+              const draft = getPrizeStatusDraft(result);
+              return (
+                <View key={result.id} style={styles.paymentCard}>
+                  <View style={styles.productHeader}>
+                    <Text style={styles.productName}>{result.products?.name || 'Unknown Draw'}</Text>
+                  </View>
+                  <Text style={styles.paymentLine}>Winner: {result.winner_name} ({result.winner_phone})</Text>
+                  <Text style={styles.paymentLine}>Ticket: {result.winner_ticket_number}</Text>
+                  <Text style={styles.paymentLine}>Drawn: {new Date(result.drawn_at).toLocaleString()}</Text>
+                  <View style={styles.actionRow}>
+                    {PRIZE_STATUSES.map((status) => (
+                      <TouchableOpacity
+                        key={status}
+                        style={[styles.statusBadge, draft.status === status ? styles.activeBadge : styles.completedBadge]}
+                        onPress={() => setPrizeStatusDrafts((prev) => ({ ...prev, [result.product_id]: { ...draft, status } }))}
+                      >
+                        <Text style={styles.tabLabel}>{status.charAt(0).toUpperCase() + status.slice(1)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Tracking note (courier, tracking number, etc.) — optional"
+                    placeholderTextColor="#666"
+                    value={draft.note}
+                    onChangeText={(text) => setPrizeStatusDrafts((prev) => ({ ...prev, [result.product_id]: { ...draft, note: text } }))}
+                  />
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => savePrizeStatus(result)}
+                    disabled={prizeStatusSaving === result.product_id}
+                  >
+                    <Truck color="white" size={16} />
+                    <Text style={styles.approveButtonText}>{prizeStatusSaving === result.product_id ? 'Saving...' : 'Save Status'}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
         )}
 
