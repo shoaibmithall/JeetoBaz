@@ -36,6 +36,7 @@ type FooterLink = {
   route?: string;
   params?: Record<string, string>;
   external?: string;
+  resetFilters?: boolean;
 };
 
 type FooterSection = {
@@ -75,7 +76,7 @@ function useFooterColors() {
 }
 
 const QUICK_LINKS: FooterLink[] = [
-  { label: 'All Draws', route: '/' },
+  { label: 'All Draws', route: '/', resetFilters: true },
   { label: 'How JeetoBaz Works', route: '/about', params: { section: 'works' } },
   { label: 'Past Winners', route: '/explore' },
   { label: 'FAQs', route: '/faq' },
@@ -107,7 +108,7 @@ const CATEGORY_ITEMS: FooterLink[] = [
   { label: 'Fashion & Beauty', route: '/', params: { group: 'fashion' } },
   { label: 'Sports & Fitness', route: '/', params: { group: 'sports' } },
   { label: 'Travel Packages', route: '/', params: { category: 'travel' } },
-  { label: 'And More', route: '/' },
+  { label: 'And More', route: '/', resetFilters: true },
 ];
 
 const SOCIAL_LINKS: { icon: ReactNode; url: string; label: string }[] = [
@@ -583,7 +584,11 @@ function CopyrightBar({ mobile }: { mobile: boolean }) {
   );
 }
 
-export default function JeetoBazFooter() {
+export default function JeetoBazFooter({
+  onResetFilters,
+}: {
+  onResetFilters?: () => void;
+}) {
   const { width } = useWindowDimensions();
   // `useWindowDimensions()` has no real viewport during server-side static rendering, so it
   // reports a value that differs from the client's actual width — without this guard, the
@@ -626,13 +631,15 @@ export default function JeetoBazFooter() {
     () => (link: FooterLink) => {
       if (link.external) {
         Linking.openURL(link.external);
+      } else if (link.resetFilters) {
+        onResetFilters?.();
       } else if (link.route && link.params) {
         router.push({ pathname: link.route, params: link.params } as never);
       } else if (link.route) {
         router.push(link.route as never);
       }
     },
-    [router],
+    [router, onResetFilters],
   );
 
   return (

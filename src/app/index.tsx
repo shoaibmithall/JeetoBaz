@@ -1153,7 +1153,15 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <JeetoBazFooter />
+      <JeetoBazFooter
+        onResetFilters={() => {
+          setSearch('');
+          setCategory('all');
+          setGroupFilter(null);
+          setSelectedEntryFee(null);
+          scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+        }}
+      />
       </HomeMain>
     </ScrollView>
     </>
