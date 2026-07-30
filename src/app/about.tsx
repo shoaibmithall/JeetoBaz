@@ -18,6 +18,7 @@ import { pageSchema } from '@/lib/structured-data';
 import {
   AppWindow,
   Award,
+  Ban,
   Bell,
   CalendarClock,
   ChevronDown,
@@ -45,8 +46,10 @@ import {
   MessageCircle,
   PackageCheck,
   Radio,
+  RefreshCw,
   Rocket,
   Scale,
+  ScrollText,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -501,40 +504,162 @@ function isSectionId(value: string | undefined): value is SectionId {
   return sections.some((section) => section.id === value);
 }
 
-const responsibleUseRules = [
+const LEGAL_FAQS = [
   {
-    title: '1. Fair Participation',
-    text: 'Users must provide accurate information during registration and participation. Any attempt to manipulate, exploit or interfere with the platform or a promotional campaign is strictly prohibited.',
+    icon: Info,
+    iconColor: '#3B82F6',
+    question: '1. Introduction',
+    answer:
+      'This Responsible Use Policy explains the standards of conduct expected from every person who accesses or uses JeetoBaz.\n\nBy creating an account, joining a promotional prize campaign, submitting a payment, contacting support or using any JeetoBaz service, you agree to:\n• use the Platform responsibly;\n• provide accurate information;\n• comply with applicable laws;\n• respect other users and JeetoBaz personnel; and\n• follow all published campaign rules, policies and instructions.\n\nThis Policy should be read together with the JeetoBaz Terms & Conditions, Privacy Policy and other applicable policies.',
   },
   {
-    title: '2. One Account Per User',
-    text: 'Each individual may maintain only one personal account unless JeetoBaz provides written authorization otherwise.',
+    icon: Scale,
+    iconColor: '#F59E0B',
+    question: '2. Fair Participation',
+    answer:
+      'Users must participate honestly and fairly.\n\nYou must not:\n• manipulate or attempt to manipulate a campaign;\n• interfere with campaign progress or draw operations;\n• obtain an unfair advantage over other participants;\n• exploit errors, bugs or technical weaknesses;\n• submit invalid or unauthorized entries;\n• encourage another person to violate campaign rules; or\n• misrepresent your eligibility or identity.\n\nEvery verified participant must follow the same published campaign requirements.',
   },
   {
-    title: '3. Accurate Information',
-    text: 'Users are responsible for keeping their name, phone number and other account information accurate and up to date.',
+    icon: UserPlus,
+    iconColor: '#8B5CF6',
+    question: '3. One Account per User',
+    answer:
+      "Each individual may maintain only one personal JeetoBaz account unless JeetoBaz provides written authorization otherwise.\n\nUsers must not:\n• create duplicate accounts;\n• use another person's identity;\n• register accounts using false information;\n• control multiple accounts through different mobile numbers or email addresses;\n• create accounts to avoid restrictions or suspension; or\n• allow another person to use their account.\n\nJeetoBaz may compare account, identity, device, payment and activity information to detect duplicate or unauthorized accounts.",
   },
   {
-    title: '4. Prohibited Activities',
-    text: 'Users must not create fake or duplicate accounts; use bots, scripts or unauthorized automation; attempt unauthorized access; abuse users or support staff; upload harmful content; or use JeetoBaz for fraud or any unlawful purpose.',
+    icon: FileCheck2,
+    iconColor: '#10B981',
+    question: '4. Accurate Information',
+    answer:
+      'Users must provide complete, accurate and current information during registration, payment submission, KYC verification, prize claims and support requests.\n\nThis may include:\n• full legal name;\n• date of birth;\n• mobile number;\n• email address;\n• CNIC details;\n• residential address;\n• payment information; and\n• other information reasonably required by JeetoBaz.\n\nFalse, incomplete, altered or misleading information may result in delayed verification, rejected participation, account restriction or disqualification.',
   },
   {
-    title: '5. Account Security',
-    text: 'Users must protect their login credentials and promptly report suspected unauthorized access. JeetoBaz applies appropriate safeguards and investigates reported account-security concerns.',
+    icon: Lock,
+    iconColor: '#EF4444',
+    question: '5. Account Security',
+    answer:
+      'Users are responsible for protecting their account and authentication details.\n\nYou must:\n• keep passwords and OTPs confidential;\n• use only official JeetoBaz login pages;\n• protect your registered mobile number and email account;\n• avoid logging in through untrusted devices;\n• log out from shared devices;\n• report suspected unauthorized access promptly; and\n• keep contact information updated.\n\nYou must not share your account, password or OTP with another person.\n\nJeetoBaz will not ask users to publicly disclose an OTP or password.',
   },
   {
-    title: '6. Promotional Campaigns',
-    text: 'Every campaign is subject to its published rules, eligibility requirements and applicable law. JeetoBaz may verify identity, participation and eligibility before confirming an entry or awarding a prize.',
+    icon: CreditCard,
+    iconColor: '#14B8A6',
+    question: '6. Payment Responsibility',
+    answer:
+      "All submitted payments must be genuine, authorized and connected to the relevant participant.\n\nUsers must not:\n• submit fake or edited payment receipts;\n• provide false transaction references;\n• use stolen or unauthorized payment methods;\n• submit the same payment for multiple entries;\n• deliberately reverse or dispute a valid payment after receiving participation;\n• conceal the real source of funds;\n• submit another user's transaction as their own; or\n• interfere with payment verification.\n\nJeetoBaz manually reviews submitted payments before confirming participation.\n\nA unique ticket is issued only after successful payment verification.",
   },
   {
-    title: '7. Suspension and Termination',
-    text: 'JeetoBaz may investigate suspected violations and may restrict, suspend or terminate an account where a violation of this policy, campaign rules or applicable law is reasonably established.',
+    icon: Ticket,
+    iconColor: '#F59E0B',
+    question: '7. Ticket Integrity',
+    answer:
+      "Every verified campaign ticket is linked to a specific JeetoBaz account and Member ID.\n\nUsers must not:\n• alter a ticket number;\n• create a fake ticket;\n• copy or duplicate another participant's ticket;\n• claim ownership of another user's entry;\n• transfer or sell a ticket unless expressly permitted;\n• interfere with ticket records; or\n• attempt to add an unverified ticket to a draw.\n\nOnly valid, verified and eligible tickets are included in the official draw.",
   },
   {
-    title: '8. Policy Updates',
-    text: 'This policy may be updated periodically. Material updates will be communicated through the app where appropriate. Continued use after an update means the revised policy applies.',
+    icon: ShieldCheck,
+    iconColor: '#10B981',
+    question: '8. Fair Draw Conduct',
+    answer:
+      'Users must respect the integrity of the JeetoBaz draw process.\n\nYou must not:\n• attempt to influence winner selection;\n• interfere with the automated draw system;\n• manipulate campaign data;\n• access restricted draw controls;\n• pressure employees or support personnel to change a result;\n• disrupt a live draw;\n• submit false claims about a completed draw; or\n• attempt to replace, remove or add tickets without authorization.\n\nThe winning ticket is selected through the JeetoBaz automated random draw system from eligible verified tickets.\n\nAn authorized administrator may initiate the draw where operationally required but cannot manually select or modify the winner.',
   },
-];
+  {
+    icon: ShieldAlert,
+    iconColor: '#EF4444',
+    question: '9. Prohibited Technical Activities',
+    answer:
+      'Users must not attempt to damage, overload, bypass or interfere with the Platform.\n\nProhibited activities include:\n• bots or automated scripts;\n• scraping without authorization;\n• unauthorized API access;\n• hacking attempts;\n• malware distribution;\n• credential theft;\n• bypassing security controls;\n• exploiting software vulnerabilities;\n• denial-of-service activity;\n• reverse engineering where prohibited;\n• unauthorized access to accounts or databases; and\n• manipulation of campaign, ticket or payment records.\n\nSecurity weaknesses should be reported privately through an official JeetoBaz support channel.',
+  },
+  {
+    icon: Siren,
+    iconColor: '#F97316',
+    question: '10. Fraudulent and Unlawful Activity',
+    answer:
+      'JeetoBaz must not be used for fraud or any unlawful purpose.\n\nUsers must not engage in:\n• identity theft;\n• forged KYC documents;\n• impersonation;\n• payment fraud;\n• money laundering;\n• proceeds-of-crime activity;\n• chargeback abuse;\n• referral fraud;\n• organized account manipulation;\n• fraudulent prize claims;\n• unlawful financial activity; or\n• any conduct prohibited by applicable law.\n\nJeetoBaz may preserve relevant records and cooperate with authorized authorities where legally required.',
+  },
+  {
+    icon: UsersRound,
+    iconColor: '#EC4899',
+    question: '11. Respectful Community Behaviour',
+    answer:
+      "Users must communicate respectfully with other participants, winners, JeetoBaz employees and support personnel.\n\nUsers must not:\n• threaten or harass another person;\n• use abusive or discriminatory language;\n• publish another person's private information;\n• impersonate JeetoBaz staff;\n• spread knowingly false information;\n• pressure or intimidate winners;\n• send repeated spam messages;\n• disrupt customer-support services; or\n• upload harmful, illegal or offensive content.\n\nJeetoBaz may remove content or restrict users who violate these standards.",
+  },
+  {
+    icon: Gift,
+    iconColor: '#FFD700',
+    question: '12. Promotional Campaign Rules',
+    answer:
+      'Every campaign is governed by its published details and campaign-specific conditions.\n\nUsers are responsible for reviewing:\n• eligibility requirements;\n• entry fee;\n• total participation spots;\n• entry limitations;\n• prize details;\n• draw conditions;\n• winner-verification requirements;\n• delivery conditions; and\n• other applicable campaign rules.\n\nParticipation does not guarantee winning.\n\nThe draw-scheduling process begins only after all required participation spots are filled.',
+  },
+  {
+    icon: Trophy,
+    iconColor: '#F59E0B',
+    question: '13. Winner Responsibilities',
+    answer:
+      "A selected participant must cooperate with JeetoBaz's winner-verification and prize-release process.\n\nThe selected winner may be required to:\n• confirm account ownership;\n• present the winning ticket;\n• provide the permanent Member ID;\n• complete CNIC and age verification;\n• confirm payment records;\n• provide delivery information;\n• sign receiving documents;\n• complete applicable ownership formalities;\n• pay legally applicable government taxes or charges where required; and\n• comply with campaign-specific prize conditions.\n\nFailure to complete verification within the permitted period may affect prize eligibility under the Terms & Conditions.",
+  },
+  {
+    icon: ClipboardCheck,
+    iconColor: '#8B5CF6',
+    question: '14. Content and Document Uploads',
+    answer:
+      "Users must upload only genuine, relevant and lawful content.\n\nYou must not upload:\n• forged documents;\n• altered receipts;\n• malware;\n• unlawful content;\n• another person's identity documents without authority;\n• misleading evidence;\n• confidential information belonging to another person; or\n• content that violates intellectual-property rights.\n\nUsers should not upload passwords, OTPs or complete payment-card credentials.",
+  },
+  {
+    icon: Eye,
+    iconColor: '#3B82F6',
+    question: '15. Fraud Prevention and Investigations',
+    answer:
+      'JeetoBaz may use manual reviews, automated checks and security monitoring to investigate suspicious activity.\n\nThis may include reviewing:\n• account information;\n• Member IDs;\n• devices and network activity;\n• login history;\n• payment records;\n• KYC documents;\n• ticket activity;\n• campaign participation;\n• support communications; and\n• other relevant records.\n\nDuring an investigation, JeetoBaz may request additional information or temporarily restrict account functions.',
+  },
+  {
+    icon: KeyRound,
+    iconColor: '#EF4444',
+    question: '16. Account Restrictions',
+    answer:
+      'Where reasonably necessary, JeetoBaz may:\n• delay payment verification;\n• withhold ticket issuance;\n• restrict campaign participation;\n• require additional identity verification;\n• suspend certain account features;\n• place an account under review;\n• block suspicious transactions; or\n• prevent prize release until verification is completed.\n\nA temporary restriction does not automatically mean that a violation has been confirmed.',
+  },
+  {
+    icon: Ban,
+    iconColor: '#EF4444',
+    question: '17. Suspension, Disqualification and Termination',
+    answer:
+      'JeetoBaz may restrict, suspend or permanently terminate an account where there is reasonable evidence of:\n• duplicate accounts;\n• fraudulent payments;\n• fake or altered documents;\n• unauthorized access;\n• campaign manipulation;\n• abusive conduct;\n• serious security violations;\n• unlawful activity;\n• repeated policy violations; or\n• attempts to avoid an existing restriction.\n\nA violation may also result in:\n• rejection of participation;\n• cancellation of invalid tickets;\n• campaign disqualification;\n• cancellation of prize eligibility;\n• withholding of a prize pending investigation; or\n• legal or regulatory reporting where permitted.\n\nAny action will be subject to applicable law, campaign rules and the JeetoBaz Terms & Conditions.',
+  },
+  {
+    icon: MessageCircle,
+    iconColor: '#14B8A6',
+    question: '18. Reporting Misuse',
+    answer:
+      'Users should promptly report:\n• suspected fraud;\n• fake JeetoBaz accounts;\n• unauthorized payment requests;\n• account compromise;\n• security weaknesses;\n• impersonation;\n• suspicious tickets;\n• harassment; or\n• other policy violations.\n\nReports should include enough information for JeetoBaz to investigate, such as relevant dates, screenshots, transaction references or account details.\n\nReports must be made honestly. Knowingly false or malicious reports may themselves violate this Policy.',
+  },
+  {
+    icon: RefreshCw,
+    iconColor: '#3B82F6',
+    question: '19. Policy Updates',
+    answer:
+      'JeetoBaz may update this Responsible Use Policy to reflect:\n• new services;\n• security improvements;\n• legal requirements;\n• operational changes;\n• new campaign processes; or\n• identified forms of abuse.\n\nThe revised Policy will display an updated date.\n\nMaterial changes may be communicated through the Platform, email, SMS, in-app notification or another official channel.\n\nContinued use after the updated Policy takes effect means that the revised Policy applies, subject to applicable law.',
+  },
+  {
+    icon: ScrollText,
+    iconColor: '#8B5CF6',
+    question: '20. Relationship with Other Policies',
+    answer:
+      'This Responsible Use Policy should be read together with:\n• Terms & Conditions;\n• Privacy Policy;\n• Refund & Cancellation Policy;\n• Shipping Policy;\n• Fair Draw & Winner Selection Policy;\n• KYC Verification Policy;\n• AML & Fraud Prevention Policy;\n• Community Guidelines;\n• Cookie Policy; and\n• campaign-specific rules.\n\nWhere a subject is addressed by a more specific policy, that policy will apply to that subject.',
+  },
+  {
+    icon: TriangleAlert,
+    iconColor: '#FFD700',
+    question: '21. Important Notice',
+    answer:
+      'Violation of this Responsible Use Policy may result in payment rejection, ticket cancellation, campaign disqualification, account restriction, suspension, permanent termination, cancellation of prize eligibility or legal action where permitted by applicable law.',
+  },
+  {
+    icon: ContactRound,
+    iconColor: '#10B981',
+    question: '22. Contact Information',
+    answer:
+      'Questions, reports or concerns regarding this Policy may be submitted through the official JeetoBaz contact channels.\n\nBusiness Name: JeetoBaz\nFounded: 2026\nSupport Email: support@jeetobaz.pk\nPrivacy Email: privacy@jeetobaz.pk\nPhone: 0337 2561482\nWebsite: jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUntil a dedicated privacy email is active, the official support email may be used for both support and privacy matters.\n\nUsers must never send passwords, OTPs or complete card credentials through email, support chat or social media.',
+  },
+] as const;
 
 export default function AboutJeetoBazScreen() {
   const router = useRouter();
@@ -577,6 +702,17 @@ export default function AboutJeetoBazScreen() {
       (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
     );
   }, [securityQuery]);
+
+  const [legalQuery, setLegalQuery] = useState('');
+  const [openLegalItem, setOpenLegalItem] = useState<string | null>(null);
+
+  const filteredLegalFaqs = useMemo(() => {
+    const search = legalQuery.trim().toLowerCase();
+    if (!search) return LEGAL_FAQS;
+    return LEGAL_FAQS.filter(
+      (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
+    );
+  }, [legalQuery]);
 
   useEffect(() => {
     const sectionParam = typeof params.section === 'string' ? params.section : undefined;
@@ -1112,22 +1248,74 @@ export default function AboutJeetoBazScreen() {
       return (
         <>
           <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Legal & Policies" />
-          <View style={[styles.policyCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text selectable style={[styles.policyTitle, { color: theme.gold }]}>Responsible Use Policy</Text>
-            <Text selectable style={[styles.policyDate, { color: theme.gold }]}>Effective from Official Launch</Text>
-            <Text selectable style={[styles.bodyText, { color: theme.muted }]}>
-              JeetoBaz is committed to providing a secure, transparent and enjoyable experience. By using JeetoBaz, users agree to use the platform responsibly, follow applicable laws and comply with these guidelines.
-            </Text>
-            {responsibleUseRules.map((rule) => (
-              <View key={rule.title} style={styles.policyRule}>
-                <Text selectable style={[styles.policyRuleTitle, { color: theme.gold }]}>{rule.title}</Text>
-                <Text selectable style={[styles.bodyText, { color: theme.muted }]}>{rule.text}</Text>
-              </View>
-            ))}
-            <Text selectable style={[styles.bodyText, { color: theme.muted }]}>
-              Questions about this policy can be sent to {SUPPORT_EMAIL}.
-            </Text>
+          <Text selectable style={[styles.leadText, { color: theme.text }]}>
+            Responsible Use Policy
+          </Text>
+          <Text selectable style={[styles.policyDate, { color: theme.gold, marginBottom: 16 }]}>Last Updated: 2026</Text>
+
+          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Search color={theme.subtle} size={20} />
+            <TextInput
+              value={legalQuery}
+              onChangeText={setLegalQuery}
+              placeholder="Search Legal & Policies..."
+              placeholderTextColor={theme.subtle}
+              style={[styles.worksSearchInput, { color: theme.text }]}
+            />
           </View>
+
+          <View style={styles.worksList}>
+            {filteredLegalFaqs.map((item) => {
+              const expanded = openLegalItem === item.question;
+              const Icon = item.icon;
+              return (
+                <View
+                  key={item.question}
+                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
+                >
+                  <TouchableOpacity
+                    style={styles.worksQuestionRow}
+                    onPress={() => setOpenLegalItem(expanded ? null : item.question)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded }}
+                  >
+                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
+                      <Icon color={item.iconColor} size={20} />
+                    </View>
+                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{item.question}</Text>
+                    {expanded ? (
+                      <ChevronDown color={theme.gold} size={21} />
+                    ) : (
+                      <ChevronRight color={theme.subtle} size={21} />
+                    )}
+                  </TouchableOpacity>
+                  {expanded ? (
+                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
+                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+
+          {filteredLegalFaqs.length === 0 ? (
+            <View style={styles.worksEmpty}>
+              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching section found</Text>
+            </View>
+          ) : null}
+
+          <Text selectable style={[styles.subheading, { color: theme.gold }]}>Explore More</Text>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/terms')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><ScrollText color="#3B82F6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Read Terms & Conditions</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setSelected('support')}>
+            <View style={[styles.navButtonIcon, { backgroundColor: theme.primarySoft }]}><ContactRound color="#8B5CF6" size={21} /></View>
+            <Text style={[styles.navButtonText, { color: theme.gold }]}>Contact Support</Text>
+            <ChevronRight color={theme.subtle} size={19} />
+          </TouchableOpacity>
         </>
       );
     }
@@ -1388,11 +1576,7 @@ const styles = StyleSheet.create({
   contactValue: { fontSize: 13, marginTop: 3 },
   linkRow: { minHeight: 68, borderWidth: 1, borderRadius: 14, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   linkText: { flex: 1, fontSize: 16, fontWeight: '700', paddingHorizontal: 11 },
-  policyCard: { borderWidth: 1, borderRadius: 18, padding: 19, marginTop: 8 },
-  policyTitle: { fontSize: 22, fontWeight: '800' },
   policyDate: { fontSize: 13, fontWeight: '700', marginTop: 5, marginBottom: 13 },
-  policyRule: { paddingTop: 16 },
-  policyRuleTitle: { fontSize: 16, fontWeight: '800', marginBottom: 5 },
   socialRow: { minHeight: 68, borderWidth: 1, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 12 },
   infoLine: { minHeight: 70, borderWidth: 1, borderRadius: 14, padding: 15, marginBottom: 10 },
   infoLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
