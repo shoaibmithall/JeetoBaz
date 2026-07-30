@@ -444,7 +444,6 @@ export default function HomeScreen() {
   }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
 
   const isDefaultView = category === 'all' && groupFilter === null && search.trim() === '' && selectedEntryFee === null;
-  const categorySectionPreviewCount = isCompactGrid ? 4 : 6;
 
   const categorySections = useMemo(() => {
     if (!isDefaultView) return [];
@@ -468,10 +467,10 @@ export default function HomeScreen() {
           label: entry.label,
           icon: entry.icon,
           total: items.length,
-          preview: items.slice(0, categorySectionPreviewCount),
+          items,
         };
       });
-  }, [isDefaultView, products, categorySectionPreviewCount]);
+  }, [isDefaultView, products]);
 
   const entryFeeCounts = useMemo(() => {
     return products.reduce<Record<number, number>>((counts, product) => {
@@ -1172,22 +1171,10 @@ export default function HomeScreen() {
                       {section.label}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    accessibilityRole="button"
-                    accessibilityLabel={`View more ${section.label}`}
-                    onPress={() => {
-                      setCategory(section.key);
-                      setGroupFilter(null);
-                      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-                    }}
-                    style={styles.categorySectionViewMore}
-                  >
-                    <Text style={[styles.categorySectionViewMoreText, { color: colors.primary }]}>View More</Text>
-                    <ChevronRight color={colors.primary} size={16} />
-                  </TouchableOpacity>
+                  <Text style={[styles.categorySectionCount, { color: colors.muted }]}>{section.total} {t('found')}</Text>
                 </View>
                 <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-                  {section.preview.map((p) => {
+                  {section.items.map((p) => {
                     const drawSchedule = getDrawScheduleStatus(p, language, time);
                     return (
                       <HomeProductCard
@@ -1384,8 +1371,7 @@ const styles = StyleSheet.create({
   categorySection: { borderWidth: 1, borderRadius: 14, overflow: 'hidden', paddingTop: 4 },
   categorySectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 12 },
   categorySectionTitle: { fontSize: 16, fontWeight: '800' },
-  categorySectionViewMore: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  categorySectionViewMoreText: { fontSize: 13, fontWeight: '700' },
+  categorySectionCount: { fontSize: 12 },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
   cardCompact: { borderRadius: 11 },
   skeletonCard: { opacity: 0.92 },
