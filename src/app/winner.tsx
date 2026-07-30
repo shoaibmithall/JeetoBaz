@@ -217,6 +217,9 @@ export default function WinnerScreen() {
         <Text style={styles.verifyText}>
           {t('winnerAlgorithmText')}
         </Text>
+        <TouchableOpacity onPress={() => router.push('/why-fair')}>
+          <Text style={styles.verifyLink}>Why JeetoBaz is Fair →</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
@@ -277,6 +280,7 @@ const styles = StyleSheet.create({
   verifyTitle: { fontSize: 16, fontWeight: 'bold', color: '#18a663', marginBottom: 8 },
   verifyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   verifyText: { color: '#aaa', fontSize: 14, lineHeight: 22 },
+  verifyLink: { color: '#18a663', fontSize: 14, fontWeight: 'bold', marginTop: 12 },
   button: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   buttonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   secondaryButton: { backgroundColor: '#071b13', marginHorizontal: 15, marginBottom: 15, padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderWidth: 1, borderColor: '#FFD700' },

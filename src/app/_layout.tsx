@@ -97,6 +97,7 @@ export default function RootLayout() {
         <Tabs.Screen name="draw" options={{ href: null }} />
         <Tabs.Screen name="winner" options={{ href: null }} />
         <Tabs.Screen name="verify-ticket" options={{ href: null }} />
+        <Tabs.Screen name="why-fair" options={{ href: null }} />
         <Tabs.Screen name="payment" options={{ href: null }} />
         <Tabs.Screen name="payment-response" options={{ href: null }} />
         <Tabs.Screen name="terms" options={{ href: null }} />
