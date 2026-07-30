@@ -9,17 +9,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import {
-  Banknote,
-  Bike,
-  CarFront,
-  Grid2X2,
-  House,
-  Shirt,
-  Smartphone,
-  X,
-  Search,
-} from 'lucide-react-native';
+import { Grid2X2, X, Search } from 'lucide-react-native';
+import { FlatCategoryIcon } from '@/components/flat-category-icon';
 import {
   CATEGORY_GROUP_LABELS,
   PRODUCT_CATEGORIES,
@@ -45,16 +36,6 @@ type CategoryBrowserProps = {
   onSelectCategory: (category: CategorySelection) => void;
   colors: CategoryBrowserColors;
 };
-
-const QUICK_ICONS = {
-  all: Grid2X2,
-  mobiles: Smartphone,
-  cars: CarFront,
-  bikes: Bike,
-  'home-living': House,
-  fashion: Shirt,
-  'cash-prizes': Banknote,
-} as const;
 
 const GROUP_ORDER: CategoryGroupKey[] = [
   'electronics',
@@ -135,12 +116,6 @@ export function CategoryBrowser({
           {visibleCategoryKeys.map((key) => {
             const category = getCategoryByKey(key);
             const label = key === 'all' ? 'All' : category?.label || key;
-            const Icon =
-              key === 'all'
-                ? Grid2X2
-                : isDesktop
-                  ? category?.icon || Grid2X2
-                  : QUICK_ICONS[key as keyof typeof QUICK_ICONS] || category?.icon || Grid2X2;
             const selected = selectedCategory === key;
 
             return (
@@ -157,8 +132,8 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <View style={[styles.quickIconBadge, { backgroundColor: selected ? colors.gold : colors.elevated }]}>
-                  <Icon color={selected ? '#07130c' : colors.gold} size={15} strokeWidth={1.9} />
+                <View style={[styles.quickIconBadge, { backgroundColor: selected ? colors.goldSoft : colors.elevated }]}>
+                  <FlatCategoryIcon categoryKey={key} size={17} />
                 </View>
                 <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
                   {label}
@@ -264,7 +239,6 @@ export function CategoryBrowser({
                   </Text>
                   <View style={styles.grid}>
                     {section.items.map((category) => {
-                      const Icon = category.icon;
                       const selected = selectedCategory === category.key;
                       return (
                         <View key={category.key} style={[styles.cell, { width: cellWidth }]}>
@@ -283,14 +257,10 @@ export function CategoryBrowser({
                             <View
                               style={[
                                 styles.iconContainer,
-                                { backgroundColor: selected ? colors.gold : colors.surface },
+                                { backgroundColor: selected ? colors.goldSoft : colors.surface },
                               ]}
                             >
-                              <Icon
-                                color={selected ? '#07130c' : colors.gold}
-                                size={22}
-                                strokeWidth={1.9}
-                              />
+                              <FlatCategoryIcon categoryKey={category.key} size={24} />
                             </View>
                             <Text
                               numberOfLines={2}
