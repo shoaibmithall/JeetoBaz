@@ -305,10 +305,6 @@ export type Database = {
         Args: { requested_phone: string; requested_code: string; requested_device_token: string };
         Returns: string;
       };
-      update_profile_avatar: {
-        Args: { requested_phone: string; requested_avatar_url: string };
-        Returns: boolean;
-      };
       get_referral_eligible_products: {
         Args: Record<string, never>;
         Returns: Product[];
