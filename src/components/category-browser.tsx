@@ -157,7 +157,7 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <Icon color={selected ? colors.gold : colors.muted} size={15} strokeWidth={2} />
+                <Icon color={selected ? colors.gold : colors.muted} size={19} strokeWidth={2} />
                 <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
                   {label}
                 </Text>
@@ -177,7 +177,7 @@ export function CategoryBrowser({
               ]}
               onPress={() => setShowAll(true)}
             >
-              <Grid2X2 color={isMoreCategory ? colors.gold : colors.muted} size={16} strokeWidth={2} />
+              <Grid2X2 color={isMoreCategory ? colors.gold : colors.muted} size={19} strokeWidth={2} />
               <Text style={[styles.quickLabel, { color: isMoreCategory ? colors.gold : colors.muted }]}>
                 More
               </Text>
