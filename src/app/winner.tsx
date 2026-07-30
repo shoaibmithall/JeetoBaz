@@ -22,7 +22,6 @@ export default function WinnerScreen() {
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [product, setProduct] = useState<Product | null>(null);
   const [result, setResult] = useState<PublicDrawResult | null>(null);
-  const [legacyWinnerName, setLegacyWinnerName] = useState('');
   const [entryCount, setEntryCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -53,13 +52,7 @@ export default function WinnerScreen() {
       setResult(resultData[0]);
       setEntryCount(resultData[0].total_entries);
     } else {
-      const { data: entriesData } = await supabase
-        .from('entries')
-        .select('*')
-        .eq('product_id', productIdValue);
-      const legacyWinner = entriesData?.find((entry) => entry.phone === productData?.winner_phone);
-      setLegacyWinnerName(legacyWinner?.name || '');
-      setEntryCount(entriesData?.length || 0);
+      setEntryCount(productData?.current_entries || 0);
     }
     setLoading(false);
   }
@@ -103,7 +96,7 @@ export default function WinnerScreen() {
           <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
         ) : null}
         <View style={styles.labelRow}><Target color="#FFD700" size={16} /><Text style={styles.winnerLabel}>{t('winnerOf')}</Text></View>
-        <Text style={styles.winnerName}>{result?.winner_name || legacyWinnerName || t('notProvided')}</Text>
+        <Text style={styles.winnerName}>{result?.winner_name || t('notProvided')}</Text>
         <Text style={styles.winnerPhone}>{result?.masked_phone || maskPhone(product?.winner_phone)}</Text>
         {result?.winner_ticket_number && (
           <Text style={styles.winnerTicket}>Ticket: {result.winner_ticket_number}</Text>

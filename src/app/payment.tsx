@@ -225,12 +225,10 @@ export default function PaymentScreen() {
       return;
     }
 
-    const { data: existing, error: existingError } = await supabase
-      .from('entries')
-      .select('id')
-      .eq('product_id', productIdValue)
-      .eq('phone', userPhone)
-      .maybeSingle();
+    const { data: existing, error: existingError } = await supabase.rpc('check_entry_exists', {
+      p_product_id: productIdValue,
+      p_phone: userPhone,
+    });
 
     if (existingError) {
       alert('Unable to verify your entry. Please try again.');
@@ -246,13 +244,10 @@ export default function PaymentScreen() {
       return;
     }
 
-    const { data: pendingPayment, error: pendingError } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('product_id', productIdValue)
-      .eq('phone', userPhone)
-      .eq('status', 'pending')
-      .maybeSingle();
+    const { data: pendingPayment, error: pendingError } = await supabase.rpc('check_pending_transaction_exists', {
+      p_product_id: productIdValue,
+      p_phone: userPhone,
+    });
 
     if (pendingError) {
       alert('Unable to verify your payment status. Please try again.');
