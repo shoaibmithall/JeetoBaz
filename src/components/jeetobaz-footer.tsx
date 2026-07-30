@@ -34,6 +34,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 type FooterLink = {
   label: string;
   route?: string;
+  params?: Record<string, string>;
   external?: string;
 };
 
@@ -75,9 +76,11 @@ function useFooterColors() {
 
 const QUICK_LINKS: FooterLink[] = [
   { label: 'All Draws', route: '/' },
-  { label: 'How It Works', route: '/help' },
+  { label: 'How JeetoBaz Works', route: '/about', params: { section: 'works' } },
   { label: 'Past Winners', route: '/explore' },
   { label: 'FAQs', route: '/faq' },
+  { label: 'Refer & Earn', route: '/referral' },
+  { label: 'My Entries', route: '/entries' },
   { label: 'Contact Us', route: '/help' },
 ];
 
@@ -87,16 +90,21 @@ const HELP_LINKS: FooterLink[] = [
   { label: 'Refund & Cancellation', route: '/refund-policy' },
   { label: 'Shipping Policy', route: '/shipping-policy' },
   { label: 'Support Center', route: '/help' },
+  { label: 'Responsible Use Policy', route: '/about', params: { section: 'legal' } },
+  { label: 'Registered & Verified', route: '/registered-verified' },
+  { label: 'Why Choose JeetoBaz?', route: '/about', params: { section: 'why' } },
+  { label: 'Trust & Security', route: '/about', params: { section: 'trust' } },
+  { label: 'About JeetoBaz', route: '/about', params: { section: 'about' } },
 ];
 
 const CATEGORY_ITEMS: FooterLink[] = [
-  { label: 'Mobiles' },
-  { label: 'Laptops' },
-  { label: 'Smart Watches' },
-  { label: 'TVs & Electronics' },
-  { label: 'Vehicles' },
-  { label: 'Travel Packages' },
-  { label: 'And More' },
+  { label: 'Mobiles', route: '/', params: { category: 'mobiles' } },
+  { label: 'Laptops', route: '/', params: { category: 'laptops' } },
+  { label: 'Smart Watches', route: '/', params: { category: 'smartwatches' } },
+  { label: 'TVs & Electronics', route: '/', params: { group: 'electronics' } },
+  { label: 'Vehicles', route: '/', params: { group: 'vehicles' } },
+  { label: 'Travel Packages', route: '/', params: { category: 'travel' } },
+  { label: 'And More', route: '/' },
 ];
 
 const SOCIAL_LINKS: { icon: ReactNode; url: string; label: string }[] = [
@@ -615,6 +623,8 @@ export default function JeetoBazFooter() {
     () => (link: FooterLink) => {
       if (link.external) {
         Linking.openURL(link.external);
+      } else if (link.route && link.params) {
+        router.push({ pathname: link.route, params: link.params } as never);
       } else if (link.route) {
         router.push(link.route as never);
       }

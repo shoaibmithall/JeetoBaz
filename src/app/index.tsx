@@ -1,7 +1,7 @@
 import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, RefreshControl, TextInput, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
-import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
@@ -20,7 +20,10 @@ import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import {
+  CATEGORY_GROUP_LABELS,
   getProductCategory,
+  PRODUCT_CATEGORIES,
+  type CategoryGroupKey,
   type CategorySelection,
 } from '@/lib/product-categories';
 import type { Product } from '@/types/database';
@@ -347,6 +350,7 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [category, setCategory] = useState<CategorySelection>('all');
+  const [groupFilter, setGroupFilter] = useState<CategoryGroupKey | null>(null);
   const [selectedEntryFee, setSelectedEntryFee] = useState<number | null>(null);
   const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -363,9 +367,23 @@ export default function HomeScreen() {
   const scrollYRef = useRef(0);
   const pullStartYRef = useRef<number | null>(null);
   const router = useRouter();
+  const categoryParams = useLocalSearchParams<{ category?: string; group?: string }>();
   const deferredSearch = useDeferredValue(search);
   const deferredCategory = useDeferredValue(category);
+  const deferredGroupFilter = useDeferredValue(groupFilter);
   const deferredSelectedEntryFee = useDeferredValue(selectedEntryFee);
+
+  useEffect(() => {
+    const categoryParam = categoryParams.category;
+    const groupParam = categoryParams.group;
+    if (typeof categoryParam === 'string' && PRODUCT_CATEGORIES.some((entry) => entry.key === categoryParam)) {
+      setCategory(categoryParam as CategorySelection);
+      setGroupFilter(null);
+    } else if (typeof groupParam === 'string' && groupParam in CATEGORY_GROUP_LABELS) {
+      setGroupFilter(groupParam as CategoryGroupKey);
+      setCategory('all');
+    }
+  }, [categoryParams.category, categoryParams.group]);
   const isCompact = responsiveWidth < 480;
   const isDark = theme.mode === 'dark';
   const colors = useMemo<HomeColors>(() => isDark ? {
@@ -400,9 +418,10 @@ export default function HomeScreen() {
     const query = deferredSearch.trim().toLowerCase();
     const result = products.filter((product) => {
       const matchesSearch = !query || product.name.toLowerCase().includes(query);
-      const matchesCategory =
-        deferredCategory === 'all' ||
-        getProductCategory(product.name) === deferredCategory;
+      const productCategoryKey = getProductCategory(product.name);
+      const matchesCategory = deferredGroupFilter
+        ? PRODUCT_CATEGORIES.find((entry) => entry.key === productCategoryKey)?.group === deferredGroupFilter
+        : deferredCategory === 'all' || productCategoryKey === deferredCategory;
       const matchesEntryFee = deferredSelectedEntryFee === null || (product.entry_fee || 1) === deferredSelectedEntryFee;
       return matchesSearch && matchesCategory && matchesEntryFee;
     });
@@ -414,7 +433,7 @@ export default function HomeScreen() {
       if (sortBy === 'entry_low') return (a.entry_fee || 1) - (b.entry_fee || 1);
       return (b.current_entries || 0) - (a.current_entries || 0);
     });
-  }, [deferredCategory, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
+  }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
 
   const entryFeeCounts = useMemo(() => {
     return products.reduce<Record<number, number>>((counts, product) => {
@@ -930,7 +949,10 @@ export default function HomeScreen() {
       <HomeNavigation>
         <CategoryBrowser
           selectedCategory={category}
-          onSelectCategory={setCategory}
+          onSelectCategory={(next) => {
+            setCategory(next);
+            setGroupFilter(null);
+          }}
           colors={colors}
         />
       </HomeNavigation>
@@ -1049,6 +1071,15 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
+
+          {groupFilter && (
+            <View style={[styles.groupFilterChip, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+              <Text style={[styles.groupFilterText, { color: colors.gold }]}>Filtered by: {CATEGORY_GROUP_LABELS[groupFilter]}</Text>
+              <TouchableOpacity onPress={() => setGroupFilter(null)} accessibilityRole="button" accessibilityLabel="Clear category filter">
+                <Text style={[styles.groupFilterClear, { color: colors.gold }]}>✕ Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {loading && (
             <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
@@ -1235,6 +1266,9 @@ const styles = StyleSheet.create({
   priceSidebar: { width: 80, paddingTop: 15 },
   drawsContent: { flex: 1, minWidth: 0 },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15 },
+  groupFilterChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderRadius: 10, marginHorizontal: 15, marginBottom: 10, paddingVertical: 9, paddingHorizontal: 13 },
+  groupFilterText: { fontSize: 13, fontWeight: '700' },
+  groupFilterClear: { fontSize: 13, fontWeight: '700' },
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
   resultsMeta: { alignItems: 'flex-end', marginLeft: 12 },
   resultsText: { color: '#aaa', fontSize: 12 },
