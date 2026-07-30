@@ -103,6 +103,9 @@ const CATEGORY_ITEMS: FooterLink[] = [
   { label: 'Smart Watches', route: '/', params: { category: 'smartwatches' } },
   { label: 'TVs & Electronics', route: '/', params: { group: 'electronics' } },
   { label: 'Vehicles', route: '/', params: { group: 'vehicles' } },
+  { label: 'Home & Living', route: '/', params: { group: 'home' } },
+  { label: 'Fashion & Beauty', route: '/', params: { group: 'fashion' } },
+  { label: 'Sports & Fitness', route: '/', params: { group: 'sports' } },
   { label: 'Travel Packages', route: '/', params: { category: 'travel' } },
   { label: 'And More', route: '/' },
 ];
