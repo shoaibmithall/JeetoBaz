@@ -372,6 +372,10 @@ export type Database = {
         Args: { p_product_id: string; p_status: PrizeStatus; p_tracking_note?: string | null };
         Returns: void;
       };
+      get_my_ticket_for_draw: {
+        Args: { p_product_id: string; p_phone: string };
+        Returns: string | null;
+      };
       verify_ticket: {
         Args: { p_ticket_number: string };
         Returns: Array<{
