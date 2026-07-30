@@ -492,7 +492,7 @@ const sections: Array<{ id: SectionId; title: string; subtitle: string }> = [
   { id: 'works', title: 'How JeetoBaz Works', subtitle: 'From campaign selection to prize delivery' },
   { id: 'trust', title: 'Trust & Security', subtitle: 'Protection, fairness and transparency' },
   { id: 'support', title: 'Support & Contact', subtitle: 'We are here when you need us' },
-  { id: 'legal', title: 'Legal & Policies', subtitle: 'Important rules and responsible use' },
+  { id: 'legal', title: 'Responsible Use Policy', subtitle: 'Important rules and responsible use' },
   { id: 'social', title: 'Follow JeetoBaz', subtitle: 'Connect with our official channels' },
   { id: 'app', title: 'App Information', subtitle: 'Version, platform and development details' },
 ];
@@ -1247,10 +1247,7 @@ export default function AboutJeetoBazScreen() {
     if (selected === 'legal') {
       return (
         <>
-          <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Legal & Policies" />
-          <Text selectable style={[styles.leadText, { color: theme.text }]}>
-            Responsible Use Policy
-          </Text>
+          <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Responsible Use Policy" />
           <Text selectable style={[styles.policyDate, { color: theme.gold, marginBottom: 16 }]}>Last Updated: 2026</Text>
 
           <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -1258,7 +1255,7 @@ export default function AboutJeetoBazScreen() {
             <TextInput
               value={legalQuery}
               onChangeText={setLegalQuery}
-              placeholder="Search Legal & Policies..."
+              placeholder="Search Responsible Use Policy..."
               placeholderTextColor={theme.subtle}
               style={[styles.worksSearchInput, { color: theme.text }]}
             />
