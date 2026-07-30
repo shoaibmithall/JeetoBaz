@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { ArrowRight, Gift, X } from 'lucide-react-native';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
+import { useAppTheme } from '@/hooks/use-theme';
 
 const STORAGE_KEY = 'referralBannerLastShownAt';
 const SHOW_DELAY_MS = 1500;
@@ -18,19 +19,32 @@ const VISIBLE_DURATION_MS = 7000;
 const REPEAT_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 const SWIPE_UP_DISMISS_THRESHOLD = -30;
 
-const COLORS = {
-  background: '#04140e',
-  border: '#c9a000',
-  gold: '#FFD700',
-  text: '#ffffff',
-  muted: '#c7d3cc',
-};
-
 export function ReferralFloatingBanner() {
   const router = useRouter();
+  const { mode, theme } = useAppTheme();
   const [visible, setVisible] = useState(false);
   const translateY = useRef(new Animated.Value(-160)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const colors = mode === 'light'
+    ? {
+        background: theme.surface,
+        border: theme.gold,
+        gold: theme.gold,
+        text: theme.text,
+        muted: theme.muted,
+        iconBoxBg: theme.goldSoft,
+        buttonText: theme.buttonText,
+      }
+    : {
+        background: theme.surfaceAlt,
+        border: theme.gold,
+        gold: theme.gold,
+        text: theme.text,
+        muted: theme.muted,
+        iconBoxBg: 'rgba(255, 215, 0, 0.12)',
+        buttonText: theme.buttonText,
+      };
 
   function dismiss() {
     if (hideTimer.current) {
@@ -97,31 +111,38 @@ export function ReferralFloatingBanner() {
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss}>
       <View pointerEvents="box-none" style={styles.overlay}>
         <Animated.View
-          style={[styles.banner, { transform: [{ translateY }] }]}
+          style={[
+            styles.banner,
+            {
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+              transform: [{ translateY }],
+            },
+          ]}
           {...panResponder.panHandlers}
         >
-          <View style={styles.accentBar} />
-          <View style={styles.iconBox}>
-            <Gift color={COLORS.gold} size={26} />
+          <View style={[styles.accentBar, { backgroundColor: colors.gold }]} />
+          <View style={[styles.iconBox, { backgroundColor: colors.iconBoxBg }]}>
+            <Gift color={colors.gold} size={26} />
           </View>
           <View style={styles.copy}>
-            <Text style={styles.title}>Refer &amp; Earn</Text>
-            <Text style={styles.message} numberOfLines={2}>
+            <Text style={[styles.title, { color: colors.gold }]}>Refer &amp; Earn</Text>
+            <Text style={[styles.message, { color: colors.muted }]} numberOfLines={2}>
               Invite friends to JeetoBaz and earn rewards after successful referrals.
             </Text>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Share Now"
-            style={styles.shareButton}
+            style={[styles.shareButton, { backgroundColor: colors.gold }]}
             onPress={() => {
               dismiss();
               router.push({ pathname: '/referral', params: { source: 'floating-banner' } });
             }}
           >
             <View style={styles.shareButtonInner}>
-              <Text style={styles.shareButtonText}>Share Now</Text>
-              <ArrowRight color="#07130c" size={14} />
+              <Text style={[styles.shareButtonText, { color: colors.buttonText }]}>Share Now</Text>
+              <ArrowRight color={colors.buttonText} size={14} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -130,7 +151,7 @@ export function ReferralFloatingBanner() {
             style={styles.closeButton}
             onPress={dismiss}
           >
-            <X color={COLORS.muted} size={16} />
+            <X color={colors.muted} size={16} />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -150,8 +171,6 @@ const styles = StyleSheet.create({
     minHeight: 76,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
@@ -170,13 +189,11 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    backgroundColor: COLORS.gold,
   },
   iconBox: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 215, 0, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 6,
@@ -186,17 +203,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: COLORS.gold,
     fontSize: 15,
     fontWeight: '800',
   },
   message: {
-    color: COLORS.muted,
     fontSize: 11,
     lineHeight: 14,
   },
   shareButton: {
-    backgroundColor: COLORS.gold,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -207,7 +221,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   shareButtonText: {
-    color: '#07130c',
     fontSize: 12,
     fontWeight: '800',
   },
