@@ -13,6 +13,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { HomeMain, HomeNavigation, HomeSkipLink } from '@/components/home-semantics';
 import JeetoBazFooter from '@/components/jeetobaz-footer';
+import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -896,6 +897,7 @@ export default function HomeScreen() {
       <script type="application/ld+json">{JSON.stringify(HOMEPAGE_WEBPAGE_SCHEMA)}</script>
     </Head>
     <HomeSkipLink />
+    <ReferralFloatingBanner />
     <ScrollView
       ref={scrollViewRef}
       style={[styles.container, { backgroundColor: colors.background }]}
