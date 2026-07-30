@@ -6,7 +6,7 @@ import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
-  Megaphone, ShieldCheck, Target, Ticket, UsersRound, X,
+  Megaphone, ShieldCheck, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -470,6 +470,13 @@ export default function HomeScreen() {
           items,
         };
       });
+  }, [isDefaultView, products]);
+
+  const trendingProducts = useMemo(() => {
+    if (!isDefaultView) return [];
+    return products
+      .filter((product) => (product.current_entries || 0) > 0)
+      .sort((a, b) => (b.current_entries || 0) - (a.current_entries || 0));
   }, [isDefaultView, products]);
 
   const entryFeeCounts = useMemo(() => {
@@ -1115,6 +1122,41 @@ export default function HomeScreen() {
               <TouchableOpacity onPress={() => setGroupFilter(null)} accessibilityRole="button" accessibilityLabel="Clear category filter">
                 <Text style={[styles.groupFilterClear, { color: colors.gold }]}>✕ Clear</Text>
               </TouchableOpacity>
+            </View>
+          )}
+
+          {!loading && isDefaultView && trendingProducts.length > 0 && (
+            <View style={styles.categorySection}>
+              <View style={[styles.categorySectionHeader, { borderBottomColor: colors.border }]}>
+                <View style={styles.iconText}>
+                  <TrendingUp color={colors.gold} size={19} strokeWidth={2} />
+                  <Text role="heading" aria-level={3} style={[styles.categorySectionTitle, { color: colors.gold }]}>
+                    Trending
+                  </Text>
+                </View>
+                <Text style={[styles.categorySectionCount, { color: colors.muted }]}>{trendingProducts.length} {t('found')}</Text>
+              </View>
+              <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
+                {trendingProducts.map((p) => {
+                  const drawSchedule = getDrawScheduleStatus(p, language, time);
+                  return (
+                    <HomeProductCard
+                      key={p.id}
+                      product={p}
+                      drawSchedule={drawSchedule}
+                      isFavorite={favorites.includes(p.id)}
+                      isCompactGrid={isCompactGrid}
+                      isMultiColumn={isMultiColumn}
+                      productCardWidth={productCardWidth}
+                      productImageHeight={productImageHeight}
+                      colors={colors}
+                      t={t}
+                      onEnter={handleEnter}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  );
+                })}
+              </View>
             </View>
           )}
 
