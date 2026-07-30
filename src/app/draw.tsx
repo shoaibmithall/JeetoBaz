@@ -6,9 +6,35 @@ import { supabase } from '@/lib/supabase';
 import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
 import { createUserNotification } from '@/lib/notifications';
-import { Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
+import { Clock, Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
+const DRAW_WINDOW_HOUR_PKT = 22;
+
+function getKarachiParts() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Karachi',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value || 0) % 24;
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value || 0);
+  return { hour, minute };
+}
+
+function getDrawWindowStatus() {
+  const { hour, minute } = getKarachiParts();
+  if (hour === DRAW_WINDOW_HOUR_PKT) {
+    const minutesLeft = 59 - minute;
+    return { isOpen: true, label: `Draw window is open — closes in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'} (10:59 PM PKT)` };
+  }
+  const hoursUntil = ((DRAW_WINDOW_HOUR_PKT - hour) % 24 + 24) % 24;
+  const totalMinutesUntil = hoursUntil * 60 - minute;
+  const h = Math.floor(totalMinutesUntil / 60);
+  const m = totalMinutesUntil % 60;
+  return { isOpen: false, label: `Draws can only run 10:00–10:59 PM PKT. Opens in ${h}h ${m}m.` };
+}
 
 export default function DrawScreen() {
   const router = useRouter();
@@ -23,6 +49,7 @@ export default function DrawScreen() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [productSlug, setProductSlug] = useState<string | null>(null);
+  const [, setWindowTick] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -34,6 +61,11 @@ export default function DrawScreen() {
     });
 
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setWindowTick((tick) => tick + 1), 30000);
+    return () => clearInterval(interval);
   }, []);
 
   async function loadEntries() {
@@ -247,11 +279,28 @@ export default function DrawScreen() {
               </View>
             ))}
           </ScrollView>
-          {phase === 'showing' && (
-            <TouchableOpacity style={styles.spinButton} onPress={startSpin}>
-              <Dices color="#000" size={20} /><Text style={styles.spinButtonText}>{t('pickWinner')}</Text>
-            </TouchableOpacity>
-          )}
+          {phase === 'showing' && (() => {
+            const windowStatus = getDrawWindowStatus();
+            return (
+              <>
+                <View style={[styles.windowBanner, windowStatus.isOpen ? styles.windowBannerOpen : styles.windowBannerClosed]}>
+                  <Clock color={windowStatus.isOpen ? '#18a663' : '#FFD700'} size={16} />
+                  <Text style={[styles.windowBannerText, windowStatus.isOpen ? styles.windowBannerTextOpen : styles.windowBannerTextClosed]}>
+                    {windowStatus.label}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.spinButton, !windowStatus.isOpen && styles.spinButtonDisabled]}
+                  onPress={startSpin}
+                  disabled={!windowStatus.isOpen}
+                >
+                  {windowStatus.isOpen
+                    ? <><Dices color="#000" size={20} /><Text style={styles.spinButtonText}>{t('pickWinner')}</Text></>
+                    : <><LockKeyhole color="#666" size={20} /><Text style={styles.spinButtonTextDisabled}>Draw Window Closed</Text></>}
+                </TouchableOpacity>
+              </>
+            );
+          })()}
         </View>
       )}
 
@@ -323,8 +372,16 @@ const styles = StyleSheet.create({
   entryName: { color: 'white', fontSize: 15, fontWeight: 'bold' },
   entryPhone: { color: '#aaa', fontSize: 13, fontFamily: 'monospace', marginTop: 2 },
   whiteText: { color: 'white', fontWeight: 'bold' },
+  windowBanner: { flexDirection: 'row', alignItems: 'center', gap: 7, marginHorizontal: 15, marginBottom: 10, padding: 12, borderRadius: 10, borderWidth: 1 },
+  windowBannerOpen: { backgroundColor: '#082d1e', borderColor: '#18a663' },
+  windowBannerClosed: { backgroundColor: '#2a2105', borderColor: '#FFD700' },
+  windowBannerText: { fontSize: 13, fontWeight: '600', flex: 1 },
+  windowBannerTextOpen: { color: '#18a663' },
+  windowBannerTextClosed: { color: '#FFD700' },
   spinButton: { backgroundColor: '#FFD700', margin: 15, padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  spinButtonDisabled: { backgroundColor: '#222' },
   spinButtonText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+  spinButtonTextDisabled: { fontSize: 18, fontWeight: 'bold', color: '#666' },
   winnerCard: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 30, alignItems: 'center', borderWidth: 2, borderColor: '#FFD700' },
   congratsText: { fontSize: 26, fontWeight: 'bold', color: '#FFD700', marginBottom: 10 },
   winnerName: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 5 },
