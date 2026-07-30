@@ -65,6 +65,7 @@ export default function ProfileScreen() {
   const [turnstileError, setTurnstileError] = useState('');
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [memberId, setMemberId] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const [city, setCity] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -140,7 +141,7 @@ export default function ProfileScreen() {
         const [{ data: profile }, { data: location }] = await Promise.all([
           supabase
             .from('users')
-            .select('name, phone, avatar_url, referral_code, created_at')
+            .select('id, name, phone, avatar_url, referral_code, created_at')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
           supabase
@@ -161,6 +162,7 @@ export default function ProfileScreen() {
           setAvatarUrl(resolvedAvatar);
           if (resolvedAvatar) void setStoredValue(avatarStorageKey(user.id), resolvedAvatar);
           setReferralCode(profile.referral_code || null);
+          setMemberId(profile.id ? `JB-M-${profile.id.slice(0, 8).toUpperCase()}` : null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
           if (profile.phone) {
@@ -182,6 +184,7 @@ export default function ProfileScreen() {
           setCity(location?.city || '');
           setDateOfBirth(location?.date_of_birth || '');
           setReferralCode(null);
+          setMemberId(null);
           setProfileCreatedAt(null);
           if (/^\+92[0-9]{10}$/.test(metadataPhone)) {
             void fetchStats(metadataPhone);
@@ -199,6 +202,7 @@ export default function ProfileScreen() {
         setAvatarUrl('');
         setCity('');
         setReferralCode(null);
+        setMemberId(null);
         setProfileCreatedAt(null);
         setTotalEntries(0);
         setStep('login');
@@ -263,6 +267,7 @@ export default function ProfileScreen() {
     setAvatarUrl('');
     setCity('');
     setReferralCode(null);
+    setMemberId(null);
     setProfileCreatedAt(null);
     setTotalEntries(0);
   }
@@ -651,6 +656,26 @@ export default function ProfileScreen() {
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
       </View>
+
+      {memberId ? (
+        <View style={[styles.referralCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={styles.referralTop}>
+            <View style={styles.referralLeft}>
+              <View style={[styles.referralIconBox, { backgroundColor: theme.primarySoft }]}>
+                <BadgeCheck color="#18a663" size={20} />
+              </View>
+              <View>
+                <Text style={[styles.referralLabel, { color: theme.muted }]}>Member ID</Text>
+                <Text style={[styles.referralCode, { color: theme.gold }]}>{memberId}</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={[styles.referralBtn, { backgroundColor: theme.primarySoft }]} onPress={() => copyToClipboard(memberId, 'memberId')}>
+              <Copy color={copiedField === 'memberId' ? '#18a663' : theme.gold} size={16} />
+            </TouchableOpacity>
+          </View>
+          {copiedField === 'memberId' ? <Text style={[styles.copiedMsg, { color: '#18a663' }]}>Copied to clipboard!</Text> : null}
+        </View>
+      ) : null}
 
       {referralCode ? (
         <View style={[styles.referralCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
