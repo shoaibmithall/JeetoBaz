@@ -25,6 +25,7 @@ import {
   PRODUCT_CATEGORIES,
   type CategoryGroupKey,
   type CategorySelection,
+  type ProductCategoryKey,
 } from '@/lib/product-categories';
 import type { Product } from '@/types/database';
 import { useAuth } from '@/providers/AuthProvider';
@@ -441,6 +442,36 @@ export default function HomeScreen() {
       return (b.current_entries || 0) - (a.current_entries || 0);
     });
   }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
+
+  const isDefaultView = category === 'all' && groupFilter === null && search.trim() === '' && selectedEntryFee === null;
+  const categorySectionPreviewCount = isCompactGrid ? 4 : 6;
+
+  const categorySections = useMemo(() => {
+    if (!isDefaultView) return [];
+    const productsByCategory = new Map<ProductCategoryKey, Product[]>();
+    for (const product of products) {
+      const key = getProductCategory(product.name);
+      if (!key) continue;
+      const existing = productsByCategory.get(key);
+      if (existing) {
+        existing.push(product);
+      } else {
+        productsByCategory.set(key, [product]);
+      }
+    }
+    return PRODUCT_CATEGORIES
+      .filter((entry) => productsByCategory.has(entry.key))
+      .map((entry) => {
+        const items = productsByCategory.get(entry.key)!;
+        return {
+          key: entry.key,
+          label: entry.label,
+          icon: entry.icon,
+          total: items.length,
+          preview: items.slice(0, categorySectionPreviewCount),
+        };
+      });
+  }, [isDefaultView, products, categorySectionPreviewCount]);
 
   const entryFeeCounts = useMemo(() => {
     return products.reduce<Record<number, number>>((counts, product) => {
@@ -1127,7 +1158,61 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {!loading && filteredProducts.length > 0 && (
+          {!loading && filteredProducts.length > 0 && isDefaultView && (
+          <View style={styles.categorySectionsList}>
+            {categorySections.map((section) => (
+              <View
+                key={section.key}
+                style={[styles.categorySection, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <View style={styles.categorySectionHeader}>
+                  <View style={styles.iconText}>
+                    <section.icon color={colors.gold} size={19} strokeWidth={2} />
+                    <Text role="heading" aria-level={3} style={[styles.categorySectionTitle, { color: colors.gold }]}>
+                      {section.label}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`View more ${section.label}`}
+                    onPress={() => {
+                      setCategory(section.key);
+                      setGroupFilter(null);
+                      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                    }}
+                    style={styles.categorySectionViewMore}
+                  >
+                    <Text style={[styles.categorySectionViewMoreText, { color: colors.primary }]}>View More</Text>
+                    <ChevronRight color={colors.primary} size={16} />
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
+                  {section.preview.map((p) => {
+                    const drawSchedule = getDrawScheduleStatus(p, language, time);
+                    return (
+                      <HomeProductCard
+                        key={p.id}
+                        product={p}
+                        drawSchedule={drawSchedule}
+                        isFavorite={favorites.includes(p.id)}
+                        isCompactGrid={isCompactGrid}
+                        isMultiColumn={isMultiColumn}
+                        productCardWidth={productCardWidth}
+                        productImageHeight={productImageHeight}
+                        colors={colors}
+                        t={t}
+                        onEnter={handleEnter}
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
+          )}
+
+          {!loading && filteredProducts.length > 0 && !isDefaultView && (
           <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
             {filteredProducts.map((p) => {
               const drawSchedule = getDrawScheduleStatus(p, language, time);
@@ -1295,6 +1380,12 @@ const styles = StyleSheet.create({
   productGrid: { width: '100%' },
   productGridMultiColumn: { paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' },
   productGridCompact: { paddingHorizontal: 10, gap: 10 },
+  categorySectionsList: { gap: 14, paddingHorizontal: 15, paddingBottom: 6 },
+  categorySection: { borderWidth: 1, borderRadius: 14, overflow: 'hidden', paddingTop: 4 },
+  categorySectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 12 },
+  categorySectionTitle: { fontSize: 16, fontWeight: '800' },
+  categorySectionViewMore: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  categorySectionViewMoreText: { fontSize: 13, fontWeight: '700' },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
   cardCompact: { borderRadius: 11 },
   skeletonCard: { opacity: 0.92 },
