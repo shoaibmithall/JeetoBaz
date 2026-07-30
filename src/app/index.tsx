@@ -353,6 +353,7 @@ export default function HomeScreen() {
   const [category, setCategory] = useState<CategorySelection>('all');
   const [groupFilter, setGroupFilter] = useState<CategoryGroupKey | null>(null);
   const [selectedEntryFee, setSelectedEntryFee] = useState<number | null>(null);
+  const [showAllTrending, setShowAllTrending] = useState(false);
   const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -445,6 +446,8 @@ export default function HomeScreen() {
 
   const isDefaultView = category === 'all' && groupFilter === null && search.trim() === '' && selectedEntryFee === null;
 
+  const categoryPreviewCount = columnCount === 3 ? 6 : 4;
+
   const categorySections = useMemo(() => {
     if (!isDefaultView) return [];
     const productsByCategory = new Map<ProductCategoryKey, Product[]>();
@@ -467,10 +470,10 @@ export default function HomeScreen() {
           label: entry.label,
           icon: entry.icon,
           total: items.length,
-          items,
+          preview: items.slice(0, categoryPreviewCount),
         };
       });
-  }, [isDefaultView, products]);
+  }, [isDefaultView, products, categoryPreviewCount]);
 
   const trendingProducts = useMemo(() => {
     if (!isDefaultView) return [];
@@ -478,6 +481,8 @@ export default function HomeScreen() {
       .filter((product) => (product.current_entries || 0) > 0)
       .sort((a, b) => (b.current_entries || 0) - (a.current_entries || 0));
   }, [isDefaultView, products]);
+
+  const trendingPreview = useMemo(() => trendingProducts.slice(0, 3), [trendingProducts]);
 
   const entryFeeCounts = useMemo(() => {
     return products.reduce<Record<number, number>>((counts, product) => {
@@ -804,6 +809,7 @@ export default function HomeScreen() {
                     ]}
                     onPress={() => {
                       setSelectedEntryFee(fee);
+                      setShowAllTrending(false);
                       if (compact) setShowPriceFilter(false);
                     }}
                   >
@@ -854,7 +860,10 @@ export default function HomeScreen() {
                   { backgroundColor: selected ? colors.goldSoft : colors.surfaceAlt, borderColor: selected ? colors.gold : colors.border },
                   disabled && styles.priceOptionDisabled,
                 ]}
-                onPress={() => setSelectedEntryFee(fee)}
+                onPress={() => {
+                  setSelectedEntryFee(fee);
+                  setShowAllTrending(false);
+                }}
               >
                 <Text style={[styles.horizontalPriceText, { color: selected ? colors.gold : disabled ? colors.muted : colors.text }]}>Rs.{fee.toLocaleString()}</Text>
                 <Text style={[styles.horizontalPriceCount, { color: selected ? colors.gold : colors.muted }]}>{count}</Text>
@@ -996,6 +1005,7 @@ export default function HomeScreen() {
           onSelectCategory={(next) => {
             setCategory(next);
             setGroupFilter(null);
+            setShowAllTrending(false);
           }}
           colors={colors}
         />
@@ -1019,7 +1029,10 @@ export default function HomeScreen() {
             placeholder={t('searchPrizes')}
             placeholderTextColor="#666"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={(text) => {
+              setSearch(text);
+              setShowAllTrending(false);
+            }}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} accessibilityLabel="Clear search">
@@ -1125,7 +1138,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {!loading && isDefaultView && trendingProducts.length > 0 && (
+          {!loading && isDefaultView && !showAllTrending && trendingPreview.length > 0 && (
             <View style={styles.categorySection}>
               <View style={[styles.categorySectionHeader, { borderBottomColor: colors.border }]}>
                 <View style={styles.iconText}>
@@ -1134,7 +1147,56 @@ export default function HomeScreen() {
                     Trending
                   </Text>
                 </View>
-                <Text style={[styles.categorySectionCount, { color: colors.muted }]}>{trendingProducts.length} {t('found')}</Text>
+                {trendingProducts.length > trendingPreview.length && (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="See all trending draws"
+                    onPress={() => setShowAllTrending(true)}
+                  >
+                    <Text style={[styles.categorySectionSeeAll, { color: colors.primary }]}>See All</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
+                {trendingPreview.map((p) => {
+                  const drawSchedule = getDrawScheduleStatus(p, language, time);
+                  return (
+                    <HomeProductCard
+                      key={p.id}
+                      product={p}
+                      drawSchedule={drawSchedule}
+                      isFavorite={favorites.includes(p.id)}
+                      isCompactGrid={isCompactGrid}
+                      isMultiColumn={isMultiColumn}
+                      productCardWidth={productCardWidth}
+                      productImageHeight={productImageHeight}
+                      colors={colors}
+                      t={t}
+                      onEnter={handleEnter}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {!loading && isDefaultView && showAllTrending && (
+            <View style={styles.categorySection}>
+              <View style={[styles.categorySectionHeader, { borderBottomColor: colors.border }]}>
+                <View style={styles.iconText}>
+                  <TrendingUp color={colors.gold} size={19} strokeWidth={2} />
+                  <Text role="heading" aria-level={3} style={[styles.categorySectionTitle, { color: colors.gold }]}>
+                    Trending
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear trending view"
+                  onPress={() => setShowAllTrending(false)}
+                >
+                  <Text style={[styles.categorySectionSeeAll, { color: colors.primary }]}>✕ Clear</Text>
+                </TouchableOpacity>
               </View>
               <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
                 {trendingProducts.map((p) => {
@@ -1193,13 +1255,14 @@ export default function HomeScreen() {
                 setSearch('');
                 setCategory('all');
                 setSelectedEntryFee(null);
+                setShowAllTrending(false);
               }}>
                 <Text style={styles.clearSearch}>{t('clearSearch')}</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {!loading && filteredProducts.length > 0 && isDefaultView && (
+          {!loading && filteredProducts.length > 0 && isDefaultView && !showAllTrending && (
           <View style={styles.categorySectionsList}>
             {categorySections.map((section) => (
               <View key={section.key} style={styles.categorySection}>
@@ -1210,10 +1273,22 @@ export default function HomeScreen() {
                       {section.label}
                     </Text>
                   </View>
-                  <Text style={[styles.categorySectionCount, { color: colors.muted }]}>{section.total} {t('found')}</Text>
+                  {section.total > section.preview.length && (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`See all ${section.label}`}
+                      onPress={() => {
+                        setCategory(section.key);
+                        setGroupFilter(null);
+                        setShowAllTrending(false);
+                      }}
+                    >
+                      <Text style={[styles.categorySectionSeeAll, { color: colors.primary }]}>See All</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-                  {section.items.map((p) => {
+                  {section.preview.map((p) => {
                     const drawSchedule = getDrawScheduleStatus(p, language, time);
                     return (
                       <HomeProductCard
@@ -1270,6 +1345,7 @@ export default function HomeScreen() {
           setCategory('all');
           setGroupFilter(null);
           setSelectedEntryFee(null);
+          setShowAllTrending(false);
           scrollViewRef.current?.scrollTo({ y: 0, animated: true });
         }}
       />
@@ -1411,6 +1487,7 @@ const styles = StyleSheet.create({
   categorySectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 12, borderBottomWidth: 1 },
   categorySectionTitle: { fontSize: 16, fontWeight: '800' },
   categorySectionCount: { fontSize: 12 },
+  categorySectionSeeAll: { fontSize: 13, fontWeight: '700' },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
   cardCompact: { borderRadius: 11 },
   skeletonCard: { opacity: 0.92 },
