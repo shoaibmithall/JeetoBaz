@@ -48,7 +48,7 @@ export default function ProfileSetupScreen() {
         alert('Error: ' + error.message);
       }
     } else {
-      await claimPendingReferral(normalizedPhoneFull);
+      await claimPendingReferral();
       await setStoredValue('userPhone', normalizedPhoneFull);
       await setStoredValue('userName', name.trim());
       router.replace('/');

@@ -27,13 +27,12 @@ export async function savePendingReferralCode(code: string) {
   if (normalized) await setStoredValue(PENDING_REFERRAL_KEY, normalized);
 }
 
-export async function claimPendingReferral(phone: string) {
+export async function claimPendingReferral() {
   const code = await getStoredValue(PENDING_REFERRAL_KEY);
   if (!code) return;
 
   const deviceToken = await getReferralDeviceToken();
   const { error } = await supabase.rpc('claim_referral_code', {
-    requested_phone: phone,
     requested_code: code,
     requested_device_token: deviceToken,
   });
