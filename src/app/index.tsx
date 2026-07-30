@@ -1160,11 +1160,8 @@ export default function HomeScreen() {
           {!loading && filteredProducts.length > 0 && isDefaultView && (
           <View style={styles.categorySectionsList}>
             {categorySections.map((section) => (
-              <View
-                key={section.key}
-                style={[styles.categorySection, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              >
-                <View style={styles.categorySectionHeader}>
+              <View key={section.key} style={styles.categorySection}>
+                <View style={[styles.categorySectionHeader, { borderBottomColor: colors.border }]}>
                   <View style={styles.iconText}>
                     <section.icon color={colors.gold} size={19} strokeWidth={2} />
                     <Text role="heading" aria-level={3} style={[styles.categorySectionTitle, { color: colors.gold }]}>
@@ -1367,9 +1364,9 @@ const styles = StyleSheet.create({
   productGrid: { width: '100%' },
   productGridMultiColumn: { paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' },
   productGridCompact: { paddingHorizontal: 10, gap: 10 },
-  categorySectionsList: { gap: 14, paddingHorizontal: 15, paddingBottom: 6 },
-  categorySection: { borderWidth: 1, borderRadius: 14, overflow: 'hidden', paddingTop: 4 },
-  categorySectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 12 },
+  categorySectionsList: { paddingBottom: 6 },
+  categorySection: { width: '100%' },
+  categorySectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 12, borderBottomWidth: 1 },
   categorySectionTitle: { fontSize: 16, fontWeight: '800' },
   categorySectionCount: { fontSize: 12 },
   card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
