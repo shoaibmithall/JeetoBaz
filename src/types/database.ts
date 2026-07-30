@@ -357,6 +357,17 @@ export type Database = {
         Args: { p_product_id: string; p_status: PrizeStatus; p_tracking_note?: string | null };
         Returns: void;
       };
+      verify_ticket: {
+        Args: { p_ticket_number: string };
+        Returns: Array<{
+          product_name: string;
+          product_slug: string | null;
+          product_status: string;
+          entry_created_at: string;
+          is_winner: boolean;
+          drawn_at: string | null;
+        }>;
+      };
     };
     Enums: {};
     CompositeTypes: {};
