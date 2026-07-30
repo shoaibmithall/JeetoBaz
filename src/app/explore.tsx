@@ -1,5 +1,5 @@
-import { Image, Linking, View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import { Image, Linking, View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -8,7 +8,7 @@ import Head from 'expo-router/head';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
-import { Medal, Target, Trophy } from 'lucide-react-native';
+import { Medal, Search, Target, Trophy } from 'lucide-react-native';
 
 export default function WinnersScreen() {
   const { t } = useLanguage();
@@ -17,6 +17,13 @@ export default function WinnersScreen() {
   const [winnerEntries, setWinnerEntries] = useState<Record<string, { name: string; ticket: string }>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const filteredWinners = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    if (!search) return winners;
+    return winners.filter((product) => product.name.toLowerCase().includes(search));
+  }, [winners, query]);
 
   useEffect(() => { fetchWinners(); }, []);
 
@@ -164,14 +171,35 @@ export default function WinnersScreen() {
         <Text style={[styles.trustText, { color: theme.muted }]}>{t('trustLine3')}</Text>
       </View>
 
+      {winners.length > 0 && (
+        <View style={[styles.searchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Search color={theme.subtle} size={20} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search winners by product name..."
+            placeholderTextColor={theme.subtle}
+            style={[styles.searchInput, { color: theme.text }]}
+          />
+        </View>
+      )}
+
       {winners.length === 0 ? (
         <View style={styles.emptyBox}>
           <Target color={theme.subtle} size={60} />
           <Text style={[styles.emptyText, { color: theme.text }]}>{t('noCompletedDraws')}</Text>
           <Text style={[styles.emptySubText, { color: theme.muted }]}>Be the first winner — enter a draw now!</Text>
         </View>
+      ) : filteredWinners.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Search color={theme.subtle} size={50} />
+          <Text style={[styles.emptyText, { color: theme.text }]}>No matching winner found</Text>
+          <TouchableOpacity onPress={() => setQuery('')}>
+            <Text style={styles.clearSearchText}>Clear Search</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
-        winners.map((product) => {
+        filteredWinners.map((product) => {
           const winnerEntry = winnerEntries[product.id];
           const totalEntries = product.current_entries || 0;
           return (
@@ -243,9 +271,12 @@ const styles = StyleSheet.create({
   trustBox: { backgroundColor: '#082d1e', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#18a663' },
   trustTitle: { fontSize: 16, fontWeight: 'bold', color: '#18a663', marginBottom: 12 },
   trustText: { color: '#aaa', fontSize: 14, marginBottom: 6 },
+  searchBox: { marginHorizontal: 15, marginBottom: 15, borderWidth: 1, borderRadius: 12, minHeight: 52, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 12, outlineStyle: 'none' } as never,
   emptyBox: { alignItems: 'center', padding: 50 },
   emptyText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
   emptySubText: { color: '#aaa', fontSize: 14, textAlign: 'center' },
+  clearSearchText: { color: '#18a663', fontSize: 15, fontWeight: 'bold', marginTop: 12 },
   winnerCard: { backgroundColor: '#071b13', margin: 15, marginBottom: 0, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#FFD700', alignItems: 'center' },
   winnerPhoto: { width: 86, height: 86, borderRadius: 43, marginBottom: 12, borderWidth: 2, borderColor: '#FFD700' },
   verifiedRecord: { color: '#18a663', fontSize: 12, fontWeight: 'bold', marginBottom: 8 },
