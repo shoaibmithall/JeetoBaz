@@ -90,6 +90,16 @@ export default function DrawScreen() {
     }
 
     const result = data[0];
+    try {
+      await supabase.from('admin_audit_log').insert({
+        action_type: 'draw_run',
+        target_id: productIdValue,
+        details: { product_name: productNameValue, winner_ticket_number: result.winner_ticket_number, total_entries: result.total_entries },
+      });
+    } catch {
+      // Best-effort only — never let audit logging block or fail the draw.
+    }
+
     const selectedWinner = entries.find((entry) => entry.id === result.winner_entry_id) || {
       id: result.winner_entry_id,
       product_id: productIdValue!,

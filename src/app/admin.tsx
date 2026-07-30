@@ -17,14 +17,34 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
 const PRIZE_STATUSES: PrizeStatus[] = ['pending', 'processing', 'shipped', 'delivered'];
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  product_deleted: 'Product deleted',
+  product_status_changed: 'Product status changed',
+  prize_status_updated: 'Prize delivery status updated',
+  payment_approved: 'Payment approved',
+  payment_rejected: 'Payment rejected',
+  draw_run: 'Draw run',
+};
+
+function formatAuditActionLabel(actionType: string) {
+  return AUDIT_ACTION_LABELS[actionType] || actionType;
+}
+
+function formatAuditDetails(details: Record<string, unknown>) {
+  return Object.entries(details)
+    .filter(([, value]) => value !== null && value !== undefined && value !== '')
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(' · ');
+}
 import { isValidSlug, slugify } from '@/lib/validation';
 import {
   BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
-  Dices, DollarSign, Eye, EyeOff, LockKeyhole, Mail, Moon, Package, Pencil,
+  Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wand2, X,
 } from 'lucide-react-native';
@@ -107,6 +127,7 @@ export default function AdminScreen() {
   const [drawResults, setDrawResults] = useState<DrawResultWithProduct[]>([]);
   const [prizeStatusDrafts, setPrizeStatusDrafts] = useState<Record<string, { status: PrizeStatus; note: string }>>({});
   const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<AdminAuditLogEntry[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -137,6 +158,7 @@ export default function AdminScreen() {
       fetchEntries();
       fetchTransactions();
       fetchDrawResults();
+      fetchAuditLog();
       loadAnnouncement();
       loadHomeAdImages();
       loadVerificationDocuments();
@@ -455,16 +477,37 @@ export default function AdminScreen() {
     setLoading(false);
   }
 
+  async function fetchAuditLog() {
+    const { data } = await supabase
+      .from('admin_audit_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (data) setAuditLog(data as AdminAuditLogEntry[]);
+  }
+
+  async function logAdminAction(actionType: string, targetId: string | null, details?: Record<string, unknown>) {
+    try {
+      await supabase.from('admin_audit_log').insert({ action_type: actionType, target_id: targetId, details: details || null });
+      await fetchAuditLog();
+    } catch {
+      // Best-effort only — never let audit logging block or fail an admin action.
+    }
+  }
+
   async function deleteProduct(id: string) {
     const confirmed = await confirmAsync('Delete', 'Delete this product?');
     if (!confirmed) return;
+    const deletedProduct = products.find((p) => p.id === id);
     await supabase.from('products').delete().eq('id', id);
+    void logAdminAction('product_deleted', id, { name: deletedProduct?.name });
     fetchProducts();
   }
 
   async function toggleStatus(p: Product) {
     const newStatus = p.status === 'active' ? 'completed' : 'active';
     await supabase.from('products').update({ status: newStatus }).eq('id', p.id);
+    void logAdminAction('product_status_changed', p.id, { name: p.name, from: p.status, to: newStatus });
     fetchProducts();
   }
 
@@ -516,6 +559,7 @@ export default function AdminScreen() {
       alert('Could not update prize status: ' + error.message);
       return;
     }
+    void logAdminAction('prize_status_updated', result.product_id, { status: draft.status, note: draft.note || null });
     await fetchDrawResults();
   }
 
@@ -832,6 +876,7 @@ export default function AdminScreen() {
         kind: 'payment-confirmed',
         link: '/entries',
       });
+      void logAdminAction('payment_approved', txn.id, { product_id: txn.product_id, phone: entryPhone, note: 'entry already existed' });
       alert('Entry already exists. Payment approved and receipt cleared.');
       fetchProducts();
       fetchEntries();
@@ -891,6 +936,7 @@ export default function AdminScreen() {
       });
     }
 
+    void logAdminAction('payment_approved', txn.id, { product_id: txn.product_id, phone: entryPhone, entry_id: rpcResult?.entry_id });
     alert('Payment approved and receipt deleted.');
     fetchProducts();
     fetchEntries();
@@ -901,6 +947,7 @@ export default function AdminScreen() {
     const confirmed = await confirmAsync('Reject', 'Reject this payment request?');
     if (!confirmed) return;
     await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
+    void logAdminAction('payment_rejected', txn.id, { product_id: txn.product_id, phone: txn.phone });
     fetchTransactions();
   }
 
@@ -1003,13 +1050,14 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'draws', 'payments', 'users', 'revenue', 'settings'].map(tab => (
+        {['products', 'draws', 'payments', 'users', 'revenue', 'audit', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             {tab === 'products' ? <Package color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'draws' ? <Trophy color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'payments' ? <ReceiptText color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'users' ? <UsersRound color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'revenue' ? <DollarSign color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
+              : tab === 'audit' ? <History color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : <Settings color={activeTab === tab ? theme.gold : theme.subtle} size={19} />}
             <Text style={[styles.tabLabel, activeTab === tab && styles.activeTabText]}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1296,6 +1344,24 @@ export default function AdminScreen() {
               <View key={p.id} style={styles.revenueRow}>
                 <Text style={styles.revenueProductName}>{p.name}</Text>
                 <Text style={styles.revenueProductAmt}>Rs. {((p.current_entries || 0) * (p.entry_fee || 1)).toLocaleString()}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {activeTab === 'audit' && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}><History color={theme.text} size={19} /><Text style={styles.sectionTitle}>Admin Action Log ({auditLog.length})</Text></View>
+            {auditLog.length === 0 && <Text style={styles.emptyText}>No admin actions logged yet.</Text>}
+            {auditLog.map((entry) => (
+              <View key={entry.id} style={styles.paymentCard}>
+                <View style={styles.productHeader}>
+                  <Text style={styles.productName}>{formatAuditActionLabel(entry.action_type)}</Text>
+                </View>
+                {entry.details ? (
+                  <Text style={styles.paymentLine}>{formatAuditDetails(entry.details)}</Text>
+                ) : null}
+                <Text style={styles.paymentLine}>{new Date(entry.created_at).toLocaleString()}</Text>
               </View>
             ))}
           </View>
