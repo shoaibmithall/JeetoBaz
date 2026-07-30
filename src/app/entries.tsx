@@ -233,7 +233,9 @@ export default function MyEntriesScreen() {
                     <Text style={[styles.statusText, { color: entryStatus.color }]}>{entryStatus.label}</Text>
                   </View>
                 </View>
-                <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.ticketNumber, isCompact && styles.ticketNumberCompact]}>Ticket: {getTicketNumber(entry)}</Text>
+                <TouchableOpacity onPress={() => router.push({ pathname: '/verify-ticket', params: { ticket: getTicketNumber(entry) } })}>
+                  <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.ticketNumber, isCompact && styles.ticketNumberCompact, styles.ticketNumberLink]}>Ticket: {getTicketNumber(entry)} →</Text>
+                </TouchableOpacity>
                 <View style={isCompact ? styles.entryMetaRow : undefined}>
                   <Text style={[styles.productPrice, isCompact && styles.productPriceCompact]}>Rs. {entry.products?.price?.toLocaleString()}</Text>
                   <Text style={[styles.entryDate, isCompact && styles.entryDateCompact, { color: theme.muted }]}>
@@ -313,6 +315,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: 'bold', color: '#18a663' },
   pendingStatusText: { fontSize: 12, fontWeight: 'bold', color: '#FFD700' },
   ticketNumber: { color: '#4a9eff', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  ticketNumberLink: { textDecorationLine: 'underline' },
   ticketNumberCompact: { fontSize: 13, marginBottom: 6 },
   productPrice: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   productPriceCompact: { fontSize: 15, marginBottom: 0, flexShrink: 0 },
