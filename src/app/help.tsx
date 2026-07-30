@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
@@ -29,8 +29,15 @@ export default function HelpCenterScreen() {
     });
   }, [language]);
 
-  async function openLink(url: string, errorMessage: string) {
+  async function openLink(url: string, errorMessage: string, sameTab = false) {
     try {
+      // react-native-web's Linking.openURL() always opens in a new tab, which leaves a
+      // stray blank tab behind for mailto: links when the OS has no mail app registered
+      // to hand the URL off to. Navigating mailto: links in the same tab avoids that.
+      if (sameTab && Platform.OS === 'web') {
+        window.location.href = url;
+        return;
+      }
       await Linking.openURL(url);
     } catch {
       showAlert('Unable to open', errorMessage);
@@ -49,7 +56,7 @@ export default function HelpCenterScreen() {
 
   function openEmail() {
     const subjectText = encodeURIComponent('JeetoBaz Support Request');
-    openLink(`mailto:${SUPPORT_EMAIL}?subject=${subjectText}`, `Please email us at ${SUPPORT_EMAIL}.`);
+    openLink(`mailto:${SUPPORT_EMAIL}?subject=${subjectText}`, `Please email us at ${SUPPORT_EMAIL}.`, true);
   }
 
   function createTicket() {
@@ -74,7 +81,8 @@ export default function HelpCenterScreen() {
 
     openLink(
       `mailto:${SUPPORT_EMAIL}?subject=${ticketSubject}&body=${ticketBody}`,
-      `Please email your issue to ${SUPPORT_EMAIL} and mention ticket ${ticketId}.`
+      `Please email your issue to ${SUPPORT_EMAIL} and mention ticket ${ticketId}.`,
+      true
     );
   }
 
