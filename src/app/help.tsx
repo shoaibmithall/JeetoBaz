@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
@@ -7,6 +7,7 @@ import { getStoredValue } from '@/lib/storage';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { showAlert } from '@/lib/alert';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -32,7 +33,7 @@ export default function HelpCenterScreen() {
     try {
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to open', errorMessage);
+      showAlert('Unable to open', errorMessage);
     }
   }
 
@@ -56,12 +57,12 @@ export default function HelpCenterScreen() {
     const cleanMessage = message.trim();
 
     if (cleanSubject.length < 3) {
-      Alert.alert('Subject required', 'Please enter a short subject for your issue.');
+      showAlert('Subject required', 'Please enter a short subject for your issue.');
       return;
     }
 
     if (cleanMessage.length < 10) {
-      Alert.alert('More details needed', 'Please explain the issue in at least 10 characters.');
+      showAlert('More details needed', 'Please explain the issue in at least 10 characters.');
       return;
     }
 
