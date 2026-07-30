@@ -1,13 +1,16 @@
-import { ActivityIndicator, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { ActivityIndicator, Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Share } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
+import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
-import { BarChart3, Medal, PackageCheck, ShieldCheck, Target, Ticket, Trophy, Truck } from 'lucide-react-native';
+import { BarChart3, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, Trophy, Truck } from 'lucide-react-native';
 import type { PrizeStatus } from '@/types/database';
+
+const APP_URL = 'https://jeetobaz.pk';
 
 type PublicDrawResult = {
   winner_name: string;
@@ -84,6 +87,23 @@ export default function WinnerScreen() {
     return phone.slice(0, 4) + '****' + phone.slice(-3);
   }
 
+  const resultUrl = `${APP_URL}/winner?productId=${productIdValue}`;
+
+  async function copyResultLink() {
+    await Clipboard.setStringAsync(resultUrl);
+    Alert.alert('Copied', 'Draw result link has been copied.');
+  }
+
+  async function shareResult() {
+    const winnerLabel = result?.winner_name || 'A lucky winner';
+    const prizeLabel = product?.name || 'a prize';
+    await Share.share({
+      title: 'JeetoBaz Draw Result',
+      message: `${winnerLabel} won ${prizeLabel} on JeetoBaz! Verified fair draw, no exceptions.\n${resultUrl}`,
+      url: resultUrl,
+    });
+  }
+
   if (loading) return (
     <>
     <Head>
@@ -134,6 +154,17 @@ export default function WinnerScreen() {
             </TouchableOpacity>
           </Link>
         ) : null}
+      </View>
+
+      <View style={styles.shareRow}>
+        <TouchableOpacity style={styles.copyLinkButton} onPress={copyResultLink}>
+          <Copy color="#18a663" size={18} />
+          <Text style={styles.copyLinkText}>Copy Link</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.shareResultButton} onPress={shareResult}>
+          <Share2 color="#000" size={18} />
+          <Text style={styles.shareResultText}>Share Result</Text>
+        </TouchableOpacity>
       </View>
 
       {myTicket && (
@@ -221,6 +252,11 @@ const styles = StyleSheet.create({
   productName: { fontSize: 24, fontWeight: 'bold', color: '#18a663', marginTop: 5 },
   productPrice: { fontSize: 16, color: '#FFD700', marginTop: 5 },
   productDetailLink: { color: '#18a663', fontSize: 14, fontWeight: 'bold', marginTop: 12 },
+  shareRow: { flexDirection: 'row', gap: 10, marginHorizontal: 15, marginTop: 15 },
+  copyLinkButton: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#18a663', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  copyLinkText: { color: '#18a663', fontSize: 14, fontWeight: 'bold' },
+  shareResultButton: { flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: '#FFD700', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  shareResultText: { color: '#000', fontSize: 14, fontWeight: 'bold' },
   myTicketCard: { backgroundColor: '#2b0d0d', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 2, borderColor: '#ff4444', alignItems: 'center' },
   myTicketTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
   myTicketTitle: { fontSize: 14, fontWeight: 'bold', color: '#ff4444', textTransform: 'uppercase' },
