@@ -382,6 +382,13 @@ export default function HomeScreen() {
     } else if (typeof groupParam === 'string' && groupParam in CATEGORY_GROUP_LABELS) {
       setGroupFilter(groupParam as CategoryGroupKey);
       setCategory('all');
+    } else {
+      // No category/group param (e.g. the footer's "All Draws" or "And More" links) -
+      // reset any active filter/search instead of leaving a previous filter applied.
+      setCategory('all');
+      setGroupFilter(null);
+      setSearch('');
+      setSelectedEntryFee(null);
     }
   }, [categoryParams.category, categoryParams.group]);
   const isCompact = responsiveWidth < 480;
