@@ -61,17 +61,8 @@ export default function MyEntriesScreen() {
     setLoadError(false);
     setCacheInfo('');
     const [{ data: entryData, error: entryError }, { data: paymentData, error: paymentError }] = await Promise.all([
-      supabase
-      .from('entries')
-      .select('*, products(*)')
-      .eq('phone', phone)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('transactions')
-        .select('*, products(*)')
-        .eq('phone', phone)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
+      supabase.rpc('get_my_entries', { p_phone: phone }),
+      supabase.rpc('get_my_pending_transactions', { p_phone: phone }),
     ]);
 
     if (entryData || paymentData) {

@@ -730,12 +730,10 @@ export default function HomeScreen() {
       router.push(activeUser ? '/profile-setup' : '/login');
       return;
     }
-    const { data: existing } = await supabase
-      .from('entries')
-      .select('id')
-      .eq('product_id', product.id)
-      .eq('phone', phone)
-      .maybeSingle();
+    const { data: existing } = await supabase.rpc('check_entry_exists', {
+      p_product_id: product.id,
+      p_phone: phone,
+    });
     if (existing) { alert(t('alreadyEntered')); return; }
     router.push({
       pathname: '/payment',

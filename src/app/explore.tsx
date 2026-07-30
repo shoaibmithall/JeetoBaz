@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { DataErrorState } from '@/components/data-error-state';
 import Head from 'expo-router/head';
-import type { Entry, Product } from '@/types/database';
+import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { Medal, Target, Trophy } from 'lucide-react-native';
@@ -14,8 +14,7 @@ export default function WinnersScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const [winners, setWinners] = useState<Product[]>([]);
-  const [winnerEntries, setWinnerEntries] = useState<Record<string, Entry>>({});
-  const [entryCounts, setEntryCounts] = useState<Record<string, number>>({});
+  const [winnerEntries, setWinnerEntries] = useState<Record<string, { name: string; ticket: string }>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -38,36 +37,28 @@ export default function WinnersScreen() {
   }
 
   async function fetchWinnerEntries(products: Product[]) {
-    const productIds = products.map((product) => product.id);
-    if (productIds.length === 0) {
-      setWinnerEntries({});
-      return;
-    }
+    const results = await Promise.all(
+      products.map((product) =>
+        supabase.rpc('get_public_draw_result', { requested_product_id: product.id })
+      )
+    );
 
-    const { data } = await supabase
-      .from('entries')
-      .select('*')
-      .in('product_id', productIds);
-
-    const nextEntries: Record<string, Entry> = {};
-    const nextCounts: Record<string, number> = {};
-    data?.forEach((entry) => {
-      nextCounts[entry.product_id] = (nextCounts[entry.product_id] || 0) + 1;
-      const matchingProduct = products.find((product) => product.id === entry.product_id && product.winner_phone === entry.phone);
-      if (matchingProduct) nextEntries[matchingProduct.id] = entry;
+    const nextEntries: Record<string, { name: string; ticket: string }> = {};
+    results.forEach(({ data }, index) => {
+      const result = data?.[0];
+      if (result) {
+        nextEntries[products[index].id] = {
+          name: result.winner_name,
+          ticket: result.winner_ticket_number,
+        };
+      }
     });
     setWinnerEntries(nextEntries);
-    setEntryCounts(nextCounts);
   }
 
   function maskPhone(phone?: string | null) {
     if (!phone) return 'N/A';
     return phone.slice(0, 4) + '****' + phone.slice(-3);
-  }
-
-  function getTicketNumber(entry?: Entry) {
-    if (!entry) return 'Not available';
-    return entry.ticket_number || `JB-${entry.id.slice(0, 8).toUpperCase()}`;
   }
 
   function getDrawDate(product: Product) {
@@ -182,7 +173,7 @@ export default function WinnersScreen() {
       ) : (
         winners.map((product) => {
           const winnerEntry = winnerEntries[product.id];
-          const totalEntries = entryCounts[product.id] || product.current_entries || 0;
+          const totalEntries = product.current_entries || 0;
           return (
             <View key={product.id} style={[styles.winnerCard, { backgroundColor: theme.surface }]}>
               {product.winner_photo ? (
@@ -215,7 +206,7 @@ export default function WinnersScreen() {
                 </View>
                 <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
                   <Text style={[styles.recordLabel, { color: theme.subtle }]}>Winner Ticket</Text>
-                  <Text style={[styles.recordValue, { color: theme.text }]}>{getTicketNumber(winnerEntry)}</Text>
+                  <Text style={[styles.recordValue, { color: theme.text }]}>{winnerEntry?.ticket || 'Not available'}</Text>
                 </View>
                 <View style={[styles.recordItem, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}>
                   <Text style={[styles.recordLabel, { color: theme.subtle }]}>Selection</Text>

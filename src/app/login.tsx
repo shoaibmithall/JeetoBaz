@@ -210,8 +210,8 @@ export default function ProfileScreen() {
   }, [authLoading, user?.id]);
 
   async function fetchStats(phone: string) {
-    const { data } = await supabase.from('entries').select('*').eq('phone', phone);
-    if (data) setTotalEntries(data.length);
+    const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
+    if (typeof data === 'number') setTotalEntries(data);
   }
 
   async function handleEmailLogin() {

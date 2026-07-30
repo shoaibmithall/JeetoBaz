@@ -326,6 +326,26 @@ export type Database = {
           new_entries?: number;
         }>;
       };
+      check_entry_exists: {
+        Args: { p_product_id: string; p_phone: string };
+        Returns: boolean;
+      };
+      check_pending_transaction_exists: {
+        Args: { p_product_id: string; p_phone: string };
+        Returns: boolean;
+      };
+      count_my_entries: {
+        Args: { p_phone: string };
+        Returns: number;
+      };
+      get_my_entries: {
+        Args: { p_phone: string };
+        Returns: Array<Entry & { products: Product | null }>;
+      };
+      get_my_pending_transactions: {
+        Args: { p_phone: string };
+        Returns: Array<Transaction & { products: Product | null }>;
+      };
     };
     Enums: {};
     CompositeTypes: {};
