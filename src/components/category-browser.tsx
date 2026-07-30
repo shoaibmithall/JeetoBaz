@@ -9,17 +9,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import {
-  Banknote,
-  Bike,
-  CarFront,
-  Grid2X2,
-  House,
-  Shirt,
-  Smartphone,
-  X,
-  Search,
-} from 'lucide-react-native';
+import { Grid2X2, X, Search } from 'lucide-react-native';
+import { FlatCategoryIcon } from '@/components/flat-category-icon';
 import {
   CATEGORY_GROUP_LABELS,
   PRODUCT_CATEGORIES,
@@ -45,16 +36,6 @@ type CategoryBrowserProps = {
   onSelectCategory: (category: CategorySelection) => void;
   colors: CategoryBrowserColors;
 };
-
-const QUICK_ICONS = {
-  all: Grid2X2,
-  mobiles: Smartphone,
-  cars: CarFront,
-  bikes: Bike,
-  'home-living': House,
-  fashion: Shirt,
-  'cash-prizes': Banknote,
-} as const;
 
 const GROUP_ORDER: CategoryGroupKey[] = [
   'electronics',
@@ -135,12 +116,6 @@ export function CategoryBrowser({
           {visibleCategoryKeys.map((key) => {
             const category = getCategoryByKey(key);
             const label = key === 'all' ? 'All' : category?.label || key;
-            const Icon =
-              key === 'all'
-                ? Grid2X2
-                : isDesktop
-                  ? category?.icon || Grid2X2
-                  : QUICK_ICONS[key as keyof typeof QUICK_ICONS] || category?.icon || Grid2X2;
             const selected = selectedCategory === key;
 
             return (
@@ -157,7 +132,7 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <Icon color={selected ? colors.gold : colors.muted} size={15} strokeWidth={2} />
+                <FlatCategoryIcon categoryKey={key} size={22} />
                 <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
                   {label}
                 </Text>
@@ -177,7 +152,9 @@ export function CategoryBrowser({
               ]}
               onPress={() => setShowAll(true)}
             >
-              <Grid2X2 color={isMoreCategory ? colors.gold : colors.muted} size={16} strokeWidth={2} />
+              <View style={[styles.quickIconBadge, { backgroundColor: isMoreCategory ? colors.gold : colors.elevated }]}>
+                <Grid2X2 color={isMoreCategory ? '#07130c' : colors.gold} size={15} strokeWidth={1.9} />
+              </View>
               <Text style={[styles.quickLabel, { color: isMoreCategory ? colors.gold : colors.muted }]}>
                 More
               </Text>
@@ -260,7 +237,6 @@ export function CategoryBrowser({
                   </Text>
                   <View style={styles.grid}>
                     {section.items.map((category) => {
-                      const Icon = category.icon;
                       const selected = selectedCategory === category.key;
                       return (
                         <View key={category.key} style={[styles.cell, { width: cellWidth }]}>
@@ -276,18 +252,7 @@ export function CategoryBrowser({
                             ]}
                             onPress={() => selectCategory(category.key)}
                           >
-                            <View
-                              style={[
-                                styles.iconContainer,
-                                { backgroundColor: selected ? colors.gold : colors.surface },
-                              ]}
-                            >
-                              <Icon
-                                color={selected ? '#07130c' : colors.gold}
-                                size={22}
-                                strokeWidth={1.9}
-                              />
-                            </View>
+                            <FlatCategoryIcon categoryKey={category.key} size={44} />
                             <Text
                               numberOfLines={2}
                               style={[
@@ -377,6 +342,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
+  },
+  quickIconBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quickLabel: {
     fontSize: 12,
@@ -483,13 +455,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-  },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   categoryLabel: {
     minHeight: 34,
