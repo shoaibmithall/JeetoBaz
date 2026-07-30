@@ -132,9 +132,7 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <View style={[styles.quickIconBadge, { backgroundColor: selected ? colors.goldSoft : colors.elevated }]}>
-                  <FlatCategoryIcon categoryKey={key} size={17} />
-                </View>
+                <FlatCategoryIcon categoryKey={key} size={22} />
                 <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
                   {label}
                 </Text>
@@ -254,14 +252,7 @@ export function CategoryBrowser({
                             ]}
                             onPress={() => selectCategory(category.key)}
                           >
-                            <View
-                              style={[
-                                styles.iconContainer,
-                                { backgroundColor: selected ? colors.goldSoft : colors.surface },
-                              ]}
-                            >
-                              <FlatCategoryIcon categoryKey={category.key} size={24} />
-                            </View>
+                            <FlatCategoryIcon categoryKey={category.key} size={44} />
                             <Text
                               numberOfLines={2}
                               style={[
@@ -464,13 +455,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-  },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   categoryLabel: {
     minHeight: 34,

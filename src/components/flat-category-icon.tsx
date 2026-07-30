@@ -1,7 +1,21 @@
-import { SvgXml } from 'react-native-svg';
-import { FLAT_CATEGORY_ICONS } from '@/lib/flat-category-icons';
+import { Image } from 'expo-image';
+import { StyleSheet } from 'react-native';
+import { CATEGORY_ICON_IMAGES } from '@/lib/category-icon-images';
 
 export function FlatCategoryIcon({ categoryKey, size = 20 }: { categoryKey: string; size?: number }) {
-  const xml = FLAT_CATEGORY_ICONS[categoryKey] || FLAT_CATEGORY_ICONS.all;
-  return <SvgXml xml={xml} width={size} height={size} />;
+  const source = CATEGORY_ICON_IMAGES[categoryKey] || CATEGORY_ICON_IMAGES.all;
+  return (
+    <Image
+      source={source}
+      style={[styles.image, { width: size, height: size, borderRadius: size * 0.28 }]}
+      contentFit="cover"
+      accessibilityIgnoresInvertColors
+    />
+  );
 }
+
+const styles = StyleSheet.create({
+  image: {
+    overflow: 'hidden',
+  },
+});
