@@ -157,7 +157,9 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <Icon color={selected ? colors.gold : colors.muted} size={19} strokeWidth={2} />
+                <View style={[styles.quickIconBadge, { backgroundColor: selected ? colors.gold : colors.elevated }]}>
+                  <Icon color={selected ? '#07130c' : colors.gold} size={15} strokeWidth={1.9} />
+                </View>
                 <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
                   {label}
                 </Text>
@@ -177,7 +179,9 @@ export function CategoryBrowser({
               ]}
               onPress={() => setShowAll(true)}
             >
-              <Grid2X2 color={isMoreCategory ? colors.gold : colors.muted} size={19} strokeWidth={2} />
+              <View style={[styles.quickIconBadge, { backgroundColor: isMoreCategory ? colors.gold : colors.elevated }]}>
+                <Grid2X2 color={isMoreCategory ? '#07130c' : colors.gold} size={15} strokeWidth={1.9} />
+              </View>
               <Text style={[styles.quickLabel, { color: isMoreCategory ? colors.gold : colors.muted }]}>
                 More
               </Text>
@@ -377,6 +381,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
+  },
+  quickIconBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quickLabel: {
     fontSize: 12,
