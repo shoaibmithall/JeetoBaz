@@ -118,6 +118,15 @@ export type Transaction = {
   user_id?: string | null;
 };
 
+export type AdminAuditLogEntry = {
+  id: string;
+  action_type: string;
+  target_id: string | null;
+  details: Record<string, unknown> | null;
+  created_by: string;
+  created_at: string;
+};
+
 export type AppNotification = {
   id: string;
   title: string;
@@ -246,6 +255,12 @@ export type Database = {
         Partial<Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path' | 'is_visible' | 'sort_order'>>
       >;
       auth_migration_config: Table<AuthMigrationConfig>;
+      admin_audit_log: Table<
+        AdminAuditLogEntry,
+        Pick<AdminAuditLogEntry, 'action_type'> &
+          Partial<Pick<AdminAuditLogEntry, 'target_id' | 'details'>>,
+        never
+      >;
     };
     Views: {};
     Functions: {
