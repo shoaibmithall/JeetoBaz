@@ -4,8 +4,9 @@ import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import { getStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
-import { BarChart3, Medal, PackageCheck, ShieldCheck, Target, Trophy, Truck } from 'lucide-react-native';
+import { BarChart3, Medal, PackageCheck, ShieldCheck, Target, Ticket, Trophy, Truck } from 'lucide-react-native';
 import type { PrizeStatus } from '@/types/database';
 
 type PublicDrawResult = {
@@ -33,6 +34,7 @@ export default function WinnerScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [result, setResult] = useState<PublicDrawResult | null>(null);
   const [entryCount, setEntryCount] = useState(0);
+  const [myTicket, setMyTicket] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,6 +66,16 @@ export default function WinnerScreen() {
     } else {
       setEntryCount(productData?.current_entries || 0);
     }
+
+    const storedPhone = await getStoredValue('userPhone');
+    if (storedPhone) {
+      const { data: ticket } = await supabase.rpc('get_my_ticket_for_draw', {
+        p_product_id: productIdValue,
+        p_phone: storedPhone,
+      });
+      setMyTicket(ticket || null);
+    }
+
     setLoading(false);
   }
 
@@ -123,6 +135,18 @@ export default function WinnerScreen() {
           </Link>
         ) : null}
       </View>
+
+      {myTicket && (
+        <View style={styles.myTicketCard}>
+          <View style={styles.myTicketTitleRow}><Ticket color="#ff4444" size={18} /><Text style={styles.myTicketTitle}>Your Ticket</Text></View>
+          <Text style={styles.myTicketNumber}>{myTicket}</Text>
+          <Text style={styles.myTicketStatus}>
+            {result?.winner_ticket_number === myTicket
+              ? '🎉 This is the winning ticket — congratulations!'
+              : "Not the winning ticket this time — better luck next draw!"}
+          </Text>
+        </View>
+      )}
 
       {result?.prize_status && (
         <View style={styles.statusCard}>
@@ -197,6 +221,11 @@ const styles = StyleSheet.create({
   productName: { fontSize: 24, fontWeight: 'bold', color: '#18a663', marginTop: 5 },
   productPrice: { fontSize: 16, color: '#FFD700', marginTop: 5 },
   productDetailLink: { color: '#18a663', fontSize: 14, fontWeight: 'bold', marginTop: 12 },
+  myTicketCard: { backgroundColor: '#2b0d0d', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 2, borderColor: '#ff4444', alignItems: 'center' },
+  myTicketTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
+  myTicketTitle: { fontSize: 14, fontWeight: 'bold', color: '#ff4444', textTransform: 'uppercase' },
+  myTicketNumber: { fontSize: 24, fontWeight: 'bold', color: '#ff4444', fontFamily: 'monospace' },
+  myTicketStatus: { fontSize: 13, color: '#ddd', marginTop: 8, textAlign: 'center' },
   statusCard: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   statusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
   statusTitle: { fontSize: 15, fontWeight: 'bold', color: 'white' },
