@@ -35,6 +35,11 @@ export type Entry = {
 
 export type PrizeStatus = 'pending' | 'processing' | 'shipped' | 'delivered';
 
+// Verification of the winner is a separate concern from prize delivery logistics.
+// disqualified/re_draw_required are rare, manual/admin-only states — never
+// system-automated, since draw_results.product_id is UNIQUE (one immutable result forever).
+export type WinnerStatus = 'selected' | 'under_verification' | 'verified' | 'disqualified' | 're_draw_required';
+
 export type DrawResult = {
   id: string;
   product_id: string;
@@ -49,6 +54,15 @@ export type DrawResult = {
   prize_status: PrizeStatus;
   prize_status_updated_at: string;
   prize_tracking_note: string | null;
+  winner_status: WinnerStatus;
+  winner_status_updated_at: string;
+};
+
+export type DrawStatusHistoryEntry = {
+  status_type: 'winner_status' | 'prize_status';
+  status_value: string;
+  note: string | null;
+  created_at: string;
 };
 
 export type User = {
@@ -274,7 +288,16 @@ export type Database = {
           drawn_at: string;
           prize_status: PrizeStatus;
           prize_tracking_note: string | null;
+          winner_status: WinnerStatus;
         }>;
+      };
+      update_winner_status: {
+        Args: { p_draw_result_id: string; p_status: WinnerStatus; p_note?: string | null };
+        Returns: void;
+      };
+      get_draw_status_history: {
+        Args: { requested_product_id: string };
+        Returns: DrawStatusHistoryEntry[];
       };
       increment: {
         Args: { x: number };
