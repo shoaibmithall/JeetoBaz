@@ -48,6 +48,10 @@ type HomeColors = {
   goldSoft: string;
 };
 type DrawSchedule = ReturnType<typeof getDrawScheduleStatus>;
+type ProductFetchOptions = {
+  hydrateFromCache?: boolean;
+  showLoading?: boolean;
+};
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
@@ -282,12 +286,11 @@ const HomeProductCard = memo(function HomeProductCard({
         )}
 
         <View style={[styles.countdownBox, isCompactGrid && styles.countdownBoxCompact, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
-          <Text numberOfLines={1} style={[styles.countdownLabel, isCompactGrid && styles.countdownLabelCompact, { color: colors.gold }]}>{drawSchedule.label}</Text>
+          {!isCompactGrid && (
+            <Text numberOfLines={1} style={[styles.countdownLabel, { color: colors.gold }]}>{drawSchedule.label}</Text>
+          )}
           <Text numberOfLines={1} style={[styles.countdownTime, isCompactGrid && styles.countdownTimeCompact, { color: colors.gold }]}>{compactScheduleValue}</Text>
         </View>
-        {!isCompactGrid && (
-          <Text style={[styles.drawScheduleNote, { color: colors.muted }]}>{drawSchedule.note}</Text>
-        )}
 
         {product.draw_date && (
           <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {product.draw_date}</Text></View>
@@ -295,9 +298,6 @@ const HomeProductCard = memo(function HomeProductCard({
 
         <View style={[styles.priceRow, isCompactGrid && styles.priceRowCompact]}>
           <Text numberOfLines={1} style={[styles.originalPrice, isCompactGrid && styles.originalPriceCompact]}>Rs. {product.price?.toLocaleString()}</Text>
-          <View style={[styles.entryBadge, isCompactGrid && styles.entryBadgeCompact]}>
-            <Text numberOfLines={1} style={[styles.entryFee, isCompactGrid && styles.entryFeeCompact]}>{t('entryFee')}: Rs. {product.entry_fee || 1}</Text>
-          </View>
         </View>
 
         <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{currentEntries.toLocaleString()} {t('participants')}</Text></View>
@@ -369,6 +369,7 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
   const scrollYRef = useRef(0);
   const pullStartYRef = useRef<number | null>(null);
+  const hasFocusedHomeRef = useRef(false);
   const router = useRouter();
   const categoryParams = useLocalSearchParams<{ category?: string; group?: string }>();
   const deferredSearch = useDeferredValue(search);
@@ -513,7 +514,6 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setHasHydratedLayout(true);
-    fetchProducts();
     fetchHomeAds();
     fetchAnnouncement();
     const timer = setInterval(() => setTime(new Date()), 60000);
@@ -537,6 +537,9 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      const isInitialProductLoad = !hasFocusedHomeRef.current;
+      fetchProducts({ hydrateFromCache: isInitialProductLoad, showLoading: isInitialProductLoad });
+      hasFocusedHomeRef.current = true;
 
       async function loadStoredState() {
         const favoritesKey = user ? `favorites:${user.id}` : null;
@@ -595,14 +598,14 @@ export default function HomeScreen() {
     }, [user])
   );
 
-  async function fetchProducts() {
-    setLoading(true);
+  async function fetchProducts({ hydrateFromCache = true, showLoading = true }: ProductFetchOptions = {}) {
+    if (showLoading) setLoading(true);
     setLoadError(false);
     setCacheInfo('');
-    const cached = await loadOfflineCache<Product[]>(ACTIVE_DRAWS_CACHE_KEY);
-    if (cached?.data.length) {
+    const cached = hydrateFromCache ? await loadOfflineCache<Product[]>(ACTIVE_DRAWS_CACHE_KEY) : null;
+    if (hydrateFromCache && cached?.data.length) {
       setProducts(cached.data);
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
 
     const { data, error } = await supabase
@@ -623,7 +626,7 @@ export default function HomeScreen() {
         setLoadError(true);
       }
     }
-    setLoading(false);
+    if (showLoading) setLoading(false);
   }
 
   async function refreshHome() {
@@ -879,7 +882,7 @@ export default function HomeScreen() {
     );
   }
 
-  if (loadError) return <DataErrorState onRetry={fetchProducts} />;
+  if (loadError) return <DataErrorState onRetry={() => fetchProducts()} />;
 
   return (
     <>
@@ -1015,7 +1018,7 @@ export default function HomeScreen() {
         <View style={[styles.cacheBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
           <CircleAlert color={colors.gold} size={17} />
           <Text style={[styles.cacheText, { color: colors.gold }]}>{cacheInfo}</Text>
-          <TouchableOpacity onPress={fetchProducts}>
+          <TouchableOpacity onPress={() => fetchProducts()}>
             <Text style={[styles.cacheRetry, { color: colors.primary }]}>{t('tryAgain')}</Text>
           </TouchableOpacity>
         </View>
@@ -1521,23 +1524,16 @@ const styles = StyleSheet.create({
   description: { fontSize: 13, color: '#aaa', marginBottom: 10 },
   descriptionCompact: { fontSize: 12, lineHeight: 17, marginBottom: 8 },
   countdownBox: { backgroundColor: '#2a2105', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, borderWidth: 1, borderColor: '#FFD700' },
-  countdownBoxCompact: { borderRadius: 7, paddingHorizontal: 7, paddingVertical: 7, marginBottom: 7, flexDirection: 'column', alignItems: 'flex-start', gap: 2 },
+  countdownBoxCompact: { borderRadius: 7, paddingHorizontal: 7, paddingVertical: 7, marginBottom: 7, alignItems: 'center', justifyContent: 'center' },
   countdownLabel: { color: '#FFD700', fontSize: 13, flex: 1, marginRight: 10 },
-  countdownLabelCompact: { fontSize: 12, lineHeight: 16, marginRight: 0, flex: 0 },
   countdownTime: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', fontFamily: 'monospace', textAlign: 'right', flexShrink: 1 },
-  countdownTimeCompact: { fontSize: 12, lineHeight: 16, textAlign: 'left' },
-  drawScheduleNote: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
-  drawScheduleNoteCompact: { fontSize: 12, lineHeight: 16, marginBottom: 5 },
+  countdownTimeCompact: { fontSize: 12, lineHeight: 16, textAlign: 'center' },
   drawDate: { color: '#4a9eff', fontSize: 12 },
   drawDateCompact: { fontSize: 12 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   priceRowCompact: { flexDirection: 'column', alignItems: 'flex-start', gap: 4, marginBottom: 6 },
   originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
   originalPriceCompact: { fontSize: 14 },
-  entryBadge: { backgroundColor: '#082d1e', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  entryBadgeCompact: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 5, maxWidth: '100%' },
-  entryFee: { fontSize: 13, color: '#18a663', fontWeight: 'bold' },
-  entryFeeCompact: { fontSize: 12 },
   participants: { fontSize: 13, color: '#aaa' },
   participantsCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
   progressBar: { backgroundColor: '#174a35', height: 8, borderRadius: 4, marginBottom: 6 },
