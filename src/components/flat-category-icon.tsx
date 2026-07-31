@@ -8,7 +8,7 @@ export function FlatCategoryIcon({ categoryKey, size = 20 }: { categoryKey: stri
     <Image
       source={source}
       style={[styles.image, { width: size, height: size, borderRadius: size * 0.28 }]}
-      contentFit="cover"
+      contentFit="contain"
       accessibilityIgnoresInvertColors
     />
   );

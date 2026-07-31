@@ -252,7 +252,7 @@ export function CategoryBrowser({
                             ]}
                             onPress={() => selectCategory(category.key)}
                           >
-                            <FlatCategoryIcon categoryKey={category.key} size={44} />
+                            <FlatCategoryIcon categoryKey={category.key} size={60} />
                             <Text
                               numberOfLines={2}
                               style={[
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   categoryCard: {
-    minHeight: 108,
+    minHeight: 126,
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 8,
@@ -458,8 +458,8 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     minHeight: 34,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '700',
     textAlign: 'center',
   },
