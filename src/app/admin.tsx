@@ -17,15 +17,24 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument } from '@/types/database';
+import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WinnerStatus } from '@/types/database';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
 const PRIZE_STATUSES: PrizeStatus[] = ['pending', 'processing', 'shipped', 'delivered'];
+const WINNER_STATUSES: WinnerStatus[] = ['selected', 'under_verification', 'verified', 'disqualified', 're_draw_required'];
+const WINNER_STATUS_LABELS: Record<WinnerStatus, string> = {
+  selected: 'Selected',
+  under_verification: 'Under Verification',
+  verified: 'Verified',
+  disqualified: 'Disqualified',
+  re_draw_required: 'Re-Draw Required',
+};
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   product_deleted: 'Product deleted',
   product_status_changed: 'Product status changed',
   prize_status_updated: 'Prize delivery status updated',
+  winner_status_updated: 'Winner verification status updated',
   payment_approved: 'Payment approved',
   payment_rejected: 'Payment rejected',
   draw_run: 'Draw run',
@@ -127,6 +136,8 @@ export default function AdminScreen() {
   const [drawResults, setDrawResults] = useState<DrawResultWithProduct[]>([]);
   const [prizeStatusDrafts, setPrizeStatusDrafts] = useState<Record<string, { status: PrizeStatus; note: string }>>({});
   const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
+  const [winnerStatusDrafts, setWinnerStatusDrafts] = useState<Record<string, { status: WinnerStatus; note: string }>>({});
+  const [winnerStatusSaving, setWinnerStatusSaving] = useState<string | null>(null);
   const [auditLog, setAuditLog] = useState<AdminAuditLogEntry[]>([]);
   const router = useRouter();
 
@@ -560,6 +571,27 @@ export default function AdminScreen() {
       return;
     }
     void logAdminAction('prize_status_updated', result.product_id, { status: draft.status, note: draft.note || null });
+    await fetchDrawResults();
+  }
+
+  function getWinnerStatusDraft(result: DrawResultWithProduct) {
+    return winnerStatusDrafts[result.id] || { status: result.winner_status, note: '' };
+  }
+
+  async function saveWinnerStatus(result: DrawResultWithProduct) {
+    const draft = getWinnerStatusDraft(result);
+    setWinnerStatusSaving(result.id);
+    const { error } = await supabase.rpc('update_winner_status', {
+      p_draw_result_id: result.id,
+      p_status: draft.status,
+      p_note: draft.note.trim() || null,
+    });
+    setWinnerStatusSaving(null);
+    if (error) {
+      alert('Could not update winner status: ' + error.message);
+      return;
+    }
+    void logAdminAction('winner_status_updated', result.product_id, { status: draft.status, note: draft.note || null });
     await fetchDrawResults();
   }
 
@@ -1222,6 +1254,7 @@ export default function AdminScreen() {
             {drawResults.length === 0 && <Text style={styles.emptyText}>No draws have been run yet.</Text>}
             {drawResults.map((result) => {
               const draft = getPrizeStatusDraft(result);
+              const winnerDraft = getWinnerStatusDraft(result);
               return (
                 <View key={result.id} style={styles.paymentCard}>
                   <View style={styles.productHeader}>
@@ -1230,6 +1263,34 @@ export default function AdminScreen() {
                   <Text style={styles.paymentLine}>Winner: {result.winner_name} ({result.winner_phone})</Text>
                   <Text style={styles.paymentLine}>Ticket: {result.winner_ticket_number}</Text>
                   <Text style={styles.paymentLine}>Drawn: {new Date(result.drawn_at).toLocaleString()}</Text>
+                  <Text style={styles.paymentLine}>Winner Verification Status:</Text>
+                  <View style={styles.actionRow}>
+                    {WINNER_STATUSES.map((status) => (
+                      <TouchableOpacity
+                        key={status}
+                        style={[styles.statusBadge, winnerDraft.status === status ? styles.activeBadge : styles.completedBadge]}
+                        onPress={() => setWinnerStatusDrafts((prev) => ({ ...prev, [result.id]: { ...winnerDraft, status } }))}
+                      >
+                        <Text style={styles.tabLabel}>{WINNER_STATUS_LABELS[status]}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Verification note — optional (e.g. only used for rare Disqualified / Re-Draw Required cases)"
+                    placeholderTextColor="#666"
+                    value={winnerDraft.note}
+                    onChangeText={(text) => setWinnerStatusDrafts((prev) => ({ ...prev, [result.id]: { ...winnerDraft, note: text } }))}
+                  />
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => saveWinnerStatus(result)}
+                    disabled={winnerStatusSaving === result.id}
+                  >
+                    <BadgeCheck color="white" size={16} />
+                    <Text style={styles.approveButtonText}>{winnerStatusSaving === result.id ? 'Saving...' : 'Save Winner Status'}</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.paymentLine}>Prize Delivery Status:</Text>
                   <View style={styles.actionRow}>
                     {PRIZE_STATUSES.map((status) => (
                       <TouchableOpacity

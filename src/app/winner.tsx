@@ -7,8 +7,8 @@ import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
-import { BarChart3, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, Trophy, Truck } from 'lucide-react-native';
-import type { PrizeStatus } from '@/types/database';
+import { BarChart3, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck } from 'lucide-react-native';
+import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
 
@@ -20,6 +20,7 @@ type PublicDrawResult = {
   drawn_at: string;
   prize_status: PrizeStatus;
   prize_tracking_note: string | null;
+  winner_status: WinnerStatus;
 };
 
 const PRIZE_STATUS_LABEL: Record<PrizeStatus, string> = {
@@ -27,6 +28,14 @@ const PRIZE_STATUS_LABEL: Record<PrizeStatus, string> = {
   processing: 'Processing',
   shipped: 'Shipped',
   delivered: 'Delivered',
+};
+
+const WINNER_STATUS_LABEL: Record<WinnerStatus, string> = {
+  selected: 'Winner Selected — Verification in Progress',
+  under_verification: 'Verification in Progress',
+  verified: 'Winner Verified',
+  disqualified: 'Did Not Pass Verification',
+  re_draw_required: 'Under Review — Re-Draw in Progress',
 };
 
 export default function WinnerScreen() {
@@ -176,6 +185,22 @@ export default function WinnerScreen() {
               ? '🎉 This is the winning ticket — congratulations!'
               : "Not the winning ticket this time — better luck next draw!"}
           </Text>
+        </View>
+      )}
+
+      {result?.winner_status && (
+        <View style={styles.statusCard}>
+          <View style={styles.statusTitleRow}>
+            {result.winner_status === 'verified' ? (
+              <ShieldCheck color="#18a663" size={18} />
+            ) : result.winner_status === 'disqualified' || result.winner_status === 're_draw_required' ? (
+              <TriangleAlert color="#ff4444" size={18} />
+            ) : (
+              <Clock color="#FFD700" size={18} />
+            )}
+            <Text style={styles.statusTitle}>Winner Verification Status</Text>
+          </View>
+          <Text style={styles.statusValue}>{WINNER_STATUS_LABEL[result.winner_status]}</Text>
         </View>
       )}
 
