@@ -73,11 +73,6 @@ export default function ProfileScreen() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
 
-  const jbUserId = useMemo(() => {
-    if (!user?.id) return null;
-    return 'JB-' + user.id.replace(/-/g, '').slice(0, 8).toUpperCase();
-  }, [user?.id]);
-
   const memberSince = useMemo(() => {
     const dateStr = profileCreatedAt || user?.created_at;
     if (!dateStr) return null;
@@ -141,7 +136,7 @@ export default function ProfileScreen() {
         const [{ data: profile }, { data: location }] = await Promise.all([
           supabase
             .from('users')
-            .select('id, name, phone, avatar_url, referral_code, created_at')
+            .select('id, name, phone, avatar_url, referral_code, created_at, member_number')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
           supabase
@@ -162,7 +157,7 @@ export default function ProfileScreen() {
           setAvatarUrl(resolvedAvatar);
           if (resolvedAvatar) void setStoredValue(avatarStorageKey(user.id), resolvedAvatar);
           setReferralCode(profile.referral_code || null);
-          setMemberId(profile.id ? `JB-M-${profile.id.slice(0, 8).toUpperCase()}` : null);
+          setMemberId(profile.member_number ? `JB-${profile.member_number}` : null);
           setProfileCreatedAt(profile.created_at || null);
           setStep('profile');
           if (profile.phone) {
@@ -448,10 +443,10 @@ export default function ProfileScreen() {
               <View style={styles.mobileDetailsRow}>
                 <TouchableOpacity
                   style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
-                  onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
-                  disabled={!jbUserId}
+                  onPress={() => memberId && copyToClipboard(memberId, 'jbId')}
+                  disabled={!memberId}
                   accessibilityRole="button"
-                  accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
+                  accessibilityLabel={memberId ? 'Copy member ID' : 'Member ID unavailable'}
                 >
                   <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
                     <ShieldCheck color={theme.primary} size={18} />
@@ -459,10 +454,10 @@ export default function ProfileScreen() {
                   <View style={styles.mobileDetailText}>
                     <Text style={[styles.mobileDetailLabel, { color: theme.muted }]}>Member ID</Text>
                     <Text style={[styles.mobileDetailValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
-                      {jbUserId || 'Unavailable'}
+                      {memberId || 'Unavailable'}
                     </Text>
                   </View>
-                  {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={12} /> : null}
+                  {memberId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={12} /> : null}
                 </TouchableOpacity>
                 <View style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}>
                   <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
@@ -598,10 +593,10 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity
                   style={styles.profileDetailItemDesktop}
-                  onPress={() => jbUserId && copyToClipboard(jbUserId, 'jbId')}
-                  disabled={!jbUserId}
+                  onPress={() => memberId && copyToClipboard(memberId, 'jbId')}
+                  disabled={!memberId}
                   accessibilityRole="button"
-                  accessibilityLabel={jbUserId ? 'Copy member ID' : 'Member ID unavailable'}
+                  accessibilityLabel={memberId ? 'Copy member ID' : 'Member ID unavailable'}
                 >
                   <View style={[styles.profileDetailIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                     <ShieldCheck color="#18a663" size={22} />
@@ -609,10 +604,10 @@ export default function ProfileScreen() {
                   <View style={styles.profileContactText}>
                     <Text style={[styles.profileContactLabel, { color: theme.muted }]}>Member ID</Text>
                     <Text style={[styles.profileContactValue, styles.profileMemberId, { color: theme.text }]} numberOfLines={1}>
-                      {jbUserId || 'Unavailable'}
+                      {memberId || 'Unavailable'}
                     </Text>
                   </View>
-                  {jbUserId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
+                  {memberId ? <Copy color={copiedField === 'jbId' ? theme.primary : theme.subtle} size={15} /> : null}
                 </TouchableOpacity>
               </View>
             </View>
