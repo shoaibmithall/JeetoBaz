@@ -132,8 +132,15 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <FlatCategoryIcon categoryKey={key} size={22} />
-                <Text style={[styles.quickLabel, { color: selected ? colors.gold : colors.muted }]}>
+                <FlatCategoryIcon categoryKey={key} size={isDesktop ? 56 : 22} />
+                <Text
+                  numberOfLines={isDesktop ? 2 : 1}
+                  style={[
+                    styles.quickLabel,
+                    isDesktop && styles.desktopChipLabel,
+                    { color: selected ? colors.gold : colors.muted },
+                  ]}
+                >
                   {label}
                 </Text>
               </TouchableOpacity>
@@ -321,17 +328,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 0,
-    gap: 6,
+    gap: 10,
   },
   desktopChip: {
-    minHeight: 36,
-    borderRadius: 9,
+    minHeight: 132,
+    minWidth: 96,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 10,
-    flexDirection: 'row',
+    paddingVertical: 14,
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 10,
+  },
+  desktopChipLabel: {
+    fontSize: 14,
+    textAlign: 'center',
   },
   quickChip: {
     minHeight: 40,
