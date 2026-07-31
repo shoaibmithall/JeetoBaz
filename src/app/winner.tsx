@@ -1,4 +1,4 @@
-import { ActivityIndicator, Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Share } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Share } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -7,7 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
-import { BarChart3, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck } from 'lucide-react-native';
+import { BarChart3, ChevronDown, ChevronUp, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
 import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -48,6 +48,9 @@ export default function WinnerScreen() {
   const [entryCount, setEntryCount] = useState(0);
   const [myTicket, setMyTicket] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [participants, setParticipants] = useState<string[] | null>(null);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
 
   useEffect(() => {
     fetchResult();
@@ -89,6 +92,20 @@ export default function WinnerScreen() {
     }
 
     setLoading(false);
+  }
+
+  async function toggleParticipants() {
+    if (showParticipants) {
+      setShowParticipants(false);
+      return;
+    }
+    setShowParticipants(true);
+    if (participants === null && productIdValue) {
+      setParticipantsLoading(true);
+      const { data } = await supabase.rpc('get_draw_ticket_numbers', { p_product_id: productIdValue });
+      setParticipants((data || []).map((row) => row.ticket_number));
+      setParticipantsLoading(false);
+    }
   }
 
   function maskPhone(phone?: string | null) {
@@ -237,6 +254,36 @@ export default function WinnerScreen() {
         </View>
       </View>
 
+      <View style={styles.participantsCard}>
+        <TouchableOpacity style={styles.participantsHeader} onPress={toggleParticipants}>
+          <View style={styles.participantsTitleRow}>
+            <Users color="#18a663" size={18} />
+            <Text style={styles.participantsTitle}>All Participant Tickets ({entryCount.toLocaleString()})</Text>
+          </View>
+          {showParticipants ? <ChevronUp color="#18a663" size={20} /> : <ChevronDown color="#18a663" size={20} />}
+        </TouchableOpacity>
+        {showParticipants && (
+          participantsLoading ? (
+            <ActivityIndicator size="small" color="#18a663" style={styles.participantsLoading} />
+          ) : (
+            <FlatList
+              data={participants || []}
+              keyExtractor={(item) => item}
+              style={styles.participantsList}
+              initialNumToRender={20}
+              maxToRenderPerBatch={20}
+              windowSize={5}
+              renderItem={({ item }) => (
+                <View style={[styles.participantRow, item === myTicket && styles.participantRowMine]}>
+                  <Text style={[styles.participantTicket, item === myTicket && styles.participantTicketMine]}>{item}</Text>
+                  {item === myTicket && <Text style={styles.participantYou}>YOU</Text>}
+                </View>
+              )}
+            />
+          )
+        )}
+      </View>
+
       <View style={styles.verifyCard}>
         <View style={styles.verifyTitleRow}><ShieldCheck color="#18a663" size={18} /><Text style={styles.verifyTitle}>{t('verifiedFairDraw')}</Text></View>
         <Text style={styles.verifyText}>
@@ -301,6 +348,17 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   detailLabel: { color: '#aaa', fontSize: 14 },
   detailValue: { color: 'white', fontSize: 14, fontWeight: 'bold' },
+  participantsCard: { backgroundColor: '#071b13', marginHorizontal: 15, marginBottom: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35', overflow: 'hidden' },
+  participantsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 18 },
+  participantsTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  participantsTitle: { fontSize: 15, fontWeight: 'bold', color: 'white' },
+  participantsLoading: { paddingBottom: 20 },
+  participantsList: { maxHeight: 320, paddingHorizontal: 18 },
+  participantRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#0e2a1c' },
+  participantRowMine: { backgroundColor: 'rgba(255,68,68,0.08)', marginHorizontal: -18, paddingHorizontal: 18, borderRadius: 6 },
+  participantTicket: { color: '#aaa', fontSize: 13, fontFamily: 'monospace' },
+  participantTicketMine: { color: '#ff4444', fontWeight: 'bold' },
+  participantYou: { color: '#ff4444', fontSize: 11, fontWeight: 'bold' },
   verifyCard: { backgroundColor: '#082d1e', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#18a663' },
   verifyTitle: { fontSize: 16, fontWeight: 'bold', color: '#18a663', marginBottom: 8 },
   verifyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },

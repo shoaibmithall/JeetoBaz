@@ -324,6 +324,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: PublicWinnerListEntry[];
       };
+      get_draw_ticket_numbers: {
+        Args: { p_product_id: string };
+        Returns: Array<{ ticket_number: string }>;
+      };
       increment: {
         Args: { x: number };
         Returns: number;
