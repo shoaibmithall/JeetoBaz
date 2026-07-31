@@ -45,7 +45,9 @@ function timelineStepIndex(state: DrawSessionState): number {
 const RESULT_STATES: DrawSessionState[] = ['winner_selected', 'result_published', 'completed'];
 
 // Polling cadence for live updates. Slower while the tab/app is backgrounded
-// so we're not hammering Supabase for a view nobody's looking at.
+// so we're not hammering Supabase for a view nobody's looking at. This is
+// the fallback path — it only runs while the Realtime channel below isn't
+// connected (initial connect delay, or a dropped websocket).
 const POLL_INTERVAL_ACTIVE_MS = 4000;
 const POLL_INTERVAL_BACKGROUND_MS = 15000;
 
@@ -62,6 +64,7 @@ export default function DrawLobbyScreen() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   useEffect(() => {
     fetchLobbyData();
@@ -76,16 +79,52 @@ export default function DrawLobbyScreen() {
     return () => subscription.remove();
   }, []);
 
-  // Live polling: refetches just the session state and entries count.
-  // Stops once the draw has a result (redirect below) or the lobby failed
-  // to load in the first place.
+  // Realtime: pushes draw_sessions/products changes to every open Lobby the
+  // instant an admin (or the draw run) writes them, instead of waiting for
+  // the next poll tick. Connection state drives the polling fallback below.
+  useEffect(() => {
+    if (!productIdValue) return;
+
+    const channel = supabase
+      .channel(`draw-lobby:${productIdValue}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'draw_sessions', filter: `product_id=eq.${productIdValue}` },
+        (payload) => {
+          const row = payload.new as { state: DrawSessionState; state_updated_at: string };
+          applySessionState(row.state, row.state_updated_at);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'products', filter: `id=eq.${productIdValue}` },
+        (payload) => {
+          const row = payload.new as { current_entries: number | null; max_entries: number };
+          setProduct((prev) => (prev ? { ...prev, current_entries: row.current_entries, max_entries: row.max_entries } : prev));
+        }
+      )
+      .subscribe((status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      setIsRealtimeConnected(false);
+    };
+  }, [productIdValue]);
+
+  // Live polling fallback: only runs while Realtime isn't connected yet
+  // (initial connect delay) or has dropped (websocket error/timeout/close).
+  // Stops entirely once the draw has a result (redirect below) or the
+  // lobby failed to load in the first place.
   useEffect(() => {
     if (loading || notFound || !sessionState || RESULT_STATES.includes(sessionState)) return;
+    if (isRealtimeConnected) return;
 
     const intervalMs = isAppActive ? POLL_INTERVAL_ACTIVE_MS : POLL_INTERVAL_BACKGROUND_MS;
     const timer = setInterval(pollLobbyData, intervalMs);
     return () => clearInterval(timer);
-  }, [loading, notFound, sessionState, isAppActive, productIdValue]);
+  }, [loading, notFound, sessionState, isAppActive, isRealtimeConnected, productIdValue]);
 
   // Applies a freshly-fetched session state; returns true if it redirected
   // (draw already has a result) so the caller can stop doing further work.
