@@ -65,6 +65,23 @@ export type DrawStatusHistoryEntry = {
   created_at: string;
 };
 
+export type PublicWinnerListEntry = {
+  product_id: string;
+  product_name: string;
+  product_slug: string | null;
+  product_image_url: string | null;
+  prize_value: number;
+  winner_name: string;
+  masked_phone: string;
+  winner_ticket_number: string;
+  total_entries: number;
+  drawn_at: string;
+  winner_status: WinnerStatus;
+  winner_avatar_url: string | null;
+  winner_city: string | null;
+  winner_province: string | null;
+};
+
 export type User = {
   id: string;
   // Live schema (verified 2026-07-27): NOT NULL, no default — was incorrectly `string | null` here.
@@ -298,6 +315,14 @@ export type Database = {
       get_draw_status_history: {
         Args: { requested_product_id: string };
         Returns: DrawStatusHistoryEntry[];
+      };
+      get_public_winners_list: {
+        Args: Record<string, never>;
+        Returns: PublicWinnerListEntry[];
+      };
+      get_my_wins: {
+        Args: Record<string, never>;
+        Returns: PublicWinnerListEntry[];
       };
       increment: {
         Args: { x: number };
