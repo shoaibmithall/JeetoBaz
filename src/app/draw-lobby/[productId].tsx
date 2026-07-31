@@ -1,4 +1,4 @@
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, AppState, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -44,6 +44,11 @@ function timelineStepIndex(state: DrawSessionState): number {
 // left to show, so we send viewers straight to the result page.
 const RESULT_STATES: DrawSessionState[] = ['winner_selected', 'result_published', 'completed'];
 
+// Polling cadence for live updates. Slower while the tab/app is backgrounded
+// so we're not hammering Supabase for a view nobody's looking at.
+const POLL_INTERVAL_ACTIVE_MS = 4000;
+const POLL_INTERVAL_BACKGROUND_MS = 15000;
+
 export default function DrawLobbyScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
@@ -56,10 +61,43 @@ export default function DrawLobbyScreen() {
   const [myTicket, setMyTicket] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
 
   useEffect(() => {
     fetchLobbyData();
   }, [productIdValue]);
+
+  // Tracks foreground/background so polling can slow down when nobody's
+  // looking (react-native-web maps this to document visibility on web).
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      setIsAppActive(nextState === 'active');
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Live polling: refetches just the session state and entries count.
+  // Stops once the draw has a result (redirect below) or the lobby failed
+  // to load in the first place.
+  useEffect(() => {
+    if (loading || notFound || !sessionState || RESULT_STATES.includes(sessionState)) return;
+
+    const intervalMs = isAppActive ? POLL_INTERVAL_ACTIVE_MS : POLL_INTERVAL_BACKGROUND_MS;
+    const timer = setInterval(pollLobbyData, intervalMs);
+    return () => clearInterval(timer);
+  }, [loading, notFound, sessionState, isAppActive, productIdValue]);
+
+  // Applies a freshly-fetched session state; returns true if it redirected
+  // (draw already has a result) so the caller can stop doing further work.
+  function applySessionState(state: DrawSessionState, updatedAt: string | null) {
+    setSessionState(state);
+    setSessionUpdatedAt(updatedAt);
+    if (RESULT_STATES.includes(state)) {
+      router.replace({ pathname: '/winner', params: { productId: productIdValue } });
+      return true;
+    }
+    return false;
+  }
 
   async function fetchLobbyData() {
     if (!productIdValue) {
@@ -89,13 +127,7 @@ export default function DrawLobbyScreen() {
       .maybeSingle();
 
     const state = (sessionData?.state as DrawSessionState) || 'waiting';
-    setSessionState(state);
-    setSessionUpdatedAt(sessionData?.state_updated_at || null);
-
-    if (RESULT_STATES.includes(state)) {
-      router.replace({ pathname: '/winner', params: { productId: productIdValue } });
-      return;
-    }
+    if (applySessionState(state, sessionData?.state_updated_at || null)) return;
 
     const storedPhone = await getStoredValue('userPhone');
     if (storedPhone) {
@@ -107,6 +139,27 @@ export default function DrawLobbyScreen() {
     }
 
     setLoading(false);
+  }
+
+  // Lightweight refetch used by the polling interval — only the fields that
+  // can actually change while the lobby is open (session state + entries
+  // count), not the full product row or the viewer's own ticket.
+  async function pollLobbyData() {
+    if (!productIdValue) return;
+
+    const [{ data: sessionData }, { data: productData }] = await Promise.all([
+      supabase.from('draw_sessions').select('state, state_updated_at').eq('product_id', productIdValue).maybeSingle(),
+      supabase.from('products').select('current_entries, max_entries').eq('id', productIdValue).maybeSingle(),
+    ]);
+
+    if (sessionData) {
+      const state = sessionData.state as DrawSessionState;
+      if (applySessionState(state, sessionData.state_updated_at || null)) return;
+    }
+
+    if (productData) {
+      setProduct((prev) => (prev ? { ...prev, current_entries: productData.current_entries, max_entries: productData.max_entries } : prev));
+    }
   }
 
   const totalTickets = product?.max_entries || 0;
