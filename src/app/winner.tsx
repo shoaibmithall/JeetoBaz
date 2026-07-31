@@ -6,8 +6,10 @@ import * as Clipboard from 'expo-clipboard';
 import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
+import { useAppTheme } from '@/hooks/use-theme';
+import { DrawReplayOverlay } from '@/components/draw-animation/DrawReplayOverlay';
 import type { Product } from '@/types/database';
-import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
+import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Copy, Medal, PackageCheck, RotateCcw, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
 import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -42,6 +44,7 @@ export default function WinnerScreen() {
   const router = useRouter();
   const { productId } = useLocalSearchParams();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
   const [product, setProduct] = useState<Product | null>(null);
   const [result, setResult] = useState<PublicDrawResult | null>(null);
@@ -53,6 +56,8 @@ export default function WinnerScreen() {
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [prevDraw, setPrevDraw] = useState<{ product_id: string; product_name: string } | null>(null);
   const [nextDraw, setNextDraw] = useState<{ product_id: string; product_name: string } | null>(null);
+  const [showReplay, setShowReplay] = useState(false);
+  const [replayLoading, setReplayLoading] = useState(false);
 
   useEffect(() => {
     fetchResult();
@@ -110,18 +115,29 @@ export default function WinnerScreen() {
     setNextDraw(newer ? { product_id: newer.product_id, product_name: newer.product_name } : null);
   }
 
+  async function ensureParticipantsLoaded() {
+    if (participants !== null || !productIdValue) return;
+    setParticipantsLoading(true);
+    const { data } = await supabase.rpc('get_draw_ticket_numbers', { p_product_id: productIdValue });
+    setParticipants((data || []).map((row) => row.ticket_number));
+    setParticipantsLoading(false);
+  }
+
   async function toggleParticipants() {
     if (showParticipants) {
       setShowParticipants(false);
       return;
     }
     setShowParticipants(true);
-    if (participants === null && productIdValue) {
-      setParticipantsLoading(true);
-      const { data } = await supabase.rpc('get_draw_ticket_numbers', { p_product_id: productIdValue });
-      setParticipants((data || []).map((row) => row.ticket_number));
-      setParticipantsLoading(false);
-    }
+    await ensureParticipantsLoaded();
+  }
+
+  async function openReplay() {
+    if (!result) return;
+    setReplayLoading(true);
+    await ensureParticipantsLoaded();
+    setReplayLoading(false);
+    setShowReplay(true);
   }
 
   function maskPhone(phone?: string | null) {
@@ -208,6 +224,19 @@ export default function WinnerScreen() {
           <Text style={styles.shareResultText}>Share Result</Text>
         </TouchableOpacity>
       </View>
+
+      {result && (
+        <TouchableOpacity
+          style={styles.replayButton}
+          onPress={openReplay}
+          disabled={replayLoading}
+          accessibilityRole="button"
+          accessibilityLabel="Watch draw again"
+        >
+          {replayLoading ? <ActivityIndicator size="small" color="#18a663" /> : <RotateCcw color="#18a663" size={18} />}
+          <Text style={styles.replayButtonText}>Watch Draw Again</Text>
+        </TouchableOpacity>
+      )}
 
       {myTicket && (
         <View style={styles.myTicketCard}>
@@ -361,6 +390,16 @@ export default function WinnerScreen() {
 
       <Text style={styles.footer}>JeetoBaz - {t('appTagline')}</Text>
     </ScrollView>
+    {showReplay && result && productIdValue ? (
+      <DrawReplayOverlay
+        theme={theme}
+        result={result}
+        ticketNumbers={participants || []}
+        productId={productIdValue}
+        myTicket={myTicket}
+        onClose={() => setShowReplay(false)}
+      />
+    ) : null}
     </>
   );
 }
@@ -389,6 +428,8 @@ const styles = StyleSheet.create({
   copyLinkText: { color: '#18a663', fontSize: 14, fontWeight: 'bold' },
   shareResultButton: { flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: '#FFD700', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
   shareResultText: { color: '#000', fontSize: 14, fontWeight: 'bold' },
+  replayButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 15, marginTop: 12, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#18a663' },
+  replayButtonText: { color: '#18a663', fontSize: 14, fontWeight: 'bold' },
   myTicketCard: { backgroundColor: '#2b0d0d', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 2, borderColor: '#ff4444', alignItems: 'center' },
   myTicketTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
   myTicketTitle: { fontSize: 14, fontWeight: 'bold', color: '#ff4444', textTransform: 'uppercase' },

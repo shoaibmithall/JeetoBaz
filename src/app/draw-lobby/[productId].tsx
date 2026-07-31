@@ -7,6 +7,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { DrawSessionState, Product } from '@/types/database';
+import { DrawAnimationSequence, RESULT_STATES } from '@/components/draw-animation/DrawAnimationSequence';
 
 const TIMELINE_STEPS = ['Waiting', 'Entries Locked', 'Verification', 'Live Draw', 'Winner Reveal'] as const;
 
@@ -39,10 +40,6 @@ function timelineStepIndex(state: DrawSessionState): number {
       return 4;
   }
 }
-
-// States that mean the draw already has a result — the Lobby has nothing
-// left to show, so we send viewers straight to the result page.
-const RESULT_STATES: DrawSessionState[] = ['winner_selected', 'result_published', 'completed'];
 
 // Polling cadence for live updates. Slower while the tab/app is backgrounded
 // so we're not hammering Supabase for a view nobody's looking at. This is
@@ -126,16 +123,16 @@ export default function DrawLobbyScreen() {
     return () => clearInterval(timer);
   }, [loading, notFound, sessionState, isAppActive, isRealtimeConnected, productIdValue]);
 
-  // Applies a freshly-fetched session state; returns true if it redirected
-  // (draw already has a result) so the caller can stop doing further work.
+  // Applies a freshly-fetched session state. The redirect to /winner used to
+  // happen here immediately; now the full-screen DrawAnimationSequence takes
+  // over once a result exists and calls onRevealComplete when it's done.
   function applySessionState(state: DrawSessionState, updatedAt: string | null) {
     setSessionState(state);
     setSessionUpdatedAt(updatedAt);
-    if (RESULT_STATES.includes(state)) {
-      router.replace({ pathname: '/winner', params: { productId: productIdValue } });
-      return true;
-    }
-    return false;
+  }
+
+  function goToResultPage() {
+    router.replace({ pathname: '/winner', params: { productId: productIdValue } });
   }
 
   async function fetchLobbyData() {
@@ -166,7 +163,7 @@ export default function DrawLobbyScreen() {
       .maybeSingle();
 
     const state = (sessionData?.state as DrawSessionState) || 'waiting';
-    if (applySessionState(state, sessionData?.state_updated_at || null)) return;
+    applySessionState(state, sessionData?.state_updated_at || null);
 
     const storedPhone = await getStoredValue('userPhone');
     if (storedPhone) {
@@ -193,7 +190,7 @@ export default function DrawLobbyScreen() {
 
     if (sessionData) {
       const state = sessionData.state as DrawSessionState;
-      if (applySessionState(state, sessionData.state_updated_at || null)) return;
+      applySessionState(state, sessionData.state_updated_at || null);
     }
 
     if (productData) {
@@ -232,6 +229,27 @@ export default function DrawLobbyScreen() {
     <Head><title>Draw Lobby | JeetoBaz</title><meta name="robots" content="noindex, follow" /></Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
       <Text style={[styles.loadingText, { color: theme.text }]}>Draw not found.</Text>
+    </View>
+    </>
+  );
+
+  const activeState = sessionState || 'waiting';
+  const showAnimationSequence = activeState !== 'created' && activeState !== 'waiting';
+
+  if (showAnimationSequence) return (
+    <>
+    <Head>
+      <title>{product.name} — Draw Lobby | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
+    </Head>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <DrawAnimationSequence
+        theme={theme}
+        product={product}
+        sessionState={activeState}
+        myTicket={myTicket}
+        onRevealComplete={goToResultPage}
+      />
     </View>
     </>
   );
