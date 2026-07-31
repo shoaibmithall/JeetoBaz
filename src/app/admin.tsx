@@ -35,6 +35,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   product_status_changed: 'Product status changed',
   prize_status_updated: 'Prize delivery status updated',
   winner_status_updated: 'Winner verification status updated',
+  certificate_uploaded: 'Winner certificate uploaded',
   payment_approved: 'Payment approved',
   payment_rejected: 'Payment rejected',
   draw_run: 'Draw run',
@@ -52,7 +53,7 @@ function formatAuditDetails(details: Record<string, unknown>) {
 }
 import { isValidSlug, slugify } from '@/lib/validation';
 import {
-  BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
+  Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wand2, X,
@@ -63,6 +64,7 @@ const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
 const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
+const CERTIFICATES_BUCKET = 'winner-certificates';
 
 function confirmAsync(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') {
@@ -138,6 +140,8 @@ export default function AdminScreen() {
   const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
   const [winnerStatusDrafts, setWinnerStatusDrafts] = useState<Record<string, { status: WinnerStatus; note: string }>>({});
   const [winnerStatusSaving, setWinnerStatusSaving] = useState<string | null>(null);
+  const [certificates, setCertificates] = useState<Record<string, { id: string; file_name: string | null }[]>>({});
+  const [certificateUploading, setCertificateUploading] = useState<string | null>(null);
   const [auditLog, setAuditLog] = useState<AdminAuditLogEntry[]>([]);
   const router = useRouter();
 
@@ -551,6 +555,67 @@ export default function AdminScreen() {
       .select('*, products(*)')
       .order('drawn_at', { ascending: false });
     if (data) setDrawResults(data as unknown as DrawResultWithProduct[]);
+    await fetchCertificates();
+  }
+
+  async function fetchCertificates() {
+    const { data } = await supabase
+      .from('winner_certificates')
+      .select('id, draw_result_id, file_name')
+      .order('created_at', { ascending: false });
+    if (!data) return;
+    const grouped: Record<string, { id: string; file_name: string | null }[]> = {};
+    for (const row of data as { id: string; draw_result_id: string; file_name: string | null }[]) {
+      if (!grouped[row.draw_result_id]) grouped[row.draw_result_id] = [];
+      grouped[row.draw_result_id].push({ id: row.id, file_name: row.file_name });
+    }
+    setCertificates(grouped);
+  }
+
+  async function uploadCertificate(result: DrawResultWithProduct) {
+    if (!result.winner_user_id) {
+      alert('This winner has no linked account (entry approved before account-linking was added), so certificate access cannot be securely granted.');
+      return;
+    }
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+    });
+    if (pickerResult.canceled || !pickerResult.assets[0]) return;
+
+    setCertificateUploading(result.id);
+    try {
+      const asset = pickerResult.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `${result.id}/${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from(CERTIFICATES_BUCKET)
+        .upload(filePath, fileData, { contentType: mimeType, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { error: insertError } = await supabase.from('winner_certificates').insert({
+        draw_result_id: result.id,
+        winner_user_id: result.winner_user_id,
+        storage_path: filePath,
+        file_name: asset.fileName || null,
+      });
+      if (insertError) throw insertError;
+
+      void logAdminAction('certificate_uploaded', result.product_id, { draw_result_id: result.id });
+      await fetchCertificates();
+      alert('Certificate uploaded — the winner can now see it under "My Certificates".');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Certificate upload failed.';
+      alert(message);
+    } finally {
+      setCertificateUploading(null);
+    }
   }
 
   function getPrizeStatusDraft(result: DrawResultWithProduct) {
@@ -1316,6 +1381,17 @@ export default function AdminScreen() {
                   >
                     <Truck color="white" size={16} />
                     <Text style={styles.approveButtonText}>{prizeStatusSaving === result.product_id ? 'Saving...' : 'Save Status'}</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.paymentLine}>
+                    Certificate: {(certificates[result.id] || []).length > 0 ? `${(certificates[result.id] || []).length} uploaded` : 'Not uploaded yet'}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => uploadCertificate(result)}
+                    disabled={certificateUploading === result.id}
+                  >
+                    <Award color="white" size={16} />
+                    <Text style={styles.approveButtonText}>{certificateUploading === result.id ? 'Uploading...' : 'Upload Certificate'}</Text>
                   </TouchableOpacity>
                 </View>
               );

@@ -158,6 +158,16 @@ export type AdminAuditLogEntry = {
   created_at: string;
 };
 
+export type WinnerCertificate = {
+  id: string;
+  draw_result_id: string;
+  winner_user_id: string;
+  storage_path: string;
+  file_name: string | null;
+  uploaded_by: string;
+  created_at: string;
+};
+
 export type AppNotification = {
   id: string;
   title: string;
@@ -292,6 +302,12 @@ export type Database = {
           Partial<Pick<AdminAuditLogEntry, 'target_id' | 'details'>>,
         never
       >;
+      winner_certificates: Table<
+        WinnerCertificate,
+        Pick<WinnerCertificate, 'draw_result_id' | 'winner_user_id' | 'storage_path'> &
+          Partial<Pick<WinnerCertificate, 'file_name'>>,
+        never
+      >;
     };
     Views: {};
     Functions: {
@@ -327,6 +343,16 @@ export type Database = {
       get_draw_ticket_numbers: {
         Args: { p_product_id: string };
         Returns: Array<{ ticket_number: string }>;
+      };
+      get_my_certificates: {
+        Args: Record<string, never>;
+        Returns: Array<{
+          certificate_id: string;
+          product_name: string;
+          storage_path: string;
+          file_name: string | null;
+          created_at: string;
+        }>;
       };
       increment: {
         Args: { x: number };
