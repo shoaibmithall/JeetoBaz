@@ -129,6 +129,8 @@ export type User = {
   cnic?: string | null;
   email?: string | null;
   auth_provider?: string;
+  // Sequential, human-friendly Member ID (formatted client-side as JB-100001) — replaces the old UUID-slice-based one.
+  member_number: number;
 };
 
 export type UserProfileDetails = {
