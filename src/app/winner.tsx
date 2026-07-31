@@ -7,7 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { Product } from '@/types/database';
-import { BarChart3, ChevronDown, ChevronUp, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
+import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Copy, Medal, PackageCheck, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
 import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -51,6 +51,8 @@ export default function WinnerScreen() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [participants, setParticipants] = useState<string[] | null>(null);
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [prevDraw, setPrevDraw] = useState<{ product_id: string; product_name: string } | null>(null);
+  const [nextDraw, setNextDraw] = useState<{ product_id: string; product_name: string } | null>(null);
 
   useEffect(() => {
     fetchResult();
@@ -91,7 +93,21 @@ export default function WinnerScreen() {
       setMyTicket(ticket || null);
     }
 
+    await fetchNeighborDraws(productIdValue);
     setLoading(false);
+  }
+
+  async function fetchNeighborDraws(currentProductId: string) {
+    const { data } = await supabase.rpc('get_public_winners_list');
+    if (!data) { setPrevDraw(null); setNextDraw(null); return; }
+    const index = data.findIndex((w) => w.product_id === currentProductId);
+    if (index === -1) { setPrevDraw(null); setNextDraw(null); return; }
+    // List is ordered newest-first: the item after this one (higher index) is older ("Previous"),
+    // the item before this one (lower index) is newer ("Next").
+    const older = data[index + 1];
+    const newer = data[index - 1];
+    setPrevDraw(older ? { product_id: older.product_id, product_name: older.product_name } : null);
+    setNextDraw(newer ? { product_id: newer.product_id, product_name: newer.product_name } : null);
   }
 
   async function toggleParticipants() {
@@ -252,7 +268,48 @@ export default function WinnerScreen() {
           <Text style={styles.detailLabel}>Draw Number</Text>
           <Text style={styles.detailValue}>#{product?.id?.slice(0, 8).toUpperCase() || 'JB'}</Text>
         </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Prize Value</Text>
+          <Text style={styles.detailValue}>Rs. {(product?.price || 0).toLocaleString()}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Entry Fee</Text>
+          <Text style={styles.detailValue}>Rs. {(product?.entry_fee || 1).toLocaleString()}</Text>
+        </View>
+        {product?.created_at && result?.drawn_at && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Draw Duration</Text>
+            <Text style={styles.detailValue}>
+              {Math.max(1, Math.round((new Date(result.drawn_at).getTime() - new Date(product.created_at).getTime()) / 86400000))} days
+            </Text>
+          </View>
+        )}
       </View>
+
+      {(prevDraw || nextDraw) && (
+        <View style={styles.navRow}>
+          <TouchableOpacity
+            style={[styles.navButton, !prevDraw && styles.navButtonDisabled]}
+            onPress={() => prevDraw && router.push({ pathname: '/winner', params: { productId: prevDraw.product_id } })}
+            disabled={!prevDraw}
+          >
+            <ChevronLeft color={prevDraw ? '#18a663' : '#444'} size={18} />
+            <Text style={[styles.navButtonText, !prevDraw && styles.navButtonTextDisabled]} numberOfLines={1}>
+              {prevDraw ? prevDraw.product_name : 'No Earlier Draw'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.navButton, !nextDraw && styles.navButtonDisabled]}
+            onPress={() => nextDraw && router.push({ pathname: '/winner', params: { productId: nextDraw.product_id } })}
+            disabled={!nextDraw}
+          >
+            <Text style={[styles.navButtonText, !nextDraw && styles.navButtonTextDisabled]} numberOfLines={1}>
+              {nextDraw ? nextDraw.product_name : 'No Later Draw'}
+            </Text>
+            <ChevronRight color={nextDraw ? '#18a663' : '#444'} size={18} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.participantsCard}>
         <TouchableOpacity style={styles.participantsHeader} onPress={toggleParticipants}>
@@ -343,6 +400,11 @@ const styles = StyleSheet.create({
   statusValue: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
   statusNote: { fontSize: 13, color: '#aaa', marginTop: 6, lineHeight: 18 },
   detailCard: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
+  navRow: { flexDirection: 'row', gap: 10, marginHorizontal: 15, marginBottom: 15 },
+  navButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#071b13', borderRadius: 12, borderWidth: 1, borderColor: '#174a35', paddingVertical: 12, paddingHorizontal: 10 },
+  navButtonDisabled: { opacity: 0.4 },
+  navButtonText: { color: '#18a663', fontSize: 12, fontWeight: 'bold', flexShrink: 1 },
+  navButtonTextDisabled: { color: '#666' },
   detailTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   detailTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
