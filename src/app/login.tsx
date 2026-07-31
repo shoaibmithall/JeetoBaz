@@ -14,7 +14,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
-  CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  Award, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
   MapPin, Medal, Phone, Rocket, RotateCcw, Shield, ShieldCheck, Smartphone, Target, Trophy,
   BadgeCheck, Truck, UserPlus, UsersRound,
@@ -721,6 +721,12 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/explore')}>
           <Medal color="#F59E0B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('pastWinners')}</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/certificates' as never)}>
+          <Award color="#FFD700" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>My Certificates</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
