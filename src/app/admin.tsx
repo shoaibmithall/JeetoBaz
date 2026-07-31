@@ -142,6 +142,7 @@ export default function AdminScreen() {
   const [winnerStatusSaving, setWinnerStatusSaving] = useState<string | null>(null);
   const [certificates, setCertificates] = useState<Record<string, { id: string; file_name: string | null }[]>>({});
   const [certificateUploading, setCertificateUploading] = useState<string | null>(null);
+  const [drawSessionStates, setDrawSessionStates] = useState<Record<string, string>>({});
   const [auditLog, setAuditLog] = useState<AdminAuditLogEntry[]>([]);
   const router = useRouter();
 
@@ -254,6 +255,15 @@ export default function AdminScreen() {
   async function fetchProducts() {
     const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
     if (data) setProducts(data);
+    await fetchDrawSessionStates();
+  }
+
+  async function fetchDrawSessionStates() {
+    const { data } = await supabase.from('draw_sessions').select('product_id, state');
+    if (!data) return;
+    const map: Record<string, string> = {};
+    for (const row of data) map[row.product_id] = row.state;
+    setDrawSessionStates(map);
   }
 
   async function fetchUsers() {
@@ -1292,6 +1302,7 @@ export default function AdminScreen() {
                     <View style={[styles.progress, { width: `${Math.min(((p.current_entries||0)/p.max_entries)*100, 100)}%` }]} />
                   </View>
                   <View style={styles.inlineRow}><DollarSign color="#aaa" size={14} /><Text style={styles.revenue}>Revenue: Rs. {((p.current_entries || 0) * (p.entry_fee || 1)).toLocaleString()}</Text></View>
+                  {drawSessionStates[p.id] && <View style={styles.inlineRow}><History color="#8B5CF6" size={14} /><Text style={styles.drawDateText}>Draw Session: {drawSessionStates[p.id]}</Text></View>}
                   {p.winner_phone && <View style={styles.inlineRow}><Trophy color="#FFD700" size={14} /><Text style={styles.winner}>Winner: {p.winner_phone}</Text></View>}
                   <View style={styles.actionRow}>
                     <TouchableOpacity style={styles.editButton} onPress={() => startEdit(p)}>

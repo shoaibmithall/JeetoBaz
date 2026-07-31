@@ -58,6 +58,37 @@ export type DrawResult = {
   winner_status_updated_at: string;
 };
 
+// Tracks the draw's lifecycle BEFORE and DURING the run — separate from
+// WinnerStatus, which tracks verification AFTER the winner is selected.
+// This state machine never decides the winner; run_jeetobaz_draw owns
+// selection entirely and is observed, not driven, by this machine.
+export type DrawSessionState =
+  | 'created'
+  | 'waiting'
+  | 'locked'
+  | 'verifying'
+  | 'ready'
+  | 'running'
+  | 'winner_selected'
+  | 'result_published'
+  | 'completed';
+
+export type DrawSession = {
+  id: string;
+  product_id: string;
+  state: DrawSessionState;
+  state_updated_at: string;
+  created_at: string;
+};
+
+export type DrawSessionStateHistoryEntry = {
+  id: string;
+  draw_session_id: string;
+  state: DrawSessionState;
+  changed_by: string | null;
+  created_at: string;
+};
+
 export type DrawStatusHistoryEntry = {
   status_type: 'winner_status' | 'prize_status';
   status_value: string;
@@ -308,6 +339,7 @@ export type Database = {
           Partial<Pick<WinnerCertificate, 'file_name'>>,
         never
       >;
+      draw_sessions: Table<DrawSession, never, never>;
     };
     Views: {};
     Functions: {
@@ -343,6 +375,10 @@ export type Database = {
       get_draw_ticket_numbers: {
         Args: { p_product_id: string };
         Returns: Array<{ ticket_number: string }>;
+      };
+      advance_draw_state: {
+        Args: { p_product_id: string; p_new_state: DrawSessionState };
+        Returns: void;
       };
       get_my_certificates: {
         Args: Record<string, never>;
