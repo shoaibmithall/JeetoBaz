@@ -238,6 +238,7 @@ const HomeProductCard = memo(function HomeProductCard({
               cachePolicy="disk"
               transition={160}
               contentFit={isMultiColumn || isCompactGrid ? 'contain' : 'cover'}
+              loading="lazy"
               onLoad={() => setImageLoading(false)}
               onError={() => {
                 setImageLoading(false);
