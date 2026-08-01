@@ -1,0 +1,11 @@
+-- This policy let any public/anon caller INSERT a row directly into
+-- public.users without binding auth_user_id to their own auth.uid(),
+-- letting someone plant a profile row against another real user's
+-- auth_user_id (or arbitrary email) before that user ever completes
+-- profile-setup. Confirmed via full codebase search: the app never
+-- inserts into users directly — every profile is created through the
+-- create_user_profile() RPC (SECURITY DEFINER, correctly binds
+-- auth_user_id = auth.uid()). This policy has no legitimate caller, so
+-- it is dropped outright rather than tightened.
+-- Applied directly to production first; this records it.
+drop policy if exists "JeetoBaz validated public user signup" on public.users;
