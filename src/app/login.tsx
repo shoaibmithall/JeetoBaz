@@ -59,6 +59,7 @@ export default function ProfileScreen() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [totalEntries, setTotalEntries] = useState(0);
+  const [certificateCount, setCertificateCount] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -133,7 +134,7 @@ export default function ProfileScreen() {
           : '';
         if (active) setAvatarUrl(metadataAvatar || scopedAvatar || '');
 
-        const [{ data: profile }, { data: location }] = await Promise.all([
+        const [{ data: profile }, { data: location }, { data: certificates }] = await Promise.all([
           supabase
             .from('users')
             .select('id, name, phone, avatar_url, referral_code, created_at, member_number')
@@ -144,7 +145,9 @@ export default function ProfileScreen() {
             .select('city, date_of_birth')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
+          supabase.rpc('get_my_certificates'),
         ]);
+        if (active) setCertificateCount(certificates?.length || 0);
 
         if (profile && active) {
           setProfileExists(true);
@@ -200,6 +203,7 @@ export default function ProfileScreen() {
         setMemberId(null);
         setProfileCreatedAt(null);
         setTotalEntries(0);
+        setCertificateCount(0);
         setStep('login');
       }
     }
@@ -649,6 +653,10 @@ export default function ProfileScreen() {
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Circle color="#18a663" fill="#18a663" size={22} />
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>{certificateCount}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>My Certificates</Text>
         </View>
       </View>
 
