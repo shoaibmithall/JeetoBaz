@@ -110,9 +110,18 @@ const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] 
   { key: 'entry_low', labels: { en: 'Entry: Low-High', ur: 'انٹری: کم سے زیادہ', roman: 'Entry: Low-High' } },
 ];
 
+const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
+
 function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
   if (!drawDate) return null;
-  const draw = new Date(drawDate);
+  const parsed = new Date(drawDate);
+  if (Number.isNaN(parsed.getTime())) return null;
+  // draw_date is admin-entered free text meant as Pakistan time (PKT, fixed
+  // UTC+5, no DST). new Date() parses it using the VIEWER's local timezone,
+  // so re-anchor the parsed wall-clock numbers to PKT explicitly rather than
+  // trusting whatever timezone the visitor's device happens to be set to.
+  const wallClockAsUtc = parsed.getTime() - parsed.getTimezoneOffset() * 60000;
+  const draw = new Date(wallClockAsUtc - PKT_OFFSET_MS);
   const diff = draw.getTime() - now.getTime();
   if (Number.isNaN(diff)) return null;
   if (diff <= 0) return translate(language, 'drawTimeArrived');

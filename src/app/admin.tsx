@@ -428,6 +428,18 @@ export default function AdminScreen() {
     if (!productName || !productPrice || !entryFee || !maxEntries) {
       alert('Please fill all required fields!'); return;
     }
+    const parsedPrice = parseInt(productPrice, 10);
+    const parsedEntryFee = parseInt(entryFee, 10);
+    const parsedMaxEntries = parseInt(maxEntries, 10);
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      alert('Price must be a valid positive number.'); return;
+    }
+    if (!Number.isFinite(parsedEntryFee) || parsedEntryFee <= 0) {
+      alert('Entry fee must be a valid positive number.'); return;
+    }
+    if (!Number.isFinite(parsedMaxEntries) || parsedMaxEntries <= 0) {
+      alert('Max entries must be a valid positive number.'); return;
+    }
     const currentEditId = editingIdRef.current;
 
     const willBeActive = currentEditId
@@ -465,9 +477,9 @@ export default function AdminScreen() {
 
     const productData: ProductFormData = {
       name: productName,
-      price: parseInt(productPrice),
-      entry_fee: parseInt(entryFee),
-      max_entries: parseInt(maxEntries),
+      price: parsedPrice,
+      entry_fee: parsedEntryFee,
+      max_entries: parsedMaxEntries,
       image_url: imageUrl || null,
       description: description || null,
       draw_date: drawDate || null,
