@@ -652,23 +652,23 @@ export default function ProfileScreen() {
       </View>
 
       <View style={[styles.statsRow, isMobileProfile && styles.statsRowMobile]}>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{totalEntries}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsEntered')}</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>0</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Circle color="#18a663" fill="#18a663" size={22} />
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{certificateCount}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>My Certificates</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{successfulReferrals}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>Refer & Earn</Text>
         </View>
@@ -1113,8 +1113,9 @@ const styles = StyleSheet.create({
   verifyLabel: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
   verifyStatus: { fontSize: 14, fontWeight: '700' },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
-  statsRowMobile: { paddingTop: 6, paddingBottom: 6 },
+  statsRowMobile: { paddingTop: 6, paddingBottom: 6, flexWrap: 'wrap' },
   statCard: { flex: 1, backgroundColor: '#071b13', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#174a35' },
+  statCardMobile: { flexGrow: 0, flexBasis: '31%' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
   menuBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35' },
