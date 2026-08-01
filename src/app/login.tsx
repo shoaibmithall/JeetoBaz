@@ -9,6 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { getReferralDeviceToken } from '@/lib/referrals';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
@@ -59,6 +60,8 @@ export default function ProfileScreen() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [totalEntries, setTotalEntries] = useState(0);
+  const [certificateCount, setCertificateCount] = useState(0);
+  const [successfulReferrals, setSuccessfulReferrals] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -127,13 +130,14 @@ export default function ProfileScreen() {
 
       if (user) {
         if (active) setStep('check');
+        void fetchReferralCount();
         const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
         const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string'
           ? user.user_metadata.avatar_url.trim()
           : '';
         if (active) setAvatarUrl(metadataAvatar || scopedAvatar || '');
 
-        const [{ data: profile }, { data: location }] = await Promise.all([
+        const [{ data: profile }, { data: location }, { data: certificates }] = await Promise.all([
           supabase
             .from('users')
             .select('id, name, phone, avatar_url, referral_code, created_at, member_number')
@@ -144,7 +148,9 @@ export default function ProfileScreen() {
             .select('city, date_of_birth')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
+          supabase.rpc('get_my_certificates'),
         ]);
+        if (active) setCertificateCount(certificates?.length || 0);
 
         if (profile && active) {
           setProfileExists(true);
@@ -200,6 +206,8 @@ export default function ProfileScreen() {
         setMemberId(null);
         setProfileCreatedAt(null);
         setTotalEntries(0);
+        setCertificateCount(0);
+        setSuccessfulReferrals(0);
         setStep('login');
       }
     }
@@ -207,6 +215,12 @@ export default function ProfileScreen() {
     void loadProfile();
     return () => { active = false; };
   }, [authLoading, user?.id]);
+
+  async function fetchReferralCount() {
+    const deviceToken = await getReferralDeviceToken();
+    const { data } = await supabase.rpc('get_referral_dashboard', { requested_device_token: deviceToken });
+    setSuccessfulReferrals(Number(data?.[0]?.successful_referrals) || 0);
+  }
 
   async function fetchStats(phone: string) {
     const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
@@ -638,17 +652,25 @@ export default function ProfileScreen() {
       </View>
 
       <View style={[styles.statsRow, isMobileProfile && styles.statsRowMobile]}>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{totalEntries}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsEntered')}</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>0</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('drawsWon')}</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Circle color="#18a663" fill="#18a663" size={22} />
           <Text style={[styles.statLabel, { color: theme.muted }]}>{t('active')}</Text>
+        </View>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>{certificateCount}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>My Certificates</Text>
+        </View>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>{successfulReferrals}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>Refer & Earn</Text>
         </View>
       </View>
 
@@ -1091,8 +1113,9 @@ const styles = StyleSheet.create({
   verifyLabel: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
   verifyStatus: { fontSize: 14, fontWeight: '700' },
   statsRow: { flexDirection: 'row', padding: 15, gap: 10 },
-  statsRowMobile: { paddingTop: 6, paddingBottom: 6 },
+  statsRowMobile: { paddingTop: 6, paddingBottom: 6, flexWrap: 'wrap' },
   statCard: { flex: 1, backgroundColor: '#071b13', borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: '#174a35' },
+  statCardMobile: { flexGrow: 0, flexBasis: '31%' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
   menuBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35' },
