@@ -124,7 +124,7 @@ export function CategoryBrowser({
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 style={[
-                  isDesktop ? styles.desktopChip : styles.quickChip,
+                  styles.categoryTile,
                   {
                     backgroundColor: selected ? colors.goldSoft : colors.surfaceAlt,
                     borderColor: selected ? colors.gold : colors.border,
@@ -132,12 +132,12 @@ export function CategoryBrowser({
                 ]}
                 onPress={() => selectCategory(key)}
               >
-                <FlatCategoryIcon categoryKey={key} size={isDesktop ? 56 : 22} />
+                <FlatCategoryIcon categoryKey={key} size={56} />
                 <Text
-                  numberOfLines={isDesktop ? 2 : 1}
+                  numberOfLines={2}
                   style={[
                     styles.quickLabel,
-                    isDesktop && styles.desktopChipLabel,
+                    styles.categoryTileLabel,
                     { color: selected ? colors.gold : colors.muted },
                   ]}
                 >
@@ -151,7 +151,7 @@ export function CategoryBrowser({
             <TouchableOpacity
               accessibilityRole="button"
               style={[
-                styles.quickChip,
+                styles.categoryTile,
                 {
                   backgroundColor: isMoreCategory ? colors.goldSoft : colors.surfaceAlt,
                   borderColor: isMoreCategory ? colors.gold : colors.border,
@@ -159,10 +159,17 @@ export function CategoryBrowser({
               ]}
               onPress={() => setShowAll(true)}
             >
-              <View style={[styles.quickIconBadge, { backgroundColor: isMoreCategory ? colors.gold : colors.elevated }]}>
-                <Grid2X2 color={isMoreCategory ? '#07130c' : colors.gold} size={15} strokeWidth={1.9} />
+              <View style={[styles.moreIconBadge, { backgroundColor: isMoreCategory ? colors.gold : colors.elevated }]}>
+                <Grid2X2 color={isMoreCategory ? '#07130c' : colors.gold} size={26} strokeWidth={1.9} />
               </View>
-              <Text style={[styles.quickLabel, { color: isMoreCategory ? colors.gold : colors.muted }]}>
+              <Text
+                numberOfLines={2}
+                style={[
+                  styles.quickLabel,
+                  styles.categoryTileLabel,
+                  { color: isMoreCategory ? colors.gold : colors.muted },
+                ]}
+              >
                 More
               </Text>
             </TouchableOpacity>
@@ -322,7 +329,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 14,
     paddingBottom: 2,
-    gap: 8,
+    gap: 10,
   },
   desktopOptions: {
     paddingHorizontal: 0,
@@ -330,7 +337,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     gap: 10,
   },
-  desktopChip: {
+  categoryTile: {
     minHeight: 132,
     minWidth: 96,
     borderRadius: 14,
@@ -342,24 +349,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
   },
-  desktopChipLabel: {
+  categoryTileLabel: {
     fontSize: 14,
     textAlign: 'center',
   },
-  quickChip: {
-    minHeight: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-  },
-  quickIconBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
+  moreIconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
