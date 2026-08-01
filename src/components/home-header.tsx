@@ -69,6 +69,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
         transparent
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}
+        accessibilityLabel="More menu"
       >
         <View style={styles.modalRoot}>
           <Pressable
