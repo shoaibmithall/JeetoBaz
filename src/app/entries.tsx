@@ -22,6 +22,10 @@ function getEntriesCacheKey(phone: string) {
   return `offlineCache:entries:${phone}`;
 }
 
+function maskDbPhone(phone: string) {
+  return phone.slice(0, 7) + '****' + phone.slice(-4);
+}
+
 export default function MyEntriesScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
@@ -94,7 +98,7 @@ export default function MyEntriesScreen() {
     const product = entry.products;
     if (!product) return { label: 'Entry Approved', color: '#18a663', background: '#082d1e' };
     if (product.status === 'completed') {
-      if (product.winner_phone === entry.phone) return { label: 'Winner', color: '#FFD700', background: '#2a2105' };
+      if (product.winner_phone === maskDbPhone(entry.phone)) return { label: 'Winner', color: '#FFD700', background: '#2a2105' };
       return { label: 'Draw Completed', color: '#aaa', background: '#222' };
     }
     if ((product.current_entries || 0) >= product.max_entries) {
@@ -252,7 +256,7 @@ export default function MyEntriesScreen() {
                     <Text numberOfLines={isCompact ? 1 : undefined} style={[styles.infoValue, isCompact && styles.infoValueCompact, { color: theme.text }]}>{entry.transaction_id}</Text>
                   </View>
                 )}
-                {entry.products?.winner_phone === entry.phone && (
+                {entry.products?.winner_phone === maskDbPhone(entry.phone) && (
                   <View style={styles.winnerBanner}>
                     <Trophy color="#FFD700" size={17} /><Text style={styles.winnerText}>{t('wonThisDraw')}</Text>
                   </View>

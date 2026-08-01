@@ -140,11 +140,6 @@ export default function WinnerScreen() {
     setShowReplay(true);
   }
 
-  function maskPhone(phone?: string | null) {
-    if (!phone) return 'N/A';
-    return phone.slice(0, 4) + '****' + phone.slice(-3);
-  }
-
   const resultUrl = `${APP_URL}/winner?productId=${productIdValue}`;
 
   async function copyResultLink() {
@@ -197,7 +192,7 @@ export default function WinnerScreen() {
         ) : null}
         <View style={styles.labelRow}><Target color="#FFD700" size={16} /><Text style={styles.winnerLabel}>{t('winnerOf')}</Text></View>
         <Text style={styles.winnerName}>{result?.winner_name || t('notProvided')}</Text>
-        <Text style={styles.winnerPhone}>{result?.masked_phone || maskPhone(product?.winner_phone)}</Text>
+        <Text style={styles.winnerPhone}>{result?.masked_phone || product?.winner_phone || 'N/A'}</Text>
         {result?.winner_ticket_number && (
           <Text style={styles.winnerTicket}>Ticket: {result.winner_ticket_number}</Text>
         )}
