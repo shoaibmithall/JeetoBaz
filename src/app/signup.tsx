@@ -82,7 +82,7 @@ export default function SignupScreen() {
     setLoading(true);
 
     const normalizedPhoneFull = '+92' + normalizePakistaniMobile(phone);
-    const { error } = await signUpWithEmail(
+    const { data, error } = await signUpWithEmail(
       email.trim().toLowerCase(),
       password,
       { data: { name: name.trim(), phone: normalizedPhoneFull }, captchaToken: turnstileToken }
@@ -98,6 +98,8 @@ export default function SignupScreen() {
       } else {
         alert('Signup failed: ' + msg);
       }
+    } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setErrors({ email: 'This email is already registered. Try logging in.' });
     } else {
       router.replace('/verify-email' as never);
     }

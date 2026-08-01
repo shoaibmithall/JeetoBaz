@@ -366,6 +366,22 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      {!profileExists && (
+        <TouchableOpacity
+          style={[styles.incompleteBanner, { backgroundColor: theme.primarySoft, borderColor: theme.gold }]}
+          onPress={() => router.push('/profile-setup' as never)}
+          accessibilityRole="button"
+        >
+          <Info color={theme.gold} size={18} />
+          <View style={styles.incompleteBannerTextWrap}>
+            <Text style={[styles.incompleteBannerTitle, { color: theme.text }]}>Complete your profile</Text>
+            <Text style={[styles.incompleteBannerSubtitle, { color: theme.muted }]}>
+              Add your name and phone number to unlock Member ID, draws, and referrals.
+            </Text>
+          </View>
+          <ChevronRight color={theme.muted} size={18} />
+        </TouchableOpacity>
+      )}
       <View style={[styles.profileHeader, isMobileProfile && styles.profileHeaderMobile]}>
         {isMobileProfile ? (
           <View style={[styles.mobileProfileCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -1045,6 +1061,10 @@ const styles = StyleSheet.create({
   profileLoadingText: { fontSize: 14, fontWeight: '600' },
   profileHeader: { paddingTop: 28, paddingBottom: 20, paddingHorizontal: 12 },
   profileHeaderMobile: { paddingBottom: 4 },
+  incompleteBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16, marginHorizontal: 16, padding: 14, borderRadius: 12, borderWidth: 1 },
+  incompleteBannerTextWrap: { flex: 1 },
+  incompleteBannerTitle: { fontSize: 14, fontWeight: '700' },
+  incompleteBannerSubtitle: { fontSize: 12, marginTop: 2, lineHeight: 16 },
   mobileProfileCard: { width: '100%', borderRadius: 18, borderWidth: 1, padding: 14, gap: 14, overflow: 'hidden' },
   mobileProfileTop: { minHeight: 112, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 18 },
   mobileAvatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
