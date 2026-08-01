@@ -9,6 +9,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
+import { getReferralDeviceToken } from '@/lib/referrals';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
@@ -60,6 +61,7 @@ export default function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [totalEntries, setTotalEntries] = useState(0);
   const [certificateCount, setCertificateCount] = useState(0);
+  const [successfulReferrals, setSuccessfulReferrals] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -128,6 +130,7 @@ export default function ProfileScreen() {
 
       if (user) {
         if (active) setStep('check');
+        void fetchReferralCount();
         const scopedAvatar = await getStoredValue(avatarStorageKey(user.id));
         const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string'
           ? user.user_metadata.avatar_url.trim()
@@ -204,6 +207,7 @@ export default function ProfileScreen() {
         setProfileCreatedAt(null);
         setTotalEntries(0);
         setCertificateCount(0);
+        setSuccessfulReferrals(0);
         setStep('login');
       }
     }
@@ -211,6 +215,12 @@ export default function ProfileScreen() {
     void loadProfile();
     return () => { active = false; };
   }, [authLoading, user?.id]);
+
+  async function fetchReferralCount() {
+    const deviceToken = await getReferralDeviceToken();
+    const { data } = await supabase.rpc('get_referral_dashboard', { requested_device_token: deviceToken });
+    setSuccessfulReferrals(Number(data?.[0]?.successful_referrals) || 0);
+  }
 
   async function fetchStats(phone: string) {
     const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
@@ -657,6 +667,10 @@ export default function ProfileScreen() {
         <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{certificateCount}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>My Certificates</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>{successfulReferrals}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>Refer & Earn</Text>
         </View>
       </View>
 
