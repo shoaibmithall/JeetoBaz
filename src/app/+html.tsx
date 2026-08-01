@@ -7,10 +7,10 @@ const GTM_CONTAINER_ID = 'GTM-TZR6W32B';
 // location.pathname (trailing slash normalized), not at build time — +html.tsx has no
 // reliable route context of its own (it's excluded from Expo Router's route tree and
 // receives `children` as an already-rendered prop, so hooks like usePathname() don't work
-// here). No CSP is configured anywhere in this project (verified: no headers config in
-// netlify.toml, no headers step in the GitHub Pages workflow — GitHub Pages itself doesn't
-// support custom response headers — and no CSP meta tag anywhere), so there's no CSP
-// compatibility concern for this inline script.
+// here). No CSP is configured anywhere in this project (verified: no headers step in the
+// GitHub Pages workflow — GitHub Pages itself doesn't support custom response headers —
+// and no CSP meta tag anywhere), so there's no CSP compatibility concern for this inline
+// script.
 const GTM_BLOCKED_PATHS = ['/auth/callback', '/auth/reset-password'];
 
 export default function Root({ children }: { children: ReactNode }) {
