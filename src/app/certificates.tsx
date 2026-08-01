@@ -93,7 +93,7 @@ export default function CertificatesScreen() {
 
       {authLoading || loading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color={theme.primary} size="large" />
+          <ActivityIndicator color={theme.primary} size="large" accessibilityLabel="Loading certificates" />
           <Text style={[styles.loadingText, { color: theme.muted }]}>Loading your certificates...</Text>
         </View>
       ) : !user ? (
@@ -128,7 +128,7 @@ export default function CertificatesScreen() {
                   disabled={busyId === cert.certificate_id}
                 >
                   {busyId === cert.certificate_id ? (
-                    <ActivityIndicator size="small" color={theme.primary} />
+                    <ActivityIndicator size="small" color={theme.primary} accessibilityLabel="Downloading certificate" />
                   ) : (
                     <Download color={theme.primary} size={17} />
                   )}

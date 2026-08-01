@@ -97,7 +97,7 @@ export default function NotificationsScreen() {
         <meta name="description" content="View your JeetoBaz notifications for account updates, draw results, and platform announcements." />
       </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator color={theme.primary} />
+        <ActivityIndicator color={theme.primary} accessibilityLabel="Loading notifications" />
         <Text style={[styles.centerText, { color: theme.muted }]}>Loading notifications...</Text>
       </View>
       </>

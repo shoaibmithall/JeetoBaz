@@ -124,7 +124,7 @@ export default function MyEntriesScreen() {
       <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
     </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} />
+      <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading entries" />
       <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingEntries')}</Text>
     </View>
     </>

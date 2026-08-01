@@ -218,7 +218,7 @@ export default function DrawLobbyScreen() {
     <>
     <Head><title>Draw Lobby | JeetoBaz</title><meta name="robots" content="noindex, follow" /></Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} />
+      <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading draw" />
       <Text style={[styles.loadingText, { color: theme.primary }]}>Loading draw lobby...</Text>
     </View>
     </>

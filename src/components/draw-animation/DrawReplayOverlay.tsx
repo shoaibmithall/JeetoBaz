@@ -44,7 +44,7 @@ export function DrawReplayOverlay({ theme, result, ticketNumbers, productId, myT
 
         {phase === 'intro' && (
           <View style={styles.introBody}>
-            <ActivityIndicator size="large" color={theme.primary} />
+            <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading replay" />
           </View>
         )}
 

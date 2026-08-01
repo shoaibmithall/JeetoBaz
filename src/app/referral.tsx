@@ -240,7 +240,7 @@ export default function ReferralScreen() {
 
         {authLoading || loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color={theme.primary} size="large" />
+            <ActivityIndicator color={theme.primary} size="large" accessibilityLabel="Loading" />
             <Text style={[styles.loadingText, { color: theme.muted }]}>Loading referral account...</Text>
           </View>
         ) : !user ? (

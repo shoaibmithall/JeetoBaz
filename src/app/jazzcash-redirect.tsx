@@ -85,7 +85,7 @@ export default function JazzCashRedirectScreen() {
             <Text style={styles.buttonText}>Return to JeetoBaz</Text>
           </TouchableOpacity>
         ) : (
-          <ActivityIndicator color="#FFD700" size="large" />
+          <ActivityIndicator color="#FFD700" size="large" accessibilityLabel="Redirecting" />
         )}
       </View>
     </View>

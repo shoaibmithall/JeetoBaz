@@ -170,7 +170,7 @@ export default function ProfileDateOfBirthScreen() {
 
           {loading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator color={theme.primary} />
+              <ActivityIndicator color={theme.primary} accessibilityLabel="Loading" />
               <Text style={[styles.loadingText, { color: theme.muted }]}>Loading date of birth...</Text>
             </View>
           ) : (
@@ -235,7 +235,7 @@ export default function ProfileDateOfBirthScreen() {
                 accessibilityLabel="Save date of birth"
                 style={[styles.saveButton, saving && styles.disabledButton]}
               >
-                {saving ? <ActivityIndicator color="#000" /> : <Save color="#000" size={19} />}
+                {saving ? <ActivityIndicator color="#000" accessibilityLabel="Saving" /> : <Save color="#000" size={19} />}
                 <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save Date of Birth'}</Text>
               </TouchableOpacity>
             </>

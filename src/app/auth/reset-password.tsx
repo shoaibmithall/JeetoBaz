@@ -97,7 +97,7 @@ export default function ResetPasswordCallbackScreen() {
       <meta name="robots" content="noindex, follow" />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color="#FFD700" />
+      <ActivityIndicator size="large" color="#FFD700" accessibilityLabel="Loading" />
       <Text style={[styles.loadingText, { color: theme.muted }]}>Verifying reset link...</Text>
     </View>
     </>

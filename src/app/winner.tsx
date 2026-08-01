@@ -161,11 +161,10 @@ export default function WinnerScreen() {
     <>
     <Head>
       <title>Winner Result | JeetoBaz</title>
-      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
     </Head>
     <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#18a663" />
+      <ActivityIndicator size="large" color="#18a663" accessibilityLabel="Loading winner" />
       <Text style={styles.loadingText}>{t('loadingWinners')}</Text>
     </View>
     </>
@@ -175,9 +174,8 @@ export default function WinnerScreen() {
     <>
     <Head>
       <title>Winner Result | JeetoBaz</title>
-      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
-      <link rel="canonical" href="https://jeetobaz.pk/winner" />
+      <link rel="canonical" href={`https://jeetobaz.pk/winner?productId=${productIdValue}`} />
     </Head>
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -228,7 +226,7 @@ export default function WinnerScreen() {
           accessibilityRole="button"
           accessibilityLabel="Watch draw again"
         >
-          {replayLoading ? <ActivityIndicator size="small" color="#18a663" /> : <RotateCcw color="#18a663" size={18} />}
+          {replayLoading ? <ActivityIndicator size="small" color="#18a663" accessibilityLabel="Loading replay" /> : <RotateCcw color="#18a663" size={18} />}
           <Text style={styles.replayButtonText}>Watch Draw Again</Text>
         </TouchableOpacity>
       )}
@@ -345,7 +343,7 @@ export default function WinnerScreen() {
         </TouchableOpacity>
         {showParticipants && (
           participantsLoading ? (
-            <ActivityIndicator size="small" color="#18a663" style={styles.participantsLoading} />
+            <ActivityIndicator size="small" color="#18a663" style={styles.participantsLoading} accessibilityLabel="Loading participants" />
           ) : (
             <FlatList
               data={participants || []}

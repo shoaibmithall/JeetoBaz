@@ -359,7 +359,7 @@ export default function ProfileScreen() {
 
   if (authLoading || step === 'check') return (
     <View style={[styles.profileLoading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator color={theme.gold} size="large" />
+      <ActivityIndicator color={theme.gold} size="large" accessibilityLabel="Loading profile" />
       <Text style={[styles.profileLoadingText, { color: theme.muted }]}>Loading profile...</Text>
     </View>
   );
@@ -399,7 +399,7 @@ export default function ProfileScreen() {
                   <CircleUserRound color={theme.text} size={76} />
                 )}
                 <View style={[styles.mobileCameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
-                  {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={15} />}
+                  {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" accessibilityLabel="Uploading photo" /> : <Camera color={theme.primary} size={15} />}
                 </View>
               </TouchableOpacity>
 
@@ -538,7 +538,7 @@ export default function ProfileScreen() {
                 <CircleUserRound color={theme.text} size={96} />
               )}
               <View style={[styles.cameraOverlay, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
-                {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" /> : <Camera color={theme.primary} size={17} />}
+                {avatarUploading ? <ActivityIndicator color={theme.primary} size="small" accessibilityLabel="Uploading photo" /> : <Camera color={theme.primary} size={17} />}
               </View>
             </TouchableOpacity>
 
@@ -946,7 +946,7 @@ export default function ProfileScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color="#000" size="small" accessibilityLabel="Signing in" />
             ) : (
               <>
                 <Text style={styles.primaryButtonText}>Sign In</Text>

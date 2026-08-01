@@ -81,7 +81,7 @@ export function DrawAnimationSequence({ theme, product, sessionState, myTicket, 
     if (!result || !ticketNumbers) {
       return (
         <View style={[styles.loading, { backgroundColor: theme.background }]}>
-          <ActivityIndicator size="large" color={theme.primary} />
+          <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading" />
         </View>
       );
     }
