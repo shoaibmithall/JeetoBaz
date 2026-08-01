@@ -94,6 +94,7 @@ export default function AdminScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
+  const [userProfileDetails, setUserProfileDetails] = useState<Record<string, { city: string | null; date_of_birth: string | null }>>({});
   const [entries, setEntries] = useState<Entry[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [receiptUrls, setReceiptUrls] = useState<Record<string, string>>({});
@@ -171,6 +172,7 @@ export default function AdminScreen() {
     if (authenticated) {
       fetchProducts();
       fetchUsers();
+      fetchUserProfileDetails();
       fetchEntries();
       fetchTransactions();
       fetchDrawResults();
@@ -269,6 +271,16 @@ export default function AdminScreen() {
   async function fetchUsers() {
     const { data } = await supabase.from('users').select('*').order('created_at', { ascending: false });
     if (data) setUsers(data);
+  }
+
+  async function fetchUserProfileDetails() {
+    const { data } = await supabase.from('user_profile_details').select('auth_user_id, city, date_of_birth');
+    if (!data) return;
+    const map: Record<string, { city: string | null; date_of_birth: string | null }> = {};
+    for (const row of data) {
+      map[row.auth_user_id] = { city: row.city, date_of_birth: row.date_of_birth };
+    }
+    setUserProfileDetails(map);
   }
 
   async function fetchEntries() {
@@ -1460,16 +1472,23 @@ export default function AdminScreen() {
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><UsersRound color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Users ({users.length})</Text></View>
             {users.length === 0 && <Text style={styles.emptyText}>No users yet!</Text>}
-            {users.map((u) => (
-              <View key={u.id} style={styles.userCard}>
-                <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
-                <Text style={styles.userPhone}>{u.phone}</Text>
-                <Text style={styles.userDate}>Joined: {new Date(u.created_at).toLocaleDateString()}</Text>
-                <Text style={styles.userEntries}>
-                  Entries: {entries.filter(e => e.phone === u.phone).length}
-                </Text>
-              </View>
-            ))}
+            {users.map((u) => {
+              const details = u.auth_user_id ? userProfileDetails[u.auth_user_id] : undefined;
+              return (
+                <View key={u.id} style={styles.userCard}>
+                  <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
+                  <Text style={styles.userPhone}>{u.phone}</Text>
+                  {u.email && <Text style={styles.userDate}>Email: {u.email}</Text>}
+                  <Text style={styles.userDate}>Member ID: JB-{u.member_number}</Text>
+                  <Text style={styles.userDate}>City: {details?.city || 'Not added'}</Text>
+                  <Text style={styles.userDate}>Date of Birth: {details?.date_of_birth ? new Date(details.date_of_birth).toLocaleDateString() : 'Not added'}</Text>
+                  <Text style={styles.userDate}>Joined: {new Date(u.created_at).toLocaleDateString()}</Text>
+                  <Text style={styles.userEntries}>
+                    Entries: {entries.filter(e => e.phone === u.phone).length}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         )}
 
