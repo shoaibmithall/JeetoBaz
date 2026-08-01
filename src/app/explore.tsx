@@ -103,7 +103,7 @@ export default function WinnersScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {header}
       <View style={[styles.loading, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
+        <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading" />
         <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
       </View>
     </View>

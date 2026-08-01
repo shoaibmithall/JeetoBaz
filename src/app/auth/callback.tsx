@@ -105,7 +105,7 @@ export default function AuthCallbackScreen() {
       <meta name="robots" content="noindex, follow" />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color="#FFD700" />
+      <ActivityIndicator size="large" color="#FFD700" accessibilityLabel="Verifying your email" />
       <Text style={[styles.loadingText, { color: theme.muted }]}>Verifying your email...</Text>
     </View>
     </>

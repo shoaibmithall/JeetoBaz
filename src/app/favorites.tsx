@@ -122,7 +122,7 @@ export default function FavoritesScreen() {
           <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
         </View>
         <View style={[styles.center, { backgroundColor: theme.background }]}>
-          <ActivityIndicator size="large" color={theme.primary} />
+          <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading favorites" />
           <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
         </View>
       </View>

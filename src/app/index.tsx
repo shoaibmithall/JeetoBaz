@@ -933,7 +933,7 @@ export default function HomeScreen() {
     >
       {process.env.EXPO_OS === 'web' && pullDistance > 0 ? (
         <View style={[styles.pullRefreshIndicator, { height: pullDistance, backgroundColor: colors.background }]}>
-          <ActivityIndicator color={colors.primary} size="small" animating={refreshing || pullDistance >= PULL_TO_REFRESH_THRESHOLD} />
+          <ActivityIndicator color={colors.primary} size="small" animating={refreshing || pullDistance >= PULL_TO_REFRESH_THRESHOLD} accessibilityLabel="Refreshing" />
           <Text style={[styles.pullRefreshText, { color: colors.primary }]}>Loading JeetoBaz...</Text>
         </View>
       ) : null}

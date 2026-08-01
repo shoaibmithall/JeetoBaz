@@ -266,7 +266,7 @@ export default function ProductDetailScreen() {
         <meta name="robots" content="noindex, follow" />
       </Head>
       <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-        <ActivityIndicator color={theme.gold} size="large" />
+        <ActivityIndicator color={theme.gold} size="large" accessibilityLabel="Loading" />
       </View>
       </>
     );
@@ -438,7 +438,7 @@ export default function ProductDetailScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <ActivityIndicator color={theme.gold} style={{ marginTop: 8 }} />
+          <ActivityIndicator color={theme.gold} style={{ marginTop: 8 }} accessibilityLabel="Loading" />
         )}
       </View>
 

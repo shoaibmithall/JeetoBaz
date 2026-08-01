@@ -77,7 +77,7 @@ export default function RegisteredVerifiedScreen() {
         </View>
 
         {loading ? (
-          <View style={styles.stateBox}><ActivityIndicator color={theme.gold} /><Text style={styles.stateText}>Loading documents...</Text></View>
+          <View style={styles.stateBox}><ActivityIndicator color={theme.gold} accessibilityLabel="Loading documents" /><Text style={styles.stateText}>Loading documents...</Text></View>
         ) : error ? (
           <View style={styles.stateBox}><Text style={styles.errorText}>{error}</Text><TouchableOpacity style={styles.retryButton} onPress={() => loadDocuments()}><Text style={styles.retryText}>Try Again</Text></TouchableOpacity></View>
         ) : documents.length === 0 ? (

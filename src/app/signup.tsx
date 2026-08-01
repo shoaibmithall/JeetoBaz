@@ -318,7 +318,7 @@ export default function SignupScreen() {
             disabled={loading || !ageAccepted}
           >
             {loading ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color="#000" size="small" accessibilityLabel="Creating account" />
             ) : (
               <>
                 <Text style={styles.primaryButtonText}>Create Account</Text>
