@@ -135,7 +135,7 @@ export default function SignupScreen() {
             <ChevronLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
+            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
             <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
           </View>
         </View>

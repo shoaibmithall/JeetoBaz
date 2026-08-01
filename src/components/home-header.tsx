@@ -42,7 +42,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
 
         <View style={styles.brand}>
           <View style={styles.brandNameRow}>
-            <Image source={require('@/assets/images/icon.png')} style={styles.brandLogo} accessibilityLabel="JeetoBaz logo" />
+            <Image source={require('@/assets/images/icon-small.png')} style={styles.brandLogo} accessibilityLabel="JeetoBaz logo" />
             <Text style={[styles.brandName, { color: theme.gold }]}>JEETOBAZ</Text>
           </View>
           <Text style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
