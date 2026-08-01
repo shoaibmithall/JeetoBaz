@@ -938,7 +938,7 @@ export default function HomeScreen() {
           <Text style={[styles.pullRefreshText, { color: colors.primary }]}>Loading JeetoBaz...</Text>
         </View>
       ) : null}
-      <Modal visible={showPriceFilter && !showPriceSidebar} transparent animationType="slide" onRequestClose={() => setShowPriceFilter(false)}>
+      <Modal visible={showPriceFilter && !showPriceSidebar} transparent animationType="slide" onRequestClose={() => setShowPriceFilter(false)} accessibilityLabel="Price filter">
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setShowPriceFilter(false)}>
           <View style={styles.priceSheet} onStartShouldSetResponder={() => true}>
             <ScrollView showsVerticalScrollIndicator={false}>{renderPricePanel(true)}</ScrollView>

@@ -31,7 +31,7 @@ export function DrawReplayOverlay({ theme, result, ticketNumbers, productId, myT
   }, [reducedMotion]);
 
   return (
-    <Modal visible animationType="fade" onRequestClose={onClose}>
+    <Modal visible animationType="fade" onRequestClose={onClose} accessibilityLabel="Draw replay">
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <TouchableOpacity style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close replay">
           <X color={theme.subtle} size={22} />
