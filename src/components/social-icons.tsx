@@ -40,6 +40,7 @@ function BrandGlyph({
       <Image
         contentFit="contain"
         source={source}
+        accessibilityLabel=""
         style={{
           height: size - inset * 2,
           tintColor: glyphColor,
@@ -72,6 +73,7 @@ export function InstagramIcon({ size = 24 }: IconProps) {
       <Image
         contentFit="contain"
         source={SOCIAL_BRAND_ASSETS.instagram}
+        accessibilityLabel=""
         style={{ height: size - 9, tintColor: '#FFFFFF', width: size - 9 }}
       />
     </LinearGradient>

@@ -186,7 +186,7 @@ export default function WinnerScreen() {
 
       <View style={styles.winnerCard}>
         {product?.winner_photo ? (
-          <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" />
+          <Image source={{ uri: product.winner_photo }} style={styles.winnerPhoto} resizeMode="cover" accessibilityLabel="Winner photo" />
         ) : null}
         <View style={styles.labelRow}><Target color="#FFD700" size={16} /><Text style={styles.winnerLabel}>{t('winnerOf')}</Text></View>
         <Text style={styles.winnerName}>{result?.winner_name || t('notProvided')}</Text>

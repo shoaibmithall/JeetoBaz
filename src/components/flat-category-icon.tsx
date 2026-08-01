@@ -10,6 +10,7 @@ export function FlatCategoryIcon({ categoryKey, size = 20 }: { categoryKey: stri
       style={[styles.image, { width: size, height: size, borderRadius: size * 0.28 }]}
       contentFit="contain"
       accessibilityIgnoresInvertColors
+      accessibilityLabel={`${categoryKey.replace(/-/g, ' ')} category icon`}
     />
   );
 }

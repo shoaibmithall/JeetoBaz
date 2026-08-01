@@ -212,7 +212,7 @@ export default function WinnersScreen() {
                   >
                     <Text style={[styles.rank, { color: theme.subtle }]}>#{index + 1}</Text>
                     {w.winner_avatar_url ? (
-                      <Image source={{ uri: w.winner_avatar_url }} style={styles.avatar} resizeMode="cover" />
+                      <Image source={{ uri: w.winner_avatar_url }} style={styles.avatar} resizeMode="cover" accessibilityLabel={`${w.winner_name || 'Winner'} photo`} />
                     ) : (
                       <View style={[styles.avatarFallback, { backgroundColor: theme.surfaceAlt }]}>
                         <Trophy color="#FFD700" size={20} />
