@@ -1223,7 +1223,7 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               )}
               {winnerPhoto ? (
-                <Image source={{ uri: winnerPhoto }} style={styles.winnerPhotoPreview} resizeMode="cover" />
+                <Image source={{ uri: winnerPhoto }} style={styles.winnerPhotoPreview} resizeMode="cover" accessibilityLabel="Winner photo preview" />
               ) : null}
         <TextInput style={styles.input} placeholder="Draw Date after full (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
 
@@ -1450,7 +1450,7 @@ export default function AdminScreen() {
                   <Text style={styles.paymentLine}>Amount: Rs. {txn.amount}</Text>
                   <Text style={styles.paymentLine}>App User: {txn.user_name || 'Unknown'} ({txn.phone})</Text>
                   {receiptUrls[txn.id] ? (
-                    <Image source={{ uri: receiptUrls[txn.id] }} style={styles.receiptImage} resizeMode="cover" />
+                    <Image source={{ uri: receiptUrls[txn.id] }} style={styles.receiptImage} resizeMode="cover" accessibilityLabel="Payment receipt" />
                   ) : (
                     <Text style={styles.emptyText}>Receipt preview unavailable.</Text>
                   )}
@@ -1605,7 +1605,7 @@ export default function AdminScreen() {
               {!verificationUploading && <Camera color={theme.info} size={18} />}
               <Text style={styles.photoUploadText}>{verificationUploading ? 'Uploading...' : verificationImageUrl ? 'Replace Document Image' : 'Upload Document Image'}</Text>
             </TouchableOpacity>
-            {verificationImageUrl ? <Image source={{ uri: verificationImageUrl }} style={styles.verificationPreviewImage} resizeMode="contain" /> : null}
+            {verificationImageUrl ? <Image source={{ uri: verificationImageUrl }} style={styles.verificationPreviewImage} resizeMode="contain" accessibilityLabel="Verification document preview" /> : null}
             <View style={styles.settingsButtonRow}>
               <TouchableOpacity
                 style={[styles.addButton, styles.settingsHalfButton, verificationSaving && styles.photoUploadDisabled]}
@@ -1628,7 +1628,7 @@ export default function AdminScreen() {
                 <Text style={styles.emptyText}>No verification documents added yet.</Text>
               ) : verificationDocuments.map((document) => (
                 <View key={document.id} style={[styles.verificationAdminCard, !document.is_visible && styles.verificationAdminCardHidden]}>
-                  <Image source={{ uri: document.image_url }} style={styles.verificationAdminImage} resizeMode="contain" />
+                  <Image source={{ uri: document.image_url }} style={styles.verificationAdminImage} resizeMode="contain" accessibilityLabel={`${document.title} document`} />
                   <View style={styles.verificationAdminContent}>
                     <View style={styles.productHeader}>
                       <Text style={styles.productName}>{document.title}</Text>
@@ -1703,7 +1703,7 @@ export default function AdminScreen() {
             {parseHomeAdImagesInput().length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.adPreviewRow}>
                 {parseHomeAdImagesInput().map((image, index) => (
-                  <Image key={`${image}-${index}`} source={{ uri: image }} style={styles.adPreviewImage} resizeMode="cover" />
+                  <Image key={`${image}-${index}`} source={{ uri: image }} style={styles.adPreviewImage} resizeMode="cover" accessibilityLabel={`Home ad image ${index + 1}`} />
                 ))}
               </ScrollView>
             ) : null}

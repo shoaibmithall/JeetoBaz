@@ -33,7 +33,8 @@ export const AppThemes = {
     selected: '#2a2105',
     text: '#f5f7f4',
     muted: '#9aac9f',
-    subtle: '#5e7468',
+    // WCAG AA (4.5:1) against background/surface/surfaceAlt — was #5e7468 (3.55-3.92, failed).
+    subtle: '#71857a',
     border: '#174a35',
     primary: '#18a663',
     primarySoft: '#082d1e',
@@ -53,7 +54,8 @@ export const AppThemes = {
     selected: '#fff6cc',
     text: '#162016',
     muted: '#53605a',
-    subtle: '#7d887f',
+    // WCAG AA (4.5:1) against background/surface/surfaceAlt — was #7d887f (3.28-3.68, failed).
+    subtle: '#687169',
     border: '#d9e2dc',
     primary: '#12883d',
     primarySoft: '#e4f6ea',

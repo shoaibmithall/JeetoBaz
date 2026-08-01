@@ -394,7 +394,7 @@ export default function ProfileScreen() {
                 accessibilityLabel="Change profile photo"
               >
                 {avatarUrl ? (
-                  <Image source={{ uri: avatarUrl }} style={styles.mobileAvatarImage} />
+                  <Image source={{ uri: avatarUrl }} style={styles.mobileAvatarImage} accessibilityLabel="Profile photo" />
                 ) : (
                   <CircleUserRound color={theme.text} size={76} />
                 )}
@@ -533,7 +533,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Change profile photo"
             >
               {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, styles.avatarImageWide, isMobileProfile && styles.avatarImageMobile]} />
+                <Image source={{ uri: avatarUrl }} style={[styles.avatarImage, styles.avatarImageWide, isMobileProfile && styles.avatarImageMobile]} accessibilityLabel="Profile photo" />
               ) : (
                 <CircleUserRound color={theme.text} size={96} />
               )}
@@ -873,7 +873,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
           <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
+            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
             <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
           </View>
           <Text style={[styles.tagline, { color: theme.muted }]}>Pakistan's Transparent Prize Campaign Platform</Text>

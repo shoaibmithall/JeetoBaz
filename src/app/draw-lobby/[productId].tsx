@@ -265,7 +265,7 @@ export default function DrawLobbyScreen() {
       {/* Section 1 — Hero Banner */}
       <View style={[styles.hero, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         {product.image_url ? (
-          <Image source={{ uri: product.image_url }} style={styles.heroImage} resizeMode="cover" />
+          <Image source={{ uri: product.image_url }} style={styles.heroImage} resizeMode="cover" accessibilityLabel={`${product.name} prize`} />
         ) : null}
         <View style={styles.verifiedBadge}>
           <ShieldCheck color="#18a663" size={14} />

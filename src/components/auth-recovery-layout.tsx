@@ -40,7 +40,7 @@ export function AuthRecoveryLayout({
               </TouchableOpacity>
             )}
             <View style={styles.logoRow}>
-              <Image source={require('@/assets/images/icon.png')} style={styles.logoImage} />
+              <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
               <Text style={[styles.logo, { color: theme.text }]}>JeetoBaz</Text>
             </View>
           </View>

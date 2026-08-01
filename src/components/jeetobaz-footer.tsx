@@ -257,7 +257,7 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
           <Image
             accessibilityLabel="JeetoBaz logo"
             contentFit="contain"
-            source={require('@/assets/images/icon.png')}
+            source={require('@/assets/images/icon-small.png')}
             style={styles.mobileBrandLogo}
           />
           <Text style={styles.mobileBrandName}>
@@ -288,7 +288,7 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
           <Image
             accessibilityLabel="JeetoBaz logo"
             contentFit="contain"
-            source={require('@/assets/images/icon.png')}
+            source={require('@/assets/images/icon-small.png')}
             style={styles.brandLogo}
           />
           <Text style={styles.brandName}>

@@ -212,13 +212,13 @@ export default function FavoritesScreen() {
             {product.slug ? (
               <Link href={`/product/${product.slug}`} asChild>
                 <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
-                  {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+                  {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" accessibilityLabel={`${product.name} prize`} />}
                   <Text style={[styles.productName, styles.productNameInLink, { color: theme.text }]}>{product.name}</Text>
                 </TouchableOpacity>
               </Link>
             ) : (
               <>
-                {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" />}
+                {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" accessibilityLabel={`${product.name} prize`} />}
                 <Text style={[styles.productName, styles.productNameInLink, { color: theme.text }]}>{product.name}</Text>
               </>
             )}
