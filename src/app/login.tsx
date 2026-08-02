@@ -18,7 +18,7 @@ import {
   Award, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
-  BadgeCheck, Truck, UserPlus, UsersRound, X,
+  BadgeCheck, Truck, User, UserPlus, UsersRound, X,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
@@ -876,6 +876,13 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted, marginTop: 0 }]}>ACCOUNT</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/edit-profile' as never); }}>
+              <User color="#3B82F6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Edit Profile</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PREFERENCES</Text>
             <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/language'); }}>
               <Globe2 color="#3B82F6" size={20} />
