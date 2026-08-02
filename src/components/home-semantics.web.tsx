@@ -55,7 +55,10 @@ export function HomeNavigation({ children }: ChildrenProps) {
 const headingWrapStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
-  padding: '10px 16px',
+  paddingTop: 10,
+  paddingBottom: 4,
+  paddingLeft: 16,
+  paddingRight: 16,
 };
 
 const quoteMarkStyle: CSSProperties = {
@@ -88,7 +91,7 @@ export function HomePageHeading({ backgroundColor, textColor }: HomePageHeadingP
     <div style={headingWrapStyle}>
       <h1 style={headingStyle}>
         <span style={quoteMarkStyle} aria-hidden="true">&ldquo;</span>
-        {' '}Win Premium Prizes in Pakistan{' '}
+        {' '}Win Premium Prizes on JeetoBaz{' '}
         <span style={quoteMarkStyle} aria-hidden="true">&rdquo;</span>
       </h1>
     </div>
