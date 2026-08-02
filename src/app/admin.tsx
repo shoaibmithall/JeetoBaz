@@ -52,7 +52,7 @@ function formatAuditDetails(details: Record<string, unknown>) {
     .join(' · ');
 }
 import { isValidSlug, slugify } from '@/lib/validation';
-import { pingIndexNow } from '@/lib/indexnow';
+import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
   Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
@@ -119,6 +119,7 @@ export default function AdminScreen() {
   const [seoData, setSeoData] = useState({ ...seoDefaults });
   const [seoExpanded, setSeoExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [indexNowSubmitting, setIndexNowSubmitting] = useState(false);
   const editingIdRef = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
@@ -529,6 +530,18 @@ export default function AdminScreen() {
       }
     }
     setLoading(false);
+  }
+
+  async function submitAllProductsToIndexNow() {
+    const slugs = products.filter((p) => p.slug).map((p) => `/product/${p.slug}`);
+    if (slugs.length === 0) {
+      alert('No products with a slug to submit.');
+      return;
+    }
+    setIndexNowSubmitting(true);
+    await pingIndexNowBulk(slugs);
+    setIndexNowSubmitting(false);
+    alert(`Submitted ${slugs.length} product(s) to IndexNow.`);
   }
 
   async function fetchAuditLog() {
@@ -1287,6 +1300,13 @@ export default function AdminScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionTitleRow}><ClipboardList color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Products ({products.length})</Text></View>
+              <TouchableOpacity
+                style={[styles.photoUploadButton, indexNowSubmitting && styles.photoUploadDisabled]}
+                onPress={submitAllProductsToIndexNow}
+                disabled={indexNowSubmitting}
+              >
+                <Text style={styles.photoUploadText}>{indexNowSubmitting ? 'Submitting...' : 'Submit All Products to IndexNow'}</Text>
+              </TouchableOpacity>
               <View style={styles.productSearchBox}>
                 <Search color={theme.muted} size={20} />
                 <TextInput
