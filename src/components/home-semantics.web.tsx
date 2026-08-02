@@ -54,14 +54,15 @@ export function HomeNavigation({ children }: ChildrenProps) {
 
 const headingStyle: CSSProperties = {
   color: '#FFD700',
-  fontSize: 24,
+  fontSize: 19,
   fontWeight: 700,
+  letterSpacing: 0.2,
   textAlign: 'center',
-  padding: '14px 20px 4px',
+  padding: '10px 20px 2px',
   margin: 0,
   lineHeight: 1.3,
 };
 
 export function HomePageHeading() {
-  return <h1 style={headingStyle}>Transparent Prize Campaigns in Pakistan</h1>;
+  return <h1 style={headingStyle}>Win Premium Prizes in Pakistan</h1>;
 }
