@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal } from 'react-native';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -16,9 +16,9 @@ import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
   Award, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
-  Copy, Eye, EyeOff, Gift, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
-  MapPin, Medal, Phone, Rocket, RotateCcw, Shield, ShieldCheck, Smartphone, Target, Trophy,
-  BadgeCheck, Truck, UserPlus, UsersRound,
+  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
+  MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
+  BadgeCheck, Truck, UserPlus, UsersRound, X,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
@@ -41,7 +41,8 @@ function dataUrlToArrayBuffer(dataUrl: string) {
 
 export default function ProfileScreen() {
   const { t } = useLanguage();
-  const { theme } = useAppTheme();
+  const { theme, mode, toggleThemeMode } = useAppTheme();
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const { width } = useWindowDimensions();
   const isMobileProfile = width < 700;
   const profileCardAvailableWidth = Math.max(width - 24, 1);
@@ -365,6 +366,7 @@ export default function ProfileScreen() {
   );
 
   if (step === 'profile') return (
+    <>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       {!profileExists && (
         <TouchableOpacity
@@ -385,6 +387,14 @@ export default function ProfileScreen() {
       <View style={[styles.profileHeader, isMobileProfile && styles.profileHeaderMobile]}>
         {isMobileProfile ? (
           <View style={[styles.mobileProfileCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <TouchableOpacity
+              style={[styles.settingsGearButton, { backgroundColor: theme.background, borderColor: theme.border }]}
+              onPress={() => setSettingsVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open settings"
+            >
+              <Settings color={theme.gold} size={20} />
+            </TouchableOpacity>
             <View style={styles.mobileProfileTop}>
               <TouchableOpacity
                 style={styles.mobileAvatarButton}
@@ -525,6 +535,14 @@ export default function ProfileScreen() {
               { backgroundColor: theme.surface, borderColor: theme.border },
             ]}
           >
+            <TouchableOpacity
+              style={[styles.settingsGearButton, { backgroundColor: theme.background, borderColor: theme.border }]}
+              onPress={() => setSettingsVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open settings"
+            >
+              <Settings color={theme.gold} size={22} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.avatarButton, styles.avatarButtonWide, isMobileProfile && styles.avatarButtonMobile]}
               onPress={uploadProfilePhoto}
@@ -846,6 +864,79 @@ export default function ProfileScreen() {
         <LogOut color="#ff4444" size={19} /><Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
+
+    <Modal visible={settingsVisible} transparent animationType="slide" onRequestClose={() => setSettingsVisible(false)} accessibilityLabel="Settings">
+      <View style={styles.settingsOverlay}>
+        <TouchableOpacity style={styles.settingsBackdrop} activeOpacity={1} onPress={() => setSettingsVisible(false)} />
+        <View style={[styles.settingsPanel, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={styles.settingsPanelHeader}>
+            <Text style={[styles.settingsPanelTitle, { color: theme.gold }]}>Settings</Text>
+            <TouchableOpacity onPress={() => setSettingsVisible(false)} accessibilityRole="button" accessibilityLabel="Close settings">
+              <X color={theme.muted} size={22} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PREFERENCES</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/language'); }}>
+              <Globe2 color="#3B82F6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('language')}</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={toggleThemeMode}>
+              {mode === 'dark' ? <Sun color="#FBBF24" size={20} /> : <Moon color="#A78BFA" size={20} />}
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>{mode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>SUPPORT & INFO</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/help', params: { source: 'settings' } }); }}>
+              <HeartHandshake color="#14B8A6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('helpCenter')}</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/faq', params: { source: 'settings' } }); }}>
+              <CircleHelp color="#3B82F6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Frequently Asked Questions</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', source: 'settings' } }); }}>
+              <Info color={theme.gold} size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>About JeetoBaz</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>LEGAL</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/terms', params: { source: 'settings' } }); }}>
+              <ClipboardList color="#6366F1" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('terms')}</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/privacy', params: { source: 'settings' } }); }}>
+              <LockKeyhole color="#EC4899" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/refund-policy' as never, params: { source: 'settings' } }); }}>
+              <RotateCcw color="#F59E0B" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Refund & Cancellation</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/shipping-policy' as never, params: { source: 'settings' } }); }}>
+              <Truck color="#18a663" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Shipping Policy</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>ACCOUNT ACTIONS</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); logout(); }}>
+              <LogOut color="#ff4444" size={20} />
+              <Text style={[styles.settingsItemText, { color: '#ff4444' }]}>Logout</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 
   const loginSchema = pageSchema('WebPage', '/login', 'Login', 'Sign in securely to your JeetoBaz account to access entries, saved campaigns, account details, notifications, and available prize opportunities.');
@@ -1066,6 +1157,15 @@ const styles = StyleSheet.create({
   incompleteBannerTitle: { fontSize: 14, fontWeight: '700' },
   incompleteBannerSubtitle: { fontSize: 12, marginTop: 2, lineHeight: 16 },
   mobileProfileCard: { width: '100%', borderRadius: 18, borderWidth: 1, padding: 14, gap: 14, overflow: 'hidden' },
+  settingsGearButton: { position: 'absolute', top: 12, right: 12, width: 38, height: 38, borderRadius: 19, borderWidth: 1, alignItems: 'center', justifyContent: 'center', zIndex: 5 },
+  settingsOverlay: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end' },
+  settingsBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.5)' },
+  settingsPanel: { width: '86%', maxWidth: 380, height: '100%', borderLeftWidth: 1, paddingTop: 24, paddingHorizontal: 18 },
+  settingsPanelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  settingsPanelTitle: { fontSize: 20, fontWeight: '800' },
+  settingsSectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginTop: 18, marginBottom: 8 },
+  settingsItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  settingsItemText: { flex: 1, fontSize: 14, fontWeight: '600' },
   mobileProfileTop: { minHeight: 112, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 18 },
   mobileAvatarButton: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 },
   mobileAvatarImage: { width: 92, height: 92, borderRadius: 46, borderWidth: 2.5, borderColor: '#FFD700' },
