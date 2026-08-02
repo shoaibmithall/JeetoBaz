@@ -21,3 +21,25 @@ export function pingIndexNow(path: string) {
     // Best-effort only — IndexNow is a nice-to-have, not required for the save to succeed.
   });
 }
+
+// Bulk variant for one-off backfills (e.g. submitting every existing product at once from the
+// admin panel). IndexNow's POST endpoint accepts up to 10,000 URLs per request.
+export async function pingIndexNowBulk(paths: string[]) {
+  if (typeof fetch !== 'function' || paths.length === 0) return;
+
+  const urlList = paths.map((path) => `https://${INDEXNOW_HOST}${path.startsWith('/') ? path : `/${path}`}`);
+
+  await fetch(INDEXNOW_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      host: INDEXNOW_HOST,
+      key: INDEXNOW_KEY,
+      keyLocation: INDEXNOW_KEY_LOCATION,
+      urlList,
+    }),
+  }).catch(() => {
+    // Best-effort only.
+  });
+}
