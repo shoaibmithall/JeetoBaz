@@ -948,7 +948,7 @@ export default function HomeScreen() {
 
       <HomeMain>
       <HomeHeader unreadCount={unreadCount} />
-      <HomePageHeading />
+      <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>

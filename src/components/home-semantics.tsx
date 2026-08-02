@@ -16,6 +16,11 @@ export function HomeNavigation({ children }: ChildrenProps) {
   return <>{children}</>;
 }
 
-export function HomePageHeading() {
+type HomePageHeadingProps = {
+  backgroundColor: string;
+  textColor: string;
+};
+
+export function HomePageHeading(_props: HomePageHeadingProps) {
   return null;
 }
