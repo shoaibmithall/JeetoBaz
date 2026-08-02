@@ -66,6 +66,7 @@ const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
 const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
 const CERTIFICATES_BUCKET = 'winner-certificates';
+const PRODUCT_IMAGES_BUCKET = 'products';
 
 function confirmAsync(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') {
@@ -109,6 +110,7 @@ export default function AdminScreen() {
   const [liveLink, setLiveLink] = useState('');
   const [winnerPhoto, setWinnerPhoto] = useState('');
   const [winnerPhotoUploading, setWinnerPhotoUploading] = useState(false);
+  const [productImageUploading, setProductImageUploading] = useState(false);
   const seoDefaults = {
     seo_title: '',
     meta_description: '',
@@ -435,6 +437,58 @@ export default function AdminScreen() {
       alert(message);
     } finally {
       setWinnerPhotoUploading(false);
+    }
+  }
+
+  async function uploadProductImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload a product image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setProductImageUploading(true);
+    try {
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png'
+        ? 'png'
+        : mimeType === 'image/webp'
+          ? 'webp'
+          : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `${editingIdRef.current || 'new'}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+      const { error } = await supabase.storage
+        .from(PRODUCT_IMAGES_BUCKET)
+        .upload(filePath, fileData, {
+          contentType: mimeType,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage
+        .from(PRODUCT_IMAGES_BUCKET)
+        .getPublicUrl(filePath);
+      setImageUrl(data.publicUrl);
+      alert('Product image uploaded. Save the product to publish it.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Product image upload failed.';
+      alert(message);
+    } finally {
+      setProductImageUploading(false);
     }
   }
 
@@ -1227,6 +1281,17 @@ export default function AdminScreen() {
               <TextInput style={styles.input} placeholder="Entry fee (1, 10, or 100) *" placeholderTextColor="#666" keyboardType="numeric" value={entryFee} onChangeText={setEntryFee} />
               <TextInput style={styles.input} placeholder="Max entries *" placeholderTextColor="#666" keyboardType="numeric" value={maxEntries} onChangeText={setMaxEntries} />
               <TextInput style={styles.input} placeholder="Image URL (optional)" placeholderTextColor="#666" value={imageUrl} onChangeText={setImageUrl} />
+              <TouchableOpacity
+                style={[styles.photoUploadButton, productImageUploading && styles.photoUploadDisabled]}
+                onPress={uploadProductImage}
+                disabled={productImageUploading}
+              >
+                {!productImageUploading && <Camera color="#4a9eff" size={18} />}
+                <Text style={styles.photoUploadText}>{productImageUploading ? 'Uploading...' : 'Upload Product Image'}</Text>
+              </TouchableOpacity>
+              {imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={styles.winnerPhotoPreview} resizeMode="cover" accessibilityLabel="Product image preview" />
+              ) : null}
               <TextInput style={[styles.input, styles.textArea]} placeholder="Description (optional)" placeholderTextColor="#666" value={description} onChangeText={setDescription} multiline numberOfLines={3} />
               <TextInput style={styles.input} placeholder="Live Link (YouTube/Facebook URL)" placeholderTextColor="#666" value={liveLink} onChangeText={setLiveLink} />
               <TextInput style={styles.input} placeholder="Winner Photo URL (optional)" placeholderTextColor="#666" value={winnerPhoto} onChangeText={setWinnerPhoto} />
