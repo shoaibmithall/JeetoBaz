@@ -948,13 +948,13 @@ export default function HomeScreen() {
 
       <HomeMain>
       <HomeHeader unreadCount={unreadCount} />
-      <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
         <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
         <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{t('transparent')}</Text></View>
         <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
+      <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
 
       {announcement ? (
         <View style={[styles.announcementBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
