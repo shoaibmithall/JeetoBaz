@@ -52,6 +52,7 @@ function formatAuditDetails(details: Record<string, unknown>) {
     .join(' · ');
 }
 import { isValidSlug, slugify } from '@/lib/validation';
+import { pingIndexNow } from '@/lib/indexnow';
 import {
   Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
@@ -507,11 +508,15 @@ export default function AdminScreen() {
     if (currentEditId) {
       const { error } = await supabase.from('products').update(productData).eq('id', currentEditId).select();
       if (error) alert('Save failed: ' + error.message);
-      else { alert('Product updated!'); cancelEdit(); fetchProducts(); }
+      else {
+        if (normalizedSlug) pingIndexNow(`/product/${normalizedSlug}`);
+        alert('Product updated!'); cancelEdit(); fetchProducts();
+      }
     } else {
       const { error } = await supabase.from('products').insert({ ...productData, current_entries: 0, status: 'active' });
       if (error) alert('Add failed: ' + error.message);
       else {
+        if (normalizedSlug) pingIndexNow(`/product/${normalizedSlug}`);
         await createUserNotification({
           title: 'New contest added',
           body: `${productName} is now live. Enter the draw today!`,
