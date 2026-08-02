@@ -20,7 +20,7 @@ export function useTheme() {
 }
 
 function normalizeTheme(value: string | null): AppThemeMode {
-  return value === 'light' ? 'light' : 'dark';
+  return value === 'dark' ? 'dark' : 'light';
 }
 
 export async function setAppThemeMode(mode: AppThemeMode) {
@@ -30,7 +30,7 @@ export async function setAppThemeMode(mode: AppThemeMode) {
 }
 
 export function useAppTheme() {
-  const [mode, setModeState] = useState<AppThemeMode>(() => resolvedMode || 'dark');
+  const [mode, setModeState] = useState<AppThemeMode>(() => resolvedMode || 'light');
   const [ready, setReady] = useState(resolvedMode !== null);
 
   useEffect(() => {
