@@ -11,7 +11,7 @@ import {
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
-import { HomeMain, HomeNavigation, HomeSkipLink } from '@/components/home-semantics';
+import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
 import JeetoBazFooter from '@/components/jeetobaz-footer';
 import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
@@ -954,6 +954,7 @@ export default function HomeScreen() {
         <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{t('transparent')}</Text></View>
         <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
+      <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
 
       {announcement ? (
         <View style={[styles.announcementBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>

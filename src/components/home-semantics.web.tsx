@@ -52,16 +52,45 @@ export function HomeNavigation({ children }: ChildrenProps) {
   return <nav aria-label="Prize categories" style={{ display: 'contents' }}>{children}</nav>;
 }
 
-const headingStyle: CSSProperties = {
-  color: '#FFD700',
-  fontSize: 24,
-  fontWeight: 700,
-  textAlign: 'center',
-  padding: '14px 20px 4px',
-  margin: 0,
-  lineHeight: 1.3,
+const headingWrapStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  padding: '10px 16px',
 };
 
-export function HomePageHeading() {
-  return <h1 style={headingStyle}>Transparent Prize Campaigns in Pakistan</h1>;
+const quoteMarkStyle: CSSProperties = {
+  opacity: 0.5,
+  fontSize: '0.8em',
+  fontWeight: 400,
+  verticalAlign: 'middle',
+};
+
+type HomePageHeadingProps = {
+  backgroundColor: string;
+  textColor: string;
+};
+
+export function HomePageHeading({ backgroundColor, textColor }: HomePageHeadingProps) {
+  const headingStyle: CSSProperties = {
+    color: textColor,
+    backgroundColor,
+    fontSize: 17,
+    fontWeight: 700,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    padding: '9px 18px',
+    margin: 0,
+    lineHeight: 1.3,
+    borderRadius: 999,
+  };
+
+  return (
+    <div style={headingWrapStyle}>
+      <h1 style={headingStyle}>
+        <span style={quoteMarkStyle} aria-hidden="true">&ldquo;</span>
+        {' '}Win Premium Prizes in Pakistan{' '}
+        <span style={quoteMarkStyle} aria-hidden="true">&rdquo;</span>
+      </h1>
+    </div>
+  );
 }
