@@ -18,6 +18,7 @@ import {
   updateVerificationDocument,
 } from '@/lib/verification-documents';
 import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WinnerStatus } from '@/types/database';
+import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
 const PRIZE_STATUSES: PrizeStatus[] = ['pending', 'processing', 'shipped', 'delivered'];
@@ -78,6 +79,126 @@ function confirmAsync(title: string, message: string): Promise<boolean> {
       { text: 'OK', onPress: () => resolve(true) },
     ]);
   });
+}
+
+// Draw dates are only ever set once entries fill up and the admin decides "1 week from now,
+// 10 PM" -- that decision is still made manually, this just replaces free-typing it (which the
+// live countdown timer on Home silently breaks on for any typo/unexpected format) with a picker
+// that always produces a valid, unambiguous date. Remount via `key` (see call site) rather than a
+// sync effect to reset to a different product's existing value when switching between products.
+function DrawDatePicker({
+  value,
+  onChange,
+  styles,
+  theme,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  styles: ReturnType<typeof createStyles>;
+  theme: AdminTheme;
+}) {
+  const existing = parseDrawDateParts(value);
+  const [day, setDay] = useState(existing ? String(existing.day) : '');
+  const [month, setMonth] = useState(existing ? String(existing.month) : '');
+  const [year, setYear] = useState(existing ? String(existing.year) : '');
+  const [hour12, setHour12] = useState(
+    existing ? String(existing.hour24 % 12 === 0 ? 12 : existing.hour24 % 12) : ''
+  );
+  const [minute, setMinute] = useState(existing ? String(existing.minute).padStart(2, '0') : '');
+  const [meridiem, setMeridiem] = useState<'AM' | 'PM'>(existing && existing.hour24 >= 12 ? 'PM' : 'AM');
+
+  function commit(next: { day: string; month: string; year: string; hour12: string; minute: string; meridiem: 'AM' | 'PM' }) {
+    const d = Number(next.day);
+    const m = Number(next.month);
+    const y = Number(next.year);
+    const h = Number(next.hour12);
+    const min = Number(next.minute);
+    const valid =
+      Number.isInteger(d) && d >= 1 && d <= 31 &&
+      Number.isInteger(m) && m >= 1 && m <= 12 &&
+      Number.isInteger(y) && y >= 2024 && y <= 2100 &&
+      Number.isInteger(h) && h >= 1 && h <= 12 &&
+      Number.isInteger(min) && min >= 0 && min <= 59;
+    if (!valid) {
+      onChange('');
+      return;
+    }
+    const hour24 = next.meridiem === 'PM' ? (h % 12) + 12 : h % 12;
+    onChange(buildDrawDateIso({ day: d, month: m, year: y, hour24, minute: min }));
+  }
+
+  return (
+    <View style={styles.drawDatePicker}>
+      <Text style={styles.drawDatePickerLabel}>Draw Date & Time (Pakistan time) -- set once entries fill up</Text>
+      <View style={styles.drawDateRow}>
+        <TextInput
+          style={styles.drawDateField}
+          placeholder="DD"
+          placeholderTextColor="#666"
+          keyboardType="number-pad"
+          maxLength={2}
+          value={day}
+          onChangeText={(next) => { setDay(next); commit({ day: next, month, year, hour12, minute, meridiem }); }}
+        />
+        <Text style={styles.drawDateSeparator}>/</Text>
+        <TextInput
+          style={styles.drawDateField}
+          placeholder="MM"
+          placeholderTextColor="#666"
+          keyboardType="number-pad"
+          maxLength={2}
+          value={month}
+          onChangeText={(next) => { setMonth(next); commit({ day, month: next, year, hour12, minute, meridiem }); }}
+        />
+        <Text style={styles.drawDateSeparator}>/</Text>
+        <TextInput
+          style={[styles.drawDateField, styles.drawDateFieldYear]}
+          placeholder="YYYY"
+          placeholderTextColor="#666"
+          keyboardType="number-pad"
+          maxLength={4}
+          value={year}
+          onChangeText={(next) => { setYear(next); commit({ day, month, year: next, hour12, minute, meridiem }); }}
+        />
+        <TextInput
+          style={[styles.drawDateField, styles.drawDateFieldSpaced]}
+          placeholder="HH"
+          placeholderTextColor="#666"
+          keyboardType="number-pad"
+          maxLength={2}
+          value={hour12}
+          onChangeText={(next) => { setHour12(next); commit({ day, month, year, hour12: next, minute, meridiem }); }}
+        />
+        <Text style={styles.drawDateSeparator}>:</Text>
+        <TextInput
+          style={styles.drawDateField}
+          placeholder="MM"
+          placeholderTextColor="#666"
+          keyboardType="number-pad"
+          maxLength={2}
+          value={minute}
+          onChangeText={(next) => { setMinute(next); commit({ day, month, year, hour12, minute: next, meridiem }); }}
+        />
+        <TouchableOpacity
+          style={[styles.drawDateMeridiem, meridiem === 'AM' && styles.drawDateMeridiemActive]}
+          onPress={() => { setMeridiem('AM'); commit({ day, month, year, hour12, minute, meridiem: 'AM' }); }}
+        >
+          <Text style={[styles.drawDateMeridiemText, meridiem === 'AM' && { color: theme.background }]}>AM</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.drawDateMeridiem, meridiem === 'PM' && styles.drawDateMeridiemActive]}
+          onPress={() => { setMeridiem('PM'); commit({ day, month, year, hour12, minute, meridiem: 'PM' }); }}
+        >
+          <Text style={[styles.drawDateMeridiemText, meridiem === 'PM' && { color: theme.background }]}>PM</Text>
+        </TouchableOpacity>
+      </View>
+      {value ? (
+        <Text style={styles.drawDatePreview}>Will save as: {value.replace('T', ' ').replace(/:00$/, '')}</Text>
+      ) : (day || month || year || hour12 || minute) ? (
+        <Text style={styles.drawDatePreviewInvalid}>Incomplete or invalid -- won't be saved until all fields are valid</Text>
+      ) : null}
+    </View>
+  );
 }
 
 export default function AdminScreen() {
@@ -1308,7 +1429,13 @@ export default function AdminScreen() {
               {winnerPhoto ? (
                 <Image source={{ uri: winnerPhoto }} style={styles.winnerPhotoPreview} resizeMode="cover" accessibilityLabel="Winner photo preview" />
               ) : null}
-        <TextInput style={styles.input} placeholder="Draw Date after full (e.g. 30 June 2026, 10:00 PM)" placeholderTextColor="#666" value={drawDate} onChangeText={setDrawDate} />
+        <DrawDatePicker
+          key={editingId || 'new'}
+          value={drawDate}
+          onChange={setDrawDate}
+          styles={styles}
+          theme={theme}
+        />
 
               <TouchableOpacity style={styles.seoToggle} onPress={() => setSeoExpanded((prev) => !prev)}>
                 <ChevronDown size={18} color={theme.text} style={{ transform: [{ rotate: seoExpanded ? '0deg' : '-90deg' }] }} />
@@ -1409,7 +1536,7 @@ export default function AdminScreen() {
                     </TouchableOpacity>
                   </View>
                   {p.description && <Text style={styles.description}>{p.description}</Text>}
-                  {p.draw_date && <View style={styles.inlineRow}><CalendarDays color="#4a9eff" size={14} /><Text style={styles.drawDateText}>Draw: {p.draw_date}</Text></View>}
+                  {p.draw_date && <View style={styles.inlineRow}><CalendarDays color="#4a9eff" size={14} /><Text style={styles.drawDateText}>Draw: {formatDrawDate(p.draw_date)}</Text></View>}
                   <Text style={styles.productPrice}>Rs. {p.price?.toLocaleString()} — Entry: Rs. {p.entry_fee || 1}</Text>
                   <Text style={styles.entries}>{p.current_entries || 0} / {p.max_entries} entries</Text>
                   <View style={styles.progressBar}>
@@ -1880,6 +2007,18 @@ function createStyles(theme: AdminTheme) {
   editBanner: { backgroundColor: theme.goldSoft, borderWidth: 1, borderColor: theme.gold, borderRadius: 8, padding: 8, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   editBannerText: { color: theme.gold, fontSize: 13, textAlign: 'center' },
   input: { backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, color: theme.text, padding: 15, marginBottom: 12, fontSize: 14 },
+  drawDatePicker: { marginBottom: 12 },
+  drawDatePickerLabel: { color: theme.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  drawDateRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
+  drawDateField: { backgroundColor: theme.surface, borderRadius: 8, borderWidth: 1, borderColor: theme.border, color: theme.text, paddingVertical: 12, paddingHorizontal: 8, fontSize: 14, width: 48, textAlign: 'center' },
+  drawDateFieldYear: { width: 66 },
+  drawDateFieldSpaced: { marginLeft: 14 },
+  drawDateSeparator: { color: theme.muted, fontSize: 16, fontWeight: '700' },
+  drawDateMeridiem: { backgroundColor: theme.surface, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingVertical: 12, paddingHorizontal: 12, marginLeft: 6 },
+  drawDateMeridiemActive: { backgroundColor: theme.gold, borderColor: theme.gold },
+  drawDateMeridiemText: { color: theme.text, fontSize: 13, fontWeight: '700' },
+  drawDatePreview: { color: '#18a663', fontSize: 12, marginTop: 8 },
+  drawDatePreviewInvalid: { color: '#ff4444', fontSize: 12, marginTop: 8 },
   productSearchBox: { minHeight: 52, backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 15, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
   productSearchInput: { flex: 1, color: theme.text, fontSize: 14, paddingVertical: 13 },
   searchResultText: { color: theme.muted, fontSize: 12, marginBottom: 10 },

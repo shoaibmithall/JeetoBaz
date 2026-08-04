@@ -9,6 +9,7 @@ import { getStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
 import { DrawReplayOverlay } from '@/components/draw-animation/DrawReplayOverlay';
 import type { Product } from '@/types/database';
+import { formatDrawDate } from '@/lib/format-draw-date';
 import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Copy, Medal, PackageCheck, RotateCcw, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
 import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
@@ -285,7 +286,7 @@ export default function WinnerScreen() {
           <Text style={styles.detailValue}>
             {result?.drawn_at
               ? new Date(result.drawn_at).toLocaleString()
-              : product?.draw_date || new Date(product?.created_at || Date.now()).toLocaleDateString()}
+              : (product?.draw_date && formatDrawDate(product.draw_date)) || new Date(product?.created_at || Date.now()).toLocaleDateString()}
           </Text>
         </View>
         <View style={styles.detailRow}>

@@ -8,6 +8,7 @@ import { getStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
+import { formatDrawDate } from '@/lib/format-draw-date';
 import { useAppTheme } from '@/hooks/use-theme';
 import { CircleAlert, LockKeyhole, Target, Trophy } from 'lucide-react-native';
 
@@ -112,7 +113,7 @@ export default function MyEntriesScreen() {
     if (product.status === 'completed') return 'Draw completed';
     const spotsLeft = Math.max(product.max_entries - (product.current_entries || 0), 0);
     if (spotsLeft > 0) return `${spotsLeft.toLocaleString()} spots left before draw scheduling`;
-    if (product.draw_date) return `Draw scheduled: ${product.draw_date}`;
+    if (product.draw_date) return `Draw scheduled: ${formatDrawDate(product.draw_date)}`;
     return 'Participants complete. JeetoBaz will announce the date, usually within about 1 week at 10:00 PM PKT.';
   }
 
