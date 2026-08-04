@@ -66,7 +66,7 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { getStoredValue } from '@/lib/storage';
 
 const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
@@ -721,6 +721,7 @@ export default function PrivacyScreen() {
   }, [query]);
 
   const privacySchema = pageSchema('WebPage', '/privacy', 'Privacy Policy', 'Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services.');
+  const breadcrumb = breadcrumbSchema([{ name: 'Privacy Policy', path: '/privacy' }]);
   return (
     <>
     <Head>
@@ -742,6 +743,7 @@ export default function PrivacyScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/privacy" />
       <script type="application/ld+json">{JSON.stringify(privacySchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}

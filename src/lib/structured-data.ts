@@ -20,3 +20,22 @@ export function pageSchema(
     isPartOf: { '@id': SITE_ID },
   };
 }
+
+// `items` excludes Home -- every caller's trail starts there, so callers just list the page(s)
+// after it (e.g. a single { name, path } for a top-level page, matching product/[slug].tsx's
+// existing Home > Explore > Product pattern for a two-level trail).
+export function breadcrumbSchema(items: Array<{ name: string; path: string }>): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL + '/' },
+      ...items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 2,
+        name: item.name,
+        item: BASE_URL + item.path,
+      })),
+    ],
+  };
+}

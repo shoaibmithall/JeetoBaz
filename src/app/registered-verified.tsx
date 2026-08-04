@@ -6,7 +6,7 @@ import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getPublicVerificationDocuments } from '@/lib/verification-documents';
 import type { VerificationDocument } from '@/types/database';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 
 export default function RegisteredVerifiedScreen() {
   const { theme } = useAppTheme();
@@ -33,6 +33,7 @@ export default function RegisteredVerifiedScreen() {
   }, [loadDocuments]));
 
   const regSchema = pageSchema('WebPage', '/registered-verified', 'Registered & Verified', 'View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust.');
+  const breadcrumb = breadcrumbSchema([{ name: 'Registered & Verified', path: '/registered-verified' }]);
   return (
     <>
     <Head>
@@ -54,6 +55,7 @@ export default function RegisteredVerifiedScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/registered-verified" />
       <script type="application/ld+json">{JSON.stringify(regSchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>

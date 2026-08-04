@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import {
   AppWindow,
   Award,
@@ -1482,6 +1482,7 @@ export default function AboutJeetoBazScreen() {
   }
 
   const aboutSchema = pageSchema('AboutPage', '/about', 'About Us', 'Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan.');
+  const breadcrumb = breadcrumbSchema([{ name: 'About JeetoBaz', path: '/about' }]);
   return (
     <>
     <Head>
@@ -1503,6 +1504,7 @@ export default function AboutJeetoBazScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/about" />
       <script type="application/ld+json">{JSON.stringify(aboutSchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
