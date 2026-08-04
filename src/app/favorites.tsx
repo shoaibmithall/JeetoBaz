@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ElementRef } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { subscribeScrollToTop } from '@/lib/home-scroll';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -32,6 +33,13 @@ export default function FavoritesScreen() {
   const [loadError, setLoadError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const router = useRouter();
+  const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
+
+  useEffect(() => {
+    return subscribeScrollToTop('favorites', () => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -186,7 +194,7 @@ export default function FavoritesScreen() {
       <link rel="canonical" href="https://jeetobaz.pk/favorites" />
       <script type="application/ld+json">{JSON.stringify(favoritesSchema)}</script>
     </Head>
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+    <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <View style={styles.titleRow}><Heart color="#FFD700" size={27} /><Text role="heading" aria-level={1} style={styles.title}>{t('favorites')}</Text></View>
         <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>

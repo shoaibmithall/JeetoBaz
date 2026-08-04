@@ -5,7 +5,7 @@ import { useWindowDimensions } from 'react-native';
 import { Heart, House, Medal, UserRound } from 'lucide-react-native';
 import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
-import { requestHomeScrollToTop } from '@/lib/home-scroll';
+import { requestHomeScrollToTop, requestScrollToTop } from '@/lib/home-scroll';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { TawkToWidget } from '@/components/TawkToWidget';
 import { PromoEntryInterstitial } from '@/components/promo-entry-interstitial';
@@ -88,9 +88,21 @@ export default function RootLayout() {
             },
           }}
         />
-        <Tabs.Screen name="favorites" options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }} />
-        <Tabs.Screen name="explore" options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }} />
-        <Tabs.Screen name="login" options={{ title: t('profile'), tabBarIcon: ({ color }) => <UserRound color={color} size={21} /> }} />
+        <Tabs.Screen
+          name="favorites"
+          options={{ title: t('favorites'), tabBarIcon: ({ color }) => <Heart color={color} size={21} /> }}
+          listeners={{ tabPress: () => requestScrollToTop('favorites') }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{ title: t('pastWinners'), tabBarIcon: ({ color }) => <Medal color={color} size={21} /> }}
+          listeners={{ tabPress: () => requestScrollToTop('explore') }}
+        />
+        <Tabs.Screen
+          name="login"
+          options={{ title: t('profile'), tabBarIcon: ({ color }) => <UserRound color={color} size={21} /> }}
+          listeners={{ tabPress: () => requestScrollToTop('login') }}
+        />
         <Tabs.Screen name="entries" options={{ href: null }} />
         <Tabs.Screen name="share" options={{ href: null }} />
         <Tabs.Screen name="admin" options={{ href: null }} />

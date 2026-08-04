@@ -603,7 +603,7 @@ const TERMS_FAQS = [
     iconColor: '#14B8A6',
     question: 'Contact Information',
     answer:
-      'For questions, complaints or legal notices, users may contact JeetoBaz through its official channels:\n\nBusiness Name: JeetoBaz\nEmail: [Official Support Email]\nPhone: [Official Contact Number]\nWebsite: https://jeetobaz.pk\nOffice Address: [Official Registered Business Address]\n\nOfficial announcements and policy updates will be published through JeetoBaz\'s authorized communication channels.',
+      'For questions, complaints or legal notices, users may contact JeetoBaz through its official channels:\n\nBusiness Name: JeetoBaz\nEmail: support@jeetobaz.pk\nPhone: 0337-2561482\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nOfficial announcements and policy updates will be published through JeetoBaz\'s authorized communication channels.',
   },
   {
     category: 'Policy & Support',
