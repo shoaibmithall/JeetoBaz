@@ -116,6 +116,7 @@ export default function RootLayout() {
         <Tabs.Screen name="profile-location" options={{ href: null }} />
         <Tabs.Screen name="edit-profile" options={{ href: null }} />
         <Tabs.Screen name="change-password" options={{ href: null }} />
+        <Tabs.Screen name="login-activity" options={{ href: null }} />
         <Tabs.Screen name="profile-date-of-birth" options={{ href: null }} />
         <Tabs.Screen name="signup" options={{ href: null }} />
         <Tabs.Screen name="verify-email" options={{ href: null }} />
