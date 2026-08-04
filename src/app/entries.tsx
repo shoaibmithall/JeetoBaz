@@ -4,7 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
-import { getStoredValue } from '@/lib/storage';
+import { useAuth } from '@/providers/AuthProvider';
+import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
@@ -30,6 +31,7 @@ function maskDbPhone(phone: string) {
 export default function MyEntriesScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
+  const { user, loading: authLoading } = useAuth();
   const [entries, setEntries] = useState<EntryWithProduct[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PendingPaymentWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,22 +46,45 @@ export default function MyEntriesScreen() {
 
   useEffect(() => {
     let active = true;
+    if (authLoading) return;
 
     async function loadEntries() {
-      const [phone, name] = await Promise.all([
+      const [cachedPhone, cachedName] = await Promise.all([
         getStoredValue('userPhone'),
         getStoredValue('userName'),
       ]);
       if (!active) return;
-      setUserPhone(phone || '');
-      setUserName(name || '');
-      if (phone) fetchEntries(phone);
+
+      let resolvedPhone = cachedPhone || '';
+      let resolvedName = cachedName || '';
+
+      // Prefer the phone stored on the account over whatever is cached locally -- a stale or
+      // differently formatted cached value here silently fails the strict-format RPCs below and
+      // was showing an outdated "Draws Entered" count vs. the live one on the Profile page.
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('phone, name')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        if (!active) return;
+        if (profile?.phone) {
+          resolvedPhone = profile.phone;
+          resolvedName = profile.name || resolvedName;
+          void setStoredValue('userPhone', profile.phone);
+          if (profile.name) void setStoredValue('userName', profile.name);
+        }
+      }
+
+      setUserPhone(resolvedPhone);
+      setUserName(resolvedName);
+      if (resolvedPhone) fetchEntries(resolvedPhone);
       else setLoading(false);
     }
 
     loadEntries();
     return () => { active = false; };
-  }, []);
+  }, [authLoading, user]);
 
   async function fetchEntries(phone: string) {
     setLoading(true);
