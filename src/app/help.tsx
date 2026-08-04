@@ -98,6 +98,7 @@ export default function HelpCenterScreen() {
       <meta property="og:description" content="Get help with your JeetoBaz account, entries, payments, prize campaigns, winner information, and common platform questions through the Help Center." />
       <meta property="og:url" content="https://jeetobaz.pk/help" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

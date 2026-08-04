@@ -916,6 +916,7 @@ export default function HomeScreen() {
       <meta property="og:site_name" content="JeetoBaz" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={HOME_OG_IMAGE} />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content={HOME_TITLE} />

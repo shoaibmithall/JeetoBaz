@@ -371,6 +371,7 @@ export default function ProductDetailScreen() {
       <meta property="og:url" content={pageUrl} />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:image:alt" content={pageTitle} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content={pageTitle} />

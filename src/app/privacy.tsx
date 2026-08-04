@@ -732,6 +732,7 @@ export default function PrivacyScreen() {
       <meta property="og:description" content="Read how JeetoBaz collects, uses, stores, and protects personal information when you access accounts, campaigns, payments, and platform services." />
       <meta property="og:url" content="https://jeetobaz.pk/privacy" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
