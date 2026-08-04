@@ -24,11 +24,11 @@ export default function VerifyEmailScreen() {
       <meta name="description" content="Verify your JeetoBaz account email address to activate your account and access prize campaigns." />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={handleLogout} style={styles.backBtn}>
-          <ChevronLeft color="white" size={24} />
+          <ChevronLeft color={theme.gold} size={24} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verify Email</Text>
+        <Text style={[styles.headerTitle, { color: theme.gold }]}>Verify Email</Text>
       </View>
 
       <View style={styles.content}>
@@ -36,7 +36,7 @@ export default function VerifyEmailScreen() {
           <Mail color="#FFD700" size={60} />
         </View>
 
-        <Text style={styles.title}>Check Your Email</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Check Your Email</Text>
         <Text style={[styles.subtitle, { color: theme.muted }]}>
           We sent a verification link to:
         </Text>
