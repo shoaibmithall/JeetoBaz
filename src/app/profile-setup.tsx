@@ -65,9 +65,9 @@ export default function ProfileSetupScreen() {
       <meta name="description" content="Complete your JeetoBaz profile setup to start participating in prize campaigns." />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>JeetoBaz</Text>
-        <Text style={styles.tagline}>Complete Your Profile</Text>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+        <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
+        <Text style={[styles.tagline, { color: theme.muted }]}>Complete Your Profile</Text>
       </View>
 
       <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">

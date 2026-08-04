@@ -198,9 +198,9 @@ export default function MyEntriesScreen() {
       <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, isCompact && styles.headerCompact]}>
-        <View style={styles.titleRow}><Target color="white" size={28} /><Text style={styles.title}>{t('myEntries')}</Text></View>
-        <Text style={styles.subtitle}>{t('welcome')}, {userName}!</Text>
+      <View style={[styles.header, isCompact && styles.headerCompact, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+        <View style={styles.titleRow}><Target color={theme.gold} size={28} /><Text style={[styles.title, { color: theme.gold }]}>{t('myEntries')}</Text></View>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>{t('welcome')}, {userName}!</Text>
       </View>
 
       {cacheInfo ? (
@@ -299,8 +299,8 @@ export default function MyEntriesScreen() {
         </>
       )}
 
-      <TouchableOpacity style={styles.backBtn} onPress={() => params.source === 'profile' ? router.replace('/login') : router.push('/')}>
-        <Text style={styles.backBtnText}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
+      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : router.push('/')}>
+        <Text style={[styles.backBtnText, { color: theme.muted }]}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
     </>
