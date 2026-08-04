@@ -36,6 +36,7 @@ export default function MyEntriesScreen() {
   const [pendingPayments, setPendingPayments] = useState<PendingPaymentWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [loadErrorDetail, setLoadErrorDetail] = useState('');
   const [cacheInfo, setCacheInfo] = useState('');
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
@@ -89,6 +90,7 @@ export default function MyEntriesScreen() {
   async function fetchEntries(phone: string) {
     setLoading(true);
     setLoadError(false);
+    setLoadErrorDetail('');
     setCacheInfo('');
     const [{ data: entryData, error: entryError }, { data: paymentData, error: paymentError }] = await Promise.all([
       supabase.rpc('get_my_entries', { p_phone: phone }),
@@ -111,6 +113,7 @@ export default function MyEntriesScreen() {
         setCacheInfo(`Showing saved entries from ${new Date(cached.savedAt).toLocaleString()}.`);
       } else {
         setLoadError(true);
+        setLoadErrorDetail(entryError?.message || paymentError?.message || '');
       }
     }
     setLoading(false);
@@ -163,7 +166,10 @@ export default function MyEntriesScreen() {
       <meta name="robots" content="noindex, follow" />
       <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
     </Head>
-    <DataErrorState onRetry={() => fetchEntries(userPhone)} />
+    <DataErrorState
+      message={loadErrorDetail ? `Something went wrong. Please try again.\n\n(${loadErrorDetail})` : undefined}
+      onRetry={() => fetchEntries(userPhone)}
+    />
     </>
   );
 
