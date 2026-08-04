@@ -1,5 +1,5 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal, Switch, Linking } from 'react-native';
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type ElementRef } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
@@ -15,6 +15,7 @@ import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
+import { subscribeScrollToTop } from '@/lib/home-scroll';
 import {
   Award, BadgeCheck, Bell, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
@@ -72,6 +73,13 @@ export default function ProfileScreen() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileError, setTurnstileError] = useState('');
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
+
+  useEffect(() => {
+    return subscribeScrollToTop('login', () => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+  }, []);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
@@ -420,7 +428,7 @@ export default function ProfileScreen() {
 
   if (step === 'profile') return (
     <>
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+    <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: theme.background }]}>
       {!profileExists && (
         <TouchableOpacity
           style={[styles.incompleteBanner, { backgroundColor: theme.primarySoft, borderColor: theme.gold }]}

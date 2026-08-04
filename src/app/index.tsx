@@ -21,6 +21,7 @@ import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
 import { isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
+import { formatDrawDate } from '@/lib/format-draw-date';
 import {
   CATEGORY_GROUP_LABELS,
   getProductCategory,
@@ -56,7 +57,7 @@ type ProductFetchOptions = {
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
-const HOME_PRODUCTS_LIMIT = 120;
+const HOME_PRODUCTS_LIMIT = 500;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone, kind';
 const PULL_TO_REFRESH_THRESHOLD = 64;
@@ -305,7 +306,7 @@ const HomeProductCard = memo(function HomeProductCard({
         </View>
 
         {product.draw_date && (
-          <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {product.draw_date}</Text></View>
+          <View style={styles.iconText}><CalendarDays color="#4a9eff" size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.drawDate, isCompactGrid && styles.drawDateCompact]}>{t('drawDate')}: {formatDrawDate(product.draw_date)}</Text></View>
         )}
 
         <View style={[styles.priceRow, isCompactGrid && styles.priceRowCompact]}>
@@ -1566,7 +1567,13 @@ const styles = StyleSheet.create({
   drawDateCompact: { fontSize: 12 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   priceRowCompact: { flexDirection: 'column', alignItems: 'flex-start', gap: 4, marginBottom: 6 },
-  originalPrice: { fontSize: 18, color: '#FFD700', fontWeight: 'bold' },
+  originalPrice: {
+    fontSize: 18,
+    color: '#9a9a9a',
+    fontWeight: 'bold',
+    textDecorationLine: 'line-through',
+    textDecorationColor: '#ff4444',
+  },
   originalPriceCompact: { fontSize: 14 },
   participants: { fontSize: 13, color: '#aaa' },
   participantsCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },

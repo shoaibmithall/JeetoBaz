@@ -1,5 +1,5 @@
 import { Image, View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -9,6 +9,7 @@ import Head from 'expo-router/head';
 import type { PublicWinnerListEntry } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { BadgeCheck, Search, Ticket, Trophy, Users } from 'lucide-react-native';
 
 type Tab = 'all' | 'mine';
@@ -24,9 +25,15 @@ export default function WinnersScreen() {
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<Tab>('all');
+  const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
 
   useEffect(() => { fetchWinners(); }, []);
   useEffect(() => { if (user) fetchMyWins(); }, [user]);
+  useEffect(() => {
+    return subscribeScrollToTop('explore', () => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+  }, []);
 
   async function fetchWinners() {
     setLoading(true);
@@ -125,7 +132,7 @@ export default function WinnersScreen() {
   return (
     <>
     {headTags}
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+    <ScrollView ref={scrollViewRef} style={[styles.container, { backgroundColor: theme.background }]}>
       {header}
 
       <View style={styles.statsRow}>
