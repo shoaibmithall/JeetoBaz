@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
+import { isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import {
   CATEGORY_GROUP_LABELS,
@@ -57,7 +58,7 @@ const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 120;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug';
-const HOME_NOTIFICATION_COLUMNS = 'id, target_phone';
+const HOME_NOTIFICATION_COLUMNS = 'id, target_phone, kind';
 const PULL_TO_REFRESH_THRESHOLD = 64;
 const HOME_URL = 'https://jeetobaz.pk/';
 const HOME_TITLE = 'Transparent Prize Campaigns in Pakistan | JeetoBaz';
@@ -592,14 +593,22 @@ export default function HomeScreen() {
           setUnreadCount(0);
           return;
         }
-        const { data: notificationData } = await supabase
-          .from('notifications')
-          .select(HOME_NOTIFICATION_COLUMNS)
-          .order('created_at', { ascending: false })
-          .limit(50);
+        const [{ data: notificationData }, preferences] = await Promise.all([
+          supabase
+            .from('notifications')
+            .select(HOME_NOTIFICATION_COLUMNS)
+            .order('created_at', { ascending: false })
+            .limit(50),
+          user?.id
+            ? supabase.from('users').select('notification_preferences').eq('auth_user_id', user.id).maybeSingle()
+              .then(({ data }) => (data?.notification_preferences as NotificationPreferences | undefined) ?? null)
+            : Promise.resolve(null),
+        ]);
         if (!active) return;
         setUnreadCount((notificationData || []).filter(
-          (item) => (!item.target_phone || item.target_phone === resolvedPhone) && !readNotificationIds.includes(item.id)
+          (item) => (!item.target_phone || item.target_phone === resolvedPhone)
+            && !readNotificationIds.includes(item.id)
+            && isNotificationKindAllowed(item.kind, preferences)
         ).length);
       }
 

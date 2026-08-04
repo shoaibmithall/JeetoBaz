@@ -5,7 +5,8 @@ import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
-import { isNotificationForUser } from '@/lib/notifications';
+import { useAuth } from '@/providers/AuthProvider';
+import { isNotificationForUser, isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import type { AppNotification } from '@/types/database';
 import { Bell } from 'lucide-react-native';
 
@@ -14,6 +15,7 @@ const READ_KEY = 'readNotificationIds';
 export default function NotificationsScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { user } = useAuth();
   const [phone, setPhone] = useState('');
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [readIds, setReadIds] = useState<string[]>([]);
@@ -38,11 +40,17 @@ export default function NotificationsScreen() {
           return;
         }
 
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50);
+        const [{ data, error }, preferences] = await Promise.all([
+          supabase
+            .from('notifications')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50),
+          user?.id
+            ? supabase.from('users').select('notification_preferences').eq('auth_user_id', user.id).maybeSingle()
+              .then(({ data: profileData }) => (profileData?.notification_preferences as NotificationPreferences | undefined) ?? null)
+            : Promise.resolve(null),
+        ]);
 
         if (!active) return;
         setPhone(savedPhone);
@@ -52,7 +60,9 @@ export default function NotificationsScreen() {
           setNotifications([]);
         } else {
           setSetupMissing(false);
-          setNotifications((data || []).filter((item) => isNotificationForUser(item, savedPhone)));
+          setNotifications((data || []).filter(
+            (item) => isNotificationForUser(item, savedPhone) && isNotificationKindAllowed(item.kind, preferences)
+          ));
         }
         setLoading(false);
       }
@@ -71,7 +81,7 @@ export default function NotificationsScreen() {
         active = false;
         supabase.removeChannel(channel);
       };
-    }, [])
+    }, [user?.id])
   );
 
   async function markAllRead() {
