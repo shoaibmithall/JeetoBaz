@@ -113,6 +113,13 @@ export type PublicWinnerListEntry = {
   winner_province: string | null;
 };
 
+export type NotificationPreferences = {
+  prize_updates: boolean;
+  winner_announcements: boolean;
+  payment_notifications: boolean;
+  promotional: boolean;
+};
+
 export type User = {
   id: string;
   // Live schema (verified 2026-07-27): NOT NULL, no default — was incorrectly `string | null` here.
@@ -131,6 +138,8 @@ export type User = {
   auth_provider?: string;
   // Sequential, human-friendly Member ID (formatted client-side as JB-100001) — replaces the old UUID-slice-based one.
   member_number: number;
+  // Added 2026-08-04 (Settings Phase 4): per-category opt-in/out, defaults to all-true in the DB.
+  notification_preferences: NotificationPreferences;
 };
 
 export type UserProfileDetails = {
@@ -443,6 +452,10 @@ export type Database = {
       };
       update_my_profile: {
         Args: { p_name?: string; p_avatar_url?: string; p_phone?: string };
+        Returns: void;
+      };
+      update_notification_preferences: {
+        Args: { p_preferences: NotificationPreferences };
         Returns: void;
       };
       approve_entry_atomic: {

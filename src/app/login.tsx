@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal, Switch } from 'react-native';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 import { signInWithEmail, signOut, updateUserProfile } from '@/lib/auth';
 import { useLanguage } from '@/lib/i18n';
+import { DEFAULT_NOTIFICATION_PREFERENCES, type NotificationPreferences } from '@/lib/notifications';
 import { getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { getReferralDeviceToken } from '@/lib/referrals';
 import { validateEmail } from '@/lib/auth-validation';
@@ -15,10 +16,10 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
-  Award, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
-  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck,
+  Award, BadgeCheck, Bell, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
-  BadgeCheck, Truck, User, UserPlus, UsersRound, X,
+  Truck, User, UserPlus, UsersRound, Wallet, X,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
@@ -43,6 +44,8 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme, mode, toggleThemeMode } = useAppTheme();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
+  const [notificationPreferenceSaving, setNotificationPreferenceSaving] = useState<keyof NotificationPreferences | null>(null);
   const { width } = useWindowDimensions();
   const isMobileProfile = width < 700;
   const profileCardAvailableWidth = Math.max(width - 24, 1);
@@ -141,7 +144,7 @@ export default function ProfileScreen() {
         const [{ data: profile }, { data: location }, { data: certificates }] = await Promise.all([
           supabase
             .from('users')
-            .select('id, name, phone, avatar_url, referral_code, created_at, member_number')
+            .select('id, name, phone, avatar_url, referral_code, created_at, member_number, notification_preferences')
             .eq('auth_user_id', user.id)
             .maybeSingle(),
           supabase
@@ -166,6 +169,7 @@ export default function ProfileScreen() {
           setReferralCode(profile.referral_code || null);
           setMemberId(profile.member_number ? `JB-${profile.member_number}` : null);
           setProfileCreatedAt(profile.created_at || null);
+          setNotificationPreferences(profile.notification_preferences || DEFAULT_NOTIFICATION_PREFERENCES);
           setStep('profile');
           if (profile.phone) {
             void fetchStats(profile.phone);
@@ -188,6 +192,7 @@ export default function ProfileScreen() {
           setReferralCode(null);
           setMemberId(null);
           setProfileCreatedAt(null);
+          setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
           if (/^\+92[0-9]{10}$/.test(metadataPhone)) {
             void fetchStats(metadataPhone);
             void setStoredValue('userPhone', metadataPhone);
@@ -206,6 +211,7 @@ export default function ProfileScreen() {
         setReferralCode(null);
         setMemberId(null);
         setProfileCreatedAt(null);
+        setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
         setTotalEntries(0);
         setCertificateCount(0);
         setSuccessfulReferrals(0);
@@ -226,6 +232,19 @@ export default function ProfileScreen() {
   async function fetchStats(phone: string) {
     const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
     if (typeof data === 'number') setTotalEntries(data);
+  }
+
+  async function toggleNotificationPreference(key: keyof NotificationPreferences) {
+    const previous = notificationPreferences;
+    const next = { ...previous, [key]: !previous[key] };
+    setNotificationPreferences(next);
+    setNotificationPreferenceSaving(key);
+    const { error } = await supabase.rpc('update_notification_preferences', { p_preferences: next });
+    setNotificationPreferenceSaving(null);
+    if (error) {
+      setNotificationPreferences(previous);
+      alert('Could not update notification preference: ' + error.message);
+    }
   }
 
   async function handleEmailLogin() {
@@ -279,6 +298,7 @@ export default function ProfileScreen() {
     setReferralCode(null);
     setMemberId(null);
     setProfileCreatedAt(null);
+    setNotificationPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
     setTotalEntries(0);
   }
 
@@ -887,6 +907,56 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Password</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
+
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>NOTIFICATIONS</Text>
+            <View style={styles.settingsItem}>
+              <Bell color="#F59E0B" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Prize Updates</Text>
+              {notificationPreferenceSaving === 'prize_updates'
+                ? <ActivityIndicator color={theme.gold} size="small" />
+                : <Switch
+                    value={notificationPreferences.prize_updates}
+                    onValueChange={() => toggleNotificationPreference('prize_updates')}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor="#fff"
+                  />}
+            </View>
+            <View style={styles.settingsItem}>
+              <Trophy color="#FBBF24" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Winner Announcements</Text>
+              {notificationPreferenceSaving === 'winner_announcements'
+                ? <ActivityIndicator color={theme.gold} size="small" />
+                : <Switch
+                    value={notificationPreferences.winner_announcements}
+                    onValueChange={() => toggleNotificationPreference('winner_announcements')}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor="#fff"
+                  />}
+            </View>
+            <View style={styles.settingsItem}>
+              <Wallet color="#18a663" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Payment Notifications</Text>
+              {notificationPreferenceSaving === 'payment_notifications'
+                ? <ActivityIndicator color={theme.gold} size="small" />
+                : <Switch
+                    value={notificationPreferences.payment_notifications}
+                    onValueChange={() => toggleNotificationPreference('payment_notifications')}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor="#fff"
+                  />}
+            </View>
+            <View style={styles.settingsItem}>
+              <Megaphone color="#3B82F6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Promotional</Text>
+              {notificationPreferenceSaving === 'promotional'
+                ? <ActivityIndicator color={theme.gold} size="small" />
+                : <Switch
+                    value={notificationPreferences.promotional}
+                    onValueChange={() => toggleNotificationPreference('promotional')}
+                    trackColor={{ false: theme.border, true: theme.primary }}
+                    thumbColor="#fff"
+                  />}
+            </View>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PREFERENCES</Text>
             <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/language'); }}>
