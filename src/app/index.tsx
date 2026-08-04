@@ -1514,7 +1514,18 @@ const styles = StyleSheet.create({
   categorySectionTitle: { fontSize: 16, fontWeight: '800' },
   categorySectionCount: { fontSize: 12 },
   categorySectionSeeAll: { fontSize: 13, fontWeight: '700' },
-  card: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35' },
+  // `contentVisibility`/`containIntrinsicSize` are web-only CSS (not part of React Native's
+  // ViewStyle type, hence the `as never` -- same pattern already used for `outlineStyle` in
+  // faq.tsx). Up to 120 product cards can render on Home at once; this tells the browser to skip
+  // layout/paint work for off-screen cards entirely rather than computing them eagerly, which is
+  // the main INP/scroll-jank cost of the unvirtualized grid -- without touching the grid's
+  // layout, pull-to-refresh, or any of the other logic tied to it. `containIntrinsicSize` gives
+  // the browser a placeholder height so skipped cards don't collapse to 0px and cause scrollbar/
+  // layout jumps (native ignores both properties silently, so this is safe cross-platform).
+  card: {
+    backgroundColor: '#071b13', margin: 15, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: '#174a35',
+    contentVisibility: 'auto', containIntrinsicSize: 'auto 420px',
+  } as never,
   cardCompact: { borderRadius: 11 },
   skeletonCard: { opacity: 0.92 },
   skeletonBlock: { borderRadius: 10 },
