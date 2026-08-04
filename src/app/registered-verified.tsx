@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -12,6 +12,7 @@ export default function RegisteredVerifiedScreen() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
+  const params = useLocalSearchParams<{ source?: string }>();
   const [documents, setDocuments] = useState<VerificationDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,7 +60,12 @@ export default function RegisteredVerifiedScreen() {
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back to Profile">
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => (params.source === 'profile' ? router.replace('/login') : router.back())}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Profile"
+        >
           <ArrowLeft color={theme.primary} size={20} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
