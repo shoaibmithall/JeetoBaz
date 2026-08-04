@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import {
   ChevronDown,
   ChevronRight,
@@ -93,6 +93,7 @@ const HELP_LINKS: FooterLink[] = [
   { label: 'Support Center', route: '/help' },
   { label: 'Responsible Use Policy', route: '/about', params: { section: 'legal' } },
   { label: 'Registered & Verified', route: '/registered-verified' },
+  { label: 'Why JeetoBaz is Fair', route: '/why-fair' },
   { label: 'Why Choose JeetoBaz?', route: '/about', params: { section: 'why' } },
   { label: 'Trust & Security', route: '/about', params: { section: 'trust' } },
   { label: 'About JeetoBaz', route: '/about', params: { section: 'about' } },
@@ -191,6 +192,36 @@ function FooterLinkItem({
   const isClickable = Boolean(link.route || link.external);
   const colors = useFooterColors();
 
+  const labelStyle = [
+    styles.linkText,
+    { color: colors.text },
+    !isClickable && styles.disabledLink,
+    !isClickable && { color: colors.muted },
+  ];
+  const chevron = showChevron && isClickable
+    ? <ChevronRight color={colors.green} size={15} strokeWidth={2.2} />
+    : null;
+
+  // A real, plain route (not the "reset filters and stay on /" case, and not an external URL)
+  // renders as an actual <a href> via Link -- this is what makes the page crawlable/indexable by
+  // search engines and non-JS tools, unlike a TouchableOpacity's onPress-only click handler.
+  // `resetFilters` links intentionally stay as plain buttons: they both point at "/", which is
+  // already the single most-discoverable URL on the site, so there's no crawl-discovery value to
+  // gain, only the reset side effect to preserve.
+  if (link.route && !link.resetFilters) {
+    return (
+      <Link
+        href={(link.params ? { pathname: link.route, params: link.params } : link.route) as never}
+        asChild
+      >
+        <TouchableOpacity accessibilityRole="link" activeOpacity={0.65} style={styles.linkItem}>
+          <Text style={labelStyle}>{link.label}</Text>
+          {chevron}
+        </TouchableOpacity>
+      </Link>
+    );
+  }
+
   return (
     <TouchableOpacity
       accessibilityRole={isClickable ? 'link' : undefined}
@@ -199,19 +230,8 @@ function FooterLinkItem({
       onPress={() => onPress(link)}
       style={styles.linkItem}
     >
-      <Text
-        style={[
-          styles.linkText,
-          { color: colors.text },
-          !isClickable && styles.disabledLink,
-          !isClickable && { color: colors.muted },
-        ]}
-      >
-        {link.label}
-      </Text>
-      {showChevron && isClickable ? (
-        <ChevronRight color={colors.green} size={15} strokeWidth={2.2} />
-      ) : null}
+      <Text style={labelStyle}>{link.label}</Text>
+      {chevron}
     </TouchableOpacity>
   );
 }
@@ -455,22 +475,30 @@ function MobileAccordion({
         )}
       </TouchableOpacity>
 
-      {isOpen ? (
-        <View style={styles.mobileAccordionContent}>
-          {section.key === 'follow' ? (
-            <SocialLinks showLabels={false} />
-          ) : (
-            section.items.map((link) => (
-              <FooterLinkItem
-                key={link.label}
-                link={link}
-                onPress={onLinkPress}
-                showChevron={false}
-              />
-            ))
-          )}
-        </View>
-      ) : null}
+      {/*
+        Always mounted, visibility toggled via `display` rather than conditionally rendering
+        `null` when closed. The static/SSR export always renders this component in its initial
+        (closed) state -- with conditional mounting, that meant every footer link inside a mobile
+        accordion (which is the layout the static export always uses, since there's no real
+        viewport at build time) was completely absent from the HTML crawlers and non-JS tools
+        receive, not just non-clickable. `display: none` is Google's own documented safe pattern
+        for accordion content -- present in the DOM, hidden until expanded -- with zero visual
+        change for real users.
+      */}
+      <View style={[styles.mobileAccordionContent, !isOpen && styles.mobileAccordionContentHidden]}>
+        {section.key === 'follow' ? (
+          <SocialLinks showLabels={false} />
+        ) : (
+          section.items.map((link) => (
+            <FooterLinkItem
+              key={link.label}
+              link={link}
+              onPress={onLinkPress}
+              showChevron={false}
+            />
+          ))
+        )}
+      </View>
     </View>
   );
 }
@@ -909,6 +937,9 @@ const styles = StyleSheet.create({
   mobileAccordionContent: {
     paddingBottom: 12,
     paddingHorizontal: 39,
+  },
+  mobileAccordionContentHidden: {
+    display: 'none',
   },
   mobilePaymentBlock: {
     paddingHorizontal: 7,
