@@ -139,6 +139,7 @@ export default function FaqScreen() {
       <meta property="og:description" content="Find clear answers to frequently asked questions about JeetoBaz accounts, prize campaigns, entries, payments, draws, winners, and platform support." />
       <meta property="og:url" content="https://jeetobaz.pk/faq" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

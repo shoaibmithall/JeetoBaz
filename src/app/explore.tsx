@@ -78,6 +78,7 @@ export default function WinnersScreen() {
       <meta property="og:description" content="Explore JeetoBaz prize campaigns, review product and participation details, follow campaign progress, and discover verified winners across Pakistan." />
       <meta property="og:url" content="https://jeetobaz.pk/explore" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

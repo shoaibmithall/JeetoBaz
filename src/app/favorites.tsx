@@ -107,6 +107,7 @@ export default function FavoritesScreen() {
       <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
@@ -141,6 +142,7 @@ export default function FavoritesScreen() {
       <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
@@ -171,6 +173,7 @@ export default function FavoritesScreen() {
       <meta property="og:description" content="Access your saved JeetoBaz prize campaigns and quickly return to products and opportunities you marked for convenient viewing and participation." />
       <meta property="og:url" content="https://jeetobaz.pk/favorites" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

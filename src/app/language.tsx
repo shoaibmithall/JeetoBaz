@@ -34,6 +34,7 @@ export default function LanguageScreen() {
       <meta property="og:description" content="Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use." />
       <meta property="og:url" content="https://jeetobaz.pk/language" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

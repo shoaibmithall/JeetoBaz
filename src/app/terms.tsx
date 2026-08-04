@@ -645,6 +645,7 @@ export default function TermsScreen() {
       <meta property="og:description" content="Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities." />
       <meta property="og:url" content="https://jeetobaz.pk/terms" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

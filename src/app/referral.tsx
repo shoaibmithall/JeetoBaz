@@ -205,6 +205,7 @@ export default function ReferralScreen() {
       <meta property="og:description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
       <meta property="og:url" content="https://jeetobaz.pk/referral" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />

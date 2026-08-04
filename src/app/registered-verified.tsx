@@ -44,6 +44,7 @@ export default function RegisteredVerifiedScreen() {
       <meta property="og:description" content="View JeetoBaz business registration, taxpayer documentation, and verification information provided to support platform transparency and public trust." />
       <meta property="og:url" content="https://jeetobaz.pk/registered-verified" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
+      <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
