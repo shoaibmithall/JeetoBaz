@@ -161,6 +161,7 @@ export default function WinnerScreen() {
     <>
     <Head>
       <title>Winner Result | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
     </Head>
     <View style={styles.loading}>
@@ -174,6 +175,7 @@ export default function WinnerScreen() {
     <>
     <Head>
       <title>Winner Result | JeetoBaz</title>
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
       <link rel="canonical" href={`https://jeetobaz.pk/winner?productId=${productIdValue}`} />
     </Head>

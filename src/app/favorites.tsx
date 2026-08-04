@@ -109,6 +109,7 @@ export default function FavoritesScreen() {
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:locale" content="en_PK" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content="My Favorites | JeetoBaz" />
@@ -144,6 +145,7 @@ export default function FavoritesScreen() {
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:locale" content="en_PK" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content="My Favorites | JeetoBaz" />
@@ -175,6 +177,7 @@ export default function FavoritesScreen() {
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
       <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:locale" content="en_PK" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
       <meta name="twitter:title" content="My Favorites | JeetoBaz" />

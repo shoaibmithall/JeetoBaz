@@ -314,25 +314,15 @@ export default function ProductDetailScreen() {
   const spotsLeft = Math.max(maxEntries - currentEntries, 0);
   const entryFee = meta.entryFee;
 
-  // `product` (live entry counts) is only available client-side after hydration; the build-time
-  // static render only has `meta.entryFee` from the manifest. Availability defaults to InStock
-  // when live counts aren't known yet, since that is the common case and this markup is refreshed
-  // on every deploy rather than needing to be real-time accurate.
-  const availability = product ? (spotsLeft > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut') : 'https://schema.org/InStock';
-
+  // No `offers`/price here on purpose: entry_fee is the cost to enter the draw, not the price of
+  // the prize being won, so a schema.org Offer.price would misrepresent what's actually for sale
+  // (e.g. showing "Rs. 1" as the price of a car) -- a policy risk, not just a copy nitpick.
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: meta.name,
     description: pageDescription,
     image: ogImage,
-    offers: {
-      '@type': 'Offer',
-      url: pageUrl,
-      priceCurrency: 'PKR',
-      price: String(entryFee),
-      availability,
-    },
   };
 
   const breadcrumbJsonLd = {
@@ -370,6 +360,7 @@ export default function ProductDetailScreen() {
       <meta property="og:description" content={pageDescription} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:locale" content="en_PK" />
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:alt" content={pageTitle} />
       <meta name="twitter:card" content="summary_large_image" />

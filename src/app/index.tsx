@@ -72,6 +72,7 @@ const ORGANIZATION_STRUCTURED_DATA = {
   name: 'JeetoBaz',
   url: HOME_URL,
   logo: 'https://jeetobaz.pk/icon-512.png',
+  areaServed: { '@type': 'Country', name: 'Pakistan' },
   sameAs: [
     'https://www.facebook.com/share/17uAJE6AQY/',
     'https://www.instagram.com/jeetobaz',
@@ -914,6 +915,7 @@ export default function HomeScreen() {
       <meta property="og:description" content={HOME_DESCRIPTION} />
       <meta property="og:url" content={HOME_URL} />
       <meta property="og:site_name" content="JeetoBaz" />
+      <meta property="og:locale" content="en_PK" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={HOME_OG_IMAGE} />
       <meta property="og:image:alt" content="JeetoBaz — Pakistan's trusted prize draw platform" />
