@@ -23,7 +23,7 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 
 const REFUND_FAQS = [
   {
@@ -167,6 +167,7 @@ export default function RefundPolicyScreen() {
   }, [query]);
 
   const refundSchema = pageSchema('WebPage', '/refund-policy', 'Refund & Cancellation Policy', 'Review the JeetoBaz Refund & Cancellation Policy covering entry purchases, refund eligibility, payment issues, and processing timelines.');
+  const breadcrumb = breadcrumbSchema([{ name: 'Refund & Cancellation Policy', path: '/refund-policy' }]);
   return (
     <>
     <Head>
@@ -188,6 +189,7 @@ export default function RefundPolicyScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/refund-policy" />
       <script type="application/ld+json">{JSON.stringify(refundSchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}

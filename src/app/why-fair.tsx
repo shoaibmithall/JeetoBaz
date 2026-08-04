@@ -19,7 +19,7 @@ import {
   Wallet,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 
 const WHY_FAIR_SECTIONS = [
   {
@@ -174,6 +174,7 @@ export default function WhyFairScreen() {
     'Why JeetoBaz is Fair',
     'How JeetoBaz keeps every prize draw fair and transparent: verified payments, verified winners, equal entry, duplicate-account protection, and a locked, immutable draw process.',
   );
+  const breadcrumb = breadcrumbSchema([{ name: 'Why JeetoBaz is Fair', path: '/why-fair' }]);
 
   return (
     <>
@@ -196,6 +197,7 @@ export default function WhyFairScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/why-fair" />
       <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}

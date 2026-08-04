@@ -58,7 +58,7 @@ import {
   DollarSign,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 
 const TERMS_FAQS = [
   {
@@ -634,6 +634,7 @@ export default function TermsScreen() {
   }, [query]);
 
   const termsSchema = pageSchema('WebPage', '/terms', 'Terms & Conditions', 'Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities.');
+  const breadcrumb = breadcrumbSchema([{ name: 'Terms & Conditions', path: '/terms' }]);
   return (
     <>
     <Head>
@@ -655,6 +656,7 @@ export default function TermsScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/terms" />
       <script type="application/ld+json">{JSON.stringify(termsSchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}

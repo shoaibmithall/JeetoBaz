@@ -26,7 +26,7 @@ import {
   Truck,
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { pageSchema } from '@/lib/structured-data';
+import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 
 const SHIPPING_FAQS = [
   {
@@ -210,6 +210,7 @@ export default function ShippingPolicyScreen() {
   }, [query]);
 
   const shippingSchema = pageSchema('WebPage', '/shipping-policy', 'Shipping Policy', 'Review the JeetoBaz Shipping Policy covering prize delivery, winner verification, delivery timelines, and prize collection procedures.');
+  const breadcrumb = breadcrumbSchema([{ name: 'Shipping Policy', path: '/shipping-policy' }]);
   return (
     <>
     <Head>
@@ -231,6 +232,7 @@ export default function ShippingPolicyScreen() {
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/shipping-policy" />
       <script type="application/ld+json">{JSON.stringify(shippingSchema)}</script>
+      <script type="application/ld+json">{JSON.stringify(breadcrumb)}</script>
     </Head>
     <ScrollView
       style={[styles.screen, { backgroundColor: theme.background }]}
