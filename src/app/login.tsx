@@ -17,8 +17,8 @@ import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
   Award, BadgeCheck, Bell, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
-  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
-  MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
+  Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
+  MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
 } from 'lucide-react-native';
 
@@ -244,6 +244,26 @@ export default function ProfileScreen() {
       await Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
     } catch {
       alert(`Unable to open email. Please email your feedback to ${SUPPORT_EMAIL}.`);
+    }
+  }
+
+  async function reportProblem() {
+    const subject = encodeURIComponent('[Problem Report] JeetoBaz');
+    const body = encodeURIComponent(
+      `Hi JeetoBaz team,\n\nI'd like to report a problem:\n\nWhat happened:\n\n\nWhere (page/screen):\n\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
+    );
+    try {
+      await Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
+    } catch {
+      alert(`Unable to open email. Please email your problem report to ${SUPPORT_EMAIL}.`);
+    }
+  }
+
+  async function shareJeetoBaz() {
+    try {
+      await Share.share({ message: 'Check out JeetoBaz — Pakistan\'s trusted prize draw platform. Win big for just Rs.1!\nhttps://jeetobaz.pk/' });
+    } catch {
+      // User cancelled or share failed silently; nothing to recover from here.
     }
   }
 
@@ -1016,9 +1036,19 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>About JeetoBaz</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void shareJeetoBaz(); }}>
+              <Share2 color="#8B5CF6" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Share JeetoBaz</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void sendFeedback(); }}>
               <MessageSquare color="#F97316" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Send Feedback</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void reportProblem(); }}>
+              <Flag color="#EF4444" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Report a Problem</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
 
