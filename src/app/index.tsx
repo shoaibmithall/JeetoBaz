@@ -196,6 +196,9 @@ const HomeProductCard = memo(function HomeProductCard({
   const currentEntries = product.current_entries || 0;
   const maxEntries = product.max_entries || 1;
   const progressPercent = Math.min((currentEntries / maxEntries) * 100, 100);
+  // For big draws, 1 entry can round down to "0%" -- once someone has entered, always show
+  // at least a visible sliver so the progress bar doesn't look stuck/unaffected.
+  const displayPercent = currentEntries > 0 ? Math.max(Math.round(progressPercent), 1) : 0;
   const spotsLeft = Math.max(maxEntries - currentEntries, 0);
   const compactScheduleValue = isCompactGrid && !product.draw_date
     ? `${spotsLeft.toLocaleString()} ${t('spotsLeft')}`
@@ -316,12 +319,12 @@ const HomeProductCard = memo(function HomeProductCard({
         <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{currentEntries.toLocaleString()} {t('participants')}</Text></View>
 
         <View style={[styles.progressBar, isCompactGrid && styles.progressBarCompact, { backgroundColor: colors.borderSoft }]}>
-          <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${progressPercent}%` }]} />
+          <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${displayPercent}%` }]} />
         </View>
 
         <View style={[styles.spotsRow, isCompactGrid && styles.spotsRowCompact]}>
           <View style={styles.iconText}><Flame color="#ff6b6b" size={isCompactGrid ? 10 : 14} /><Text numberOfLines={1} style={[styles.spots, isCompactGrid && styles.spotsCompact]}>{spotsLeft.toLocaleString()} {t('spotsLeft')}</Text></View>
-          <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{Math.round(progressPercent)}%</Text>
+          <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{displayPercent}%</Text>
         </View>
 
         <TouchableOpacity
