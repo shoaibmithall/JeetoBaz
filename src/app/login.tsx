@@ -848,7 +848,7 @@ export default function ProfileScreen() {
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/registered-verified' as never)}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/registered-verified', params: { source: 'profile' } })}>
           <BadgeCheck color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Registered &amp; Verified</Text>
           <ChevronRight color={theme.subtle} size={20} />
