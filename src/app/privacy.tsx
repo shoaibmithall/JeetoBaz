@@ -820,11 +820,16 @@ export default function PrivacyScreen() {
                   <ChevronRight color={theme.subtle} size={21} />
                 )}
               </TouchableOpacity>
-              {expanded ? (
-                <View style={[styles.answerBox, { borderTopColor: theme.border }]}>
-                  <Text style={[styles.answer, { color: theme.muted }]}>{item.answer}</Text>
-                </View>
-              ) : null}
+              {/*
+                Always mounted, visibility toggled via `display` rather than conditionally
+                rendering `null` -- the static export always starts with every question
+                collapsed, so conditional mounting meant this page's actual legal/policy content
+                was completely absent from the HTML crawlers receive, not just non-clickable.
+                Same fix applied to the footer, FAQ, and Why JeetoBaz is Fair pages.
+              */}
+              <View style={[styles.answerBox, { borderTopColor: theme.border }, !expanded && styles.answerBoxHidden]}>
+                <Text style={[styles.answer, { color: theme.muted }]}>{item.answer}</Text>
+              </View>
             </View>
           );
         })}
@@ -874,6 +879,7 @@ const styles = StyleSheet.create({
   category: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
   question: { fontSize: 15, fontWeight: '700', lineHeight: 21 },
   answerBox: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 15 },
+  answerBoxHidden: { display: 'none' },
   answer: { fontSize: 14, lineHeight: 22 },
   empty: { alignItems: 'center', padding: 35 },
   emptyTitle: { fontSize: 17, fontWeight: '700' },

@@ -935,11 +935,16 @@ export default function AboutJeetoBazScreen() {
                       <ChevronRight color={theme.subtle} size={21} />
                     )}
                   </TouchableOpacity>
-                  {expanded ? (
-                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
-                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
-                    </View>
-                  ) : null}
+                  {/*
+                    Always mounted, visibility toggled via `display` rather than
+                    conditionally rendering `null` -- see the same fix applied to the
+                    footer, FAQ, Terms, and Privacy pages: the static export always starts
+                    collapsed, so conditional mounting hid this section's real content from
+                    crawlers entirely.
+                  */}
+                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
+                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
+                  </View>
                 </View>
               );
             })}
@@ -1043,11 +1048,16 @@ export default function AboutJeetoBazScreen() {
                       <ChevronRight color={theme.subtle} size={21} />
                     )}
                   </TouchableOpacity>
-                  {expanded ? (
-                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
-                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{step.text}</Text>
-                    </View>
-                  ) : null}
+                  {/*
+                    Always mounted, visibility toggled via `display` rather than
+                    conditionally rendering `null` -- see the same fix applied to the
+                    footer, FAQ, Terms, and Privacy pages: the static export always starts
+                    collapsed, so conditional mounting hid this section's real content from
+                    crawlers entirely.
+                  */}
+                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
+                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{step.text}</Text>
+                  </View>
                 </View>
               );
             })}
@@ -1155,11 +1165,16 @@ export default function AboutJeetoBazScreen() {
                       <ChevronRight color={theme.subtle} size={21} />
                     )}
                   </TouchableOpacity>
-                  {expanded ? (
-                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
-                      <Text selectable style={[styles.worksAnswerText, { color: theme.text }]}>{item.answer}</Text>
-                    </View>
-                  ) : null}
+                  {/*
+                    Always mounted, visibility toggled via `display` rather than
+                    conditionally rendering `null` -- see the same fix applied to the
+                    footer, FAQ, Terms, and Privacy pages: the static export always starts
+                    collapsed, so conditional mounting hid this section's real content from
+                    crawlers entirely.
+                  */}
+                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
+                    <Text selectable style={[styles.worksAnswerText, { color: theme.text }]}>{item.answer}</Text>
+                  </View>
                 </View>
               );
             })}
@@ -1286,11 +1301,16 @@ export default function AboutJeetoBazScreen() {
                       <ChevronRight color={theme.subtle} size={21} />
                     )}
                   </TouchableOpacity>
-                  {expanded ? (
-                    <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }]}>
-                      <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
-                    </View>
-                  ) : null}
+                  {/*
+                    Always mounted, visibility toggled via `display` rather than
+                    conditionally rendering `null` -- see the same fix applied to the
+                    footer, FAQ, Terms, and Privacy pages: the static export always starts
+                    collapsed, so conditional mounting hid this section's real content from
+                    crawlers entirely.
+                  */}
+                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
+                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
+                  </View>
                 </View>
               );
             })}
@@ -1588,6 +1608,7 @@ const styles = StyleSheet.create({
   worksIconBox: { width: 42, height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   worksQuestionText: { fontSize: 15, fontWeight: '700', lineHeight: 21 },
   worksAnswerBox: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 15 },
+  worksAnswerBoxHidden: { display: 'none' },
   worksAnswerText: { fontSize: 14, lineHeight: 22 },
   worksEmpty: { alignItems: 'center', padding: 30 },
   worksEmptyTitle: { fontSize: 16, fontWeight: '700' },
