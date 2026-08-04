@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal, Switch } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal, Switch, Linking } from 'react-native';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -17,13 +17,14 @@ import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import {
   Award, BadgeCheck, Bell, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
-  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone,
+  Copy, Eye, EyeOff, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
 } from 'lucide-react-native';
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
 const USER_AVATAR_STORAGE_KEY = 'userAvatarUrl';
+const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
 
 function avatarStorageKey(userId: string) {
   return `${USER_AVATAR_STORAGE_KEY}:${userId}`;
@@ -232,6 +233,18 @@ export default function ProfileScreen() {
   async function fetchStats(phone: string) {
     const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
     if (typeof data === 'number') setTotalEntries(data);
+  }
+
+  async function sendFeedback() {
+    const subject = encodeURIComponent('JeetoBaz Feedback');
+    const body = encodeURIComponent(
+      `Hi JeetoBaz team,\n\nMy feedback:\n\n\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
+    );
+    try {
+      await Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
+    } catch {
+      alert(`Unable to open email. Please email your feedback to ${SUPPORT_EMAIL}.`);
+    }
   }
 
   async function toggleNotificationPreference(key: keyof NotificationPreferences) {
@@ -908,6 +921,13 @@ export default function ProfileScreen() {
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
 
+            <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PRIVACY & SECURITY</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/login-activity' as never); }}>
+              <Smartphone color="#6366F1" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Login Activity</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>NOTIFICATIONS</Text>
             <View style={styles.settingsItem}>
               <Bell color="#F59E0B" size={20} />
@@ -984,6 +1004,11 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', source: 'settings' } }); }}>
               <Info color={theme.gold} size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>About JeetoBaz</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void sendFeedback(); }}>
+              <MessageSquare color="#F97316" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Send Feedback</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
 
