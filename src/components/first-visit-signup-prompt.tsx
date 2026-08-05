@@ -4,12 +4,12 @@ import { usePathname, useRouter } from 'expo-router';
 import { UserPlus, X } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
-import { getStoredValue, setStoredValue } from '@/lib/storage';
 
-// Shown once ever per device (persistent storage, not sessionStorage) on the Home page, to a
-// signed-out visitor only. Waits for the promo interstitial's "jeetobaz-promo-active" class to
-// clear first so the two overlays never stack.
-const SIGNUP_PROMPT_KEY = 'signupPromptShown';
+// Shows on every fresh visit to Home while the visitor is signed out -- not just once ever --
+// stopping only once they log in. attemptedRef just prevents re-showing on every in-session
+// navigation back to Home (a fresh mount, e.g. a reload or a new visit later, resets it). Waits
+// for the promo interstitial's "jeetobaz-promo-active" class to clear first so the two overlays
+// never stack.
 const INITIAL_DELAY_MS = 1500;
 const PROMO_ACTIVE_POLL_MS = 500;
 
@@ -28,19 +28,15 @@ export function FirstVisitSignupPrompt() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
-    getStoredValue(SIGNUP_PROMPT_KEY).then((shown) => {
-      if (cancelled || shown) return;
-
-      function tryShow() {
-        if (cancelled) return;
-        if (document.documentElement.classList.contains('jeetobaz-promo-active')) {
-          timer = setTimeout(tryShow, PROMO_ACTIVE_POLL_MS);
-          return;
-        }
-        setVisible(true);
+    function tryShow() {
+      if (cancelled) return;
+      if (document.documentElement.classList.contains('jeetobaz-promo-active')) {
+        timer = setTimeout(tryShow, PROMO_ACTIVE_POLL_MS);
+        return;
       }
-      timer = setTimeout(tryShow, INITIAL_DELAY_MS);
-    });
+      setVisible(true);
+    }
+    timer = setTimeout(tryShow, INITIAL_DELAY_MS);
 
     return () => {
       cancelled = true;
@@ -50,7 +46,6 @@ export function FirstVisitSignupPrompt() {
 
   function dismiss() {
     setVisible(false);
-    void setStoredValue(SIGNUP_PROMPT_KEY, '1');
   }
 
   function goTo(path: '/signup' | '/login') {
