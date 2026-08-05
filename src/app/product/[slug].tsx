@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage, type TranslationKey } from '@/lib/i18n';
 import { getProductCategory } from '@/lib/product-categories';
+import { pageSchema } from '@/lib/structured-data';
 import type { Product } from '@/types/database';
 import productSeoManifest from '@/generated/product-seo-manifest.json';
 
@@ -314,16 +315,14 @@ export default function ProductDetailScreen() {
   const spotsLeft = Math.max(maxEntries - currentEntries, 0);
   const entryFee = meta.entryFee;
 
-  // No `offers`/price here on purpose: entry_fee is the cost to enter the draw, not the price of
-  // the prize being won, so a schema.org Offer.price would misrepresent what's actually for sale
-  // (e.g. showing "Rs. 1" as the price of a car) -- a policy risk, not just a copy nitpick.
-  const productJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: meta.name,
-    description: pageDescription,
-    image: ogImage,
-  };
+  // Not typed as schema.org Product: entry_fee is the cost to enter the draw, not the price of the
+  // prize being won, so a Product needs an `offers`/price to be valid -- but a schema.org
+  // Offer.price here would misrepresent what's actually for sale (e.g. showing "Rs. 1" as the
+  // price of a car), and there's no real review system to back `review`/`aggregateRating` either
+  // (fabricating either is a Google structured-data policy risk, not just a copy nitpick). Google
+  // Search Console confirmed pages using `Product` here were already invalid/ineligible for rich
+  // results without one of those three, so WebPage is both the honest and the actually-working type.
+  const productJsonLd = pageSchema('WebPage', `/product/${slug}`, meta.name, pageDescription);
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
