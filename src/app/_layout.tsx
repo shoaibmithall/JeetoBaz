@@ -107,6 +107,7 @@ export default function RootLayout() {
           listeners={{ tabPress: () => requestScrollToTop('login') }}
         />
         <Tabs.Screen name="entries" options={{ href: null }} />
+        <Tabs.Screen name="my-activity" options={{ href: null }} />
         <Tabs.Screen name="wallet" options={{ href: null }} />
         <Tabs.Screen name="wallet-topup" options={{ href: null }} />
         <Tabs.Screen name="share" options={{ href: null }} />
