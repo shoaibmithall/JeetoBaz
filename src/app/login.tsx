@@ -16,8 +16,9 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
+import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
 import {
-  Award, BadgeCheck, Bell, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  Award, BadgeCheck, Bell, BellRing, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
@@ -48,6 +49,9 @@ export default function ProfileScreen() {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [notificationPreferenceSaving, setNotificationPreferenceSaving] = useState<keyof NotificationPreferences | null>(null);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushSaving, setPushSaving] = useState(false);
   const { width } = useWindowDimensions();
   const isMobileProfile = width < 700;
   const profileCardAvailableWidth = Math.max(width - 24, 1);
@@ -80,6 +84,34 @@ export default function ProfileScreen() {
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     });
   }, []);
+
+  useEffect(() => {
+    const supported = isPushSupported();
+    setPushSupported(supported);
+    if (!supported) return;
+    let active = true;
+    getActivePushSubscription().then((subscription) => {
+      if (active) setPushEnabled(Boolean(subscription));
+    });
+    return () => { active = false; };
+  }, []);
+
+  async function togglePushNotifications() {
+    if (!phone) {
+      alert('Please add your phone number to your profile first.');
+      return;
+    }
+    setPushSaving(true);
+    if (pushEnabled) {
+      await unsubscribeFromPush();
+      setPushEnabled(false);
+    } else {
+      const result = await subscribeToPush(phone);
+      if (result.ok) setPushEnabled(true);
+      else alert(result.message || 'Could not enable push notifications.');
+    }
+    setPushSaving(false);
+  }
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
@@ -967,6 +999,25 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>NOTIFICATIONS</Text>
+            {pushSupported && (
+              <>
+                <View style={styles.settingsItem}>
+                  <BellRing color="#EF4444" size={20} />
+                  <Text style={[styles.settingsItemText, { color: theme.text }]}>Push Notifications (this device)</Text>
+                  {pushSaving
+                    ? <ActivityIndicator color={theme.gold} size="small" />
+                    : <Switch
+                        value={pushEnabled}
+                        onValueChange={togglePushNotifications}
+                        trackColor={{ false: theme.border, true: theme.primary }}
+                        thumbColor="#fff"
+                      />}
+                </View>
+                <Text style={[styles.settingsHint, { color: theme.subtle }]}>
+                  On iPhone/iPad, add JeetoBaz to your Home Screen first for this to work.
+                </Text>
+              </>
+            )}
             <View style={styles.settingsItem}>
               <Bell color="#F59E0B" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Prize Updates</Text>
@@ -1321,6 +1372,7 @@ const styles = StyleSheet.create({
   settingsPanelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
   settingsPanelTitle: { fontSize: 20, fontWeight: '800' },
   settingsSectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginTop: 18, marginBottom: 8 },
+  settingsHint: { fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 10 },
   settingsItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   settingsItemText: { flex: 1, fontSize: 14, fontWeight: '600' },
   mobileProfileTop: { minHeight: 112, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 18 },
