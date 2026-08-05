@@ -1,6 +1,6 @@
-import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,9 +9,9 @@ import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAuth } from '@/providers/AuthProvider';
-import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
+import { checkWalletTopupCooldown, markWalletTopupSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
-import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
+import { CheckCircle2, House, PartyPopper, TriangleAlert, Wallet } from 'lucide-react-native';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -24,29 +24,12 @@ const PAYMENT_ACCOUNTS = [
   { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
 ];
 
-function subscribeToHydration() {
-  return () => {};
-}
-
-function getClientHydrationSnapshot() {
-  return true;
-}
-
-function getServerHydrationSnapshot() {
-  return false;
-}
-
 type ReceiptAsset = {
   uri: string;
   fileName?: string | null;
   mimeType?: string | null;
   dataUrl?: string | null;
 };
-
-function firstParam(value: string | string[] | undefined, fallback = '') {
-  if (Array.isArray(value)) return value[0] || fallback;
-  return value || fallback;
-}
 
 function dataUrlToArrayBuffer(dataUrl: string) {
   const base64 = dataUrl.split(',')[1];
@@ -59,35 +42,23 @@ function dataUrlToArrayBuffer(dataUrl: string) {
   return bytes.buffer;
 }
 
-export default function PaymentScreen() {
+export default function WalletTopupScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const router = useRouter();
   const { user } = useAuth();
-  const { productId, productName, entryFee } = useLocalSearchParams();
-  const hasHydratedParams = useSyncExternalStore(
-    subscribeToHydration,
-    getClientHydrationSnapshot,
-    getServerHydrationSnapshot,
-  );
-  const productIdValue = hasHydratedParams ? firstParam(productId) : '';
-  const productNameValue = hasHydratedParams ? firstParam(productName, 'Selected draw') : 'Selected draw';
-  const entryFeeValue = hasHydratedParams ? firstParam(entryFee, '1') : '1';
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
+  const [amount, setAmount] = useState('');
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [receiptPreviewError, setReceiptPreviewError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('payment');
+  const [step, setStep] = useState('form');
   const [submitError, setSubmitError] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userName, setUserName] = useState('');
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [walletSubmitting, setWalletSubmitting] = useState(false);
-  const [walletError, setWalletError] = useState('');
-  const [paidVia, setPaidVia] = useState<'wallet' | 'manual'>('manual');
   const submittingRef = useRef(false);
-  const canSubmit = Boolean(receipt && productIdValue && !loading);
-  const entryFeeNumber = Number(entryFeeValue) || 0;
+  const amountValue = Number(amount);
+  const canSubmit = Boolean(receipt && amount && amountValue >= 1 && amountValue <= 1000000 && !loading);
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
@@ -109,10 +80,6 @@ export default function PaymentScreen() {
         }
         setUserPhone(phone);
         setUserName(name);
-        if (phone) {
-          const { data: walletRow } = await supabase.from('wallets').select('balance').eq('phone', phone).maybeSingle();
-          setWalletBalance(walletRow?.balance ?? 0);
-        }
       },
     );
   }, [user]);
@@ -148,7 +115,7 @@ export default function PaymentScreen() {
     }
   }
 
-  async function uploadReceipt(productId: string) {
+  async function uploadReceipt() {
     if (!receipt?.dataUrl) {
       throw new Error('Please choose the receipt screenshot again.');
     }
@@ -159,7 +126,7 @@ export default function PaymentScreen() {
       : mimeType === 'image/webp'
         ? 'webp'
         : 'jpg';
-    const filePath = `${productId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
+    const filePath = `wallet-topups/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
     const { error } = await supabase.storage
       .from(RECEIPT_BUCKET)
       .upload(filePath, dataUrlToArrayBuffer(receipt.dataUrl), {
@@ -171,48 +138,7 @@ export default function PaymentScreen() {
     return filePath;
   }
 
-  async function confirmWalletEntry() {
-    if (walletSubmitting || submittingRef.current) return;
-    setWalletError('');
-
-    if (!productIdValue) {
-      alert('Missing product for this payment!');
-      return;
-    }
-
-    if (!userPhone) {
-      router.push('/login');
-      return;
-    }
-
-    submittingRef.current = true;
-    setWalletSubmitting(true);
-
-    const { data: rpcResult, error: rpcError } = await supabase
-      .rpc('enter_draw_from_wallet_atomic', {
-        p_product_id: productIdValue,
-        p_phone: userPhone,
-        p_name: userName?.trim() || undefined,
-      })
-      .single();
-
-    if (rpcError || !rpcResult?.ok) {
-      const message = rpcError?.message || rpcResult?.error || 'Wallet entry failed.';
-      setWalletError(message);
-      alert('Error: ' + message);
-      submittingRef.current = false;
-      setWalletSubmitting(false);
-      return;
-    }
-
-    setWalletBalance(rpcResult.new_balance ?? null);
-    setPaidVia('wallet');
-    setStep('success');
-    submittingRef.current = false;
-    setWalletSubmitting(false);
-  }
-
-  async function confirmPayment() {
+  async function confirmTopup() {
     if (loading || submittingRef.current) return;
     setSubmitError('');
 
@@ -221,15 +147,13 @@ export default function PaymentScreen() {
       return;
     }
 
-    submittingRef.current = true;
-    setLoading(true);
-
-    if (!productIdValue) {
-      alert('Missing product for this payment!');
-      submittingRef.current = false;
-      setLoading(false);
+    if (!amountValue || amountValue < 1 || amountValue > 1000000) {
+      alert('Please enter a valid amount.');
       return;
     }
+
+    submittingRef.current = true;
+    setLoading(true);
 
     if (!userPhone) {
       router.push('/login');
@@ -238,9 +162,9 @@ export default function PaymentScreen() {
       return;
     }
 
-    const cooldown = await checkPaymentCooldown(productIdValue, userPhone);
+    const cooldown = await checkWalletTopupCooldown(userPhone);
     if (!cooldown.allowed) {
-      const message = `Please wait ${cooldown.waitSeconds} seconds before submitting payment again.`;
+      const message = `Please wait ${cooldown.waitSeconds} seconds before submitting again.`;
       setSubmitError(message);
       alert(message);
       submittingRef.current = false;
@@ -248,80 +172,32 @@ export default function PaymentScreen() {
       return;
     }
 
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('id, entry_fee, status, current_entries, max_entries')
-      .eq('id', productIdValue)
-      .maybeSingle();
-
-    if (productError || !product) {
-      alert('This draw could not be verified. Please try again.');
-      submittingRef.current = false;
-      setLoading(false);
-      return;
-    }
-
-    if (product.status !== 'active') {
-      alert('This draw is no longer active.');
-      submittingRef.current = false;
-      setLoading(false);
-      return;
-    }
-
-    if ((product.current_entries || 0) >= product.max_entries) {
-      alert('Sorry, this draw is full.');
-      submittingRef.current = false;
-      setLoading(false);
-      return;
-    }
-
-    const { data: existing, error: existingError } = await supabase.rpc('check_entry_exists', {
-      p_product_id: productIdValue,
-      p_phone: userPhone,
-    });
-
-    if (existingError) {
-      alert('Unable to verify your entry. Please try again.');
-      submittingRef.current = false;
-      setLoading(false);
-      return;
-    }
-
-    if (existing) {
-      alert('You have already entered this draw!');
-      submittingRef.current = false;
-      setLoading(false);
-      return;
-    }
-
-    const { data: pendingPayment, error: pendingError } = await supabase.rpc('check_pending_transaction_exists', {
-      p_product_id: productIdValue,
+    const { data: pendingRequest, error: pendingError } = await supabase.rpc('check_pending_wallet_topup_exists', {
       p_phone: userPhone,
     });
 
     if (pendingError) {
-      alert('Unable to verify your payment status. Please try again.');
+      alert('Unable to verify your top-up status. Please try again.');
       submittingRef.current = false;
       setLoading(false);
       return;
     }
 
-    if (pendingPayment) {
-      alert('Your payment request is already pending admin approval.');
+    if (pendingRequest) {
+      alert('You already have a top-up request pending admin approval.');
       submittingRef.current = false;
       setLoading(false);
       return;
     }
 
     try {
-      await markPaymentSubmitAttempt(productIdValue, userPhone);
-      const receiptPath = await uploadReceipt(productIdValue);
-      const { error } = await supabase.from('transactions').insert({
-        product_id: productIdValue,
+      await markWalletTopupSubmitAttempt(userPhone);
+      const receiptPath = await uploadReceipt();
+      const { error } = await supabase.from('wallet_topup_requests').insert({
         phone: userPhone,
         user_name: userName?.trim() || null,
-        amount: product.entry_fee || 1,
-        jazzcash_txn_id: `RECEIPT-${Date.now()}`,
+        amount: Math.round(amountValue),
+        reference: `TOPUP-${Date.now()}`,
         payment_method: selectedMethod,
         sender_name: userName?.trim() || null,
         sender_phone: userPhone,
@@ -337,7 +213,7 @@ export default function PaymentScreen() {
     } catch (error) {
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
-        : 'Payment submit failed.';
+        : 'Top-up submit failed.';
       setSubmitError(message);
       alert('Error: ' + message);
     }
@@ -348,18 +224,16 @@ export default function PaymentScreen() {
   if (step === 'success') return (
     <>
     <Head>
-      <title>Payment | JeetoBaz</title>
+      <title>Wallet Top-Up | JeetoBaz</title>
       <meta name="robots" content="noindex, follow" />
-      <meta name="description" content="Submit your JeetoBaz prize campaign payment and upload payment receipt." />
+      <meta name="description" content="Submit your JeetoBaz wallet top-up request." />
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.successBox}>
         <PartyPopper color={theme.gold} size={80} />
-        <Text style={[styles.successTitle, { color: theme.primary }]}>{paidVia === 'wallet' ? 'Entry Confirmed!' : 'Payment Submitted!'}</Text>
-        <Text style={[styles.successText, { color: theme.text }]}>{t('goodLuck')}</Text>
-        <Text style={[styles.successSub, { color: theme.muted }]}>
-          {paidVia === 'wallet' ? 'Paid instantly from your wallet — no approval wait!' : 'Your entry will be added after admin approval.'}
-        </Text>
+        <Text style={[styles.successTitle, { color: theme.primary }]}>Top-Up Submitted!</Text>
+        <Text style={[styles.successText, { color: theme.text }]}>Thank you!</Text>
+        <Text style={[styles.successSub, { color: theme.muted }]}>Your wallet will be credited after admin approval.</Text>
       </View>
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
         <House color="white" size={18} /><Text style={styles.homeBtnText}>{t('backToHome')}</Text>
@@ -371,52 +245,31 @@ export default function PaymentScreen() {
   return (
     <>
     <Head>
-      <title>Payment | JeetoBaz</title>
+      <title>Wallet Top-Up | JeetoBaz</title>
       <meta name="robots" content="noindex, follow" />
-      <meta name="description" content="Submit your JeetoBaz prize campaign payment and upload payment receipt." />
+      <meta name="description" content="Add funds to your JeetoBaz wallet to enter draws instantly." />
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={[styles.backBtn, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
-        <View style={styles.titleRow}><CreditCard color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>{t('payment')}</Text></View>
+        <View style={styles.titleRow}><Wallet color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>Wallet Top-Up</Text></View>
         <Text style={styles.dummy}></Text>
       </View>
 
-      <View style={[styles.productBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={[styles.productName, { color: theme.text }]}>{productNameValue}</Text>
-        <Text style={[styles.entryFee, { color: theme.gold }]}>{t('entryFee')}: Rs. {entryFeeValue}</Text>
+      <View style={[styles.amountBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.amountLabel, { color: theme.text }]}>Amount to add (Rs.)</Text>
+        <TextInput
+          style={[styles.amountInput, { color: theme.text, borderColor: theme.border }]}
+          placeholder="e.g. 500"
+          placeholderTextColor={theme.subtle}
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="number-pad"
+          accessibilityLabel="Top-up amount"
+        />
       </View>
-
-      {userPhone && walletBalance !== null ? (
-        <View style={[styles.walletBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <View style={styles.walletHeaderRow}>
-            <Wallet color={theme.gold} size={20} />
-            <Text style={[styles.walletTitle, { color: theme.text }]}>Pay from Wallet</Text>
-          </View>
-          <Text style={[styles.walletBalanceText, { color: theme.muted }]}>Balance: Rs. {walletBalance.toLocaleString()}</Text>
-          {walletBalance >= entryFeeNumber ? (
-            <TouchableOpacity style={styles.walletPayBtn} onPress={confirmWalletEntry} disabled={walletSubmitting}>
-              <Zap color="#000" size={18} />
-              <Text style={styles.walletPayBtnText}>{walletSubmitting ? t('confirming') : `Pay Rs. ${entryFeeValue} Instantly`}</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.walletTopupLink} onPress={() => router.push('/wallet-topup')}>
-              <Text style={[styles.walletTopupLinkText, { color: theme.info }]}>Insufficient balance — Top up your wallet →</Text>
-            </TouchableOpacity>
-          )}
-          {walletError ? <Text style={styles.walletErrorText}>{walletError}</Text> : null}
-        </View>
-      ) : null}
-
-      {userPhone && walletBalance !== null ? (
-        <View style={styles.orDivider}>
-          <View style={[styles.orDividerLine, { backgroundColor: theme.border }]} />
-          <Text style={[styles.orDividerText, { color: theme.subtle }]}>OR PAY MANUALLY</Text>
-          <View style={[styles.orDividerLine, { backgroundColor: theme.border }]} />
-        </View>
-      ) : null}
 
       <View style={styles.paymentBox}>
         <Text style={[styles.payTitle, { color: theme.text }]}>{t('sendPaymentTo')}:</Text>
@@ -447,7 +300,7 @@ export default function PaymentScreen() {
         <View style={[styles.stepsBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
           <Text style={[styles.stepsTitle, { color: theme.primary }]}>{t('howToPay')}:</Text>
           <Text style={[styles.step, { color: theme.muted }]}>1. Open your preferred wallet or banking app</Text>
-          <Text style={[styles.step, { color: theme.muted }]}>2. Send any entry fee to the above accounts</Text>
+          <Text style={[styles.step, { color: theme.muted }]}>2. Send the amount you want to add to the above accounts</Text>
           <Text style={[styles.step, { color: theme.muted }]}>3. Share transaction receipt screenshot</Text>
           <Text style={[styles.step, { color: theme.muted }]}>4. Upload it below and confirm</Text>
         </View>
@@ -474,28 +327,22 @@ export default function PaymentScreen() {
           </>
         ) : null}
         {receiptPreviewError ? <Text style={styles.receiptErrorText}>{receiptPreviewError}</Text> : null}
-        {!productIdValue ? (
-          <View style={[styles.warningBox, { backgroundColor: theme.goldSoft, borderColor: theme.gold }]}>
-            <TriangleAlert color={theme.gold} size={17} />
-            <Text style={[styles.warningText, { color: theme.text }]}>Please open payment from a draw again so the product can be verified.</Text>
-          </View>
-        ) : null}
         {submitError ? (
           <View style={[styles.errorBox, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
-            <Text style={[styles.errorTitle, { color: theme.danger }]}>Payment submit failed</Text>
+            <Text style={[styles.errorTitle, { color: theme.danger }]}>Top-up submit failed</Text>
             <Text style={[styles.errorText, { color: theme.text }]}>{submitError}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={confirmPayment} disabled={loading}>
+            <TouchableOpacity style={styles.retryButton} onPress={confirmTopup} disabled={loading}>
               <Text style={styles.retryButtonText}>{loading ? t('confirming') : t('tryAgain')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
         <TouchableOpacity
           style={[styles.confirmBtn, !canSubmit && styles.confirmBtnDisabled]}
-          onPress={confirmPayment}
+          onPress={confirmTopup}
           disabled={!canSubmit}
         >
           {!loading && <CheckCircle2 color="#000" size={19} />}
-          <Text style={styles.confirmBtnText}>{loading ? t('confirming') : t('confirmEntry')}</Text>
+          <Text style={styles.confirmBtnText}>{loading ? t('confirming') : 'Submit Top-Up'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -503,7 +350,7 @@ export default function PaymentScreen() {
         <View style={styles.noteTitleRow}><TriangleAlert color={theme.gold} size={17} /><Text style={[styles.noteTitle, { color: theme.gold }]}>{t('important')}:</Text></View>
         <Text style={[styles.noteText, { color: theme.muted }]}>• {t('paymentVerify')}</Text>
         <Text style={[styles.noteText, { color: theme.muted }]}>• Keep your transaction receipt ID safe</Text>
-        <Text style={[styles.noteText, { color: theme.muted }]}>• {t('oneEntry')}</Text>
+        <Text style={[styles.noteText, { color: theme.muted }]}>• One pending top-up request at a time</Text>
       </View>
     </ScrollView>
     </>
@@ -517,25 +364,12 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   dummy: { width: 50 },
-  productBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35', alignItems: 'center' },
-  productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
-  entryFee: { fontSize: 16, color: '#FFD700', fontWeight: 'bold' },
-  walletBox: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 18, borderWidth: 1, borderColor: '#174a35' },
-  walletHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  walletTitle: { fontSize: 16, fontWeight: 'bold', color: 'white' },
-  walletBalanceText: { fontSize: 13, color: '#aaa', marginBottom: 12 },
-  walletPayBtn: { backgroundColor: '#FFD700', padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
-  walletPayBtnText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  walletTopupLink: { padding: 12, alignItems: 'center' },
-  walletTopupLinkText: { fontSize: 14, fontWeight: 'bold' },
-  walletErrorText: { color: '#ffb4b4', fontSize: 12, lineHeight: 17, marginTop: 10 },
-  orDivider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 15, marginTop: 20 },
-  orDividerLine: { flex: 1, height: 1 },
-  orDividerText: { fontSize: 11, fontWeight: 'bold' },
+  amountBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
+  amountLabel: { fontSize: 16, fontWeight: 'bold', color: 'white', marginBottom: 10 },
+  amountInput: { borderWidth: 1, borderColor: '#174a35', borderRadius: 10, padding: 14, fontSize: 18, color: 'white' },
   paymentBox: { margin: 15 },
   payTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   methodCard: { backgroundColor: '#071b13', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 15, borderWidth: 1, borderColor: '#174a35' },
-  methodCardSelected: { borderColor: '#FFD700', backgroundColor: '#2a2105' },
   methodInfo: { flex: 1 },
   methodName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   methodNumber: { color: '#FFD700', fontSize: 16, fontFamily: 'monospace', marginTop: 2 },
@@ -553,8 +387,6 @@ const styles = StyleSheet.create({
   receiptSelectedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   receiptSelectedText: { color: '#18a663', fontWeight: 'bold', fontSize: 13 },
   receiptErrorText: { color: '#ffb4b4', fontSize: 12, lineHeight: 17, marginBottom: 12 },
-  warningBox: { backgroundColor: '#2a2105', borderColor: '#FFD700', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 8, alignItems: 'center' },
-  warningText: { color: '#ffe88a', fontSize: 13, lineHeight: 18, flex: 1 },
   errorBox: { backgroundColor: '#2b0d0d', borderColor: '#ff4444', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12 },
   errorTitle: { color: '#ff7777', fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
   errorText: { color: '#ffd5d5', fontSize: 13, lineHeight: 18, marginBottom: 10 },

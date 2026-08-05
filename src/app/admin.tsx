@@ -17,7 +17,7 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WinnerStatus } from '@/types/database';
+import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
@@ -39,6 +39,9 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   certificate_uploaded: 'Winner certificate uploaded',
   payment_approved: 'Payment approved',
   payment_rejected: 'Payment rejected',
+  wallet_topup_approved: 'Wallet top-up approved',
+  wallet_topup_rejected: 'Wallet top-up rejected',
+  wallet_balance_adjusted: 'Wallet balance adjusted',
   draw_run: 'Draw run',
 };
 
@@ -58,7 +61,7 @@ import {
   Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Trash2,
-  Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wand2, X,
+  Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
 } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
@@ -220,6 +223,15 @@ export default function AdminScreen() {
   const [paymentsSearch, setPaymentsSearch] = useState('');
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<Set<string>>(new Set());
   const [bulkPaymentsProcessing, setBulkPaymentsProcessing] = useState(false);
+  const [walletTopupRequests, setWalletTopupRequests] = useState<WalletTopupRequest[]>([]);
+  const [walletTopupReceiptUrls, setWalletTopupReceiptUrls] = useState<Record<string, string>>({});
+  const [walletTopupsSearch, setWalletTopupsSearch] = useState('');
+  const [selectedWalletTopupIds, setSelectedWalletTopupIds] = useState<Set<string>>(new Set());
+  const [bulkWalletTopupsProcessing, setBulkWalletTopupsProcessing] = useState(false);
+  const [walletBalances, setWalletBalances] = useState<Record<string, number>>({});
+  const [walletAdjustExpandedPhone, setWalletAdjustExpandedPhone] = useState<string | null>(null);
+  const [walletAdjustDrafts, setWalletAdjustDrafts] = useState<Record<string, { amount: string; type: WalletTransactionType; reason: string }>>({});
+  const [walletAdjustSaving, setWalletAdjustSaving] = useState<string | null>(null);
   const [usersSearch, setUsersSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [userProfileDetails, setUserProfileDetails] = useState<Record<string, { city: string | null; date_of_birth: string | null }>>({});
@@ -305,6 +317,8 @@ export default function AdminScreen() {
       fetchUserProfileDetails();
       fetchEntries();
       fetchTransactions();
+      fetchWalletTopupRequests();
+      fetchWalletBalances();
       fetchDrawResults();
       fetchAuditLog();
       loadAnnouncement();
@@ -474,6 +488,42 @@ export default function AdminScreen() {
       if (data?.signedUrl) nextUrls[item.id] = data.signedUrl;
     }
     setReceiptUrls(nextUrls);
+  }
+
+  async function fetchWalletBalances() {
+    const { data } = await supabase.from('wallets').select('phone, balance');
+    if (!data) return;
+    const map: Record<string, number> = {};
+    for (const row of data) map[row.phone] = row.balance;
+    setWalletBalances(map);
+  }
+
+  async function fetchWalletTopupRequests() {
+    const { data } = await supabase
+      .from('wallet_topup_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (data) {
+      setWalletTopupRequests(data);
+      loadWalletTopupReceiptUrls(data);
+    }
+  }
+
+  async function loadWalletTopupReceiptUrls(items: WalletTopupRequest[]) {
+    const nextUrls: Record<string, string> = {};
+    for (const item of items) {
+      if (!item.receipt_path) continue;
+      if (item.receipt_path.startsWith('data:')) {
+        nextUrls[item.id] = item.receipt_path;
+        continue;
+      }
+      const { data } = await supabase.storage
+        .from(RECEIPT_BUCKET)
+        .createSignedUrl(item.receipt_path, 60 * 60);
+      if (data?.signedUrl) nextUrls[item.id] = data.signedUrl;
+    }
+    setWalletTopupReceiptUrls(nextUrls);
   }
 
   function startEdit(p: Product) {
@@ -1334,6 +1384,152 @@ export default function AdminScreen() {
     alert(`Rejected ${successCount} of ${txns.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
   }
 
+  async function approveWalletTopupCore(request: WalletTopupRequest): Promise<{ ok: boolean; message: string }> {
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('approve_wallet_topup_request', { p_request_id: request.id })
+      .single();
+
+    if (rpcError) {
+      return { ok: false, message: 'Top-up approval failed: ' + rpcError.message };
+    }
+
+    if (!rpcResult?.ok) {
+      return { ok: false, message: rpcResult?.error || 'Top-up approval failed.' };
+    }
+
+    if (request.receipt_path && !request.receipt_path.startsWith('data:')) {
+      await supabase.storage.from(RECEIPT_BUCKET).remove([request.receipt_path]).catch(() => {});
+    }
+
+    await createUserNotification({
+      title: 'Wallet topped up',
+      body: `Rs. ${request.amount} has been added to your wallet.`,
+      targetPhone: request.phone,
+      kind: 'payment-confirmed',
+    });
+
+    void logAdminAction('wallet_topup_approved', request.id, { phone: request.phone, amount: request.amount, new_balance: rpcResult?.new_balance });
+    return { ok: true, message: 'Wallet topped up and receipt deleted.' };
+  }
+
+  async function approveWalletTopup(request: WalletTopupRequest) {
+    const confirmed = await confirmAsync('Approve', `Add Rs. ${request.amount} to this user's wallet? Receipt screenshot will be deleted after approval.`);
+    if (!confirmed) return;
+    const result = await approveWalletTopupCore(request);
+    alert(result.message);
+    fetchWalletTopupRequests();
+  }
+
+  async function rejectWalletTopupCore(request: WalletTopupRequest): Promise<{ ok: boolean; message: string }> {
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('reject_wallet_topup_request', { p_request_id: request.id })
+      .single();
+
+    if (rpcError) return { ok: false, message: 'Reject failed: ' + rpcError.message };
+    if (!rpcResult?.ok) return { ok: false, message: rpcResult?.error || 'Reject failed.' };
+
+    void logAdminAction('wallet_topup_rejected', request.id, { phone: request.phone, amount: request.amount });
+    return { ok: true, message: 'Top-up request rejected.' };
+  }
+
+  async function rejectWalletTopup(request: WalletTopupRequest) {
+    const confirmed = await confirmAsync('Reject', 'Reject this wallet top-up request?');
+    if (!confirmed) return;
+    await rejectWalletTopupCore(request);
+    fetchWalletTopupRequests();
+  }
+
+  function toggleWalletTopupSelected(id: string) {
+    setSelectedWalletTopupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkApproveWalletTopups(requests: WalletTopupRequest[]) {
+    if (requests.length === 0 || bulkWalletTopupsProcessing) return;
+    const confirmed = await confirmAsync(
+      'Approve Selected',
+      `Add wallet balance for ${requests.length} selected request(s)? Receipt screenshots will be deleted after approval.`
+    );
+    if (!confirmed) return;
+
+    setBulkWalletTopupsProcessing(true);
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const request of requests) {
+      const result = await approveWalletTopupCore(request);
+      if (result.ok) successCount += 1;
+      else failures.push(`${request.user_name || request.phone}: ${result.message}`);
+    }
+    setBulkWalletTopupsProcessing(false);
+    setSelectedWalletTopupIds(new Set());
+    fetchWalletTopupRequests();
+    alert(`Approved ${successCount} of ${requests.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
+  }
+
+  async function bulkRejectWalletTopups(requests: WalletTopupRequest[]) {
+    if (requests.length === 0 || bulkWalletTopupsProcessing) return;
+    const confirmed = await confirmAsync('Reject Selected', `Reject ${requests.length} selected top-up request(s)?`);
+    if (!confirmed) return;
+
+    setBulkWalletTopupsProcessing(true);
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const request of requests) {
+      const result = await rejectWalletTopupCore(request);
+      if (result.ok) successCount += 1;
+      else failures.push(`${request.user_name || request.phone}: ${result.message}`);
+    }
+    setBulkWalletTopupsProcessing(false);
+    setSelectedWalletTopupIds(new Set());
+    fetchWalletTopupRequests();
+    alert(`Rejected ${successCount} of ${requests.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
+  }
+
+  function getWalletAdjustDraft(phone: string) {
+    return walletAdjustDrafts[phone] || { amount: '', type: 'bonus' as WalletTransactionType, reason: '' };
+  }
+
+  async function saveWalletAdjustment(phone: string) {
+    const draft = getWalletAdjustDraft(phone);
+    const amount = Math.trunc(Number(draft.amount));
+    if (!amount) {
+      alert('Enter a non-zero amount. Use a negative number to debit the wallet.');
+      return;
+    }
+
+    const confirmed = await confirmAsync(
+      'Adjust Wallet',
+      `${amount > 0 ? 'Credit' : 'Debit'} Rs. ${Math.abs(amount)} ${amount > 0 ? 'to' : 'from'} this user's wallet (${draft.type})?`
+    );
+    if (!confirmed) return;
+
+    setWalletAdjustSaving(phone);
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('adjust_wallet_balance_atomic', {
+        p_phone: phone,
+        p_amount: amount,
+        p_type: draft.type,
+        p_reference: draft.reason.trim() || undefined,
+      })
+      .single();
+    setWalletAdjustSaving(null);
+
+    if (rpcError || !rpcResult?.ok) {
+      alert('Adjustment failed: ' + (rpcError?.message || rpcResult?.error || 'Unknown error.'));
+      return;
+    }
+
+    setWalletBalances((prev) => ({ ...prev, [phone]: rpcResult.new_balance ?? prev[phone] ?? 0 }));
+    setWalletAdjustDrafts((prev) => ({ ...prev, [phone]: { amount: '', type: draft.type, reason: '' } }));
+    setWalletAdjustExpandedPhone(null);
+    void logAdminAction('wallet_balance_adjusted', null, { phone, amount, type: draft.type, reason: draft.reason.trim() || undefined, new_balance: rpcResult.new_balance });
+    alert(`Wallet updated. New balance: Rs. ${rpcResult.new_balance}`);
+  }
+
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
@@ -1378,6 +1574,26 @@ export default function AdminScreen() {
 
   function toggleSelectAllPayments() {
     setSelectedPaymentIds(allFilteredPaymentsSelected ? new Set() : new Set(filteredPendingPayments.map((txn) => txn.id)));
+  }
+  const filteredWalletTopupRequests = useMemo(() => {
+    const query = walletTopupsSearch.trim().toLowerCase();
+    if (!query) return walletTopupRequests;
+
+    return walletTopupRequests.filter((request) =>
+      [request.user_name, request.phone, request.payment_method]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  }, [walletTopupsSearch, walletTopupRequests]);
+  const allFilteredWalletTopupsSelected = filteredWalletTopupRequests.length > 0
+    && filteredWalletTopupRequests.every((request) => selectedWalletTopupIds.has(request.id));
+
+  useEffect(() => {
+    setSelectedWalletTopupIds(new Set());
+  }, [walletTopupsSearch]);
+
+  function toggleSelectAllWalletTopups() {
+    setSelectedWalletTopupIds(allFilteredWalletTopupsSelected ? new Set() : new Set(filteredWalletTopupRequests.map((request) => request.id)));
   }
   const filteredUsers = useMemo(() => {
     const query = usersSearch.trim().toLowerCase();
@@ -1474,17 +1690,18 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'draws', 'payments', 'users', 'revenue', 'audit', 'settings'].map(tab => (
+        {['products', 'draws', 'payments', 'wallet-topups', 'users', 'revenue', 'audit', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             {tab === 'products' ? <Package color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'draws' ? <Trophy color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'payments' ? <ReceiptText color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
+              : tab === 'wallet-topups' ? <Wallet color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'users' ? <UsersRound color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'revenue' ? <DollarSign color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'audit' ? <History color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : <Settings color={activeTab === tab ? theme.gold : theme.subtle} size={19} />}
             <Text style={[styles.tabLabel, activeTab === tab && styles.activeTabText]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'wallet-topups' ? 'Wallet Top-Ups' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -1875,6 +2092,99 @@ export default function AdminScreen() {
           </View>
         )}
 
+        {activeTab === 'wallet-topups' && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}><Wallet color={theme.text} size={19} /><Text style={styles.sectionTitle}>Pending Wallet Top-Ups ({walletTopupRequests.length})</Text></View>
+            {walletTopupRequests.length > 0 && (
+              <View style={styles.productSearchBox}>
+                <Search color={theme.muted} size={20} />
+                <TextInput
+                  style={styles.productSearchInput}
+                  placeholder="Search by name, phone, or method..."
+                  placeholderTextColor={theme.muted}
+                  value={walletTopupsSearch}
+                  onChangeText={setWalletTopupsSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Search pending wallet top-ups"
+                />
+                {walletTopupsSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setWalletTopupsSearch('')} accessibilityLabel="Clear wallet top-ups search">
+                    <X color={theme.muted} size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            {walletTopupsSearch.trim() && (
+              <Text style={styles.searchResultText}>
+                Showing {filteredWalletTopupRequests.length} of {walletTopupRequests.length} pending top-ups
+              </Text>
+            )}
+            {walletTopupRequests.length === 0 && <Text style={styles.emptyText}>No pending wallet top-ups.</Text>}
+            {walletTopupRequests.length > 0 && filteredWalletTopupRequests.length === 0 && (
+              <Text style={styles.emptyText}>No pending top-ups match “{walletTopupsSearch.trim()}”.</Text>
+            )}
+            {filteredWalletTopupRequests.length > 0 && (
+              <View style={styles.bulkActionBar}>
+                <TouchableOpacity style={styles.bulkSelectAll} onPress={toggleSelectAllWalletTopups} disabled={bulkWalletTopupsProcessing}>
+                  {allFilteredWalletTopupsSelected ? <CheckSquare color={theme.gold} size={20} /> : <Square color={theme.muted} size={20} />}
+                  <Text style={styles.bulkSelectAllText}>
+                    {selectedWalletTopupIds.size > 0 ? `${selectedWalletTopupIds.size} selected` : 'Select all'}
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.bulkActionButtons}>
+                  <TouchableOpacity
+                    style={[styles.approveButton, styles.bulkActionButton, selectedWalletTopupIds.size === 0 && styles.photoUploadDisabled]}
+                    onPress={() => bulkApproveWalletTopups(filteredWalletTopupRequests.filter((request) => selectedWalletTopupIds.has(request.id)))}
+                    disabled={selectedWalletTopupIds.size === 0 || bulkWalletTopupsProcessing}
+                  >
+                    <Check color="white" size={16} />
+                    <Text style={styles.approveButtonText}>{bulkWalletTopupsProcessing ? 'Working...' : `Approve Selected (${selectedWalletTopupIds.size})`}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.rejectButton, styles.bulkActionButton, selectedWalletTopupIds.size === 0 && styles.photoUploadDisabled]}
+                    onPress={() => bulkRejectWalletTopups(filteredWalletTopupRequests.filter((request) => selectedWalletTopupIds.has(request.id)))}
+                    disabled={selectedWalletTopupIds.size === 0 || bulkWalletTopupsProcessing}
+                  >
+                    <X color="#ff4444" size={16} />
+                    <Text style={styles.rejectButtonText}>{bulkWalletTopupsProcessing ? 'Working...' : `Reject Selected (${selectedWalletTopupIds.size})`}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {filteredWalletTopupRequests.map((request) => {
+              const selected = selectedWalletTopupIds.has(request.id);
+              return (
+                <View key={request.id} style={[styles.paymentCard, selected && styles.paymentCardSelected]}>
+                  <View style={styles.productHeader}>
+                    <TouchableOpacity style={styles.bulkRowCheckbox} onPress={() => toggleWalletTopupSelected(request.id)} disabled={bulkWalletTopupsProcessing}>
+                      {selected ? <CheckSquare color={theme.gold} size={20} /> : <Square color={theme.muted} size={20} />}
+                    </TouchableOpacity>
+                    <Text style={[styles.productName, styles.bulkRowProductName]}>Rs. {request.amount}</Text>
+                    <Text style={styles.paymentStatus}>Pending</Text>
+                  </View>
+                  <Text style={styles.paymentLine}>Method: {request.payment_method || 'Not provided'}</Text>
+                  <Text style={styles.paymentLine}>App User: {request.user_name || 'Unknown'} ({request.phone})</Text>
+                  {walletTopupReceiptUrls[request.id] ? (
+                    <Image source={{ uri: walletTopupReceiptUrls[request.id] }} style={styles.receiptImage} resizeMode="cover" accessibilityLabel="Top-up receipt" />
+                  ) : (
+                    <Text style={styles.emptyText}>Receipt preview unavailable.</Text>
+                  )}
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.approveButton} onPress={() => approveWalletTopup(request)} disabled={bulkWalletTopupsProcessing}>
+                      <Check color="white" size={16} /><Text style={styles.approveButtonText}>Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.rejectButton} onPress={() => rejectWalletTopup(request)} disabled={bulkWalletTopupsProcessing}>
+                      <X color="#ff4444" size={16} /><Text style={styles.rejectButtonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {activeTab === 'users' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><UsersRound color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Users ({users.length})</Text></View>
@@ -1910,6 +2220,8 @@ export default function AdminScreen() {
             )}
             {filteredUsers.map((u) => {
               const details = u.auth_user_id ? userProfileDetails[u.auth_user_id] : undefined;
+              const walletExpanded = walletAdjustExpandedPhone === u.phone;
+              const walletDraft = getWalletAdjustDraft(u.phone);
               return (
                 <View key={u.id} style={styles.userCard}>
                   <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
@@ -1922,6 +2234,54 @@ export default function AdminScreen() {
                   <Text style={styles.userEntries}>
                     Entries: {entries.filter(e => e.phone === u.phone).length}
                   </Text>
+                  <View style={styles.inlineRow}>
+                    <Wallet color={theme.gold} size={16} />
+                    <Text style={styles.userEntries}>Wallet: Rs. {(walletBalances[u.phone] ?? 0).toLocaleString()}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.walletAdjustToggle}
+                    onPress={() => setWalletAdjustExpandedPhone(walletExpanded ? null : u.phone)}
+                  >
+                    <Text style={styles.walletAdjustToggleText}>{walletExpanded ? 'Cancel' : 'Adjust Wallet'}</Text>
+                  </TouchableOpacity>
+                  {walletExpanded && (
+                    <View style={styles.walletAdjustForm}>
+                      <View style={styles.actionRow}>
+                        {(['bonus', 'refund', 'adjustment'] as WalletTransactionType[]).map((type) => (
+                          <TouchableOpacity
+                            key={type}
+                            style={[styles.statusBadge, walletDraft.type === type ? styles.activeBadge : styles.completedBadge]}
+                            onPress={() => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, type } }))}
+                          >
+                            <Text style={styles.tabLabel}>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Amount (negative to debit, e.g. -50)"
+                        placeholderTextColor="#666"
+                        keyboardType="numbers-and-punctuation"
+                        value={walletDraft.amount}
+                        onChangeText={(text) => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, amount: text } }))}
+                      />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Reason — optional (shows in this user's transaction history)"
+                        placeholderTextColor="#666"
+                        value={walletDraft.reason}
+                        onChangeText={(text) => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, reason: text } }))}
+                      />
+                      <TouchableOpacity
+                        style={styles.approveButton}
+                        onPress={() => saveWalletAdjustment(u.phone)}
+                        disabled={walletAdjustSaving === u.phone}
+                      >
+                        <Wallet color="white" size={16} />
+                        <Text style={styles.approveButtonText}>{walletAdjustSaving === u.phone ? 'Saving...' : 'Save Adjustment'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -2183,6 +2543,7 @@ export default function AdminScreen() {
               <Text style={styles.quickStat}>Users: {users.length}</Text>
               <Text style={styles.quickStat}>Entries: {entries.length}</Text>
               <Text style={styles.quickStat}>Pending Payments: {pendingPayments.length}</Text>
+              <Text style={styles.quickStat}>Pending Wallet Top-Ups: {walletTopupRequests.length}</Text>
               <Text style={styles.quickStat}>Revenue: Rs. {totalRevenue.toLocaleString()}</Text>
             </View>
           </View>
@@ -2314,6 +2675,9 @@ function createStyles(theme: AdminTheme) {
   userPhone: { color: theme.primary, fontSize: 14, marginBottom: 4 },
   userDate: { color: theme.muted, fontSize: 12, marginBottom: 2 },
   userEntries: { color: theme.gold, fontSize: 12 },
+  walletAdjustToggle: { alignSelf: 'flex-start', marginTop: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border },
+  walletAdjustToggleText: { color: theme.gold, fontSize: 12, fontWeight: 'bold' },
+  walletAdjustForm: { marginTop: 10, gap: 8 },
   emptyText: { color: theme.muted, textAlign: 'center', padding: 20 },
   revenueGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   revenueCard: { backgroundColor: theme.surface, borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: theme.border, width: '47%' },

@@ -856,6 +856,12 @@ export default function ProfileScreen() {
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/wallet', params: { source: 'profile' } })}>
+          <Wallet color="#18a663" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>My Wallet</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/')}>
           <Trophy color="#FFD700" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('activeDraws')}</Text>
