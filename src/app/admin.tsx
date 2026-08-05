@@ -55,9 +55,9 @@ function formatAuditDetails(details: Record<string, unknown>) {
 import { isValidSlug, slugify } from '@/lib/validation';
 import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
-  Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, ChevronDown, Circle, ClipboardList,
+  Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
-  Plus, ReceiptText, Rocket, Save, Send, Settings, Trash2,
+  Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wand2, X,
 } from 'lucide-react-native';
 
@@ -218,6 +218,8 @@ export default function AdminScreen() {
   const [productSearch, setProductSearch] = useState('');
   const [drawsSearch, setDrawsSearch] = useState('');
   const [paymentsSearch, setPaymentsSearch] = useState('');
+  const [selectedPaymentIds, setSelectedPaymentIds] = useState<Set<string>>(new Set());
+  const [bulkPaymentsProcessing, setBulkPaymentsProcessing] = useState(false);
   const [usersSearch, setUsersSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [userProfileDetails, setUserProfileDetails] = useState<Record<string, { city: string | null; date_of_birth: string | null }>>({});
@@ -1171,10 +1173,10 @@ export default function AdminScreen() {
     if (!updatedPayment) throw new Error('Database permission missing for payment approval update.');
   }
 
-  async function approvePayment(txn: Transaction) {
-    const confirmed = await confirmAsync('Approve', 'Approve this payment and add entry? Receipt screenshot will be deleted after approval.');
-    if (!confirmed) return;
-
+  // Core logic shared by the single Approve button and bulk-approve -- returns a result instead
+  // of alert()-ing or refetching directly, so bulk-approve can run this per selected payment
+  // without popping N confirm/alert dialogs, then refetch once at the end.
+  async function approvePaymentCore(txn: Transaction): Promise<{ ok: boolean; message: string }> {
     const entryPhone = txn.phone;
     const entryName = txn.user_name || undefined;
 
@@ -1192,8 +1194,7 @@ export default function AdminScreen() {
         const message = error && typeof error === 'object' && 'message' in error
           ? String(error.message)
           : 'Payment cleanup failed.';
-        alert('Payment cleanup failed: ' + message);
-        return;
+        return { ok: false, message: 'Payment cleanup failed: ' + message };
       }
       const existingProductName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
       await createUserNotification({
@@ -1204,11 +1205,7 @@ export default function AdminScreen() {
         link: '/entries',
       });
       void logAdminAction('payment_approved', txn.id, { product_id: txn.product_id, phone: entryPhone, note: 'entry already existed' });
-      alert('Entry already exists. Payment approved and receipt cleared.');
-      fetchProducts();
-      fetchEntries();
-      fetchTransactions();
-      return;
+      return { ok: true, message: 'Entry already exists. Payment approved and receipt cleared.' };
     }
 
     const { data: rpcResult, error: rpcError } = await supabase
@@ -1221,13 +1218,11 @@ export default function AdminScreen() {
       .single();
 
     if (rpcError) {
-      alert('Entry approval failed: ' + rpcError.message);
-      return;
+      return { ok: false, message: 'Entry approval failed: ' + rpcError.message };
     }
 
     if (!rpcResult?.ok) {
-      alert(rpcResult?.error || 'Entry approval failed.');
-      return;
+      return { ok: false, message: rpcResult?.error || 'Entry approval failed.' };
     }
 
     const product = products.find((p) => p.id === txn.product_id);
@@ -1238,11 +1233,7 @@ export default function AdminScreen() {
       const message = error && typeof error === 'object' && 'message' in error
         ? String(error.message)
         : 'Payment cleanup failed.';
-      alert('Entry added, but payment cleanup failed: ' + message);
-      fetchProducts();
-      fetchEntries();
-      fetchTransactions();
-      return;
+      return { ok: true, message: 'Entry added, but payment cleanup failed: ' + message };
     }
 
     const productName = product?.name || 'your draw';
@@ -1264,18 +1255,83 @@ export default function AdminScreen() {
     }
 
     void logAdminAction('payment_approved', txn.id, { product_id: txn.product_id, phone: entryPhone, entry_id: rpcResult?.entry_id });
-    alert('Payment approved and receipt deleted.');
+    return { ok: true, message: 'Payment approved and receipt deleted.' };
+  }
+
+  async function approvePayment(txn: Transaction) {
+    const confirmed = await confirmAsync('Approve', 'Approve this payment and add entry? Receipt screenshot will be deleted after approval.');
+    if (!confirmed) return;
+    const result = await approvePaymentCore(txn);
+    alert(result.message);
     fetchProducts();
     fetchEntries();
     fetchTransactions();
   }
 
+  async function rejectPaymentCore(txn: Transaction): Promise<{ ok: boolean; message: string }> {
+    const { error } = await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
+    if (error) return { ok: false, message: 'Reject failed: ' + error.message };
+    void logAdminAction('payment_rejected', txn.id, { product_id: txn.product_id, phone: txn.phone });
+    return { ok: true, message: 'Payment rejected.' };
+  }
+
   async function rejectPayment(txn: Transaction) {
     const confirmed = await confirmAsync('Reject', 'Reject this payment request?');
     if (!confirmed) return;
-    await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
-    void logAdminAction('payment_rejected', txn.id, { product_id: txn.product_id, phone: txn.phone });
+    await rejectPaymentCore(txn);
     fetchTransactions();
+  }
+
+  function togglePaymentSelected(id: string) {
+    setSelectedPaymentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkApprovePayments(txns: Transaction[]) {
+    if (txns.length === 0 || bulkPaymentsProcessing) return;
+    const confirmed = await confirmAsync(
+      'Approve Selected',
+      `Approve ${txns.length} selected payment(s) and add entries? Receipt screenshots will be deleted after approval.`
+    );
+    if (!confirmed) return;
+
+    setBulkPaymentsProcessing(true);
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const txn of txns) {
+      const result = await approvePaymentCore(txn);
+      if (result.ok) successCount += 1;
+      else failures.push(`${txn.user_name || txn.phone}: ${result.message}`);
+    }
+    setBulkPaymentsProcessing(false);
+    setSelectedPaymentIds(new Set());
+    fetchProducts();
+    fetchEntries();
+    fetchTransactions();
+    alert(`Approved ${successCount} of ${txns.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
+  }
+
+  async function bulkRejectPayments(txns: Transaction[]) {
+    if (txns.length === 0 || bulkPaymentsProcessing) return;
+    const confirmed = await confirmAsync('Reject Selected', `Reject ${txns.length} selected payment request(s)?`);
+    if (!confirmed) return;
+
+    setBulkPaymentsProcessing(true);
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const txn of txns) {
+      const result = await rejectPaymentCore(txn);
+      if (result.ok) successCount += 1;
+      else failures.push(`${txn.user_name || txn.phone}: ${result.message}`);
+    }
+    setBulkPaymentsProcessing(false);
+    setSelectedPaymentIds(new Set());
+    fetchTransactions();
+    alert(`Rejected ${successCount} of ${txns.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
   }
 
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);
@@ -1313,6 +1369,16 @@ export default function AdminScreen() {
         .some((value) => String(value).toLowerCase().includes(query));
     });
   }, [paymentsSearch, pendingPayments, products]);
+  const allFilteredPaymentsSelected = filteredPendingPayments.length > 0
+    && filteredPendingPayments.every((txn) => selectedPaymentIds.has(txn.id));
+
+  useEffect(() => {
+    setSelectedPaymentIds(new Set());
+  }, [paymentsSearch]);
+
+  function toggleSelectAllPayments() {
+    setSelectedPaymentIds(allFilteredPaymentsSelected ? new Set() : new Set(filteredPendingPayments.map((txn) => txn.id)));
+  }
   const filteredUsers = useMemo(() => {
     const query = usersSearch.trim().toLowerCase();
     if (!query) return users;
@@ -1747,12 +1813,44 @@ export default function AdminScreen() {
             {pendingPayments.length > 0 && filteredPendingPayments.length === 0 && (
               <Text style={styles.emptyText}>No pending payments match “{paymentsSearch.trim()}”.</Text>
             )}
+            {filteredPendingPayments.length > 0 && (
+              <View style={styles.bulkActionBar}>
+                <TouchableOpacity style={styles.bulkSelectAll} onPress={toggleSelectAllPayments} disabled={bulkPaymentsProcessing}>
+                  {allFilteredPaymentsSelected ? <CheckSquare color={theme.gold} size={20} /> : <Square color={theme.muted} size={20} />}
+                  <Text style={styles.bulkSelectAllText}>
+                    {selectedPaymentIds.size > 0 ? `${selectedPaymentIds.size} selected` : 'Select all'}
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.bulkActionButtons}>
+                  <TouchableOpacity
+                    style={[styles.approveButton, styles.bulkActionButton, selectedPaymentIds.size === 0 && styles.photoUploadDisabled]}
+                    onPress={() => bulkApprovePayments(filteredPendingPayments.filter((txn) => selectedPaymentIds.has(txn.id)))}
+                    disabled={selectedPaymentIds.size === 0 || bulkPaymentsProcessing}
+                  >
+                    <Check color="white" size={16} />
+                    <Text style={styles.approveButtonText}>{bulkPaymentsProcessing ? 'Working...' : `Approve Selected (${selectedPaymentIds.size})`}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.rejectButton, styles.bulkActionButton, selectedPaymentIds.size === 0 && styles.photoUploadDisabled]}
+                    onPress={() => bulkRejectPayments(filteredPendingPayments.filter((txn) => selectedPaymentIds.has(txn.id)))}
+                    disabled={selectedPaymentIds.size === 0 || bulkPaymentsProcessing}
+                  >
+                    <X color="#ff4444" size={16} />
+                    <Text style={styles.rejectButtonText}>{bulkPaymentsProcessing ? 'Working...' : `Reject Selected (${selectedPaymentIds.size})`}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             {filteredPendingPayments.map((txn) => {
               const product = products.find((p) => p.id === txn.product_id);
+              const selected = selectedPaymentIds.has(txn.id);
               return (
-                <View key={txn.id} style={styles.paymentCard}>
+                <View key={txn.id} style={[styles.paymentCard, selected && styles.paymentCardSelected]}>
                   <View style={styles.productHeader}>
-                    <Text style={styles.productName}>{product?.name || 'Unknown Draw'}</Text>
+                    <TouchableOpacity style={styles.bulkRowCheckbox} onPress={() => togglePaymentSelected(txn.id)} disabled={bulkPaymentsProcessing}>
+                      {selected ? <CheckSquare color={theme.gold} size={20} /> : <Square color={theme.muted} size={20} />}
+                    </TouchableOpacity>
+                    <Text style={[styles.productName, styles.bulkRowProductName]}>{product?.name || 'Unknown Draw'}</Text>
                     <Text style={styles.paymentStatus}>Pending</Text>
                   </View>
                   <Text style={styles.paymentLine}>Method: {txn.payment_method || 'Not provided'}</Text>
@@ -1764,10 +1862,10 @@ export default function AdminScreen() {
                     <Text style={styles.emptyText}>Receipt preview unavailable.</Text>
                   )}
                   <View style={styles.actionRow}>
-                    <TouchableOpacity style={styles.approveButton} onPress={() => approvePayment(txn)}>
+                    <TouchableOpacity style={styles.approveButton} onPress={() => approvePayment(txn)} disabled={bulkPaymentsProcessing}>
                       <Check color="white" size={16} /><Text style={styles.approveButtonText}>Approve</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.rejectButton} onPress={() => rejectPayment(txn)}>
+                    <TouchableOpacity style={styles.rejectButton} onPress={() => rejectPayment(txn)} disabled={bulkPaymentsProcessing}>
                       <X color="#ff4444" size={16} /><Text style={styles.rejectButtonText}>Reject</Text>
                     </TouchableOpacity>
                   </View>
@@ -2188,6 +2286,14 @@ function createStyles(theme: AdminTheme) {
   inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actionRow: { flexDirection: 'row', gap: 8 },
   paymentCard: { backgroundColor: theme.surface, borderRadius: 15, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: theme.gold },
+  paymentCardSelected: { borderColor: theme.primary, borderWidth: 2 },
+  bulkActionBar: { backgroundColor: theme.surfaceAlt, borderRadius: 12, borderWidth: 1, borderColor: theme.border, padding: 12, marginBottom: 14, gap: 10 },
+  bulkSelectAll: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bulkSelectAllText: { color: theme.text, fontSize: 13, fontWeight: '600' },
+  bulkActionButtons: { flexDirection: 'row', gap: 8 },
+  bulkActionButton: { flex: 1 },
+  bulkRowCheckbox: { padding: 2 },
+  bulkRowProductName: { marginLeft: 10 },
   paymentStatus: { color: theme.gold, fontSize: 12, fontWeight: 'bold' },
   paymentLine: { color: theme.muted, fontSize: 13, marginBottom: 5 },
   receiptImage: { width: '100%', height: 260, borderRadius: 10, marginVertical: 12, borderWidth: 1, borderColor: theme.border },
