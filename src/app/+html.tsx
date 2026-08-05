@@ -12,6 +12,12 @@ const GTM_CONTAINER_ID = 'GTM-TZR6W32B';
 // and no CSP meta tag anywhere), so there's no CSP compatibility concern for this inline
 // script.
 const GTM_BLOCKED_PATHS = ['/auth/callback', '/auth/reset-password'];
+// Read directly here (not via the app's getStoredValue/AsyncStorage helper) because this script
+// runs before React hydrates -- CookieConsentBanner's key ('cookieConsent') is read straight
+// from localStorage since AsyncStorage's web backend is an unprefixed localStorage wrapper (see
+// src/components/cookie-consent-banner.tsx). A first-ever pageview (no decision stored yet)
+// still loads GTM, matching every other site's "on by default, opt out" cookie banner behavior;
+// only an explicit "Reject" stops it from loading on subsequent page loads.
 
 export default function Root({ children }: { children: ReactNode }) {
   const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } =
@@ -25,6 +31,7 @@ export default function Root({ children }: { children: ReactNode }) {
           {`(function(w,d,s,l,i){
             var p=location.pathname.replace(/\\/+$/,'')||'/';
             if (${JSON.stringify(GTM_BLOCKED_PATHS)}.indexOf(p) !== -1) return;
+            try { if (w.localStorage.getItem('cookieConsent') === 'rejected') return; } catch (e) {}
             w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
             var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
             j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
