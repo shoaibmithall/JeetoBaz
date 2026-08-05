@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage, type TranslationKey } from '@/lib/i18n';
 import { getProductCategory } from '@/lib/product-categories';
+import { recordRecentlyViewedProduct } from '@/lib/recently-viewed';
 import { pageSchema } from '@/lib/structured-data';
 import type { Product } from '@/types/database';
 import productSeoManifest from '@/generated/product-seo-manifest.json';
@@ -159,6 +160,10 @@ export default function ProductDetailScreen() {
     loadProduct();
     return () => { active = false; };
   }, [slug]);
+
+  useEffect(() => {
+    if (product?.id) void recordRecentlyViewedProduct(product.id);
+  }, [product?.id]);
 
   // Independent of the main product fetch above so related products don't wait on it — the
   // current product's entry fee (needed for proximity sorting) is already available synchronously

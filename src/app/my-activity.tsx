@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
-import { ChevronRight, Heart, Target, Ticket, Trophy } from 'lucide-react-native';
+import { ChevronRight, Heart, History, Target, Ticket, Trophy } from 'lucide-react-native';
 
 export default function MyActivityScreen() {
   const { theme } = useAppTheme();
@@ -41,6 +41,12 @@ export default function MyActivityScreen() {
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/favorites')}>
           <Heart color="#EC4899" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Wishlist</Text>
+          <ChevronRight color={theme.subtle} size={20} />
+        </TouchableOpacity>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/recently-viewed')}>
+          <History color="#4a9eff" size={21} />
+          <Text style={[styles.menuText, { color: theme.gold }]}>Recently Viewed</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
       </View>
