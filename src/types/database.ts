@@ -270,6 +270,17 @@ export type AuthMigrationConfig = {
   value: string;
 };
 
+// Added 2026-08-05: Stage 1 of Web Push notifications (supabase/migrations/20260805120000_add_push_subscriptions.sql).
+export type PushSubscriptionRow = {
+  id: string;
+  phone: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string | null;
+  created_at: string;
+};
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -336,6 +347,10 @@ export type Database = {
         Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path'> &
           Partial<Pick<VerificationDocument, 'is_visible' | 'sort_order'>>,
         Partial<Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path' | 'is_visible' | 'sort_order'>>
+      >;
+      push_subscriptions: Table<
+        PushSubscriptionRow,
+        Pick<PushSubscriptionRow, 'phone' | 'endpoint' | 'p256dh' | 'auth'> & Partial<Pick<PushSubscriptionRow, 'user_agent'>>
       >;
       auth_migration_config: Table<AuthMigrationConfig>;
       admin_audit_log: Table<
