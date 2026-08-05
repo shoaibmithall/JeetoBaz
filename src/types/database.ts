@@ -281,6 +281,27 @@ export type PushSubscriptionRow = {
   created_at: string;
 };
 
+// Added 2026-08-05: Wallet Phase 1 (supabase/migrations/20260805150000_add_wallet_foundation.sql).
+// Both tables are read-only from the client -- writes only ever happen via the
+// topup_wallet_atomic / enter_draw_from_wallet_atomic SECURITY DEFINER functions.
+export type WalletRow = {
+  phone: string;
+  balance: number;
+  updated_at: string;
+};
+
+export type WalletTransactionType = 'topup' | 'entry' | 'refund' | 'bonus' | 'adjustment';
+
+export type WalletTransactionRow = {
+  id: string;
+  phone: string;
+  type: WalletTransactionType;
+  amount: number;
+  balance_after: number;
+  reference: string | null;
+  created_at: string;
+};
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -352,6 +373,10 @@ export type Database = {
         PushSubscriptionRow,
         Pick<PushSubscriptionRow, 'phone' | 'endpoint' | 'p256dh' | 'auth'> & Partial<Pick<PushSubscriptionRow, 'user_agent'>>
       >;
+      // Read-only from the client -- all writes go through topup_wallet_atomic /
+      // enter_draw_from_wallet_atomic, never a direct insert/update.
+      wallets: Table<WalletRow, never, never>;
+      wallet_transactions: Table<WalletTransactionRow, never, never>;
       auth_migration_config: Table<AuthMigrationConfig>;
       admin_audit_log: Table<
         AdminAuditLogEntry,
@@ -486,6 +511,14 @@ export type Database = {
           entry_id?: string;
           new_entries?: number;
         }>;
+      };
+      topup_wallet_atomic: {
+        Args: { p_phone: string; p_amount: number; p_reference?: string };
+        Returns: Array<{ ok: boolean; error?: string; new_balance?: number }>;
+      };
+      enter_draw_from_wallet_atomic: {
+        Args: { p_product_id: string; p_phone: string; p_name?: string };
+        Returns: Array<{ ok: boolean; error?: string; entry_id?: string; new_balance?: number }>;
       };
       check_entry_exists: {
         Args: { p_product_id: string; p_phone: string };
