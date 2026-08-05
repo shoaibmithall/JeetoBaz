@@ -17,7 +17,7 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WinnerStatus } from '@/types/database';
+import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
@@ -41,6 +41,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   payment_rejected: 'Payment rejected',
   wallet_topup_approved: 'Wallet top-up approved',
   wallet_topup_rejected: 'Wallet top-up rejected',
+  wallet_balance_adjusted: 'Wallet balance adjusted',
   draw_run: 'Draw run',
 };
 
@@ -227,6 +228,10 @@ export default function AdminScreen() {
   const [walletTopupsSearch, setWalletTopupsSearch] = useState('');
   const [selectedWalletTopupIds, setSelectedWalletTopupIds] = useState<Set<string>>(new Set());
   const [bulkWalletTopupsProcessing, setBulkWalletTopupsProcessing] = useState(false);
+  const [walletBalances, setWalletBalances] = useState<Record<string, number>>({});
+  const [walletAdjustExpandedPhone, setWalletAdjustExpandedPhone] = useState<string | null>(null);
+  const [walletAdjustDrafts, setWalletAdjustDrafts] = useState<Record<string, { amount: string; type: WalletTransactionType; reason: string }>>({});
+  const [walletAdjustSaving, setWalletAdjustSaving] = useState<string | null>(null);
   const [usersSearch, setUsersSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [userProfileDetails, setUserProfileDetails] = useState<Record<string, { city: string | null; date_of_birth: string | null }>>({});
@@ -313,6 +318,7 @@ export default function AdminScreen() {
       fetchEntries();
       fetchTransactions();
       fetchWalletTopupRequests();
+      fetchWalletBalances();
       fetchDrawResults();
       fetchAuditLog();
       loadAnnouncement();
@@ -482,6 +488,14 @@ export default function AdminScreen() {
       if (data?.signedUrl) nextUrls[item.id] = data.signedUrl;
     }
     setReceiptUrls(nextUrls);
+  }
+
+  async function fetchWalletBalances() {
+    const { data } = await supabase.from('wallets').select('phone, balance');
+    if (!data) return;
+    const map: Record<string, number> = {};
+    for (const row of data) map[row.phone] = row.balance;
+    setWalletBalances(map);
   }
 
   async function fetchWalletTopupRequests() {
@@ -1475,6 +1489,47 @@ export default function AdminScreen() {
     alert(`Rejected ${successCount} of ${requests.length}.` + (failures.length ? `\n\nFailed:\n${failures.join('\n')}` : ''));
   }
 
+  function getWalletAdjustDraft(phone: string) {
+    return walletAdjustDrafts[phone] || { amount: '', type: 'bonus' as WalletTransactionType, reason: '' };
+  }
+
+  async function saveWalletAdjustment(phone: string) {
+    const draft = getWalletAdjustDraft(phone);
+    const amount = Math.trunc(Number(draft.amount));
+    if (!amount) {
+      alert('Enter a non-zero amount. Use a negative number to debit the wallet.');
+      return;
+    }
+
+    const confirmed = await confirmAsync(
+      'Adjust Wallet',
+      `${amount > 0 ? 'Credit' : 'Debit'} Rs. ${Math.abs(amount)} ${amount > 0 ? 'to' : 'from'} this user's wallet (${draft.type})?`
+    );
+    if (!confirmed) return;
+
+    setWalletAdjustSaving(phone);
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('adjust_wallet_balance_atomic', {
+        p_phone: phone,
+        p_amount: amount,
+        p_type: draft.type,
+        p_reference: draft.reason.trim() || undefined,
+      })
+      .single();
+    setWalletAdjustSaving(null);
+
+    if (rpcError || !rpcResult?.ok) {
+      alert('Adjustment failed: ' + (rpcError?.message || rpcResult?.error || 'Unknown error.'));
+      return;
+    }
+
+    setWalletBalances((prev) => ({ ...prev, [phone]: rpcResult.new_balance ?? prev[phone] ?? 0 }));
+    setWalletAdjustDrafts((prev) => ({ ...prev, [phone]: { amount: '', type: draft.type, reason: '' } }));
+    setWalletAdjustExpandedPhone(null);
+    void logAdminAction('wallet_balance_adjusted', null, { phone, amount, type: draft.type, reason: draft.reason.trim() || undefined, new_balance: rpcResult.new_balance });
+    alert(`Wallet updated. New balance: Rs. ${rpcResult.new_balance}`);
+  }
+
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
@@ -2165,6 +2220,8 @@ export default function AdminScreen() {
             )}
             {filteredUsers.map((u) => {
               const details = u.auth_user_id ? userProfileDetails[u.auth_user_id] : undefined;
+              const walletExpanded = walletAdjustExpandedPhone === u.phone;
+              const walletDraft = getWalletAdjustDraft(u.phone);
               return (
                 <View key={u.id} style={styles.userCard}>
                   <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
@@ -2177,6 +2234,54 @@ export default function AdminScreen() {
                   <Text style={styles.userEntries}>
                     Entries: {entries.filter(e => e.phone === u.phone).length}
                   </Text>
+                  <View style={styles.inlineRow}>
+                    <Wallet color={theme.gold} size={16} />
+                    <Text style={styles.userEntries}>Wallet: Rs. {(walletBalances[u.phone] ?? 0).toLocaleString()}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.walletAdjustToggle}
+                    onPress={() => setWalletAdjustExpandedPhone(walletExpanded ? null : u.phone)}
+                  >
+                    <Text style={styles.walletAdjustToggleText}>{walletExpanded ? 'Cancel' : 'Adjust Wallet'}</Text>
+                  </TouchableOpacity>
+                  {walletExpanded && (
+                    <View style={styles.walletAdjustForm}>
+                      <View style={styles.actionRow}>
+                        {(['bonus', 'refund', 'adjustment'] as WalletTransactionType[]).map((type) => (
+                          <TouchableOpacity
+                            key={type}
+                            style={[styles.statusBadge, walletDraft.type === type ? styles.activeBadge : styles.completedBadge]}
+                            onPress={() => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, type } }))}
+                          >
+                            <Text style={styles.tabLabel}>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Amount (negative to debit, e.g. -50)"
+                        placeholderTextColor="#666"
+                        keyboardType="numbers-and-punctuation"
+                        value={walletDraft.amount}
+                        onChangeText={(text) => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, amount: text } }))}
+                      />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Reason — optional (shows in this user's transaction history)"
+                        placeholderTextColor="#666"
+                        value={walletDraft.reason}
+                        onChangeText={(text) => setWalletAdjustDrafts((prev) => ({ ...prev, [u.phone]: { ...walletDraft, reason: text } }))}
+                      />
+                      <TouchableOpacity
+                        style={styles.approveButton}
+                        onPress={() => saveWalletAdjustment(u.phone)}
+                        disabled={walletAdjustSaving === u.phone}
+                      >
+                        <Wallet color="white" size={16} />
+                        <Text style={styles.approveButtonText}>{walletAdjustSaving === u.phone ? 'Saving...' : 'Save Adjustment'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -2570,6 +2675,9 @@ function createStyles(theme: AdminTheme) {
   userPhone: { color: theme.primary, fontSize: 14, marginBottom: 4 },
   userDate: { color: theme.muted, fontSize: 12, marginBottom: 2 },
   userEntries: { color: theme.gold, fontSize: 12 },
+  walletAdjustToggle: { alignSelf: 'flex-start', marginTop: 10, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border },
+  walletAdjustToggleText: { color: theme.gold, fontSize: 12, fontWeight: 'bold' },
+  walletAdjustForm: { marginTop: 10, gap: 8 },
   emptyText: { color: theme.muted, textAlign: 'center', padding: 20 },
   revenueGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   revenueCard: { backgroundColor: theme.surface, borderRadius: 12, padding: 15, alignItems: 'center', borderWidth: 1, borderColor: theme.border, width: '47%' },

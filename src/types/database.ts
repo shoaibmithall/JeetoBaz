@@ -548,6 +548,10 @@ export type Database = {
         Args: { p_product_id: string; p_phone: string; p_name?: string };
         Returns: Array<{ ok: boolean; error?: string; entry_id?: string; new_balance?: number }>;
       };
+      adjust_wallet_balance_atomic: {
+        Args: { p_phone: string; p_amount: number; p_type: string; p_reference?: string };
+        Returns: Array<{ ok: boolean; error?: string; new_balance?: number }>;
+      };
       get_my_pending_wallet_topup_requests: {
         Args: { p_phone: string };
         Returns: Array<{
