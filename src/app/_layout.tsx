@@ -11,6 +11,7 @@ import { TawkToWidget } from '@/components/TawkToWidget';
 import { PromoEntryInterstitial } from '@/components/promo-entry-interstitial';
 import { FirstVisitSignupPrompt } from '@/components/first-visit-signup-prompt';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import { UpdateAvailableBanner } from '@/components/update-available-banner';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -153,6 +154,7 @@ export default function RootLayout() {
       <PromoEntryInterstitial />
       <FirstVisitSignupPrompt />
       <CookieConsentBanner />
+      <UpdateAvailableBanner />
     </>
     </AuthProvider>
   );
