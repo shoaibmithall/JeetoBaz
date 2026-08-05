@@ -19,7 +19,7 @@ import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
 import {
   Award, BadgeCheck, Bell, BellRing, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
-  Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
+  Copy, Eye, EyeOff, Flag, Gift, Globe2, Heart, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, Shield, ShieldCheck, Smartphone, Sun, Target, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
 } from 'lucide-react-native';
@@ -857,13 +857,29 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.menuBox, isMobileProfile && styles.menuBoxMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/entries', params: { source: 'profile' } })}>
-          <Target color="#FF6B6B" size={21} />
-          <Text style={[styles.menuText, { color: theme.gold }]}>{t('myEntries')}</Text>
-          <ChevronRight color={theme.subtle} size={20} />
+      <Text style={[styles.activityTitle, { color: theme.text }]}>🎟️ My Activity</Text>
+      <View style={[styles.activityGrid, isMobileProfile && styles.activityGridMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <TouchableOpacity style={styles.activityItem} onPress={() => router.push({ pathname: '/entries', params: { source: 'profile' } })}>
+          <View style={[styles.activityIconBox, { backgroundColor: '#FF6B6B22' }]}>
+            <Target color="#FF6B6B" size={22} />
+          </View>
+          <Text style={[styles.activityLabel, { color: theme.text }]}>{t('myEntries')}</Text>
         </TouchableOpacity>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.activityItem} onPress={() => router.push({ pathname: '/explore', params: { tab: 'mine', source: 'profile' } })}>
+          <View style={[styles.activityIconBox, { backgroundColor: theme.goldSoft }]}>
+            <Trophy color={theme.gold} size={22} />
+          </View>
+          <Text style={[styles.activityLabel, { color: theme.text }]}>My Wins</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.activityItem} onPress={() => router.push('/favorites')}>
+          <View style={[styles.activityIconBox, { backgroundColor: '#EC489922' }]}>
+            <Heart color="#EC4899" size={22} />
+          </View>
+          <Text style={[styles.activityLabel, { color: theme.text }]}>Wishlist</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.menuBox, isMobileProfile && styles.menuBoxMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/wallet', params: { source: 'profile' } })}>
           <Wallet color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>My Wallet</Text>
@@ -1461,6 +1477,12 @@ const styles = StyleSheet.create({
   statCardMobile: { flexGrow: 0, flexBasis: '31%' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#FFD700' },
   statLabel: { fontSize: 11, color: '#aaa', marginTop: 4, textAlign: 'center' },
+  activityTitle: { fontSize: 16, fontWeight: 'bold', color: 'white', marginHorizontal: 15, marginTop: 15, marginBottom: 8 },
+  activityGrid: { backgroundColor: '#071b13', marginHorizontal: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35', flexDirection: 'row', paddingVertical: 16 },
+  activityGridMobile: { paddingVertical: 12 },
+  activityItem: { flex: 1, alignItems: 'center', gap: 8 },
+  activityIconBox: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  activityLabel: { fontSize: 12, fontWeight: '600', color: 'white', textAlign: 'center' },
   menuBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, borderWidth: 1, borderColor: '#174a35' },
   menuBoxMobile: { marginTop: 4 },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18 },

@@ -1,6 +1,6 @@
 import { Image, View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import { useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
-import { Link, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/providers/AuthProvider';
@@ -19,12 +19,13 @@ export default function WinnersScreen() {
   const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string }>();
   const [winners, setWinners] = useState<PublicWinnerListEntry[]>([]);
   const [myWins, setMyWins] = useState<PublicWinnerListEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<Tab>('all');
+  const [tab, setTab] = useState<Tab>(params.tab === 'mine' ? 'mine' : 'all');
   const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
 
   useEffect(() => { fetchWinners(); }, []);
