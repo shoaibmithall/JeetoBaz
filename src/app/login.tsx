@@ -72,6 +72,7 @@ export default function ProfileScreen() {
   const [totalEntries, setTotalEntries] = useState(0);
   const [certificateCount, setCertificateCount] = useState(0);
   const [successfulReferrals, setSuccessfulReferrals] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [emailError, setEmailError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -256,6 +257,7 @@ export default function ProfileScreen() {
         setTotalEntries(0);
         setCertificateCount(0);
         setSuccessfulReferrals(0);
+        setWalletBalance(0);
         setStep('login');
       }
     }
@@ -273,6 +275,8 @@ export default function ProfileScreen() {
   async function fetchStats(phone: string) {
     const { data } = await supabase.rpc('count_my_entries', { p_phone: phone });
     if (typeof data === 'number') setTotalEntries(data);
+    const { data: walletRow } = await supabase.from('wallets').select('balance').eq('phone', phone).maybeSingle();
+    setWalletBalance(walletRow?.balance ?? 0);
   }
 
   async function sendFeedback() {
@@ -798,6 +802,10 @@ export default function ProfileScreen() {
         <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.statNumber, { color: theme.gold }]}>{successfulReferrals}</Text>
           <Text style={[styles.statLabel, { color: theme.muted }]}>Refer & Earn</Text>
+        </View>
+        <View style={[styles.statCard, isMobileProfile && styles.statCardMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.statNumber, { color: theme.gold }]}>Rs. {walletBalance.toLocaleString()}</Text>
+          <Text style={[styles.statLabel, { color: theme.muted }]}>My Wallet</Text>
         </View>
       </View>
 
