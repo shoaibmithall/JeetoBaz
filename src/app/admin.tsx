@@ -216,6 +216,9 @@ export default function AdminScreen() {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
+  const [drawsSearch, setDrawsSearch] = useState('');
+  const [paymentsSearch, setPaymentsSearch] = useState('');
+  const [usersSearch, setUsersSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [userProfileDetails, setUserProfileDetails] = useState<Record<string, { city: string | null; date_of_birth: string | null }>>({});
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -1289,6 +1292,37 @@ export default function AdminScreen() {
         .some((value) => String(value).toLowerCase().includes(query))
     );
   }, [productSearch, products]);
+  const filteredDrawResults = useMemo(() => {
+    const query = drawsSearch.trim().toLowerCase();
+    if (!query) return drawResults;
+
+    return drawResults.filter((result) =>
+      [result.products?.name, result.winner_name, result.winner_phone, result.winner_ticket_number]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  }, [drawsSearch, drawResults]);
+  const filteredPendingPayments = useMemo(() => {
+    const query = paymentsSearch.trim().toLowerCase();
+    if (!query) return pendingPayments;
+
+    return pendingPayments.filter((txn) => {
+      const product = products.find((p) => p.id === txn.product_id);
+      return [product?.name, txn.user_name, txn.phone, txn.payment_method]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [paymentsSearch, pendingPayments, products]);
+  const filteredUsers = useMemo(() => {
+    const query = usersSearch.trim().toLowerCase();
+    if (!query) return users;
+
+    return users.filter((u) =>
+      [u.name, u.phone, u.email, u.member_number ? `JB-${u.member_number}` : null]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  }, [usersSearch, users]);
 
   if (authLoading && !authenticated) return (
     <>
@@ -1568,8 +1602,37 @@ export default function AdminScreen() {
         {activeTab === 'draws' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><Trophy color={theme.text} size={19} /><Text style={styles.sectionTitle}>Completed Draws ({drawResults.length})</Text></View>
+            {drawResults.length > 0 && (
+              <View style={styles.productSearchBox}>
+                <Search color={theme.muted} size={20} />
+                <TextInput
+                  style={styles.productSearchInput}
+                  placeholder="Search by product, winner name, phone, or ticket..."
+                  placeholderTextColor={theme.muted}
+                  value={drawsSearch}
+                  onChangeText={setDrawsSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Search completed draws"
+                />
+                {drawsSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setDrawsSearch('')} accessibilityLabel="Clear draws search">
+                    <X color={theme.muted} size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            {drawsSearch.trim() && (
+              <Text style={styles.searchResultText}>
+                Showing {filteredDrawResults.length} of {drawResults.length} draws
+              </Text>
+            )}
             {drawResults.length === 0 && <Text style={styles.emptyText}>No draws have been run yet.</Text>}
-            {drawResults.map((result) => {
+            {drawResults.length > 0 && filteredDrawResults.length === 0 && (
+              <Text style={styles.emptyText}>No draws match “{drawsSearch.trim()}”.</Text>
+            )}
+            {filteredDrawResults.map((result) => {
               const draft = getPrizeStatusDraft(result);
               const winnerDraft = getWinnerStatusDraft(result);
               return (
@@ -1654,8 +1717,37 @@ export default function AdminScreen() {
         {activeTab === 'payments' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><ReceiptText color={theme.text} size={19} /><Text style={styles.sectionTitle}>Pending Payments ({pendingPayments.length})</Text></View>
+            {pendingPayments.length > 0 && (
+              <View style={styles.productSearchBox}>
+                <Search color={theme.muted} size={20} />
+                <TextInput
+                  style={styles.productSearchInput}
+                  placeholder="Search by product, name, phone, or method..."
+                  placeholderTextColor={theme.muted}
+                  value={paymentsSearch}
+                  onChangeText={setPaymentsSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Search pending payments"
+                />
+                {paymentsSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setPaymentsSearch('')} accessibilityLabel="Clear payments search">
+                    <X color={theme.muted} size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            {paymentsSearch.trim() && (
+              <Text style={styles.searchResultText}>
+                Showing {filteredPendingPayments.length} of {pendingPayments.length} pending payments
+              </Text>
+            )}
             {pendingPayments.length === 0 && <Text style={styles.emptyText}>No pending payments.</Text>}
-            {pendingPayments.map((txn) => {
+            {pendingPayments.length > 0 && filteredPendingPayments.length === 0 && (
+              <Text style={styles.emptyText}>No pending payments match “{paymentsSearch.trim()}”.</Text>
+            )}
+            {filteredPendingPayments.map((txn) => {
               const product = products.find((p) => p.id === txn.product_id);
               return (
                 <View key={txn.id} style={styles.paymentCard}>
@@ -1688,8 +1780,37 @@ export default function AdminScreen() {
         {activeTab === 'users' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><UsersRound color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Users ({users.length})</Text></View>
+            {users.length > 0 && (
+              <View style={styles.productSearchBox}>
+                <Search color={theme.muted} size={20} />
+                <TextInput
+                  style={styles.productSearchInput}
+                  placeholder="Search by name, phone, email, or member ID..."
+                  placeholderTextColor={theme.muted}
+                  value={usersSearch}
+                  onChangeText={setUsersSearch}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Search users"
+                />
+                {usersSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setUsersSearch('')} accessibilityLabel="Clear users search">
+                    <X color={theme.muted} size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            {usersSearch.trim() && (
+              <Text style={styles.searchResultText}>
+                Showing {filteredUsers.length} of {users.length} users
+              </Text>
+            )}
             {users.length === 0 && <Text style={styles.emptyText}>No users yet!</Text>}
-            {users.map((u) => {
+            {users.length > 0 && filteredUsers.length === 0 && (
+              <Text style={styles.emptyText}>No users match “{usersSearch.trim()}”.</Text>
+            )}
+            {filteredUsers.map((u) => {
               const details = u.auth_user_id ? userProfileDetails[u.auth_user_id] : undefined;
               return (
                 <View key={u.id} style={styles.userCard}>
