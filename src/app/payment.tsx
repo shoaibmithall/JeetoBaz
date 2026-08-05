@@ -11,7 +11,7 @@ import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
-import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert } from 'lucide-react-native';
+import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -81,8 +81,13 @@ export default function PaymentScreen() {
   const [submitError, setSubmitError] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userName, setUserName] = useState('');
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [walletSubmitting, setWalletSubmitting] = useState(false);
+  const [walletError, setWalletError] = useState('');
+  const [paidVia, setPaidVia] = useState<'wallet' | 'manual'>('manual');
   const submittingRef = useRef(false);
   const canSubmit = Boolean(receipt && productIdValue && !loading);
+  const entryFeeNumber = Number(entryFeeValue) || 0;
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
@@ -104,6 +109,10 @@ export default function PaymentScreen() {
         }
         setUserPhone(phone);
         setUserName(name);
+        if (phone) {
+          const { data: walletRow } = await supabase.from('wallets').select('balance').eq('phone', phone).maybeSingle();
+          setWalletBalance(walletRow?.balance ?? 0);
+        }
       },
     );
   }, [user]);
@@ -160,6 +169,47 @@ export default function PaymentScreen() {
 
     if (error) throw error;
     return filePath;
+  }
+
+  async function confirmWalletEntry() {
+    if (walletSubmitting || submittingRef.current) return;
+    setWalletError('');
+
+    if (!productIdValue) {
+      alert('Missing product for this payment!');
+      return;
+    }
+
+    if (!userPhone) {
+      router.push('/login');
+      return;
+    }
+
+    submittingRef.current = true;
+    setWalletSubmitting(true);
+
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('enter_draw_from_wallet_atomic', {
+        p_product_id: productIdValue,
+        p_phone: userPhone,
+        p_name: userName?.trim() || undefined,
+      })
+      .single();
+
+    if (rpcError || !rpcResult?.ok) {
+      const message = rpcError?.message || rpcResult?.error || 'Wallet entry failed.';
+      setWalletError(message);
+      alert('Error: ' + message);
+      submittingRef.current = false;
+      setWalletSubmitting(false);
+      return;
+    }
+
+    setWalletBalance(rpcResult.new_balance ?? null);
+    setPaidVia('wallet');
+    setStep('success');
+    submittingRef.current = false;
+    setWalletSubmitting(false);
   }
 
   async function confirmPayment() {
@@ -305,9 +355,11 @@ export default function PaymentScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.successBox}>
         <PartyPopper color={theme.gold} size={80} />
-        <Text style={[styles.successTitle, { color: theme.primary }]}>Payment Submitted!</Text>
+        <Text style={[styles.successTitle, { color: theme.primary }]}>{paidVia === 'wallet' ? 'Entry Confirmed!' : 'Payment Submitted!'}</Text>
         <Text style={[styles.successText, { color: theme.text }]}>{t('goodLuck')}</Text>
-        <Text style={[styles.successSub, { color: theme.muted }]}>Your entry will be added after admin approval.</Text>
+        <Text style={[styles.successSub, { color: theme.muted }]}>
+          {paidVia === 'wallet' ? 'Paid instantly from your wallet — no approval wait!' : 'Your entry will be added after admin approval.'}
+        </Text>
       </View>
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.push('/')}>
         <House color="white" size={18} /><Text style={styles.homeBtnText}>{t('backToHome')}</Text>
@@ -336,6 +388,35 @@ export default function PaymentScreen() {
         <Text style={[styles.productName, { color: theme.text }]}>{productNameValue}</Text>
         <Text style={[styles.entryFee, { color: theme.gold }]}>{t('entryFee')}: Rs. {entryFeeValue}</Text>
       </View>
+
+      {userPhone && walletBalance !== null ? (
+        <View style={[styles.walletBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={styles.walletHeaderRow}>
+            <Wallet color={theme.gold} size={20} />
+            <Text style={[styles.walletTitle, { color: theme.text }]}>Pay from Wallet</Text>
+          </View>
+          <Text style={[styles.walletBalanceText, { color: theme.muted }]}>Balance: Rs. {walletBalance.toLocaleString()}</Text>
+          {walletBalance >= entryFeeNumber ? (
+            <TouchableOpacity style={styles.walletPayBtn} onPress={confirmWalletEntry} disabled={walletSubmitting}>
+              <Zap color="#000" size={18} />
+              <Text style={styles.walletPayBtnText}>{walletSubmitting ? t('confirming') : `Pay Rs. ${entryFeeValue} Instantly`}</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.walletTopupLink} onPress={() => router.push('/wallet-topup')}>
+              <Text style={[styles.walletTopupLinkText, { color: theme.info }]}>Insufficient balance — Top up your wallet →</Text>
+            </TouchableOpacity>
+          )}
+          {walletError ? <Text style={styles.walletErrorText}>{walletError}</Text> : null}
+        </View>
+      ) : null}
+
+      {userPhone && walletBalance !== null ? (
+        <View style={styles.orDivider}>
+          <View style={[styles.orDividerLine, { backgroundColor: theme.border }]} />
+          <Text style={[styles.orDividerText, { color: theme.subtle }]}>OR PAY MANUALLY</Text>
+          <View style={[styles.orDividerLine, { backgroundColor: theme.border }]} />
+        </View>
+      ) : null}
 
       <View style={styles.paymentBox}>
         <Text style={[styles.payTitle, { color: theme.text }]}>{t('sendPaymentTo')}:</Text>
@@ -439,6 +520,18 @@ const styles = StyleSheet.create({
   productBox: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35', alignItems: 'center' },
   productName: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 5 },
   entryFee: { fontSize: 16, color: '#FFD700', fontWeight: 'bold' },
+  walletBox: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 18, borderWidth: 1, borderColor: '#174a35' },
+  walletHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  walletTitle: { fontSize: 16, fontWeight: 'bold', color: 'white' },
+  walletBalanceText: { fontSize: 13, color: '#aaa', marginBottom: 12 },
+  walletPayBtn: { backgroundColor: '#FFD700', padding: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  walletPayBtnText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  walletTopupLink: { padding: 12, alignItems: 'center' },
+  walletTopupLinkText: { fontSize: 14, fontWeight: 'bold' },
+  walletErrorText: { color: '#ffb4b4', fontSize: 12, lineHeight: 17, marginTop: 10 },
+  orDivider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 15, marginTop: 20 },
+  orDividerLine: { flex: 1, height: 1 },
+  orDividerText: { fontSize: 11, fontWeight: 'bold' },
   paymentBox: { margin: 15 },
   payTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 15 },
   methodCard: { backgroundColor: '#071b13', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 15, borderWidth: 1, borderColor: '#174a35' },
