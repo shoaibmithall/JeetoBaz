@@ -302,6 +302,26 @@ export type WalletTransactionRow = {
   created_at: string;
 };
 
+// Added 2026-08-05: Wallet Phase 2 (supabase/migrations/20260805160000_add_wallet_topup_requests.sql).
+export type WalletTopupStatus = 'pending' | 'approved' | 'rejected';
+
+export type WalletTopupRequest = {
+  id: string;
+  user_id?: string | null;
+  phone: string;
+  user_name?: string | null;
+  amount: number;
+  payment_method?: string | null;
+  sender_name?: string | null;
+  sender_phone?: string | null;
+  reference?: string | null;
+  receipt_path?: string | null;
+  status: WalletTopupStatus;
+  created_at: string;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+};
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row;
   Insert: Insert;
@@ -347,6 +367,14 @@ export type Database = {
         Transaction,
         Pick<Transaction, 'product_id' | 'phone' | 'amount' | 'jazzcash_txn_id'> &
           Partial<Pick<Transaction, 'status' | 'payment_method' | 'sender_name' | 'sender_phone' | 'user_name' | 'receipt_path'>>
+      >;
+      // Insert-only from the client -- status only ever changes via the approve_wallet_topup_request /
+      // reject_wallet_topup_request SECURITY DEFINER functions, never a direct update.
+      wallet_topup_requests: Table<
+        WalletTopupRequest,
+        Pick<WalletTopupRequest, 'phone' | 'amount'> &
+          Partial<Pick<WalletTopupRequest, 'user_id' | 'user_name' | 'payment_method' | 'sender_name' | 'sender_phone' | 'reference' | 'receipt_path' | 'status'>>,
+        never
       >;
       notifications: Table<
         AppNotification,
@@ -519,6 +547,28 @@ export type Database = {
       enter_draw_from_wallet_atomic: {
         Args: { p_product_id: string; p_phone: string; p_name?: string };
         Returns: Array<{ ok: boolean; error?: string; entry_id?: string; new_balance?: number }>;
+      };
+      get_my_pending_wallet_topup_requests: {
+        Args: { p_phone: string };
+        Returns: Array<{
+          id: string;
+          amount: number;
+          payment_method: string | null;
+          status: string;
+          created_at: string;
+        }>;
+      };
+      check_pending_wallet_topup_exists: {
+        Args: { p_phone: string };
+        Returns: boolean;
+      };
+      approve_wallet_topup_request: {
+        Args: { p_request_id: string };
+        Returns: Array<{ ok: boolean; error?: string; new_balance?: number }>;
+      };
+      reject_wallet_topup_request: {
+        Args: { p_request_id: string; p_reason?: string };
+        Returns: Array<{ ok: boolean; error?: string; reason?: string }>;
       };
       check_entry_exists: {
         Args: { p_product_id: string; p_phone: string };
