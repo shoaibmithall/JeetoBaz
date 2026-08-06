@@ -17,7 +17,13 @@ import {
   getAllVerificationDocuments,
   updateVerificationDocument,
 } from '@/lib/verification-documents';
-import type { AdminAuditLogEntry, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
+import {
+  createBrandShowcaseImage,
+  deleteBrandShowcaseImage,
+  getAllBrandShowcaseImages,
+  updateBrandShowcaseImageVisibility,
+} from '@/lib/brand-showcase';
+import type { AdminAuditLogEntry, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
@@ -69,6 +75,7 @@ const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
 const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
+const BRAND_SHOWCASE_BUCKET = 'brand-showcase';
 const CERTIFICATES_BUCKET = 'winner-certificates';
 const PRODUCT_IMAGES_BUCKET = 'products';
 
@@ -278,6 +285,8 @@ export default function AdminScreen() {
   const [verificationEditingId, setVerificationEditingId] = useState<string | null>(null);
   const [verificationUploading, setVerificationUploading] = useState(false);
   const [verificationSaving, setVerificationSaving] = useState(false);
+  const [brandShowcaseImages, setBrandShowcaseImages] = useState<BrandShowcaseImage[]>([]);
+  const [brandShowcaseUploading, setBrandShowcaseUploading] = useState(false);
   const [drawResults, setDrawResults] = useState<DrawResultWithProduct[]>([]);
   const [prizeStatusDrafts, setPrizeStatusDrafts] = useState<Record<string, { status: PrizeStatus; note: string }>>({});
   const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
@@ -324,6 +333,7 @@ export default function AdminScreen() {
       loadAnnouncement();
       loadHomeAdImages();
       loadVerificationDocuments();
+      loadBrandShowcaseImages();
     }
   }, [authenticated]);
 
@@ -1061,6 +1071,89 @@ export default function AdminScreen() {
     setVerificationImageUrl('');
     setVerificationImagePath('');
     setVerificationEditingId(null);
+  }
+
+  async function loadBrandShowcaseImages() {
+    const { data, error } = await getAllBrandShowcaseImages();
+    if (error) {
+      console.warn('Unable to load brand showcase images:', error.message);
+      return;
+    }
+    setBrandShowcaseImages(data || []);
+  }
+
+  async function uploadBrandShowcaseImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload a showcase image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.9,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      alert('Please select an image smaller than 5 MB.');
+      return;
+    }
+
+    setBrandShowcaseUploading(true);
+    try {
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `showcase/${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from(BRAND_SHOWCASE_BUCKET)
+        .upload(filePath, fileData, { contentType: mimeType, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(BRAND_SHOWCASE_BUCKET).getPublicUrl(filePath);
+      const { error: insertError } = await createBrandShowcaseImage({ image_url: data.publicUrl, image_path: filePath });
+      if (insertError) throw insertError;
+
+      await loadBrandShowcaseImages();
+      alert('Showcase image published.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Showcase image upload failed.';
+      alert(message);
+    } finally {
+      setBrandShowcaseUploading(false);
+    }
+  }
+
+  async function toggleBrandShowcaseVisibility(image: BrandShowcaseImage) {
+    const { error } = await updateBrandShowcaseImageVisibility(image.id, !image.is_visible);
+    if (error) {
+      alert('Visibility could not be changed. Error: ' + error.message);
+      return;
+    }
+    await loadBrandShowcaseImages();
+  }
+
+  async function removeBrandShowcaseImage(image: BrandShowcaseImage) {
+    const confirmed = await confirmAsync('Delete image', 'Delete this showcase image?');
+    if (!confirmed) return;
+
+    const { error } = await deleteBrandShowcaseImage(image.id);
+    if (error) {
+      alert('Image could not be deleted. Error: ' + error.message);
+      return;
+    }
+
+    const { error: storageError } = await supabase.storage.from(BRAND_SHOWCASE_BUCKET).remove([image.image_path]);
+    if (storageError) console.warn('Image record deleted but storage cleanup failed:', storageError.message);
+    await loadBrandShowcaseImages();
   }
 
   function startVerificationEdit(document: VerificationDocument) {
@@ -2443,6 +2536,46 @@ export default function AdminScreen() {
                         <Text style={styles.visibilityButtonText}>{document.is_visible ? 'Hide' : 'Show'}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeVerificationDocument(document)}>
+                        <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><Camera color={theme.text} size={17} /><Text style={styles.settingLabel}>Brand Showcase Images</Text></View>
+            <Text style={styles.settingHint}>Just photos, no names or claims -- shown in the "JeetoBaz Style" carousel on the home page.</Text>
+            <TouchableOpacity
+              style={[styles.photoUploadButton, brandShowcaseUploading && styles.photoUploadDisabled]}
+              onPress={uploadBrandShowcaseImage}
+              disabled={brandShowcaseUploading}
+            >
+              {!brandShowcaseUploading && <Camera color={theme.info} size={18} />}
+              <Text style={styles.photoUploadText}>{brandShowcaseUploading ? 'Uploading...' : 'Upload Showcase Image'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.verificationList}>
+              {brandShowcaseImages.length === 0 ? (
+                <Text style={styles.emptyText}>No showcase images added yet.</Text>
+              ) : brandShowcaseImages.map((image) => (
+                <View key={image.id} style={[styles.verificationAdminCard, !image.is_visible && styles.verificationAdminCardHidden]}>
+                  <Image source={{ uri: image.image_url }} style={styles.verificationAdminImage} resizeMode="contain" accessibilityLabel="Brand showcase image" />
+                  <View style={styles.verificationAdminContent}>
+                    <View style={styles.productHeader}>
+                      <View style={[styles.statusBadge, image.is_visible ? styles.activeBadge : styles.completedBadge]}>
+                        <Circle color={image.is_visible ? theme.primary : theme.gold} size={8} fill={image.is_visible ? theme.primary : theme.gold} />
+                        <Text style={styles.statusText}>{image.is_visible ? 'Visible' : 'Hidden'}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.verificationActionRow}>
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => toggleBrandShowcaseVisibility(image)}>
+                        {image.is_visible ? <EyeOff color={theme.gold} size={16} /> : <Eye color={theme.gold} size={16} />}
+                        <Text style={styles.visibilityButtonText}>{image.is_visible ? 'Hide' : 'Show'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeBrandShowcaseImage(image)}>
                         <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
                       </TouchableOpacity>
                     </View>

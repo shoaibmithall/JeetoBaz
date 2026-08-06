@@ -6,7 +6,7 @@ import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
-  Megaphone, ShieldCheck, Target, Ticket, TrendingUp, UsersRound, X,
+  Megaphone, ShieldCheck, Sparkles, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
+import { getPublicBrandShowcaseImages } from '@/lib/brand-showcase';
 import { isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import { formatDrawDate } from '@/lib/format-draw-date';
@@ -56,6 +57,7 @@ type ProductFetchOptions = {
 };
 const ACTIVE_DRAWS_CACHE_KEY = 'offlineCache:activeDraws';
 const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
+const BRAND_SHOWCASE_CACHE_KEY = 'offlineCache:brandShowcase';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 500;
 const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug';
@@ -380,6 +382,7 @@ export default function HomeScreen() {
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
+  const [brandShowcaseImages, setBrandShowcaseImages] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
@@ -532,6 +535,7 @@ export default function HomeScreen() {
     setHasHydratedLayout(true);
     fetchHomeAds();
     fetchAnnouncement();
+    fetchBrandShowcase();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -664,7 +668,7 @@ export default function HomeScreen() {
     }
 
     try {
-      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement()]);
+      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement(), fetchBrandShowcase()]);
     } finally {
       setRefreshing(false);
       setPullDistance(0);
@@ -710,6 +714,18 @@ export default function HomeScreen() {
       }
     }
     setAdsLoading(false);
+  }
+
+  async function fetchBrandShowcase() {
+    const cached = await loadOfflineCache<string[]>(BRAND_SHOWCASE_CACHE_KEY);
+    if (cached?.data.length) setBrandShowcaseImages(cached.data);
+
+    const { data, error } = await getPublicBrandShowcaseImages();
+    if (!error && data) {
+      const images = data.map((row) => row.image_url);
+      setBrandShowcaseImages(images);
+      await saveOfflineCache(BRAND_SHOWCASE_CACHE_KEY, images);
+    }
   }
 
   async function fetchAnnouncement() {
@@ -1114,6 +1130,19 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {brandShowcaseImages.length > 0 ? (
+        <View style={styles.brandShowcase}>
+          <View style={styles.sectionHeading}><Sparkles color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.brandShowcaseTitle, { color: colors.gold }]}>JeetoBaz Style</Text></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandShowcaseRow}>
+            {brandShowcaseImages.map((imageUrl, index) => (
+              <View key={imageUrl + index} style={[styles.brandShowcaseCard, { borderColor: colors.gold }]}>
+                <ExpoImage source={{ uri: imageUrl }} style={styles.brandShowcaseImage} contentFit="cover" accessibilityLabel="JeetoBaz brand photo" />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
       <View style={[styles.howItWorks, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.sectionHeading}><Ticket color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.howTitle, { color: colors.gold }]}>{t('howItWorks')}</Text></View>
         <View style={styles.steps}>
@@ -1446,6 +1475,11 @@ const styles = StyleSheet.create({
   howItWorks: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 8, marginBottom: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   sectionHeading: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, marginBottom: 15 },
   howTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  brandShowcase: { marginTop: 15, marginBottom: 8 },
+  brandShowcaseTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  brandShowcaseRow: { paddingHorizontal: 15, gap: 12 },
+  brandShowcaseCard: { width: 150, height: 230, borderRadius: 16, borderWidth: 2, overflow: 'hidden', backgroundColor: '#071b13' },
+  brandShowcaseImage: { width: '100%', height: '100%' },
   steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   step: { flex: 1, alignItems: 'center' },
   stepNumber: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },

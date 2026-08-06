@@ -248,6 +248,15 @@ export type VerificationDocument = {
   updated_at: string;
 };
 
+export type BrandShowcaseImage = {
+  id: string;
+  image_url: string;
+  image_path: string;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -396,6 +405,11 @@ export type Database = {
         Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path'> &
           Partial<Pick<VerificationDocument, 'is_visible' | 'sort_order'>>,
         Partial<Pick<VerificationDocument, 'title' | 'description' | 'image_url' | 'image_path' | 'is_visible' | 'sort_order'>>
+      >;
+      brand_showcase_images: Table<
+        BrandShowcaseImage,
+        Pick<BrandShowcaseImage, 'image_url' | 'image_path'> & Partial<Pick<BrandShowcaseImage, 'is_visible' | 'sort_order'>>,
+        Partial<Pick<BrandShowcaseImage, 'is_visible' | 'sort_order'>>
       >;
       push_subscriptions: Table<
         PushSubscriptionRow,
