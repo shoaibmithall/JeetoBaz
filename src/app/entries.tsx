@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/providers/AuthProvider';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Entry, Product, Transaction } from '@/types/database';
 import { formatDrawDate } from '@/lib/format-draw-date';
@@ -153,8 +154,7 @@ export default function MyEntriesScreen() {
       <meta name="description" content="View your JeetoBaz prize campaign entries, pending payments, and ticket status." />
     </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading entries" />
-      <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingEntries')}</Text>
+      <BrandedLoader message={t('loadingEntries')} />
     </View>
     </>
   );

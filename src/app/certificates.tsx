@@ -5,6 +5,7 @@ import Head from 'expo-router/head';
 import { ArrowLeft, Award, Download, Share2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/AuthProvider';
+import { BrandedLoader } from '@/components/branded-loader';
 import { supabase } from '@/lib/supabase';
 
 const CERTIFICATES_BUCKET = 'winner-certificates';
@@ -93,8 +94,7 @@ export default function CertificatesScreen() {
 
       {authLoading || loading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color={theme.primary} size="large" accessibilityLabel="Loading certificates" />
-          <Text style={[styles.loadingText, { color: theme.muted }]}>Loading your certificates...</Text>
+          <BrandedLoader message="Loading your certificates..." />
         </View>
       ) : !user ? (
         <View style={[styles.emptyCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>

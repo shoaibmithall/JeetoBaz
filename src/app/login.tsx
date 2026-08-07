@@ -14,6 +14,7 @@ import { getReferralDeviceToken } from '@/lib/referrals';
 import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { BrandedLoader } from '@/components/branded-loader';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
@@ -457,8 +458,7 @@ export default function ProfileScreen() {
 
   if (authLoading || step === 'check') return (
     <View style={[styles.profileLoading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator color={theme.gold} size="large" accessibilityLabel="Loading profile" />
-      <Text style={[styles.profileLoadingText, { color: theme.muted }]}>Loading profile...</Text>
+      <BrandedLoader message="Loading profile..." />
     </View>
   );
 

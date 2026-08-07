@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ElementRef } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { BrandedLoader } from '@/components/branded-loader';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
@@ -132,8 +133,7 @@ export default function FavoritesScreen() {
           <Text style={[styles.subtitle, { color: theme.muted }]}>{t('yourSavedDraws')}</Text>
         </View>
         <View style={[styles.center, { backgroundColor: theme.background }]}>
-          <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading favorites" />
-          <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingFavorites')}</Text>
+          <BrandedLoader message={t('loadingFavorites')} />
         </View>
       </View>
       </>

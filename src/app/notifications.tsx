@@ -1,9 +1,10 @@
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, setStoredValue } from '@/lib/storage';
+import { BrandedLoader } from '@/components/branded-loader';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { isNotificationForUser, isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
@@ -113,8 +114,7 @@ export default function NotificationsScreen() {
         <meta name="description" content="View your JeetoBaz notifications for account updates, draw results, and platform announcements." />
       </Head>
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator color={theme.primary} accessibilityLabel="Loading notifications" />
-        <Text style={[styles.centerText, { color: theme.muted }]}>Loading notifications...</Text>
+        <BrandedLoader message="Loading notifications..." />
       </View>
       </>
     );

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, useWindowDimensions } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/providers/AuthProvider';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import type { WalletTransactionRow, WalletTransactionType } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -127,8 +128,7 @@ export default function WalletScreen() {
       <meta name="description" content="View your JeetoBaz wallet balance and transaction history." />
     </Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading wallet" />
-      <Text style={[styles.loadingText, { color: theme.primary }]}>Loading wallet...</Text>
+      <BrandedLoader message="Loading wallet..." />
     </View>
     </>
   );

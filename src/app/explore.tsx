@@ -1,9 +1,10 @@
-import { Image, View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { Image, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/providers/AuthProvider';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import Head from 'expo-router/head';
 import type { PublicWinnerListEntry } from '@/types/database';
@@ -113,8 +114,7 @@ export default function WinnersScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {header}
       <View style={[styles.loading, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading" />
-        <Text style={[styles.loadingText, { color: theme.primary }]}>{t('loadingWinners')}</Text>
+        <BrandedLoader message={t('loadingWinners')} />
       </View>
     </View>
     </>
