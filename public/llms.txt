@@ -1,0 +1,25 @@
+# JeetoBaz
+
+> JeetoBaz (jeetobaz.pk) is Pakistan's online prize draw platform. Users pay a small entry fee for a chance to win verified, publicly checkable prizes -- mobiles, laptops, tablets, smartwatches, cars, bikes, home appliances, and more. Every draw result (winner name, ticket number, and timestamp) is published so anyone can verify it.
+
+## What JeetoBaz is not
+
+JeetoBaz is a prize draw platform, not a direct e-commerce store. The amount a user pays is an entry fee for a chance to win a prize in a random draw -- it is not the purchase price of the item, and paying it does not guarantee receiving that item.
+
+## Key facts
+
+- Entries start at Rs. 1.
+- Every draw's winner is selected by a documented, explained process and published publicly with a ticket number and timestamp.
+- JeetoBaz is registered with Pakistan's Federal Board of Revenue (FBR).
+- JeetoBaz is based in Pakistan and serves users across the country.
+
+## Pages
+
+- [About JeetoBaz](https://jeetobaz.pk/about): Company background, mission, and registration details.
+- [Why JeetoBaz is Fair](https://jeetobaz.pk/why-fair): How the draw and winner-selection process works.
+- [Registered & Verified](https://jeetobaz.pk/registered-verified): Business registration and verification documents.
+- [Frequently Asked Questions](https://jeetobaz.pk/faq): Common questions about accounts, entries, payments, and draws.
+- [Active prize campaigns](https://jeetobaz.pk/explore): Currently open draws.
+- [Terms & Conditions](https://jeetobaz.pk/terms)
+- [Privacy Policy](https://jeetobaz.pk/privacy)
+- [Refund & Cancellation Policy](https://jeetobaz.pk/refund-policy)
