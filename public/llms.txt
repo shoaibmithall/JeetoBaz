@@ -16,6 +16,7 @@ JeetoBaz is a prize draw platform, not a direct e-commerce store. The amount a u
 ## Pages
 
 - [About JeetoBaz](https://jeetobaz.pk/about): Company background, mission, and registration details.
+- [Transparency Center](https://jeetobaz.pk/transparency): How draws are fair, how JeetoBaz is registered and verified, and common questions -- in one place.
 - [Why JeetoBaz is Fair](https://jeetobaz.pk/why-fair): How the draw and winner-selection process works.
 - [Registered & Verified](https://jeetobaz.pk/registered-verified): Business registration and verification documents.
 - [Frequently Asked Questions](https://jeetobaz.pk/faq): Common questions about accounts, entries, payments, and draws.

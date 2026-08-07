@@ -27,6 +27,7 @@ const STATIC_PAGES = [
   { path: '/refund-policy', changefreq: 'monthly', priority: '0.3' },
   { path: '/shipping-policy', changefreq: 'monthly', priority: '0.3' },
   { path: '/why-fair', changefreq: 'monthly', priority: '0.4' },
+  { path: '/transparency', changefreq: 'monthly', priority: '0.5' },
 ];
 
 function escapeXml(value) {

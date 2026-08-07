@@ -86,6 +86,7 @@ const QUICK_LINKS: FooterLink[] = [
 ];
 
 const HELP_LINKS: FooterLink[] = [
+  { label: 'Transparency Center', route: '/transparency' },
   { label: 'Terms & Conditions', route: '/terms' },
   { label: 'Privacy Policy', route: '/privacy' },
   { label: 'Refund & Cancellation', route: '/refund-policy' },
