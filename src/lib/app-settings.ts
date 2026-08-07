@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 
 export const HOME_AD_IMAGES_KEY = 'home_ad_images';
 export const ANNOUNCEMENT_KEY = 'announcement';
+export const GOOGLE_REVIEW_LINK_KEY = 'google_review_link';
 
 function normalizeImageUrls(value: unknown) {
   if (!Array.isArray(value)) return [];
@@ -56,4 +57,27 @@ export async function saveAnnouncement(value: string) {
     .upsert({ key: ANNOUNCEMENT_KEY, value: announcement });
 
   return { announcement, error };
+}
+
+export async function getGoogleReviewLink() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', GOOGLE_REVIEW_LINK_KEY)
+    .maybeSingle();
+
+  if (error) return { link: '', error };
+  return {
+    link: typeof data?.value === 'string' ? data.value.trim() : '',
+    error: null,
+  };
+}
+
+export async function saveGoogleReviewLink(value: string) {
+  const link = value.trim();
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ key: GOOGLE_REVIEW_LINK_KEY, value: link });
+
+  return { link, error };
 }

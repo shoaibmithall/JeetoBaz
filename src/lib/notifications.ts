@@ -49,6 +49,7 @@ const NOTIFICATION_KIND_TO_PREFERENCE_KEY: Record<string, keyof NotificationPref
   'winner-announced': 'winner_announcements',
   'payment-confirmed': 'payment_notifications',
   'promotional': 'promotional',
+  'review-request': 'promotional',
 };
 
 // Kinds not present in the map (e.g. 'admin', 'general') are always shown — only categorized,
