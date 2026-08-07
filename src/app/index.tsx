@@ -8,7 +8,6 @@ import {
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
   Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
@@ -16,7 +15,6 @@ import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/compo
 import JeetoBazFooter from '@/components/jeetobaz-footer';
 import { AnimatedCounter, FloatingView, PressScale, ShineSweep } from '@/components/motion';
 import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
-import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -207,7 +205,6 @@ const HomeProductCard = memo(function HomeProductCard({
   onToggleFavorite: (productId: string) => void;
   revealIndex?: number;
 }) {
-  const reducedMotion = useReducedMotion();
   const [imageLoading, setImageLoading] = useState(Boolean(product.image_url));
   const [imageFailed, setImageFailed] = useState(false);
   const [imageWidth, setImageWidth] = useState(0);
@@ -225,8 +222,7 @@ const HomeProductCard = memo(function HomeProductCard({
     : drawSchedule.value;
 
   return (
-    <Animated.View
-      entering={reducedMotion ? undefined : FadeInUp.duration(360).delay(Math.min((revealIndex ?? 0) * 40, 320)).springify().damping(18)}
+    <View
       style={[
         styles.card,
         isMultiColumn && { width: productCardWidth, margin: 0 },
@@ -363,7 +359,7 @@ const HomeProductCard = memo(function HomeProductCard({
           <Target color="#000" size={isCompactGrid ? 14 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
         </PressScale>
       </View>
-    </Animated.View>
+    </View>
   );
 });
 
