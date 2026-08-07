@@ -2,7 +2,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } fro
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Share2, Sun, X } from 'lucide-react-native';
+import { BadgeCheck, Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Scale, Share2, Sun, Trophy, X } from 'lucide-react-native';
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/lib/i18n';
@@ -11,7 +11,7 @@ type HomeHeaderProps = {
   unreadCount: number;
 };
 
-type MenuRoute = '/language' | '/help' | '/share';
+type MenuRoute = '/language' | '/help' | '/share' | '/registered-verified' | '/explore' | '/why-fair';
 
 export function HomeHeader({ unreadCount }: HomeHeaderProps) {
   const router = useRouter();
@@ -95,6 +95,9 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
               onPress={toggleTheme}
               textColor={mode === 'dark' ? '#FBBF24' : '#A78BFA'}
             />
+            <MenuItem icon={<BadgeCheck color="#18a663" size={21} />} label={t('trustFbrTitle')} onPress={() => openRoute('/registered-verified')} textColor="#18a663" />
+            <MenuItem icon={<Trophy color="#FFD700" size={21} />} label={t('trustWinnersTitle')} onPress={() => openRoute('/explore')} textColor="#FFD700" />
+            <MenuItem icon={<Scale color="#18a663" size={21} />} label={t('trustFairTitle')} onPress={() => openRoute('/why-fair')} textColor="#18a663" />
             <MenuItem icon={<Headphones color="#14B8A6" size={21} />} label={t('helpCenter')} onPress={() => openRoute('/help')} textColor="#14B8A6" />
             <MenuItem icon={<Share2 color="#18a663" size={21} />} label={t('shareJeetoBaz')} onPress={() => openRoute('/share')} textColor="#18a663" />
           </View>
