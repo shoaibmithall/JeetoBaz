@@ -25,6 +25,8 @@ import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import { formatDrawDate } from '@/lib/format-draw-date';
 import {
   CATEGORY_GROUP_LABELS,
+  getBrandByKey,
+  getProductBrand,
   getProductCategory,
   PRODUCT_CATEGORIES,
   type CategoryGroupKey,
@@ -379,6 +381,7 @@ export default function HomeScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('popular');
   const [category, setCategory] = useState<CategorySelection>('all');
   const [groupFilter, setGroupFilter] = useState<CategoryGroupKey | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedEntryFee, setSelectedEntryFee] = useState<number | null>(null);
   const [showAllTrending, setShowAllTrending] = useState(false);
   const [showPriceFilter, setShowPriceFilter] = useState(false);
@@ -403,6 +406,7 @@ export default function HomeScreen() {
   const deferredCategory = useDeferredValue(category);
   const deferredGroupFilter = useDeferredValue(groupFilter);
   const deferredSelectedEntryFee = useDeferredValue(selectedEntryFee);
+  const deferredSelectedBrand = useDeferredValue(selectedBrand);
 
   useEffect(() => {
     const categoryParam = categoryParams.category;
@@ -410,14 +414,17 @@ export default function HomeScreen() {
     if (typeof categoryParam === 'string' && PRODUCT_CATEGORIES.some((entry) => entry.key === categoryParam)) {
       setCategory(categoryParam as CategorySelection);
       setGroupFilter(null);
+      setSelectedBrand(null);
     } else if (typeof groupParam === 'string' && groupParam in CATEGORY_GROUP_LABELS) {
       setGroupFilter(groupParam as CategoryGroupKey);
       setCategory('all');
+      setSelectedBrand(null);
     } else {
       // No category/group param (e.g. the footer's "All Draws" or "And More" links) -
       // reset any active filter/search instead of leaving a previous filter applied.
       setCategory('all');
       setGroupFilter(null);
+      setSelectedBrand(null);
       setSearch('');
       setSelectedEntryFee(null);
     }
@@ -461,11 +468,28 @@ export default function HomeScreen() {
         ? PRODUCT_CATEGORIES.find((entry) => entry.key === productCategoryKey)?.group === deferredGroupFilter
         : deferredCategory === 'all' || productCategoryKey === deferredCategory;
       const matchesEntryFee = deferredSelectedEntryFee === null || (product.entry_fee || 1) === deferredSelectedEntryFee;
-      return matchesSearch && matchesCategory && matchesEntryFee;
+      const matchesBrand = !deferredSelectedBrand || getProductBrand(product.name) === deferredSelectedBrand;
+      return matchesSearch && matchesCategory && matchesEntryFee && matchesBrand;
     });
 
     return result.sort((a, b) => compareBySortOption(a, b, sortBy));
-  }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
+  }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedBrand, deferredSelectedEntryFee, products, sortBy]);
+
+  // Brand filter chips only appear once a single category is selected (mirrors how
+  // e-commerce sites like Priceoye show brand tabs inside a category page) -- listing
+  // every brand across all products at once wouldn't be a meaningful filter.
+  const brandOptions = useMemo(() => {
+    if (deferredCategory === 'all') return [];
+    const seen = new Set<string>();
+    for (const product of products) {
+      if (getProductCategory(product.name) !== deferredCategory) continue;
+      const brandKey = getProductBrand(product.name);
+      if (brandKey) seen.add(brandKey);
+    }
+    return Array.from(seen)
+      .map((key) => getBrandByKey(key))
+      .filter((brand): brand is NonNullable<typeof brand> => brand !== null);
+  }, [deferredCategory, products]);
 
   const isDefaultView = category === 'all' && groupFilter === null && search.trim() === '' && selectedEntryFee === null;
 
@@ -1053,11 +1077,39 @@ export default function HomeScreen() {
           onSelectCategory={(next) => {
             setCategory(next);
             setGroupFilter(null);
+            setSelectedBrand(null);
             setShowAllTrending(false);
           }}
           colors={colors}
         />
       </HomeNavigation>
+
+      {brandOptions.length > 1 && (
+        <View style={[styles.sortContainer, { backgroundColor: colors.surfaceAlt }]}>
+          <Text style={[styles.sortLabel, { color: colors.muted }]}>{t('brand')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[styles.sortChip, { backgroundColor: colors.surface, borderColor: colors.border }, selectedBrand === null && { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}
+              onPress={() => setSelectedBrand(null)}
+            >
+              <Text style={[styles.sortChipText, { color: colors.muted }, selectedBrand === null && { color: colors.gold, fontWeight: 'bold' }]}>
+                {t('allBrands')}
+              </Text>
+            </TouchableOpacity>
+            {brandOptions.map((brand) => (
+              <TouchableOpacity
+                key={brand.key}
+                style={[styles.sortChip, { backgroundColor: colors.surface, borderColor: colors.border }, selectedBrand === brand.key && { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}
+                onPress={() => setSelectedBrand(brand.key)}
+              >
+                <Text style={[styles.sortChipText, { color: colors.muted }, selectedBrand === brand.key && { color: colors.gold, fontWeight: 'bold' }]}>
+                  {brand.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {cacheInfo ? (
         <View style={[styles.cacheBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
@@ -1315,6 +1367,7 @@ export default function HomeScreen() {
               <TouchableOpacity onPress={() => {
                 setSearch('');
                 setCategory('all');
+                setSelectedBrand(null);
                 setSelectedEntryFee(null);
                 setShowAllTrending(false);
               }}>
@@ -1341,6 +1394,7 @@ export default function HomeScreen() {
                       onPress={() => {
                         setCategory(section.key);
                         setGroupFilter(null);
+                        setSelectedBrand(null);
                         setShowAllTrending(false);
                       }}
                     >
@@ -1405,6 +1459,7 @@ export default function HomeScreen() {
           setSearch('');
           setCategory('all');
           setGroupFilter(null);
+          setSelectedBrand(null);
           setSelectedEntryFee(null);
           setShowAllTrending(false);
           scrollViewRef.current?.scrollTo({ y: 0, animated: true });
