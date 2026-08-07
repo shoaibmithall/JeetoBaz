@@ -13,7 +13,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
 import JeetoBazFooter from '@/components/jeetobaz-footer';
-import { AnimatedCounter, FloatingView, PressScale, ShineSweep } from '@/components/motion';
+import { AnimatedCounter, FloatingView, MarqueeRow, PressScale, ShineSweep } from '@/components/motion';
 import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -1228,13 +1228,19 @@ export default function HomeScreen() {
       {brandShowcaseImages.length > 0 ? (
         <View style={styles.brandShowcase}>
           <View style={styles.sectionHeading}><Sparkles color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.brandShowcaseTitle, { color: colors.gold }]}>JeetoBaz Style</Text></View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandShowcaseRow}>
-            {brandShowcaseImages.map((imageUrl, index) => (
-              <View key={imageUrl + index} style={[styles.brandShowcaseCard, { borderColor: colors.gold }]}>
+          <MarqueeRow
+            items={brandShowcaseImages}
+            keyExtractor={(imageUrl, index) => imageUrl + index}
+            itemWidth={150}
+            gap={12}
+            leadingPadding={15}
+            speed={28}
+            renderItem={(imageUrl) => (
+              <View style={[styles.brandShowcaseCard, { borderColor: colors.gold }]}>
                 <ExpoImage source={{ uri: imageUrl }} style={styles.brandShowcaseImage} contentFit="cover" accessibilityLabel="JeetoBaz brand photo" />
               </View>
-            ))}
-          </ScrollView>
+            )}
+          />
         </View>
       ) : null}
 
@@ -1611,7 +1617,6 @@ const styles = StyleSheet.create({
   howTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   brandShowcase: { marginTop: 15, marginBottom: 8 },
   brandShowcaseTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
-  brandShowcaseRow: { paddingHorizontal: 15, gap: 12 },
   brandShowcaseCard: { width: 150, height: 230, borderRadius: 16, borderWidth: 2, overflow: 'hidden', backgroundColor: '#071b13' },
   brandShowcaseImage: { width: '100%', height: '100%' },
   testimonialsSection: { marginHorizontal: 15, marginTop: 15, padding: 16, borderRadius: 16, borderWidth: 1 },
