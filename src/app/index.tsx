@@ -8,12 +8,15 @@ import {
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
   Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
 import JeetoBazFooter from '@/components/jeetobaz-footer';
+import { AnimatedCounter, FloatingView, PressScale, ShineSweep } from '@/components/motion';
 import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
@@ -189,6 +192,7 @@ const HomeProductCard = memo(function HomeProductCard({
   t,
   onEnter,
   onToggleFavorite,
+  revealIndex,
 }: {
   product: Product;
   drawSchedule: DrawSchedule;
@@ -201,9 +205,12 @@ const HomeProductCard = memo(function HomeProductCard({
   t: (key: TranslationKey) => string;
   onEnter: (product: Product) => void;
   onToggleFavorite: (productId: string) => void;
+  revealIndex?: number;
 }) {
+  const reducedMotion = useReducedMotion();
   const [imageLoading, setImageLoading] = useState(Boolean(product.image_url));
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageWidth, setImageWidth] = useState(0);
   const liveLink = product.live_link;
   const showImage = Boolean(product.image_url && !imageFailed);
   const currentEntries = product.current_entries || 0;
@@ -218,7 +225,8 @@ const HomeProductCard = memo(function HomeProductCard({
     : drawSchedule.value;
 
   return (
-    <View
+    <Animated.View
+      entering={reducedMotion ? undefined : FadeInUp.duration(360).delay(Math.min((revealIndex ?? 0) * 40, 320)).springify().damping(18)}
       style={[
         styles.card,
         isMultiColumn && { width: productCardWidth, margin: 0 },
@@ -243,7 +251,7 @@ const HomeProductCard = memo(function HomeProductCard({
         )}
       </View>
 
-      <View style={{ height: productImageHeight }}>
+      <View style={{ height: productImageHeight }} onLayout={(e) => setImageWidth(e.nativeEvent.layout.width)}>
         {showImage ? (
           <>
             {imageLoading ? (
@@ -269,6 +277,7 @@ const HomeProductCard = memo(function HomeProductCard({
                 { height: productImageHeight, opacity: imageLoading ? 0 : 1 },
               ]}
             />
+            {!imageLoading && <ShineSweep width={imageWidth} delay={((revealIndex ?? 0) % 5) * 300} />}
           </>
         ) : (
           <View style={[styles.productImageFallback, { backgroundColor: colors.surfaceAlt }]}>
@@ -329,7 +338,12 @@ const HomeProductCard = memo(function HomeProductCard({
           <Text numberOfLines={1} style={[styles.originalPrice, isCompactGrid && styles.originalPriceCompact]}>Rs. {product.price?.toLocaleString()}</Text>
         </View>
 
-        <View style={styles.iconText}><UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} /><Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>{currentEntries.toLocaleString()} {t('participants')}</Text></View>
+        <View style={styles.iconText}>
+          <UsersRound color={colors.muted} size={isCompactGrid ? 11 : 15} />
+          <Text numberOfLines={1} style={[styles.participants, isCompactGrid && styles.participantsCompact, { color: colors.muted }]}>
+            <AnimatedCounter value={currentEntries} /> {t('participants')}
+          </Text>
+        </View>
 
         <View style={[styles.progressBar, isCompactGrid && styles.progressBarCompact, { backgroundColor: colors.borderSoft }]}>
           <View style={[styles.progress, isCompactGrid && styles.progressCompact, { width: `${displayPercent}%` }]} />
@@ -340,16 +354,16 @@ const HomeProductCard = memo(function HomeProductCard({
           <Text style={[styles.percent, isCompactGrid && styles.percentCompact]}>{displayPercent}%</Text>
         </View>
 
-        <TouchableOpacity
+        <PressScale
           style={[styles.button, isCompactGrid && styles.buttonCompact]}
           onPress={() => onEnter(product)}
           accessibilityRole="button"
           accessibilityLabel={`${t('enterFor')} Rs.${product.entry_fee || 1}: ${product.name}`}
         >
           <Target color="#000" size={isCompactGrid ? 14 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
-        </TouchableOpacity>
+        </PressScale>
       </View>
-    </View>
+    </Animated.View>
   );
 });
 
@@ -1052,14 +1066,16 @@ export default function HomeScreen() {
 
       {activeAdImage ? (
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
-          <ExpoImage
-            source={{ uri: activeAdImage }}
-            accessibilityLabel={`JeetoBaz featured offer ${activeAdIndex + 1} of ${homeAdImages.length}`}
-            cachePolicy="disk"
-            transition={180}
-            contentFit="cover"
-            style={styles.adBannerImage}
-          />
+          <FloatingView style={styles.adBannerImage}>
+            <ExpoImage
+              source={{ uri: activeAdImage }}
+              accessibilityLabel={`JeetoBaz featured offer ${activeAdIndex + 1} of ${homeAdImages.length}`}
+              cachePolicy="disk"
+              transition={180}
+              contentFit="cover"
+              style={styles.adBannerImage}
+            />
+          </FloatingView>
           {homeAdImages.length > 1 ? (
             <>
               <TouchableOpacity
@@ -1326,11 +1342,12 @@ export default function HomeScreen() {
                 )}
               </View>
               <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-                {trendingPreview.map((p) => {
+                {trendingPreview.map((p, index) => {
                   const drawSchedule = getDrawScheduleStatus(p, language, time);
                   return (
                     <HomeProductCard
                       key={p.id}
+                      revealIndex={index}
                       product={p}
                       drawSchedule={drawSchedule}
                       isFavorite={favorites.includes(p.id)}
@@ -1367,11 +1384,12 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
               <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-                {trendingProducts.map((p) => {
+                {trendingProducts.map((p, index) => {
                   const drawSchedule = getDrawScheduleStatus(p, language, time);
                   return (
                     <HomeProductCard
                       key={p.id}
+                      revealIndex={index}
                       product={p}
                       drawSchedule={drawSchedule}
                       isFavorite={favorites.includes(p.id)}
@@ -1458,11 +1476,12 @@ export default function HomeScreen() {
                   )}
                 </View>
                 <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-                  {section.preview.map((p) => {
+                  {section.preview.map((p, index) => {
                     const drawSchedule = getDrawScheduleStatus(p, language, time);
                     return (
                       <HomeProductCard
                         key={p.id}
+                        revealIndex={index}
                         product={p}
                         drawSchedule={drawSchedule}
                         isFavorite={favorites.includes(p.id)}
@@ -1485,11 +1504,12 @@ export default function HomeScreen() {
 
           {!loading && filteredProducts.length > 0 && !isDefaultView && (
           <View style={[styles.productGrid, isMultiColumn && styles.productGridMultiColumn, isCompactGrid && styles.productGridCompact]}>
-            {filteredProducts.map((p) => {
+            {filteredProducts.map((p, index) => {
               const drawSchedule = getDrawScheduleStatus(p, language, time);
               return (
                 <HomeProductCard
                   key={p.id}
+                  revealIndex={index}
                   product={p}
                   drawSchedule={drawSchedule}
                   isFavorite={favorites.includes(p.id)}
