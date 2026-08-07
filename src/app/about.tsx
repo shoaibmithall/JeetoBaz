@@ -1486,11 +1486,11 @@ export default function AboutJeetoBazScreen() {
   return (
     <>
     <Head>
-      <title>About Us | JeetoBaz</title>
+      <title>About JeetoBaz — Pakistan's Trusted Prize Draw Platform</title>
       <meta name="robots" content="index, follow" />
       <meta name="description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
       <meta property="og:type" content="website" />
-      <meta property="og:title" content="About Us | JeetoBaz" />
+      <meta property="og:title" content="About JeetoBaz — Pakistan's Trusted Prize Draw Platform" />
       <meta property="og:description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
       <meta property="og:url" content="https://jeetobaz.pk/about" />
       <meta property="og:image" content="https://jeetobaz.pk/og-image.png" />
@@ -1499,7 +1499,7 @@ export default function AboutJeetoBazScreen() {
       <meta property="og:locale" content="en_PK" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
-      <meta name="twitter:title" content="About Us | JeetoBaz" />
+      <meta name="twitter:title" content="About JeetoBaz — Pakistan's Trusted Prize Draw Platform" />
       <meta name="twitter:description" content="Learn about JeetoBaz, its mission, transparent prize campaign process, trust features, and commitment to providing a reliable experience in Pakistan." />
       <meta name="twitter:image" content="https://jeetobaz.pk/twitter-image.png" />
       <link rel="canonical" href="https://jeetobaz.pk/about" />

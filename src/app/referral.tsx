@@ -198,7 +198,7 @@ export default function ReferralScreen() {
     <>
     <Head>
       <title>Refer &amp; Earn | JeetoBaz</title>
-      <meta name="robots" content="index, follow" />
+      <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Learn how the JeetoBaz referral program works, invite eligible friends, share your referral code, and review applicable reward information and conditions." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Refer &amp; Earn | JeetoBaz" />

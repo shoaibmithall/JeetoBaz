@@ -45,7 +45,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
             <Image source={require('@/assets/images/icon-small.png')} style={styles.brandLogo} accessibilityLabel="JeetoBaz logo" />
             <Text style={[styles.brandName, { color: theme.gold }]}>JEETOBAZ</Text>
           </View>
-          <Text style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
+          <Text role="heading" aria-level={1} style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
         </View>
 
         <TouchableOpacity
