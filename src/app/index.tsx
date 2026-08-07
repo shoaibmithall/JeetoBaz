@@ -6,7 +6,7 @@ import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
-  Megaphone, ShieldCheck, Sparkles, Target, Ticket, TrendingUp, UsersRound, X,
+  Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -20,6 +20,7 @@ import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValu
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
 import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
 import { getPublicBrandShowcaseImages } from '@/lib/brand-showcase';
+import { getPublicTestimonials } from '@/lib/testimonials';
 import { isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import { subscribeHomeScrollToTop } from '@/lib/home-scroll';
 import { formatDrawDate } from '@/lib/format-draw-date';
@@ -33,7 +34,7 @@ import {
   type CategorySelection,
   type ProductCategoryKey,
 } from '@/lib/product-categories';
-import type { Product } from '@/types/database';
+import type { Product, Testimonial } from '@/types/database';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
 
@@ -394,6 +395,7 @@ export default function HomeScreen() {
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
   const [brandShowcaseImages, setBrandShowcaseImages] = useState<string[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollViewRef = useRef<ElementRef<typeof ScrollView>>(null);
@@ -539,6 +541,27 @@ export default function HomeScreen() {
     }, {});
   }, [products]);
 
+  const organizationStructuredData = useMemo(() => {
+    if (testimonials.length === 0) return ORGANIZATION_STRUCTURED_DATA;
+    const averageRating = testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length;
+    return {
+      ...ORGANIZATION_STRUCTURED_DATA,
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: Math.round(averageRating * 10) / 10,
+        reviewCount: testimonials.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: testimonials.map((t) => ({
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: t.rating, bestRating: 5, worstRating: 1 },
+        author: { '@type': 'Person', name: t.reviewer_name },
+        reviewBody: t.review_text,
+      })),
+    };
+  }, [testimonials]);
+
   const activeAdImage = homeAdImages.length > 0
     ? homeAdImages[activeAdIndex % homeAdImages.length]
     : null;
@@ -562,6 +585,7 @@ export default function HomeScreen() {
     fetchHomeAds();
     fetchAnnouncement();
     fetchBrandShowcase();
+    fetchTestimonials();
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -694,7 +718,7 @@ export default function HomeScreen() {
     }
 
     try {
-      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement(), fetchBrandShowcase()]);
+      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement(), fetchBrandShowcase(), fetchTestimonials()]);
     } finally {
       setRefreshing(false);
       setPullDistance(0);
@@ -752,6 +776,11 @@ export default function HomeScreen() {
       setBrandShowcaseImages(images);
       await saveOfflineCache(BRAND_SHOWCASE_CACHE_KEY, images);
     }
+  }
+
+  async function fetchTestimonials() {
+    const { data, error } = await getPublicTestimonials();
+    if (!error && data) setTestimonials(data);
   }
 
   async function fetchAnnouncement() {
@@ -970,7 +999,7 @@ export default function HomeScreen() {
       <meta name="twitter:title" content={HOME_TITLE} />
       <meta name="twitter:description" content={HOME_DESCRIPTION} />
       <meta name="twitter:image" content={HOME_TWITTER_IMAGE} />
-      <script type="application/ld+json">{JSON.stringify(ORGANIZATION_STRUCTURED_DATA)}</script>
+      <script type="application/ld+json">{JSON.stringify(organizationStructuredData)}</script>
       <script type="application/ld+json">{JSON.stringify(WEBSITE_STRUCTURED_DATA)}</script>
       <script type="application/ld+json">{JSON.stringify(HOMEPAGE_WEBPAGE_SCHEMA)}</script>
     </Head>
@@ -1227,6 +1256,32 @@ export default function HomeScreen() {
           <ShieldCheck color="white" size={15} /><Text style={styles.verifiedText}>{t('verifiedFairDraw')}</Text>
         </View>
       </View>
+
+      {testimonials.length > 0 ? (
+        <View style={[styles.testimonialsSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.sectionHeading}><Star color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.howTitle, { color: colors.gold }]}>What Winners Say</Text></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.testimonialsRow}>
+            {testimonials.map((testimonial) => (
+              <View key={testimonial.id} style={[styles.testimonialCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+                <View style={styles.testimonialStars}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      color={colors.gold}
+                      size={14}
+                      fill={index < testimonial.rating ? colors.gold : 'transparent'}
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.testimonialText, { color: colors.text }]} numberOfLines={5}>
+                  &ldquo;{testimonial.review_text}&rdquo;
+                </Text>
+                <Text style={[styles.testimonialAuthor, { color: colors.muted }]}>— {testimonial.reviewer_name}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {showPriceSidebar && renderHorizontalPriceBar()}
 
@@ -1537,6 +1592,12 @@ const styles = StyleSheet.create({
   brandShowcaseRow: { paddingHorizontal: 15, gap: 12 },
   brandShowcaseCard: { width: 150, height: 230, borderRadius: 16, borderWidth: 2, overflow: 'hidden', backgroundColor: '#071b13' },
   brandShowcaseImage: { width: '100%', height: '100%' },
+  testimonialsSection: { marginHorizontal: 15, marginTop: 15, padding: 16, borderRadius: 16, borderWidth: 1 },
+  testimonialsRow: { gap: 12, paddingTop: 10 },
+  testimonialCard: { width: 240, padding: 14, borderRadius: 14, borderWidth: 1, gap: 8 },
+  testimonialStars: { flexDirection: 'row', gap: 2 },
+  testimonialText: { fontSize: 13, lineHeight: 19 },
+  testimonialAuthor: { fontSize: 12, fontWeight: '600' },
   steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   step: { flex: 1, alignItems: 'center' },
   stepNumber: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
