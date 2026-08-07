@@ -5,7 +5,7 @@ import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rout
 import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
-  BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
+  BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Scale, Search,
   Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
@@ -1301,6 +1301,12 @@ export default function HomeScreen() {
         <View style={styles.drawsContent}>
           <View style={styles.resultsRow}>
             <View style={[styles.iconText, { flex: 1 }]}><Flame color={colors.gold} size={21} /><Text role="heading" aria-level={2} style={[styles.sectionTitle, { color: colors.gold }]}>{t('activeDraws')}</Text></View>
+            <Link href="/compare" asChild>
+              <TouchableOpacity style={styles.compareLink} accessibilityRole="link" accessibilityLabel="Compare all active draws">
+                <Scale color={colors.primary} size={14} />
+                <Text style={[styles.compareLinkText, { color: colors.primary }]}>Compare</Text>
+              </TouchableOpacity>
+            </Link>
             <View style={styles.resultsMeta}>
               <Text style={[styles.resultsText, { color: colors.muted }]}>{filteredProducts.length} {t('found')}</Text>
               <Text style={[styles.sortedBy, { color: colors.primary }]}>
@@ -1672,6 +1678,8 @@ const styles = StyleSheet.create({
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
   resultsMeta: { alignItems: 'flex-end', marginLeft: 12 },
   resultsText: { color: '#aaa', fontSize: 12 },
+  compareLink: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#18a663', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
+  compareLinkText: { fontSize: 12, fontWeight: '700' },
   sortedBy: { color: '#18a663', fontSize: 12, marginTop: 2 },
   emptyBox: { alignItems: 'center', padding: 50 },
   emptyEmoji: { fontSize: 50, marginBottom: 15 },
