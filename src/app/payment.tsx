@@ -12,6 +12,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -439,8 +440,11 @@ export default function PaymentScreen() {
                 <Text style={[styles.methodNumber, { color: theme.gold }]}>{account.number}</Text>
               </TouchableOpacity>
               <Text style={[styles.methodAccount, { color: theme.primary }]}>{account.accountTitle}</Text>
+              <Text style={[styles.copyHint, { color: theme.subtle }]}>Tap number to copy, or scan the QR</Text>
             </View>
-            <Text style={[styles.copyHint, { color: theme.subtle }]}>Tap number to copy</Text>
+            <View style={styles.methodQrBox}>
+              <QRCode value={account.number} size={46} backgroundColor="white" color="#000" />
+            </View>
           </TouchableOpacity>
         ))}
 
@@ -540,7 +544,8 @@ const styles = StyleSheet.create({
   methodName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   methodNumber: { color: '#FFD700', fontSize: 16, fontFamily: 'monospace', marginTop: 2 },
   methodAccount: { color: '#18a663', fontSize: 13, marginTop: 2 },
-  copyHint: { color: '#777', fontSize: 11, width: 82, textAlign: 'right' },
+  copyHint: { color: '#777', fontSize: 11, marginTop: 4 },
+  methodQrBox: { backgroundColor: 'white', borderRadius: 8, padding: 4 },
   stepsBox: { backgroundColor: '#082d1e', borderRadius: 12, padding: 15, marginTop: 10, borderWidth: 1, borderColor: '#18a663' },
   stepsTitle: { color: '#18a663', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
   step: { color: '#aaa', fontSize: 14, marginBottom: 6 },
