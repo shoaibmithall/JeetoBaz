@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import { useAppTheme } from '@/hooks/use-theme';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DrawReplayOverlay } from '@/components/draw-animation/DrawReplayOverlay';
 import type { Product } from '@/types/database';
 import { formatDrawDate } from '@/lib/format-draw-date';
@@ -227,8 +228,7 @@ export default function WinnerScreen() {
       <meta name="description" content="View verified JeetoBaz draw winner result with complete draw details and prize information." />
     </Head>
     <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#18a663" accessibilityLabel="Loading winner" />
-      <Text style={styles.loadingText}>{t('loadingWinners')}</Text>
+      <BrandedLoader message={t('loadingWinners')} />
     </View>
     </>
   );

@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState, type ElementRef } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getRecentlyViewedProductIds, pruneRecentlyViewedProductIds } from '@/lib/recently-viewed';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -87,7 +88,7 @@ export default function RecentlyViewedScreen() {
           <Text style={[styles.subtitle, { color: theme.muted }]}>Draws you've recently looked at</Text>
         </View>
         <View style={[styles.center, { backgroundColor: theme.background }]}>
-          <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading recently viewed" />
+          <BrandedLoader message="Loading recently viewed..." />
         </View>
       </View>
       </>

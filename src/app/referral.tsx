@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   Share,
@@ -28,6 +27,7 @@ import {
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers/AuthProvider';
+import { BrandedLoader } from '@/components/branded-loader';
 import {
   getReferralDeviceToken,
   normalizeReferralCode,
@@ -242,8 +242,7 @@ export default function ReferralScreen() {
 
         {authLoading || loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color={theme.primary} size="large" accessibilityLabel="Loading" />
-            <Text style={[styles.loadingText, { color: theme.muted }]}>Loading referral account...</Text>
+            <BrandedLoader message="Loading referral account..." />
           </View>
         ) : !user ? (
           <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>

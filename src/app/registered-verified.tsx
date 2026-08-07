@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
+import { BrandedLoader } from '@/components/branded-loader';
 import { getPublicVerificationDocuments } from '@/lib/verification-documents';
 import type { VerificationDocument } from '@/types/database';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
@@ -87,7 +88,7 @@ export default function RegisteredVerifiedScreen() {
         </View>
 
         {loading ? (
-          <View style={styles.stateBox}><ActivityIndicator color={theme.gold} accessibilityLabel="Loading documents" /><Text style={styles.stateText}>Loading documents...</Text></View>
+          <View style={styles.stateBox}><BrandedLoader message="Loading documents..." /></View>
         ) : error ? (
           <View style={styles.stateBox}><Text style={styles.errorText}>{error}</Text><TouchableOpacity style={styles.retryButton} onPress={() => loadDocuments()}><Text style={styles.retryText}>Try Again</Text></TouchableOpacity></View>
         ) : documents.length === 0 ? (

@@ -1,4 +1,4 @@
-import { ActivityIndicator, AppState, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -7,6 +7,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 import { getStoredValue } from '@/lib/storage';
 import type { DrawSessionState, Product } from '@/types/database';
+import { BrandedLoader } from '@/components/branded-loader';
 import { DrawAnimationSequence, RESULT_STATES } from '@/components/draw-animation/DrawAnimationSequence';
 
 const TIMELINE_STEPS = ['Waiting', 'Entries Locked', 'Verification', 'Live Draw', 'Winner Reveal'] as const;
@@ -218,8 +219,7 @@ export default function DrawLobbyScreen() {
     <>
     <Head><title>Draw Lobby | JeetoBaz</title><meta name="robots" content="noindex, follow" /></Head>
     <View style={[styles.loading, { backgroundColor: theme.background }]}>
-      <ActivityIndicator size="large" color={theme.primary} accessibilityLabel="Loading draw" />
-      <Text style={[styles.loadingText, { color: theme.primary }]}>Loading draw lobby...</Text>
+      <BrandedLoader message="Loading draw lobby..." />
     </View>
     </>
   );
