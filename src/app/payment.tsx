@@ -1,4 +1,4 @@
-import { Alert, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Alert, Image, Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
@@ -12,17 +12,16 @@ import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
-import QRCode from 'react-native-qrcode-svg';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
-  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
-  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
-  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
-  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: false },
-  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
-  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/jazzcash.jpg') },
+  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/easypaisa.jpg') },
+  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/nayapay.jpg') },
+  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/upaisa.jpg') },
+  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: null },
+  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/zindigi.jpg') },
+  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/alliedbank.jpg') },
 ];
 
 function subscribeToHydration() {
@@ -86,6 +85,7 @@ export default function PaymentScreen() {
   const [walletSubmitting, setWalletSubmitting] = useState(false);
   const [walletError, setWalletError] = useState('');
   const [paidVia, setPaidVia] = useState<'wallet' | 'manual'>('manual');
+  const [qrPreview, setQrPreview] = useState<typeof PAYMENT_ACCOUNTS[number] | null>(null);
   const submittingRef = useRef(false);
   const canSubmit = Boolean(receipt && productIdValue && !loading);
   const entryFeeNumber = Number(entryFeeValue) || 0;
@@ -440,12 +440,12 @@ export default function PaymentScreen() {
                 <Text style={[styles.methodNumber, { color: theme.gold }]}>{account.number}</Text>
               </TouchableOpacity>
               <Text style={[styles.methodAccount, { color: theme.primary }]}>{account.accountTitle}</Text>
-              <Text style={[styles.copyHint, { color: theme.subtle }]}>{account.hasQr ? 'Tap number to copy, or scan the QR' : 'Tap number to copy'}</Text>
+              <Text style={[styles.copyHint, { color: theme.subtle }]}>{account.qrImage ? 'Tap number to copy, or tap QR to enlarge' : 'Tap number to copy'}</Text>
             </View>
-            {account.hasQr && (
-              <View style={styles.methodQrBox}>
-                <QRCode value={account.number} size={46} backgroundColor="white" color="#000" />
-              </View>
+            {account.qrImage && (
+              <TouchableOpacity style={styles.methodQrBox} onPress={() => setQrPreview(account)} accessibilityRole="button" accessibilityLabel={`Enlarge ${account.method} payment QR code`}>
+                <Image source={account.qrImage} style={styles.methodQrImage} resizeMode="contain" />
+              </TouchableOpacity>
             )}
           </TouchableOpacity>
         ))}
@@ -512,6 +512,20 @@ export default function PaymentScreen() {
         <Text style={[styles.noteText, { color: theme.muted }]}>• {t('oneEntry')}</Text>
       </View>
     </ScrollView>
+
+    <Modal visible={!!qrPreview} transparent animationType="fade" onRequestClose={() => setQrPreview(null)}>
+      <TouchableOpacity style={styles.qrModalBackdrop} activeOpacity={1} onPress={() => setQrPreview(null)}>
+        <View style={styles.qrModalCard}>
+          <Text style={styles.qrModalTitle}>{qrPreview?.method}</Text>
+          {qrPreview?.qrImage ? (
+            <Image source={qrPreview.qrImage} style={styles.qrModalImage} resizeMode="contain" accessibilityLabel={`${qrPreview.method} payment QR code`} />
+          ) : null}
+          <TouchableOpacity style={styles.qrModalCloseBtn} onPress={() => setQrPreview(null)}>
+            <Text style={styles.qrModalCloseText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
     </>
   );
 }
@@ -547,7 +561,14 @@ const styles = StyleSheet.create({
   methodNumber: { color: '#FFD700', fontSize: 16, fontFamily: 'monospace', marginTop: 2 },
   methodAccount: { color: '#18a663', fontSize: 13, marginTop: 2 },
   copyHint: { color: '#777', fontSize: 11, marginTop: 4 },
-  methodQrBox: { backgroundColor: 'white', borderRadius: 8, padding: 4 },
+  methodQrBox: { backgroundColor: 'white', borderRadius: 8, padding: 4, width: 54, height: 54 },
+  methodQrImage: { width: '100%', height: '100%' },
+  qrModalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  qrModalCard: { backgroundColor: 'white', borderRadius: 16, padding: 20, alignItems: 'center', width: '100%', maxWidth: 340 },
+  qrModalTitle: { fontSize: 16, fontWeight: 'bold', color: '#000', marginBottom: 14 },
+  qrModalImage: { width: 260, height: 260 },
+  qrModalCloseBtn: { marginTop: 16, backgroundColor: '#071b13', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 },
+  qrModalCloseText: { color: '#18a663', fontWeight: 'bold', fontSize: 14 },
   stepsBox: { backgroundColor: '#082d1e', borderRadius: 12, padding: 15, marginTop: 10, borderWidth: 1, borderColor: '#18a663' },
   stepsTitle: { color: '#18a663', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
   step: { color: '#aaa', fontSize: 14, marginBottom: 6 },
