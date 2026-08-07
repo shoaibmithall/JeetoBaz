@@ -1243,8 +1243,8 @@ export default function AboutJeetoBazScreen() {
           <ContactButton
             icon={<Globe2 color="#3B82F6" size={23} />}
             title="Website"
-            value="www.jeetobaz.pk"
-            onPress={() => openLink(WEBSITE, 'Visit www.jeetobaz.pk.')}
+            value="jeetobaz.pk"
+            onPress={() => openLink(WEBSITE, 'Visit jeetobaz.pk.')}
           />
           <SectionCard title="In-App Support" icon={<MessageCircle color="#25D366" size={22} />}>
             Users can access the Help Center and submit a support request from within JeetoBaz.
@@ -1421,7 +1421,7 @@ export default function AboutJeetoBazScreen() {
         <InfoLine label="Application Name" value="JeetoBaz" />
         <InfoLine label="Version" value="1.0.0" />
         <InfoLine label="Platforms" value="Android & iOS" />
-        <InfoLine label="Website" value="www.jeetobaz.pk" />
+        <InfoLine label="Website" value="jeetobaz.pk" />
         <InfoLine label="Country" value="Pakistan" />
         <InfoLine label="Development" value="Developed in Pakistan" />
       </>

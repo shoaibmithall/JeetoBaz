@@ -2,6 +2,7 @@ import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html
 import type { ReactNode } from 'react';
 
 const GTM_CONTAINER_ID = 'GTM-TZR6W32B';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://jqjrfnhqqfymwfsdkwmv.supabase.co';
 // GA4/GTM must never fire on routes that briefly carry live Supabase session tokens in the
 // URL hash (magic-link callbacks). Checked at script-execution time against the real
 // location.pathname (trailing slash normalized), not at build time — +html.tsx has no
@@ -43,6 +44,8 @@ export default function Root({ children }: { children: ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
+        <link rel="preconnect" href={SUPABASE_URL} />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
         <ScrollViewStyleReset />
         {headNodes}
       </head>
