@@ -174,7 +174,13 @@ export function getCategoryByKey(key: CategorySelection) {
     : PRODUCT_CATEGORIES.find((category) => category.key === key) || null;
 }
 
-export function getProductCategory(name: string): ProductCategoryKey | null {
+// `explicitCategory` is the admin-assigned category (products.category column) -- when set, it
+// wins outright since it's a deliberate choice, not a guess. Falls back to keyword matching
+// against the name for older products that predate the admin category picker.
+export function getProductCategory(name: string, explicitCategory?: string | null): ProductCategoryKey | null {
+  if (explicitCategory && PRODUCT_CATEGORIES.some((category) => category.key === explicitCategory)) {
+    return explicitCategory as ProductCategoryKey;
+  }
   return PRODUCT_CATEGORIES.find((category) => category.keywords.test(name))?.key || null;
 }
 

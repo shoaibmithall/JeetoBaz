@@ -26,7 +26,7 @@ const PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, 
 // Supabase's default row cap for this table's current size) rather than a small `limit`, because
 // truncating the candidate pool before sorting by entry_fee proximity could silently drop the
 // actual closest match.
-const RELATED_PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, slug';
+const RELATED_PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, slug, category';
 const RELATED_PRODUCTS_QUERY_LIMIT = 300;
 const RELATED_PRODUCTS_MAX = 4;
 
@@ -211,7 +211,7 @@ export default function ProductDetailScreen() {
         // category as the current product, ranked by closest entry_fee. If that doesn't fill
         // all 4 slots, top up with the next-closest entry_fee matches from any other category.
         const sameCategory = openCandidates
-          .filter((candidate) => getProductCategory(candidate.name) === currentCategory)
+          .filter((candidate) => getProductCategory(candidate.name, candidate.category) === currentCategory)
           .sort(byEntryFeeProximity);
         picked = sameCategory.slice(0, RELATED_PRODUCTS_MAX);
 

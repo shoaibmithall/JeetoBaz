@@ -31,6 +31,7 @@ import {
 } from '@/lib/testimonials';
 import type { AdminAuditLogEntry, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
+import { PRODUCT_CATEGORIES } from '@/lib/product-categories';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
 const TESTIMONIAL_SOURCES: TestimonialSource[] = ['google', 'trustpilot', 'website', 'whatsapp'];
@@ -267,6 +268,7 @@ export default function AdminScreen() {
   const [drawDate, setDrawDate] = useState('');
   const [liveLink, setLiveLink] = useState('');
   const [winnerPhoto, setWinnerPhoto] = useState('');
+  const [category, setCategory] = useState<string | null>(null);
   const [winnerPhotoUploading, setWinnerPhotoUploading] = useState(false);
   const [productImageUploading, setProductImageUploading] = useState(false);
   const seoDefaults = {
@@ -572,6 +574,7 @@ export default function AdminScreen() {
     setDrawDate(p.draw_date || '');
     setLiveLink(p.live_link || '');
     setWinnerPhoto(p.winner_photo || '');
+    setCategory(p.category || null);
     setSeoData({
       seo_title: p.seo_title ?? '',
       meta_description: p.meta_description ?? '',
@@ -590,6 +593,7 @@ export default function AdminScreen() {
     setMaxEntries(''); setImageUrl(''); setDescription(''); setDrawDate('');
     setLiveLink('');
     setWinnerPhoto('');
+    setCategory(null);
     setSeoData({ ...seoDefaults });
   }
 
@@ -768,6 +772,7 @@ export default function AdminScreen() {
       meta_keywords: seoData.meta_keywords || null,
       slug: normalizedSlug || null,
       indexable: seoData.indexable,
+      category: category || null,
     };
 
     if (currentEditId) {
@@ -1926,6 +1931,26 @@ export default function AdminScreen() {
               <View style={styles.sectionTitleRow}>{editingId ? <Pencil color={theme.text} size={19} /> : <Plus color={theme.text} size={19} />}<Text style={styles.sectionTitle}>{editingId ? 'Edit Product' : 'Add New Product'}</Text></View>
               {editingId && <View style={styles.editBanner}><TriangleAlert color="#FFD700" size={16} /><Text style={styles.editBannerText}>Editing mode</Text></View>}
               <TextInput style={styles.input} placeholder="Product name *" placeholderTextColor="#666" value={productName} onChangeText={setProductName} />
+
+              <Text style={styles.categoryLabel}>Category</Text>
+              <View style={styles.categoryChipsWrap}>
+                <TouchableOpacity
+                  style={[styles.categoryChip, !category && styles.categoryChipActive]}
+                  onPress={() => setCategory(null)}
+                >
+                  <Text style={[styles.categoryChipText, !category && styles.categoryChipTextActive]}>Auto-detect</Text>
+                </TouchableOpacity>
+                {PRODUCT_CATEGORIES.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.key}
+                    style={[styles.categoryChip, category === cat.key && styles.categoryChipActive]}
+                    onPress={() => setCategory(cat.key)}
+                  >
+                    <Text style={[styles.categoryChipText, category === cat.key && styles.categoryChipTextActive]}>{cat.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               <TextInput style={styles.input} placeholder="Price in Rs. *" placeholderTextColor="#666" keyboardType="numeric" value={productPrice} onChangeText={setProductPrice} />
               <TextInput style={styles.input} placeholder="Entry fee (1, 10, or 100) *" placeholderTextColor="#666" keyboardType="numeric" value={entryFee} onChangeText={setEntryFee} />
               <TextInput style={styles.input} placeholder="Max entries *" placeholderTextColor="#666" keyboardType="numeric" value={maxEntries} onChangeText={setMaxEntries} />
@@ -2948,6 +2973,12 @@ function createStyles(theme: AdminTheme) {
   editBanner: { backgroundColor: theme.goldSoft, borderWidth: 1, borderColor: theme.gold, borderRadius: 8, padding: 8, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   editBannerText: { color: theme.gold, fontSize: 13, textAlign: 'center' },
   input: { backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, color: theme.text, padding: 15, marginBottom: 12, fontSize: 14 },
+  categoryLabel: { color: theme.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  categoryChipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  categoryChip: { backgroundColor: theme.surface, borderRadius: 16, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 12, paddingVertical: 7 },
+  categoryChipActive: { backgroundColor: theme.goldSoft, borderColor: theme.gold },
+  categoryChipText: { color: theme.muted, fontSize: 12, fontWeight: '600' },
+  categoryChipTextActive: { color: theme.gold, fontWeight: '800' },
   drawDatePicker: { marginBottom: 12 },
   drawDatePickerLabel: { color: theme.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 },
   drawDateRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
