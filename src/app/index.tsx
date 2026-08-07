@@ -4,9 +4,9 @@ import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useSta
 import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
-  ArrowRight, BadgeCheck, CalendarDays, CheckCircle2, CircleAlert,
-  BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Headphones, Heart, ListFilter, LockKeyhole, Play, Scale, Search,
-  Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, Trophy, TrendingUp, UsersRound, X,
+  ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
+  BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Search,
+  Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -1269,43 +1269,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={[styles.trustBadgesSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={styles.sectionHeading}>
-          <ShieldCheck color={colors.gold} size={20} />
-          <Text role="heading" aria-level={2} style={[styles.trustBadgesTitle, { color: colors.gold }]}>{t('trustBadgesTitle')}</Text>
-        </View>
-        <View style={styles.trustBadgesGrid}>
-          <Link href="/registered-verified" asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.trustBadgeCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }])} accessibilityRole="link">
-              <BadgeCheck color={colors.primary} size={26} />
-              <Text style={[styles.trustBadgeTitle, { color: colors.text }]}>{t('trustFbrTitle')}</Text>
-              <Text style={[styles.trustBadgeDesc, { color: colors.muted }]}>{t('trustFbrDesc')}</Text>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/explore" asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.trustBadgeCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }])} accessibilityRole="link">
-              <Trophy color={colors.primary} size={26} />
-              <Text style={[styles.trustBadgeTitle, { color: colors.text }]}>{t('trustWinnersTitle')}</Text>
-              <Text style={[styles.trustBadgeDesc, { color: colors.muted }]}>{t('trustWinnersDesc')}</Text>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/why-fair" asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.trustBadgeCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }])} accessibilityRole="link">
-              <Scale color={colors.primary} size={26} />
-              <Text style={[styles.trustBadgeTitle, { color: colors.text }]}>{t('trustFairTitle')}</Text>
-              <Text style={[styles.trustBadgeDesc, { color: colors.muted }]}>{t('trustFairDesc')}</Text>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/help" asChild>
-            <TouchableOpacity style={StyleSheet.flatten([styles.trustBadgeCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }])} accessibilityRole="link">
-              <Headphones color={colors.primary} size={26} />
-              <Text style={[styles.trustBadgeTitle, { color: colors.text }]}>{t('trustSupportTitle')}</Text>
-              <Text style={[styles.trustBadgeDesc, { color: colors.muted }]}>{t('trustSupportDesc')}</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </View>
-
       {testimonials.length > 0 ? (
         <View style={[styles.testimonialsSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.sectionHeading}><Star color={colors.gold} size={20} /><Text role="heading" aria-level={2} style={[styles.howTitle, { color: colors.gold }]}>What Winners Say</Text></View>
@@ -1664,12 +1627,6 @@ const styles = StyleSheet.create({
   algoText: { color: '#aaa', fontSize: 13, lineHeight: 20, marginBottom: 12 },
   verifiedBadge: { backgroundColor: '#18a663', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', flexDirection: 'row', gap: 5, alignItems: 'center' },
   verifiedText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
-  trustBadgesSection: { marginHorizontal: 15, marginBottom: 15, padding: 16, borderRadius: 16, borderWidth: 1 },
-  trustBadgesTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
-  trustBadgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
-  trustBadgeCard: { width: '47%', minWidth: 140, borderRadius: 12, borderWidth: 1, padding: 14, gap: 4, alignItems: 'flex-start' },
-  trustBadgeTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 4 },
-  trustBadgeDesc: { fontSize: 12, lineHeight: 16 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' },
   priceSheet: { maxHeight: '88%' },
   pricePanel: { borderWidth: 1, borderRadius: 12, padding: 6 },
