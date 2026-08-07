@@ -10,7 +10,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { DrawReplayOverlay } from '@/components/draw-animation/DrawReplayOverlay';
 import type { Product } from '@/types/database';
 import { formatDrawDate } from '@/lib/format-draw-date';
-import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Copy, Medal, PackageCheck, RotateCcw, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Truck, Users } from 'lucide-react-native';
+import { BarChart3, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Copy, Medal, RotateCcw, Share2, ShieldCheck, Target, Ticket, TriangleAlert, Trophy, Users } from 'lucide-react-native';
 import type { PrizeStatus, WinnerStatus } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -40,6 +40,67 @@ const WINNER_STATUS_LABEL: Record<WinnerStatus, string> = {
   disqualified: 'Did Not Pass Verification',
   re_draw_required: 'Under Review — Re-Draw in Progress',
 };
+
+type TimelineStepState = 'done' | 'active' | 'warning';
+type TimelineStep = { key: string; label: string; state: TimelineStepState };
+
+// Entries only ever get created once an admin approves the matching payment (see
+// admin.tsx's approvePaymentCore), so a draw_results row existing at all already proves
+// entry + payment + the draw itself completed -- these first three steps aren't a guess.
+function buildWinnerTimelineSteps(result: PublicDrawResult): TimelineStep[] {
+  const steps: TimelineStep[] = [
+    { key: 'entry', label: 'Entry Purchased', state: 'done' },
+    { key: 'payment', label: 'Payment Verified', state: 'done' },
+    { key: 'draw', label: 'Draw Completed', state: 'done' },
+  ];
+
+  if (result.winner_status === 'verified') {
+    steps.push({ key: 'winner', label: 'Winner Verified', state: 'done' });
+  } else if (result.winner_status === 'disqualified' || result.winner_status === 're_draw_required') {
+    steps.push({ key: 'winner', label: WINNER_STATUS_LABEL[result.winner_status], state: 'warning' });
+    return steps;
+  } else {
+    steps.push({ key: 'winner', label: 'Winner Verification in Progress', state: 'active' });
+  }
+
+  steps.push({
+    key: 'prize',
+    label: result.prize_status === 'delivered' ? 'Prize Delivered' : PRIZE_STATUS_LABEL[result.prize_status],
+    state: result.prize_status === 'delivered' ? 'done' : 'active',
+  });
+
+  return steps;
+}
+
+function WinnerTimeline({ result }: { result: PublicDrawResult }) {
+  const steps = buildWinnerTimelineSteps(result);
+  return (
+    <View style={styles.timelineCard}>
+      <Text style={styles.timelineTitle}>Your Prize Journey</Text>
+      {steps.map((step, index) => {
+        const isLast = index === steps.length - 1;
+        const color = step.state === 'done' ? '#18a663' : step.state === 'warning' ? '#ff4444' : '#FFD700';
+        return (
+          <View key={step.key} style={styles.timelineRow}>
+            <View style={styles.timelineMarkerColumn}>
+              <View style={[styles.timelineMarker, { borderColor: color, backgroundColor: step.state === 'done' ? color : 'transparent' }]}>
+                {step.state === 'done' && <Check color="#000" size={12} strokeWidth={3} />}
+                {step.state === 'warning' && <TriangleAlert color={color} size={12} strokeWidth={3} />}
+              </View>
+              {!isLast && <View style={[styles.timelineConnector, { backgroundColor: step.state === 'done' ? '#18a663' : '#233' }]} />}
+            </View>
+            <Text style={[styles.timelineLabel, { color: step.state === 'active' ? '#FFD700' : step.state === 'warning' ? '#ff4444' : 'white' }]}>
+              {step.label}
+            </Text>
+          </View>
+        );
+      })}
+      {result.prize_tracking_note ? (
+        <Text style={styles.statusNote}>{result.prize_tracking_note}</Text>
+      ) : null}
+    </View>
+  );
+}
 
 export default function WinnerScreen() {
   const router = useRouter();
@@ -246,34 +307,7 @@ export default function WinnerScreen() {
         </View>
       )}
 
-      {result?.winner_status && (
-        <View style={styles.statusCard}>
-          <View style={styles.statusTitleRow}>
-            {result.winner_status === 'verified' ? (
-              <ShieldCheck color="#18a663" size={18} />
-            ) : result.winner_status === 'disqualified' || result.winner_status === 're_draw_required' ? (
-              <TriangleAlert color="#ff4444" size={18} />
-            ) : (
-              <Clock color="#FFD700" size={18} />
-            )}
-            <Text style={styles.statusTitle}>Winner Verification Status</Text>
-          </View>
-          <Text style={styles.statusValue}>{WINNER_STATUS_LABEL[result.winner_status]}</Text>
-        </View>
-      )}
-
-      {result?.prize_status && (
-        <View style={styles.statusCard}>
-          <View style={styles.statusTitleRow}>
-            {result.prize_status === 'delivered' ? <PackageCheck color="#18a663" size={18} /> : <Truck color="#FFD700" size={18} />}
-            <Text style={styles.statusTitle}>Prize Delivery Status</Text>
-          </View>
-          <Text style={styles.statusValue}>{PRIZE_STATUS_LABEL[result.prize_status]}</Text>
-          {result.prize_tracking_note ? (
-            <Text style={styles.statusNote}>{result.prize_tracking_note}</Text>
-          ) : null}
-        </View>
-      )}
+      {result?.winner_status && <WinnerTimeline result={result} />}
 
       <View style={styles.detailCard}>
         <View style={styles.detailTitleRow}><BarChart3 color="white" size={19} /><Text style={styles.detailTitle}>{t('drawDetails')}</Text></View>
@@ -431,11 +465,14 @@ const styles = StyleSheet.create({
   myTicketTitle: { fontSize: 14, fontWeight: 'bold', color: '#ff4444', textTransform: 'uppercase' },
   myTicketNumber: { fontSize: 24, fontWeight: 'bold', color: '#ff4444', fontFamily: 'monospace' },
   myTicketStatus: { fontSize: 13, color: '#ddd', marginTop: 8, textAlign: 'center' },
-  statusCard: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
-  statusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
-  statusTitle: { fontSize: 15, fontWeight: 'bold', color: 'white' },
-  statusValue: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
-  statusNote: { fontSize: 13, color: '#aaa', marginTop: 6, lineHeight: 18 },
+  statusNote: { fontSize: 13, color: '#aaa', marginTop: 6, lineHeight: 18, marginLeft: 34 },
+  timelineCard: { backgroundColor: '#071b13', marginHorizontal: 15, marginTop: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
+  timelineTitle: { fontSize: 15, fontWeight: 'bold', color: 'white', marginBottom: 14 },
+  timelineRow: { flexDirection: 'row' },
+  timelineMarkerColumn: { alignItems: 'center', width: 24 },
+  timelineMarker: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  timelineConnector: { width: 2, flex: 1, minHeight: 20 },
+  timelineLabel: { fontSize: 14, fontWeight: '600', marginLeft: 12, paddingBottom: 18, flexShrink: 1 },
   detailCard: { backgroundColor: '#071b13', margin: 15, borderRadius: 15, padding: 20, borderWidth: 1, borderColor: '#174a35' },
   navRow: { flexDirection: 'row', gap: 10, marginHorizontal: 15, marginBottom: 15 },
   navButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#071b13', borderRadius: 12, borderWidth: 1, borderColor: '#174a35', paddingVertical: 12, paddingHorizontal: 10 },
