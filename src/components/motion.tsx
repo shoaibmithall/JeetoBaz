@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
@@ -155,7 +155,94 @@ export function ShineSweep({ width, delay = 0 }: { width: number; delay?: number
   );
 }
 
+/**
+ * Auto-scrolling horizontal row that loops seamlessly (the list is rendered twice
+ * back-to-back, and the scroll position wraps once it passes the first copy).
+ * Pauses on touch/drag (and mouse hover on web) and resumes shortly after the
+ * user lets go -- manual swiping always wins over the auto-scroll.
+ */
+export function MarqueeRow<T>({
+  items,
+  keyExtractor,
+  renderItem,
+  itemWidth,
+  gap,
+  leadingPadding = 0,
+  speed = 30,
+  style,
+}: {
+  items: T[];
+  keyExtractor: (item: T, index: number) => string;
+  renderItem: (item: T, index: number) => ReactNode;
+  itemWidth: number;
+  gap: number;
+  leadingPadding?: number;
+  speed?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reducedMotion = useReducedMotion();
+  const scrollRef = useRef<ScrollView>(null);
+  const pausedRef = useRef(false);
+  const offsetRef = useRef(0);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const oneSetWidth = items.length * (itemWidth + gap);
+  const canLoop = !reducedMotion && items.length > 1 && oneSetWidth > 0;
+
+  useEffect(() => {
+    if (!canLoop) return;
+    let raf: number;
+    let lastTime = Date.now();
+    const tick = () => {
+      const now = Date.now();
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      if (!pausedRef.current) {
+        offsetRef.current += speed * dt;
+        if (offsetRef.current >= oneSetWidth) offsetRef.current -= oneSetWidth;
+        scrollRef.current?.scrollTo({ x: offsetRef.current, animated: false });
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [canLoop, oneSetWidth, speed]);
+
+  function pause() {
+    pausedRef.current = true;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+  }
+
+  function resumeAfterDelay() {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      pausedRef.current = false;
+    }, 1500);
+  }
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      onTouchStart={pause}
+      onTouchEnd={resumeAfterDelay}
+      onScrollBeginDrag={pause}
+      onScrollEndDrag={resumeAfterDelay}
+      style={style}
+      contentContainerStyle={[styles.marqueeRow, { paddingLeft: leadingPadding, gap }]}
+    >
+      {items.map((item, index) => (
+        <View key={`${keyExtractor(item, index)}-a`}>{renderItem(item, index)}</View>
+      ))}
+      {canLoop && items.map((item, index) => (
+        <View key={`${keyExtractor(item, index)}-b`}>{renderItem(item, index)}</View>
+      ))}
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
   shineBand: { position: 'absolute', top: -40, bottom: -40 },
   shineGradient: { flex: 1 },
+  marqueeRow: { flexDirection: 'row' },
 });
