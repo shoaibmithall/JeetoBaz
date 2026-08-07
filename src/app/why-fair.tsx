@@ -172,7 +172,7 @@ export default function WhyFairScreen() {
     'WebPage',
     '/why-fair',
     'Why JeetoBaz is Fair',
-    'How JeetoBaz keeps every prize draw fair and transparent: verified payments, verified winners, equal entry, duplicate-account protection, and a locked, immutable draw process.',
+    'How JeetoBaz keeps every prize draw fair and transparent: verified payments, verified winners, equal entry, and a locked, immutable draw process.',
   );
   const breadcrumb = breadcrumbSchema([{ name: 'Why JeetoBaz is Fair', path: '/why-fair' }]);
 
@@ -181,7 +181,7 @@ export default function WhyFairScreen() {
     <Head>
       <title>Why JeetoBaz is Fair | JeetoBaz</title>
       <meta name="robots" content="index, follow" />
-      <meta name="description" content="How JeetoBaz keeps every prize draw fair and transparent: verified payments, verified winners, equal entry, duplicate-account protection, and a locked, immutable draw process." />
+      <meta name="description" content="How JeetoBaz keeps every prize draw fair and transparent: verified payments, verified winners, equal entry, and a locked, immutable draw process." />
       <meta property="og:type" content="website" />
       <meta property="og:title" content="Why JeetoBaz is Fair | JeetoBaz" />
       <meta property="og:description" content="How JeetoBaz keeps every prize draw fair and transparent, from verified payments to a locked, immutable draw process." />
