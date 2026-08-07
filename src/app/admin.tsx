@@ -23,10 +23,23 @@ import {
   getAllBrandShowcaseImages,
   updateBrandShowcaseImageVisibility,
 } from '@/lib/brand-showcase';
-import type { AdminAuditLogEntry, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
+import {
+  createTestimonial,
+  deleteTestimonial,
+  getAllTestimonials,
+  updateTestimonialVisibility,
+} from '@/lib/testimonials';
+import type { AdminAuditLogEntry, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
+const TESTIMONIAL_SOURCES: TestimonialSource[] = ['google', 'trustpilot', 'website', 'whatsapp'];
+const TESTIMONIAL_SOURCE_LABELS: Record<TestimonialSource, string> = {
+  google: 'Google',
+  trustpilot: 'Trustpilot',
+  website: 'Website',
+  whatsapp: 'WhatsApp',
+};
 const PRIZE_STATUSES: PrizeStatus[] = ['pending', 'processing', 'shipped', 'delivered'];
 const WINNER_STATUSES: WinnerStatus[] = ['selected', 'under_verification', 'verified', 'disqualified', 're_draw_required'];
 const WINNER_STATUS_LABELS: Record<WinnerStatus, string> = {
@@ -289,6 +302,13 @@ export default function AdminScreen() {
   const [verificationSaving, setVerificationSaving] = useState(false);
   const [brandShowcaseImages, setBrandShowcaseImages] = useState<BrandShowcaseImage[]>([]);
   const [brandShowcaseUploading, setBrandShowcaseUploading] = useState(false);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialReviewerName, setTestimonialReviewerName] = useState('');
+  const [testimonialReviewText, setTestimonialReviewText] = useState('');
+  const [testimonialRating, setTestimonialRating] = useState(5);
+  const [testimonialSource, setTestimonialSource] = useState<TestimonialSource>('google');
+  const [testimonialSourceUrl, setTestimonialSourceUrl] = useState('');
+  const [testimonialSaving, setTestimonialSaving] = useState(false);
   const [drawResults, setDrawResults] = useState<DrawResultWithProduct[]>([]);
   const [prizeStatusDrafts, setPrizeStatusDrafts] = useState<Record<string, { status: PrizeStatus; note: string }>>({});
   const [prizeStatusSaving, setPrizeStatusSaving] = useState<string | null>(null);
@@ -337,6 +357,7 @@ export default function AdminScreen() {
       loadHomeAdImages();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
+      loadTestimonials();
     }
   }, [authenticated]);
 
@@ -1187,6 +1208,70 @@ export default function AdminScreen() {
     const { error: storageError } = await supabase.storage.from(BRAND_SHOWCASE_BUCKET).remove([image.image_path]);
     if (storageError) console.warn('Image record deleted but storage cleanup failed:', storageError.message);
     await loadBrandShowcaseImages();
+  }
+
+  async function loadTestimonials() {
+    const { data, error } = await getAllTestimonials();
+    if (error) {
+      console.warn('Unable to load testimonials:', error.message);
+      return;
+    }
+    setTestimonials(data || []);
+  }
+
+  function resetTestimonialForm() {
+    setTestimonialReviewerName('');
+    setTestimonialReviewText('');
+    setTestimonialRating(5);
+    setTestimonialSource('google');
+    setTestimonialSourceUrl('');
+  }
+
+  async function addTestimonial() {
+    if (testimonialReviewerName.trim().length < 2) {
+      alert('Enter the reviewer’s name.');
+      return;
+    }
+    if (testimonialReviewText.trim().length < 10) {
+      alert('Paste the actual review text (at least 10 characters) -- never write one yourself.');
+      return;
+    }
+    setTestimonialSaving(true);
+    const { error } = await createTestimonial({
+      reviewer_name: testimonialReviewerName.trim(),
+      review_text: testimonialReviewText.trim(),
+      rating: testimonialRating,
+      source: testimonialSource,
+      source_url: testimonialSourceUrl.trim() || undefined,
+    });
+    setTestimonialSaving(false);
+    if (error) {
+      alert('Testimonial could not be saved. Error: ' + error.message);
+      return;
+    }
+    resetTestimonialForm();
+    await loadTestimonials();
+  }
+
+  async function toggleTestimonialVisibility(testimonial: Testimonial) {
+    const { error } = await updateTestimonialVisibility(testimonial.id, !testimonial.is_visible);
+    if (error) {
+      alert('Visibility could not be changed. Error: ' + error.message);
+      return;
+    }
+    await loadTestimonials();
+  }
+
+  async function removeTestimonial(testimonial: Testimonial) {
+    const confirmed = await confirmAsync('Delete testimonial', `Delete ${testimonial.reviewer_name}'s testimonial?`);
+    if (!confirmed) return;
+
+    const { error } = await deleteTestimonial(testimonial.id);
+    if (error) {
+      alert('Testimonial could not be deleted. Error: ' + error.message);
+      return;
+    }
+    await loadTestimonials();
   }
 
   function startVerificationEdit(document: VerificationDocument) {
@@ -2609,6 +2694,95 @@ export default function AdminScreen() {
                         <Text style={styles.visibilityButtonText}>{image.is_visible ? 'Hide' : 'Show'}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeBrandShowcaseImage(image)}>
+                        <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Testimonials</Text></View>
+            <Text style={styles.settingHint}>
+              Paste a real winner&apos;s actual review word-for-word (from Google, Trustpilot, WhatsApp, or the
+              website) -- never write one yourself. Shown on the About page with review structured data.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Reviewer name (e.g. Ahmed K.)"
+              placeholderTextColor="#666"
+              value={testimonialReviewerName}
+              onChangeText={setTestimonialReviewerName}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Paste the actual review text here..."
+              placeholderTextColor="#666"
+              value={testimonialReviewText}
+              onChangeText={setTestimonialReviewText}
+              multiline
+              numberOfLines={3}
+            />
+            <Text style={styles.paymentLine}>Rating:</Text>
+            <View style={styles.actionRow}>
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <TouchableOpacity
+                  key={rating}
+                  style={[styles.statusBadge, testimonialRating === rating ? styles.activeBadge : styles.completedBadge]}
+                  onPress={() => setTestimonialRating(rating)}
+                >
+                  <Text style={styles.tabLabel}>{rating} ★</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.paymentLine}>Source:</Text>
+            <View style={styles.actionRow}>
+              {TESTIMONIAL_SOURCES.map((source) => (
+                <TouchableOpacity
+                  key={source}
+                  style={[styles.statusBadge, testimonialSource === source ? styles.activeBadge : styles.completedBadge]}
+                  onPress={() => setTestimonialSource(source)}
+                >
+                  <Text style={styles.tabLabel}>{TESTIMONIAL_SOURCE_LABELS[source]}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Source URL — optional (link to the actual review, e.g. on Google)"
+              placeholderTextColor="#666"
+              value={testimonialSourceUrl}
+              onChangeText={setTestimonialSourceUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={addTestimonial} disabled={testimonialSaving}>
+              <Plus color="white" size={18} />
+              <Text style={styles.addButtonText}>{testimonialSaving ? 'Saving...' : 'Add Testimonial'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.verificationList}>
+              {testimonials.length === 0 ? (
+                <Text style={styles.emptyText}>No testimonials added yet.</Text>
+              ) : testimonials.map((testimonial) => (
+                <View key={testimonial.id} style={[styles.verificationAdminCard, !testimonial.is_visible && styles.verificationAdminCardHidden]}>
+                  <View style={styles.verificationAdminContent}>
+                    <View style={styles.productHeader}>
+                      <Text style={styles.productName}>{testimonial.reviewer_name} — {testimonial.rating}★ ({TESTIMONIAL_SOURCE_LABELS[testimonial.source]})</Text>
+                      <View style={[styles.statusBadge, testimonial.is_visible ? styles.activeBadge : styles.completedBadge]}>
+                        <Circle color={testimonial.is_visible ? theme.primary : theme.gold} size={8} fill={testimonial.is_visible ? theme.primary : theme.gold} />
+                        <Text style={styles.statusText}>{testimonial.is_visible ? 'Visible' : 'Hidden'}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.paymentLine}>{testimonial.review_text}</Text>
+                    <View style={styles.verificationActionRow}>
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => toggleTestimonialVisibility(testimonial)}>
+                        {testimonial.is_visible ? <EyeOff color={theme.gold} size={16} /> : <Eye color={theme.gold} size={16} />}
+                        <Text style={styles.visibilityButtonText}>{testimonial.is_visible ? 'Hide' : 'Show'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeTestimonial(testimonial)}>
                         <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
                       </TouchableOpacity>
                     </View>

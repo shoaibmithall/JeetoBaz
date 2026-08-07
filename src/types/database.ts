@@ -257,6 +257,21 @@ export type BrandShowcaseImage = {
   created_at: string;
 };
 
+export type TestimonialSource = 'google' | 'trustpilot' | 'website' | 'whatsapp';
+
+export type Testimonial = {
+  id: string;
+  draw_result_id: string | null;
+  reviewer_name: string;
+  review_text: string;
+  rating: number;
+  source: TestimonialSource;
+  source_url: string | null;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -410,6 +425,12 @@ export type Database = {
         BrandShowcaseImage,
         Pick<BrandShowcaseImage, 'image_url' | 'image_path'> & Partial<Pick<BrandShowcaseImage, 'is_visible' | 'sort_order'>>,
         Partial<Pick<BrandShowcaseImage, 'is_visible' | 'sort_order'>>
+      >;
+      testimonials: Table<
+        Testimonial,
+        Pick<Testimonial, 'reviewer_name' | 'review_text' | 'rating'> &
+          Partial<Pick<Testimonial, 'draw_result_id' | 'source' | 'source_url' | 'is_visible' | 'sort_order'>>,
+        Partial<Pick<Testimonial, 'is_visible' | 'sort_order'>>
       >;
       push_subscriptions: Table<
         PushSubscriptionRow,
