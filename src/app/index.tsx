@@ -115,6 +115,14 @@ const SORT_OPTIONS: { key: SortOption; labels: Record<LanguageCode, string> }[] 
   { key: 'entry_low', labels: { en: 'Entry: Low-High', ur: 'انٹری: کم سے زیادہ', roman: 'Entry: Low-High' } },
 ];
 
+function compareBySortOption(a: Product, b: Product, sortBy: SortOption) {
+  if (sortBy === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  if (sortBy === 'price_low') return (a.price || 0) - (b.price || 0);
+  if (sortBy === 'price_high') return (b.price || 0) - (a.price || 0);
+  if (sortBy === 'entry_low') return (a.entry_fee || 1) - (b.entry_fee || 1);
+  return (b.current_entries || 0) - (a.current_entries || 0);
+}
+
 const PKT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
 function getTimeLeft(drawDate: string | null | undefined, language: LanguageCode, now: Date) {
@@ -456,13 +464,7 @@ export default function HomeScreen() {
       return matchesSearch && matchesCategory && matchesEntryFee;
     });
 
-    return result.sort((a, b) => {
-      if (sortBy === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      if (sortBy === 'price_low') return (a.price || 0) - (b.price || 0);
-      if (sortBy === 'price_high') return (b.price || 0) - (a.price || 0);
-      if (sortBy === 'entry_low') return (a.entry_fee || 1) - (b.entry_fee || 1);
-      return (b.current_entries || 0) - (a.current_entries || 0);
-    });
+    return result.sort((a, b) => compareBySortOption(a, b, sortBy));
   }, [deferredCategory, deferredGroupFilter, deferredSearch, deferredSelectedEntryFee, products, sortBy]);
 
   const isDefaultView = category === 'all' && groupFilter === null && search.trim() === '' && selectedEntryFee === null;
@@ -485,7 +487,7 @@ export default function HomeScreen() {
     return PRODUCT_CATEGORIES
       .filter((entry) => productsByCategory.has(entry.key))
       .map((entry) => {
-        const items = productsByCategory.get(entry.key)!;
+        const items = productsByCategory.get(entry.key)!.sort((a, b) => compareBySortOption(a, b, sortBy));
         return {
           key: entry.key,
           label: entry.label,
@@ -494,7 +496,7 @@ export default function HomeScreen() {
           preview: items.slice(0, categoryPreviewCount),
         };
       });
-  }, [isDefaultView, products, categoryPreviewCount]);
+  }, [isDefaultView, products, categoryPreviewCount, sortBy]);
 
   const trendingProducts = useMemo(() => {
     if (!isDefaultView) return [];
