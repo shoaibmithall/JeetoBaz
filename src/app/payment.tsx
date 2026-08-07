@@ -16,13 +16,13 @@ import QRCode from 'react-native-qrcode-svg';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
+  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: false },
+  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', hasQr: true },
+  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', hasQr: true },
 ];
 
 function subscribeToHydration() {
@@ -440,11 +440,13 @@ export default function PaymentScreen() {
                 <Text style={[styles.methodNumber, { color: theme.gold }]}>{account.number}</Text>
               </TouchableOpacity>
               <Text style={[styles.methodAccount, { color: theme.primary }]}>{account.accountTitle}</Text>
-              <Text style={[styles.copyHint, { color: theme.subtle }]}>Tap number to copy, or scan the QR</Text>
+              <Text style={[styles.copyHint, { color: theme.subtle }]}>{account.hasQr ? 'Tap number to copy, or scan the QR' : 'Tap number to copy'}</Text>
             </View>
-            <View style={styles.methodQrBox}>
-              <QRCode value={account.number} size={46} backgroundColor="white" color="#000" />
-            </View>
+            {account.hasQr && (
+              <View style={styles.methodQrBox}>
+                <QRCode value={account.number} size={46} backgroundColor="white" color="#000" />
+              </View>
+            )}
           </TouchableOpacity>
         ))}
 
