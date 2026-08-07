@@ -64,7 +64,7 @@ const HOME_ADS_CACHE_KEY = 'offlineCache:homeAds';
 const BRAND_SHOWCASE_CACHE_KEY = 'offlineCache:brandShowcase';
 const ENTRY_FEES = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000] as const;
 const HOME_PRODUCTS_LIMIT = 500;
-const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug';
+const HOME_PRODUCT_COLUMNS = 'id, name, price, status, created_at, current_entries, max_entries, entry_fee, winner_phone, image_url, description, draw_date, live_link, winner_photo, slug, category';
 const HOME_NOTIFICATION_COLUMNS = 'id, target_phone, kind';
 const PULL_TO_REFRESH_THRESHOLD = 64;
 const HOME_URL = 'https://jeetobaz.pk/';
@@ -475,7 +475,7 @@ export default function HomeScreen() {
     const query = deferredSearch.trim().toLowerCase();
     const result = products.filter((product) => {
       const matchesSearch = !query || product.name.toLowerCase().includes(query);
-      const productCategoryKey = getProductCategory(product.name);
+      const productCategoryKey = getProductCategory(product.name, product.category);
       const matchesCategory = deferredGroupFilter
         ? PRODUCT_CATEGORIES.find((entry) => entry.key === productCategoryKey)?.group === deferredGroupFilter
         : deferredCategory === 'all' || productCategoryKey === deferredCategory;
@@ -494,7 +494,7 @@ export default function HomeScreen() {
     if (deferredCategory === 'all') return [];
     const seen = new Set<string>();
     for (const product of products) {
-      if (getProductCategory(product.name) !== deferredCategory) continue;
+      if (getProductCategory(product.name, product.category) !== deferredCategory) continue;
       const brandKey = getProductBrand(product.name);
       if (brandKey) seen.add(brandKey);
     }
@@ -511,7 +511,7 @@ export default function HomeScreen() {
     if (!isDefaultView) return [];
     const productsByCategory = new Map<ProductCategoryKey, Product[]>();
     for (const product of products) {
-      const key = getProductCategory(product.name);
+      const key = getProductCategory(product.name, product.category);
       if (!key) continue;
       const existing = productsByCategory.get(key);
       if (existing) {

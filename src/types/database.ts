@@ -18,6 +18,7 @@ export type Product = {
   meta_keywords?: string | null;
   slug?: string | null;
   indexable?: boolean;
+  category?: string | null;
 };
 
 export type Entry = {
@@ -287,6 +288,7 @@ export type ProductFormData = {
   meta_keywords: string | null;
   slug: string | null;
   indexable: boolean;
+  category: string | null;
 };
 
 export type AuthMigrationConfig = {
