@@ -174,3 +174,69 @@ export function getCategoryByKey(key: CategorySelection) {
 export function getProductCategory(name: string): ProductCategoryKey | null {
   return PRODUCT_CATEGORIES.find((category) => category.keywords.test(name))?.key || null;
 }
+
+export type ProductBrand = {
+  key: string;
+  label: string;
+  keywords: RegExp;
+};
+
+// Scoped to whichever category is already selected (e.g. only Mobiles-category
+// products are checked when the Mobiles tab is active), so overlapping brand
+// names across categories (Samsung phones vs. Samsung TVs, Honda cars vs.
+// Honda bikes) never cross-match.
+export const PRODUCT_BRANDS: ProductBrand[] = [
+  { key: 'apple', label: 'Apple', keywords: /(\biphone\b|\bipad\b|macbook|\bapple\b|airpods)/i },
+  { key: 'samsung', label: 'Samsung', keywords: /samsung/i },
+  { key: 'infinix', label: 'Infinix', keywords: /infinix/i },
+  { key: 'xiaomi', label: 'Xiaomi', keywords: /(xiaomi|redmi|\bmi\b)/i },
+  { key: 'oppo', label: 'Oppo', keywords: /oppo/i },
+  { key: 'vivo', label: 'Vivo', keywords: /vivo/i },
+  { key: 'honor', label: 'Honor', keywords: /honor/i },
+  { key: 'tecno', label: 'Tecno', keywords: /tecno/i },
+  { key: 'realme', label: 'Realme', keywords: /realme/i },
+  { key: 'oneplus', label: 'OnePlus', keywords: /one\s?plus/i },
+  { key: 'nothing', label: 'Nothing', keywords: /\bnothing\b/i },
+  { key: 'huawei', label: 'Huawei', keywords: /huawei/i },
+  { key: 'qmobile', label: 'QMobile', keywords: /q\s?mobile/i },
+  { key: 'itel', label: 'Itel', keywords: /\bitel\b/i },
+
+  { key: 'hp', label: 'HP', keywords: /(\bhp\b|hewlett)/i },
+  { key: 'dell', label: 'Dell', keywords: /\bdell\b/i },
+  { key: 'lenovo', label: 'Lenovo', keywords: /lenovo/i },
+  { key: 'asus', label: 'Asus', keywords: /asus/i },
+  { key: 'acer', label: 'Acer', keywords: /acer/i },
+  { key: 'msi', label: 'MSI', keywords: /\bmsi\b/i },
+
+  { key: 'toyota', label: 'Toyota', keywords: /toyota/i },
+  { key: 'honda', label: 'Honda', keywords: /honda/i },
+  { key: 'suzuki', label: 'Suzuki', keywords: /suzuki/i },
+  { key: 'kia', label: 'Kia', keywords: /\bkia\b/i },
+  { key: 'hyundai', label: 'Hyundai', keywords: /hyundai/i },
+  { key: 'changan', label: 'Changan', keywords: /changan/i },
+  { key: 'mg', label: 'MG', keywords: /\bmg\s?(hs|zs)\b/i },
+  { key: 'daihatsu', label: 'Daihatsu', keywords: /daihatsu/i },
+  { key: 'yamaha', label: 'Yamaha', keywords: /yamaha/i },
+  { key: 'united', label: 'United', keywords: /\bunited\b/i },
+
+  { key: 'lg', label: 'LG', keywords: /\blg\b/i },
+  { key: 'sony', label: 'Sony', keywords: /sony/i },
+  { key: 'tcl', label: 'TCL', keywords: /\btcl\b/i },
+  { key: 'haier', label: 'Haier', keywords: /haier/i },
+  { key: 'dawlance', label: 'Dawlance', keywords: /dawlance/i },
+  { key: 'pel', label: 'PEL', keywords: /\bpel\b/i },
+  { key: 'orient', label: 'Orient', keywords: /orient/i },
+  { key: 'ecostar', label: 'Ecostar', keywords: /ecostar/i },
+  { key: 'kenwood', label: 'Kenwood', keywords: /kenwood/i },
+
+  { key: 'rolex', label: 'Rolex', keywords: /rolex/i },
+  { key: 'casio', label: 'Casio', keywords: /casio/i },
+];
+
+export function getProductBrand(name: string): string | null {
+  return PRODUCT_BRANDS.find((brand) => brand.keywords.test(name))?.key || null;
+}
+
+export function getBrandByKey(key: string) {
+  return PRODUCT_BRANDS.find((brand) => brand.key === key) || null;
+}
