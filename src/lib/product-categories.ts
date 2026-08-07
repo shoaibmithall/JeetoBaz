@@ -109,16 +109,19 @@ export const CATEGORY_GROUP_LABELS: Record<CategoryGroupKey, string> = {
 };
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
+  // Smartwatches must be checked before Mobiles -- "Samsung Galaxy Watch" contains the
+  // substring "samsung galaxy", which the Mobiles keywords below would otherwise match
+  // first (getProductCategory takes the first match), mis-filing watches as phones.
+  { key: 'smartwatches', label: 'Smartwatches', group: 'electronics', icon: Watch, keywords: /(smartwatch|smart watch|apple watch|galaxy watch|fitness band)/i },
   { key: 'mobiles', label: 'Mobiles', group: 'electronics', icon: Smartphone, keywords: /(mobile|phone|iphone|samsung galaxy|pixel|oppo|vivo|infinix|tecno|realme)/i },
   { key: 'laptops', label: 'Laptops', group: 'electronics', icon: Laptop, keywords: /(laptop|macbook|notebook|chromebook)/i },
   { key: 'tablets', label: 'Tablets', group: 'electronics', icon: Tablet, keywords: /(tablet|ipad|galaxy tab)/i },
-  { key: 'smartwatches', label: 'Smartwatches', group: 'electronics', icon: Watch, keywords: /(smartwatch|smart watch|apple watch|galaxy watch|fitness band)/i },
   { key: 'gaming', label: 'Gaming Consoles', group: 'electronics', icon: Gamepad2, keywords: /(gaming console|playstation|ps5|ps4|xbox|nintendo|steam deck)/i },
   { key: 'tvs', label: 'TVs', group: 'electronics', icon: Tv, keywords: /(\btv\b|television|smart tv|led tv|oled|qled)/i },
   { key: 'audio', label: 'Audio', group: 'electronics', icon: Headphones, keywords: /(speaker|headphone|earphone|earbuds|airpods|soundbar|audio)/i },
-  { key: 'cameras', label: 'Cameras', group: 'electronics', icon: Camera, keywords: /(camera|dslr|mirrorless|gopro|action cam)/i },
+  { key: 'cameras', label: 'Cameras', group: 'electronics', icon: Camera, keywords: /(camera|dslr|mirrorless|gopro|action cam|canon|nikon|\bdji\b)/i },
 
-  { key: 'cars', label: 'Cars', group: 'vehicles', icon: CarFront, keywords: /(\bcar\b|toyota|honda civic|honda city|suzuki alto|kia|hyundai|changan|mg hs)/i },
+  { key: 'cars', label: 'Cars', group: 'vehicles', icon: CarFront, keywords: /(\bcar\b|toyota|honda civic|honda city|suzuki alto|suzuki swift|suzuki cultus|suzuki every|suzuki wagon|suzuki bolan|suzuki ravi|suzuki mehran|\bkia\b|hyundai|changan|mg hs|mg zs)/i },
   { key: 'bikes', label: 'Bikes', group: 'vehicles', icon: Bike, keywords: /(bike|motorcycle|honda cg|honda cd|yamaha|suzuki gs|scooter)/i },
 
   { key: 'home-living', label: 'Home & Living', group: 'home', icon: House, keywords: /(home & living|home and living|household|home essentials)/i },
@@ -231,6 +234,11 @@ export const PRODUCT_BRANDS: ProductBrand[] = [
 
   { key: 'rolex', label: 'Rolex', keywords: /rolex/i },
   { key: 'casio', label: 'Casio', keywords: /casio/i },
+
+  { key: 'canon', label: 'Canon', keywords: /canon/i },
+  { key: 'nikon', label: 'Nikon', keywords: /nikon/i },
+  { key: 'gopro', label: 'GoPro', keywords: /gopro/i },
+  { key: 'dji', label: 'DJI', keywords: /\bdji\b/i },
 ];
 
 export function getProductBrand(name: string): string | null {
