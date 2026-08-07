@@ -10,7 +10,7 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
-import { getAnnouncement, getHomeAdImages, saveAnnouncement as saveAnnouncementSetting, saveHomeAdImages } from '@/lib/app-settings';
+import { getAnnouncement, getGoogleReviewLink, getHomeAdImages, saveAnnouncement as saveAnnouncementSetting, saveGoogleReviewLink, saveHomeAdImages } from '@/lib/app-settings';
 import {
   createVerificationDocument,
   deleteVerificationDocument,
@@ -66,7 +66,7 @@ import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
   Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
-  Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Trash2,
+  Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Star, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
 } from 'lucide-react-native';
 
@@ -271,6 +271,8 @@ export default function AdminScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [announcementSaved, setAnnouncementSaved] = useState(false);
+  const [googleReviewLink, setGoogleReviewLink] = useState('');
+  const [googleReviewLinkSaved, setGoogleReviewLinkSaved] = useState(false);
   const [homeAdImagesInput, setHomeAdImagesInput] = useState('');
   const [homeAdImagesSaved, setHomeAdImagesSaved] = useState(false);
   const [homeAdUploading, setHomeAdUploading] = useState(false);
@@ -331,6 +333,7 @@ export default function AdminScreen() {
       fetchDrawResults();
       fetchAuditLog();
       loadAnnouncement();
+      loadGoogleReviewLink();
       loadHomeAdImages();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
@@ -937,6 +940,7 @@ export default function AdminScreen() {
 
   async function saveWinnerStatus(result: DrawResultWithProduct) {
     const draft = getWinnerStatusDraft(result);
+    const justVerified = result.winner_status !== 'verified' && draft.status === 'verified';
     setWinnerStatusSaving(result.id);
     const { error } = await supabase.rpc('update_winner_status', {
       p_draw_result_id: result.id,
@@ -947,6 +951,19 @@ export default function AdminScreen() {
     if (error) {
       alert('Could not update winner status: ' + error.message);
       return;
+    }
+    if (justVerified) {
+      const { link: reviewLink } = await getGoogleReviewLink();
+      const prizeName = result.products?.name || 'your prize';
+      await createUserNotification({
+        title: 'Congratulations again! 🎉',
+        body: reviewLink
+          ? `Your win of ${prizeName} is now verified. If you have a minute, a quick honest review would mean a lot to us.`
+          : `Your win of ${prizeName} is now verified. Thank you for being part of JeetoBaz!`,
+        targetPhone: result.winner_phone,
+        link: reviewLink || null,
+        kind: 'review-request',
+      });
     }
     void logAdminAction('winner_status_updated', result.product_id, { status: draft.status, note: draft.note || null });
     await fetchDrawResults();
@@ -972,6 +989,22 @@ export default function AdminScreen() {
     await setStoredValue('announcement', savedAnnouncement);
     setAnnouncementSaved(true);
     setTimeout(() => setAnnouncementSaved(false), 2000);
+  }
+
+  async function loadGoogleReviewLink() {
+    const { link, error } = await getGoogleReviewLink();
+    if (!error) setGoogleReviewLink(link);
+  }
+
+  async function saveGoogleReviewLinkSetting() {
+    const { link, error } = await saveGoogleReviewLink(googleReviewLink);
+    if (error) {
+      alert('Google review link could not be saved. Error: ' + error.message);
+      return;
+    }
+    setGoogleReviewLink(link);
+    setGoogleReviewLinkSaved(true);
+    setTimeout(() => setGoogleReviewLinkSaved(false), 2000);
   }
 
   function parseHomeAdImagesInput() {
@@ -2600,6 +2633,27 @@ export default function AdminScreen() {
             <TouchableOpacity style={styles.addButton} onPress={saveAnnouncement}>
               {announcementSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
               <Text style={styles.addButtonText}>{announcementSaved ? 'Saved!' : 'Save Announcement'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Google Review Link</Text></View>
+            <Text style={styles.settingHint}>
+              Once a winner&apos;s status is set to Verified below, they automatically get an in-app notification asking
+              for a review, linking here. Get this link from Google Business Profile → Get more reviews.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://g.page/r/.../review"
+              placeholderTextColor="#666"
+              value={googleReviewLink}
+              onChangeText={setGoogleReviewLink}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={saveGoogleReviewLinkSetting}>
+              {googleReviewLinkSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+              <Text style={styles.addButtonText}>{googleReviewLinkSaved ? 'Saved!' : 'Save Review Link'}</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />

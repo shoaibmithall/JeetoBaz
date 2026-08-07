@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -95,6 +95,12 @@ export default function NotificationsScreen() {
       const nextReadIds = [...readIds, item.id];
       setReadIds(nextReadIds);
       await setStoredValue(READ_KEY, JSON.stringify(nextReadIds));
+    }
+    if (!item.link) return;
+    if (item.link.startsWith('http://') || item.link.startsWith('https://')) {
+      await Linking.openURL(item.link);
+    } else {
+      router.push(item.link as never);
     }
   }
 
