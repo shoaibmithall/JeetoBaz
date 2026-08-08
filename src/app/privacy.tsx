@@ -69,7 +69,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { getStoredValue } from '@/lib/storage';
 
-const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const SUPPORT_EMAIL = 'privacy@jeetobaz.pk';
 const SUPPORT_WHATSAPP = '+92 337 2561482';
 const SUPPORT_WHATSAPP_LINK = 'https://wa.me/923372561482';
 
@@ -664,7 +664,7 @@ const PRIVACY_FAQS = [
     iconColor: '#FFD700',
     question: 'Contact Information',
     answer:
-      'For privacy questions, account-data requests, correction requests, account deletion or complaints, users may contact JeetoBaz through its official channels.\n\nBusiness Name: JeetoBaz\nSupport Email: support@jeetobaz.pk\nPrivacy Email: privacy@jeetobaz.pk\nPhone: 0337 2561482\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUntil a separate privacy email is active, JeetoBaz may use its official support email for both support and privacy requests. Users should not send passwords, OTPs or complete payment-card credentials by email, WhatsApp or support chat.',
+      'For privacy questions, account-data requests, correction requests, account deletion or complaints, users may contact JeetoBaz through its official channels.\n\nBusiness Name: JeetoBaz\nSupport Email: support@jeetobaz.pk\nPrivacy Email: privacy@jeetobaz.pk\nPhone: 0337 2561482\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUsers should not send passwords, OTPs or complete payment-card credentials by email, WhatsApp or support chat.',
   },
 ] as const;
 
@@ -790,7 +790,7 @@ export default function PrivacyScreen() {
         <TouchableOpacity style={[styles.whatsAppButton, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]} onPress={openWhatsAppDeletionRequest}>
           <Text style={[styles.whatsAppButtonText, { color: theme.primary }]}>Request by WhatsApp</Text>
         </TouchableOpacity>
-        <Text style={[styles.emailText, { color: theme.subtle }]}>Email: {SUPPORT_EMAIL}</Text>
+        <Text style={[styles.emailText, { color: theme.subtle }]}>Privacy Email: {SUPPORT_EMAIL}</Text>
         <Text style={[styles.emailText, { color: theme.subtle }]}>WhatsApp: {SUPPORT_WHATSAPP}</Text>
       </View>
 
