@@ -111,6 +111,53 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'website-availability-technical-issues',
+    title: 'Website Availability & Technical Issues',
+    blocks: [
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'JeetoBaz makes reasonable efforts to keep the Website available, functional, secure, and accessible. However, continuous or uninterrupted availability of the Website cannot be guaranteed.',
+      },
+      {
+        type: 'paragraph',
+        text: 'The Website may occasionally become temporarily unavailable or experience reduced functionality due to scheduled maintenance, updates, technical improvements, server or hosting issues, network interruptions, security measures, unexpected system failures, or other circumstances beyond the reasonable control of JeetoBaz.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Users may also experience technical difficulties caused by factors outside the Website itself, including internet connectivity, mobile or desktop devices, operating systems, web browsers, telecommunications networks, third-party services, or other technical infrastructure.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Certain Website features may depend on third-party technology, services, APIs, payment infrastructure, hosting services, email services, authentication systems, or other external systems. A temporary interruption, delay, error, or failure affecting such a service may consequently affect the availability or functionality of the corresponding Website feature.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'JeetoBaz may temporarily suspend, restrict, modify, or disable access to any part of the Website where reasonably necessary for maintenance, security, troubleshooting, updates, technical improvements, or other operational reasons.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'JeetoBaz will make reasonable efforts to restore affected Website functionality when practical, but does not guarantee a specific restoration time or that every technical issue can be resolved immediately.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Users should ensure that they are using a compatible and reasonably up-to-date device, browser, operating system, and internet connection when accessing the Website.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Where a technical issue affects a specific transaction, account activity, entry, payment, refund, delivery, or other matter governed by a separate JeetoBaz policy, the applicable Terms & Conditions or relevant policy will govern that matter.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Technical interruptions or temporary Website unavailability should not be interpreted as a permanent discontinuation of the JeetoBaz platform unless JeetoBaz expressly communicates such a decision.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
