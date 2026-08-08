@@ -8,9 +8,9 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
 
-// support@ and privacy@ are confirmed-planned addresses, not yet created/monitored as of writing --
-// owner must activate both inboxes before this page goes live. complaintsjeetobaz@ is the only one
-// currently wired up anywhere else in the app (see help.tsx, privacy.tsx, about.tsx, login.tsx).
+// support@ and privacy@ are live as of Cloudflare Email Routing setup (both forward to
+// complaintsjeetobaz@, the address wired up elsewhere in the app -- see help.tsx, privacy.tsx,
+// about.tsx, login.tsx). All three inboxes route to the same monitored Gmail account.
 const SUPPORT_EMAIL = 'support@jeetobaz.pk';
 const COMPLAINTS_EMAIL = 'complaintsjeetobaz@gmail.com';
 const PRIVACY_EMAIL = 'privacy@jeetobaz.pk';
