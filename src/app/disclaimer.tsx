@@ -1,22 +1,48 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ScrollView } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
-import { AlertTriangle, ChevronRight } from 'lucide-react-native';
+import { AlertTriangle, ChevronRight, Mail, MapPin, Phone } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { showAlert } from '@/lib/alert';
+
+const CONTACT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const CONTACT_PHONE_DISPLAY = '+92 337 2561482';
+const CONTACT_PHONE = '923372561482';
+
+// Matches the fix already applied to help.tsx: react-native-web's Linking.openURL() always opens
+// a new tab, which leaves a stray blank tab behind for mailto: links when no mail app is
+// registered to handle the handoff. Navigating in the same tab avoids that for mailto specifically.
+async function openContactLink(url: string, errorMessage: string, sameTab = false) {
+  try {
+    if (sameTab && Platform.OS === 'web') {
+      window.location.href = url;
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    showAlert('Unable to open', errorMessage);
+  }
+}
 
 // Content is added phase by phase as the source copy is reviewed and confirmed against real
 // platform facts (see other legal pages: terms.tsx, refund-policy.tsx, shipping-policy.tsx).
 // `tone` marks a paragraph as an important callout: 'gold' for an advisory/read-this note,
 // 'red' for a critical/legal-consequence statement. Plain paragraphs render as normal body text.
+type ContactItem =
+  | { kind: 'email'; label: string; value: string; note: string }
+  | { kind: 'phone'; label: string; value: string; note: string }
+  | { kind: 'location'; label: string; value: string };
+
 type DisclaimerBlock =
   | { type: 'paragraph'; text: string; tone?: 'gold' | 'red' }
   | {
       type: 'links';
       items: { label: string; description?: string; route: string; params?: Record<string, string> }[];
-    };
+    }
+  | { type: 'contact'; items: ContactItem[] };
 
 type DisclaimerSection = {
   id: string;
@@ -519,6 +545,55 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'contact-us',
+    title: 'Contact Us',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'If you have questions about this Disclaimer, believe that information published on the Website may be inaccurate, or wish to report an issue relating to Website content, you may contact JeetoBaz through the official contact details provided below.',
+      },
+      {
+        type: 'contact',
+        items: [
+          {
+            kind: 'email',
+            label: 'Email',
+            value: CONTACT_EMAIL,
+            note: 'For general questions, complaints, Website-related assistance, and reporting inaccurate information, users may contact JeetoBaz through this email address.',
+          },
+          {
+            kind: 'phone',
+            label: 'Phone',
+            value: CONTACT_PHONE_DISPLAY,
+            note: 'Users may contact JeetoBaz through the above telephone number for appropriate support or assistance.',
+          },
+          {
+            kind: 'location',
+            label: 'Business Location',
+            value: 'Hyderabad, Sindh, Pakistan',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Users should provide sufficient information when contacting JeetoBaz so that the relevant matter can be properly understood and reviewed. Where appropriate, this may include the relevant Website page or URL, a description of the issue, and any other information reasonably necessary to investigate the matter.',
+      },
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz may review reported errors, inaccurate information, broken links, or other Website-related issues and may correct, update, remove, or otherwise address the relevant content where appropriate.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Submitting a complaint, correction request, or other communication does not by itself create a right to a particular outcome, response time, correction, refund, compensation, or other remedy unless such right is expressly provided under an applicable JeetoBaz policy or required by applicable law.',
+      },
+      {
+        type: 'paragraph',
+        text: 'For matters specifically governed by the Terms & Conditions, Refund Policy, Shipping Policy, Responsible Use Policy, Privacy Policy, or another applicable JeetoBaz policy, users should also refer to the relevant policy and follow the applicable procedure described there.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
@@ -572,6 +647,60 @@ function DisclaimerLinks({ block }: { block: Extract<DisclaimerBlock, { type: 'l
           </TouchableOpacity>
         </Link>
       ))}
+    </View>
+  );
+}
+
+function DisclaimerContact({ block }: { block: Extract<DisclaimerBlock, { type: 'contact' }> }) {
+  const { theme } = useAppTheme();
+
+  return (
+    <View style={[styles.linksBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      {block.items.map((item, index) => {
+        const isLast = index === block.items.length - 1;
+        const rowStyle = StyleSheet.flatten([
+          styles.contactRow,
+          !isLast && { borderBottomColor: theme.border, borderBottomWidth: 1 },
+        ]);
+
+        if (item.kind === 'location') {
+          return (
+            <View key={item.label} style={rowStyle}>
+              <View style={[styles.contactIconBox, { backgroundColor: theme.background }]}>
+                <MapPin color={theme.primary} size={18} />
+              </View>
+              <View style={styles.contactCopy}>
+                <Text style={[styles.contactLabel, { color: theme.subtle }]}>{item.label}</Text>
+                <Text style={[styles.contactValue, { color: theme.text }]}>{item.value}</Text>
+              </View>
+            </View>
+          );
+        }
+
+        const Icon = item.kind === 'email' ? Mail : Phone;
+        const onPress =
+          item.kind === 'email'
+            ? () =>
+                openContactLink(
+                  `mailto:${item.value}?subject=${encodeURIComponent('JeetoBaz Disclaimer Inquiry')}`,
+                  `Please email us at ${item.value}.`,
+                  true,
+                )
+            : () => openContactLink(`tel:+${CONTACT_PHONE}`, `Please call us at ${item.value}.`);
+
+        return (
+          <TouchableOpacity key={item.label} accessibilityRole="link" onPress={onPress} style={rowStyle}>
+            <View style={[styles.contactIconBox, { backgroundColor: theme.background }]}>
+              <Icon color={theme.primary} size={18} />
+            </View>
+            <View style={styles.contactCopy}>
+              <Text style={[styles.contactLabel, { color: theme.subtle }]}>{item.label}</Text>
+              <Text style={[styles.contactValue, { color: theme.primary }]}>{item.value}</Text>
+              <Text style={[styles.contactNote, { color: theme.muted }]}>{item.note}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -653,8 +782,10 @@ export default function DisclaimerScreen() {
                 {section.blocks.map((block, index) =>
                   block.type === 'paragraph' ? (
                     <DisclaimerParagraph key={index} block={block} />
-                  ) : (
+                  ) : block.type === 'links' ? (
                     <DisclaimerLinks key={index} block={block} />
+                  ) : (
+                    <DisclaimerContact key={index} block={block} />
                   ),
                 )}
               </View>
@@ -708,4 +839,10 @@ const styles = StyleSheet.create({
   linkCopy: { flex: 1, gap: 3, paddingRight: 12 },
   linkText: { fontSize: 14.5, fontWeight: '700' },
   linkDescription: { fontSize: 12.5, lineHeight: 17 },
+  contactRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 13, padding: 16 },
+  contactIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  contactCopy: { flex: 1, gap: 2 },
+  contactLabel: { fontSize: 11.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  contactValue: { fontSize: 15, fontWeight: '700' },
+  contactNote: { fontSize: 12.5, lineHeight: 17, marginTop: 2 },
 });
