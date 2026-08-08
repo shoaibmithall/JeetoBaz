@@ -11,7 +11,9 @@ import { showAlert } from '@/lib/alert';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
-const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const COMPLAINTS_EMAIL = 'complaintsjeetobaz@gmail.com';
+const SUPPORT_EMAIL = 'support@jeetobaz.pk';
+const PRIVACY_EMAIL = 'privacy@jeetobaz.pk';
 
 export default function HelpCenterScreen() {
   const [subject, setSubject] = useState('');
@@ -56,7 +58,17 @@ export default function HelpCenterScreen() {
 
   function openEmail() {
     const subjectText = encodeURIComponent('JeetoBaz Support Request');
+    openLink(`mailto:${COMPLAINTS_EMAIL}?subject=${subjectText}`, `Please email us at ${COMPLAINTS_EMAIL}.`, true);
+  }
+
+  function openSupportEmail() {
+    const subjectText = encodeURIComponent('JeetoBaz Support Request');
     openLink(`mailto:${SUPPORT_EMAIL}?subject=${subjectText}`, `Please email us at ${SUPPORT_EMAIL}.`, true);
+  }
+
+  function openPrivacyEmail() {
+    const subjectText = encodeURIComponent('JeetoBaz Privacy Request');
+    openLink(`mailto:${PRIVACY_EMAIL}?subject=${subjectText}`, `Please email us at ${PRIVACY_EMAIL}.`, true);
   }
 
   function createTicket() {
@@ -80,8 +92,8 @@ export default function HelpCenterScreen() {
     );
 
     openLink(
-      `mailto:${SUPPORT_EMAIL}?subject=${ticketSubject}&body=${ticketBody}`,
-      `Please email your issue to ${SUPPORT_EMAIL} and mention ticket ${ticketId}.`,
+      `mailto:${COMPLAINTS_EMAIL}?subject=${ticketSubject}&body=${ticketBody}`,
+      `Please email your issue to ${COMPLAINTS_EMAIL} and mention ticket ${ticketId}.`,
       true
     );
   }
@@ -133,11 +145,29 @@ export default function HelpCenterScreen() {
           <ChevronRight color={theme.subtle} size={22} />
         </TouchableOpacity>
 
+        <TouchableOpacity style={[styles.contactRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openSupportEmail}>
+          <View style={[styles.contactIcon, { backgroundColor: theme.infoSoft }]}><Mail color={theme.info} size={23} /></View>
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactTitle, { color: theme.text }]}>Support Email</Text>
+            <Text style={[styles.contactValue, { color: theme.muted }]}>{SUPPORT_EMAIL}</Text>
+          </View>
+          <ChevronRight color={theme.subtle} size={22} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={[styles.contactRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openEmail}>
           <View style={[styles.contactIcon, { backgroundColor: theme.infoSoft }]}><Mail color={theme.info} size={23} /></View>
           <View style={styles.contactInfo}>
-            <Text style={[styles.contactTitle, { color: theme.text }]}>Email</Text>
-            <Text style={[styles.contactValue, { color: theme.muted }]}>{SUPPORT_EMAIL}</Text>
+            <Text style={[styles.contactTitle, { color: theme.text }]}>Complaints</Text>
+            <Text style={[styles.contactValue, { color: theme.muted }]}>{COMPLAINTS_EMAIL}</Text>
+          </View>
+          <ChevronRight color={theme.subtle} size={22} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.contactRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={openPrivacyEmail}>
+          <View style={[styles.contactIcon, { backgroundColor: theme.infoSoft }]}><Mail color={theme.info} size={23} /></View>
+          <View style={styles.contactInfo}>
+            <Text style={[styles.contactTitle, { color: theme.text }]}>Privacy Email</Text>
+            <Text style={[styles.contactValue, { color: theme.muted }]}>{PRIVACY_EMAIL}</Text>
           </View>
           <ChevronRight color={theme.subtle} size={22} />
         </TouchableOpacity>

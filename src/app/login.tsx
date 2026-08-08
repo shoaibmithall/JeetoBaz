@@ -27,7 +27,7 @@ import {
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
 const USER_AVATAR_STORAGE_KEY = 'userAvatarUrl';
-const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const SUPPORT_EMAIL = 'support@jeetobaz.pk';
 
 function avatarStorageKey(userId: string) {
   return `${USER_AVATAR_STORAGE_KEY}:${userId}`;

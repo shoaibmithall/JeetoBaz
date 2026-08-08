@@ -473,7 +473,7 @@ const WORKS_IMPORTANT_INFO = [
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
-const SUPPORT_EMAIL = 'complaintsjeetobaz@gmail.com';
+const SUPPORT_EMAIL = 'support@jeetobaz.pk';
 const WEBSITE = 'https://jeetobaz.pk';
 
 type SectionId =
@@ -657,7 +657,7 @@ const LEGAL_FAQS = [
     iconColor: '#10B981',
     question: '22. Contact Information',
     answer:
-      'Questions, reports or concerns regarding this Policy may be submitted through the official JeetoBaz contact channels.\n\nBusiness Name: JeetoBaz\nFounded: 2026\nSupport Email: support@jeetobaz.pk\nPrivacy Email: privacy@jeetobaz.pk\nPhone: 0337 2561482\nWebsite: jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUntil a dedicated privacy email is active, the official support email may be used for both support and privacy matters.\n\nUsers must never send passwords, OTPs or complete card credentials through email, support chat or social media.',
+      'Questions, reports or concerns regarding this Policy may be submitted through the official JeetoBaz contact channels.\n\nBusiness Name: JeetoBaz\nFounded: 2026\nSupport Email: support@jeetobaz.pk\nPrivacy Email: privacy@jeetobaz.pk\nPhone: 0337 2561482\nWebsite: jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUsers must never send passwords, OTPs or complete card credentials through email, support chat or social media.',
   },
 ] as const;
 
