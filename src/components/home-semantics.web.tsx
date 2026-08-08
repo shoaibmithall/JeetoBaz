@@ -73,6 +73,18 @@ type HomePageHeadingProps = {
   textColor: string;
 };
 
+const zoomInKeyframes = `
+@keyframes jeetobazPillZoomIn {
+  from { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; }
+  to { opacity: 1; transform: scale(1); }
+}
+.jeetobaz-pill-zoom-in { animation: jeetobazPillZoomIn 0.5s ease 1 both; }
+@media (prefers-reduced-motion: reduce) {
+  .jeetobaz-pill-zoom-in { animation: none; }
+}
+`;
+
 export function HomePageHeading({ backgroundColor, textColor }: HomePageHeadingProps) {
   const headingStyle: CSSProperties = {
     color: textColor,
@@ -90,7 +102,8 @@ export function HomePageHeading({ backgroundColor, textColor }: HomePageHeadingP
 
   return (
     <div style={headingWrapStyle}>
-      <h1 style={headingStyle}>
+      <style>{zoomInKeyframes}</style>
+      <h1 style={headingStyle} className="jeetobaz-pill-zoom-in">
         <span style={quoteMarkStyle} aria-hidden="true">&ldquo;</span>
         {' '}Win Premium Prizes on JeetoBaz{' '}
         <span style={quoteMarkStyle} aria-hidden="true">&rdquo;</span>
