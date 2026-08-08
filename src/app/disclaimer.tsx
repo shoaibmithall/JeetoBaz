@@ -248,6 +248,62 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'third-party-services-external-links-content',
+    title: 'Third-Party Services, External Links & Content',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'The JeetoBaz Website may contain links, references, integrations, embedded content, or connections to third-party websites, platforms, services, applications, payment providers, communication services, social media platforms, or other external resources.',
+      },
+      {
+        type: 'paragraph',
+        text: 'These third-party services and resources are operated independently from JeetoBaz and may be subject to their own terms, policies, privacy practices, availability, and operating conditions.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'A link or reference to a third-party website or service does not necessarily mean that JeetoBaz endorses, guarantees, sponsors, controls, or accepts responsibility for the third party, its content, products, services, practices, availability, or representations.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'JeetoBaz does not control the content, security, privacy practices, availability, accuracy, or continued operation of external websites and services. Users who access a third-party website or service through a link provided on the JeetoBaz Website do so subject to the terms and policies applicable to that third party.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Third-party links may change, become unavailable, be redirected, or lead to content that has been updated since the link was originally published. JeetoBaz may remove, update, replace, or add external links when reasonably necessary.',
+      },
+      {
+        type: 'paragraph',
+        text: 'The Website may also use third-party technical services to support certain functionality, including hosting, authentication, communications, analytics, payment processing, security, or other technical operations. The availability or performance of a Website feature may therefore depend partly on the availability and proper functioning of the relevant third-party service.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Where a payment, communication, verification, delivery, or other service is provided or processed through a third-party provider, the provider\'s applicable terms and policies may also apply to that service.',
+      },
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz may publish references, sources, citations, or other external information in future Website content, including blog articles or educational materials. Such references are intended to provide additional information and do not necessarily constitute an endorsement of every statement, product, service, or organization mentioned by an external source.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Users should independently review the terms, privacy policies, security information, and other relevant conditions of third-party websites or services before using them or providing information to them.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'JeetoBaz is not responsible for changes, interruptions, inaccuracies, security incidents, privacy practices, or other matters occurring solely within a third-party website or service, except to the extent otherwise required by applicable law or expressly provided in an applicable JeetoBaz policy.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Nothing in this section changes or overrides any rights or obligations specifically established under the JeetoBaz Terms & Conditions, Privacy Policy, Refund Policy, Shipping Policy, or other applicable policies.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
