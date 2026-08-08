@@ -1274,16 +1274,13 @@ export default function ProfileScreen() {
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
           </View>
 
-          <TouchableOpacity style={[styles.googleButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]} disabled>
-            <Text style={[styles.googleButtonText, { color: theme.text }]}>G</Text>
-            <Text style={[styles.googleButtonLabel, { color: theme.text }]}>Continue with Google</Text>
-            <Text style={styles.comingSoonBadge}>Soon</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push('/signup' as never)}>
-            <Text style={[styles.switchText, { color: theme.muted }]}>
-              New to JeetoBaz?{' '}
-              <Text style={styles.switchHighlight}>Create Account</Text>
+          <TouchableOpacity
+            style={[styles.createAccountButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}
+            onPress={() => router.push('/signup' as never)}
+          >
+            <Image source={require('@/assets/images/icon-small.png')} style={styles.createAccountLogo} accessibilityLabel="JeetoBaz logo" />
+            <Text style={[styles.createAccountLabel, { color: theme.text }]}>
+              New to JeetoBaz? <Text style={styles.switchHighlight}>Create Account</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -1354,12 +1351,10 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1 },
   dividerText: { fontSize: 13 },
 
-  googleButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#174a35', gap: 10, marginBottom: 16, opacity: 0.6 },
-  googleButtonText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
-  googleButtonLabel: { fontSize: 15, color: 'white', flex: 1 },
-  comingSoonBadge: { fontSize: 11, color: '#FFD700', backgroundColor: '#2a2105', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, fontWeight: '600' },
+  createAccountButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, borderWidth: 1, gap: 10 },
+  createAccountLogo: { width: 26, height: 26, borderRadius: 6 },
+  createAccountLabel: { fontSize: 14 },
 
-  switchText: { color: '#9aac9f', fontSize: 14, textAlign: 'center' },
   switchHighlight: { color: '#18a663', fontWeight: 'bold' },
 
   trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
