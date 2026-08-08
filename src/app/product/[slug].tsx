@@ -7,6 +7,7 @@ import { House, Target, Ticket, UsersRound } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage, type TranslationKey } from '@/lib/i18n';
+import { ButtonSheen } from '@/components/motion';
 import { getProductCategory } from '@/lib/product-categories';
 import { recordRecentlyViewedProduct } from '@/lib/recently-viewed';
 import { pageSchema } from '@/lib/structured-data';
@@ -429,6 +430,7 @@ export default function ProductDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={`${t('enterFor')} Rs.${entryFee}: ${meta.name}`}
             >
+              <ButtonSheen />
               <Target color="#000" size={19} />
               <Text style={styles.enterButtonText}>{t('enterFor')} Rs.{entryFee}</Text>
             </TouchableOpacity>
@@ -536,6 +538,6 @@ const styles = StyleSheet.create({
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   participants: { fontSize: 13 },
 
-  enterButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 12 },
+  enterButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 12, overflow: 'hidden' },
   enterButtonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
 });
