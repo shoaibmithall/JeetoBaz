@@ -1275,12 +1275,12 @@ export default function ProfileScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.createAccountButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}
+            style={styles.createAccountButton}
             onPress={() => router.push('/signup' as never)}
           >
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.createAccountLogo} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.createAccountLabel, { color: theme.text }]}>
-              New to JeetoBaz? <Text style={styles.switchHighlight}>Create Account</Text>
+            <Image source={require('@/assets/images/jeetobaz-logo-gold.png')} style={styles.createAccountLogo} accessibilityLabel="JeetoBaz logo" />
+            <Text style={styles.createAccountLabel}>
+              New to JeetoBaz? <Text style={styles.createAccountHighlight}>Create Account</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -1351,11 +1351,10 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1 },
   dividerText: { fontSize: 13 },
 
-  createAccountButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, borderWidth: 1, gap: 10 },
+  createAccountButton: { backgroundColor: '#ff4444', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, gap: 10 },
   createAccountLogo: { width: 26, height: 26, borderRadius: 6 },
-  createAccountLabel: { fontSize: 14 },
-
-  switchHighlight: { color: '#18a663', fontWeight: 'bold' },
+  createAccountLabel: { fontSize: 14, color: 'white' },
+  createAccountHighlight: { fontWeight: 'bold', color: 'white' },
 
   trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
