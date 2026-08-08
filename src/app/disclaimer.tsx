@@ -158,6 +158,48 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'prize-product-information',
+    title: 'Prize & Product Information',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz makes reasonable efforts to ensure that prize and product information displayed on the Website is clear, accurate, and representative of the relevant prize or product.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Prize images displayed on the Website are intended to represent the corresponding prize or product. While JeetoBaz generally uses images of the actual or intended prize where available, the appearance of a prize received by a winner may vary from the image displayed on the Website due to factors such as lighting, photography, screen settings, packaging, manufacturing variations, product revisions, available color options, or other circumstances beyond the control of JeetoBaz.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Product names, specifications, colors, dimensions, accessories, packaging, model details, and other product characteristics may be subject to availability or manufacturer and supplier changes. Where applicable, the information displayed on the Website should be read together with the specific information provided for the relevant prize or draw.',
+      },
+      {
+        type: 'paragraph',
+        text: 'The availability of a particular product, model, color, configuration, or specification may change after information has been published on the Website. JeetoBaz may update the relevant information when such changes become known.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Where the exact model, configuration, color, specification, or other characteristic of a prize cannot reasonably be provided as originally displayed or described, any applicable replacement, substitution, or alternative arrangement will be handled in accordance with the applicable JeetoBaz Terms & Conditions and policies.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Images, illustrations, graphics, or other visual materials should not be interpreted as creating a guarantee that every visual characteristic of the delivered prize will be identical to the image displayed on the Website.',
+      },
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz does not intentionally publish misleading prize or product information. If a user identifies an apparent discrepancy between published information and the information applicable to a particular prize, the user may contact JeetoBaz using the contact information provided on the Website so that the matter can be reviewed.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Nothing in this section changes or overrides any specific rights, conditions, obligations, or procedures relating to prizes that are expressly provided in the JeetoBaz Terms & Conditions, Refund Policy, Shipping Policy, or any other applicable policy.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
