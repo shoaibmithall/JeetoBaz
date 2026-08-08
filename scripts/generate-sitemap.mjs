@@ -26,6 +26,7 @@ const STATIC_PAGES = [
   { path: '/registered-verified', changefreq: 'monthly', priority: '0.4' },
   { path: '/refund-policy', changefreq: 'monthly', priority: '0.3' },
   { path: '/shipping-policy', changefreq: 'monthly', priority: '0.3' },
+  { path: '/disclaimer', changefreq: 'monthly', priority: '0.3' },
   { path: '/why-fair', changefreq: 'monthly', priority: '0.4' },
   { path: '/transparency', changefreq: 'monthly', priority: '0.5' },
   { path: '/compare', changefreq: 'daily', priority: '0.6' },

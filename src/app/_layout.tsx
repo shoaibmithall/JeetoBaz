@@ -127,6 +127,7 @@ export default function RootLayout() {
         <Tabs.Screen name="terms" options={{ href: null }} />
         <Tabs.Screen name="refund-policy" options={{ href: null }} />
         <Tabs.Screen name="shipping-policy" options={{ href: null }} />
+        <Tabs.Screen name="disclaimer" options={{ href: null }} />
         <Tabs.Screen name="help" options={{ href: null }} />
         <Tabs.Screen name="faq" options={{ href: null }} />
         <Tabs.Screen name="jazzcash-redirect" options={{ href: null }} />

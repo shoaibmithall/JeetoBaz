@@ -81,6 +81,7 @@ const QUICK_LINKS: FooterLink[] = [
   { label: 'How JeetoBaz Works', route: '/about', params: { section: 'works' } },
   { label: 'Past Winners', route: '/explore' },
   { label: 'JeetoBaz Blog', route: '/blog' },
+  { label: 'Disclaimer', route: '/disclaimer' },
   { label: 'FAQs', route: '/faq' },
   { label: 'Refer & Earn', route: '/referral' },
   { label: 'My Entries', route: '/entries' },
