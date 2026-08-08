@@ -13,7 +13,10 @@ import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 // 'red' for a critical/legal-consequence statement. Plain paragraphs render as normal body text.
 type DisclaimerBlock =
   | { type: 'paragraph'; text: string; tone?: 'gold' | 'red' }
-  | { type: 'links'; items: { label: string; route: string; params?: Record<string, string> }[] };
+  | {
+      type: 'links';
+      items: { label: string; description?: string; route: string; params?: Record<string, string> }[];
+    };
 
 type DisclaimerSection = {
   id: string;
@@ -304,6 +307,83 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'user-responsibility-related-policies',
+    title: 'User Responsibility & Related Policies',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Users are responsible for reviewing the information available on the JeetoBaz Website and understanding the terms and conditions that apply to their use of the Website and its features.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Before using a particular feature, service, or participating in an activity through the Website, users should review the applicable JeetoBaz policies and any specific information provided for that activity.',
+      },
+      {
+        type: 'paragraph',
+        text: 'The following documents provide additional terms and information relating to different aspects of the JeetoBaz platform:',
+      },
+      {
+        type: 'links',
+        items: [
+          {
+            label: 'Terms & Conditions',
+            description: 'Sets out the terms governing use of the Website and applicable participation conditions.',
+            route: '/terms',
+          },
+          {
+            label: 'Refund Policy',
+            description: 'Provides information regarding applicable refund procedures and conditions.',
+            route: '/refund-policy',
+          },
+          {
+            label: 'Shipping Policy',
+            description: 'Provides information relating to the delivery of physical prizes or products where applicable.',
+            route: '/shipping-policy',
+          },
+          {
+            label: 'Responsible Use Policy',
+            description: 'Provides information concerning responsible use of the JeetoBaz platform.',
+            route: '/about',
+            params: { section: 'legal' },
+          },
+          {
+            label: 'Privacy Policy',
+            description: 'Explains how personal information is handled in accordance with the applicable privacy practices of JeetoBaz.',
+            route: '/privacy',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Users are responsible for ensuring that the information they provide to JeetoBaz is accurate, complete, and up to date where such information is required for the relevant Website feature or service.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Users should also ensure that they satisfy all applicable eligibility requirements before using a feature or participating in an activity. Eligibility requirements, age restrictions, participation conditions, verification requirements, and other applicable conditions are governed by the relevant JeetoBaz Terms & Conditions and should not be inferred solely from information contained in this Disclaimer.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Users should not rely solely on summaries, promotional materials, search results, third-party references, or previously viewed Website content when making decisions concerning their use of the JeetoBaz platform. The latest applicable information and official JeetoBaz policies should be consulted.',
+      },
+      {
+        type: 'paragraph',
+        text: 'If a user is uncertain about the meaning or application of a particular requirement, they may contact JeetoBaz through the official contact information provided on the Website before proceeding.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'This Disclaimer does not create additional eligibility rights, participation rights, refund rights, delivery rights, or other contractual rights beyond those expressly provided under the applicable JeetoBaz Terms & Conditions and policies.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where another JeetoBaz policy specifically addresses a matter covered by that policy, that policy should be consulted for the complete requirements applicable to that matter.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
@@ -347,7 +427,12 @@ function DisclaimerLinks({ block }: { block: Extract<DisclaimerBlock, { type: 'l
               index < block.items.length - 1 && { borderBottomColor: theme.border, borderBottomWidth: 1 },
             ])}
           >
-            <Text style={[styles.linkText, { color: theme.primary }]}>{item.label}</Text>
+            <View style={styles.linkCopy}>
+              <Text style={[styles.linkText, { color: theme.primary }]}>{item.label}</Text>
+              {item.description ? (
+                <Text style={[styles.linkDescription, { color: theme.muted }]}>{item.description}</Text>
+              ) : null}
+            </View>
             <ChevronRight color={theme.subtle} size={17} />
           </TouchableOpacity>
         </Link>
@@ -485,5 +570,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
+  linkCopy: { flex: 1, gap: 3, paddingRight: 12 },
   linkText: { fontSize: 14.5, fontWeight: '700' },
+  linkDescription: { fontSize: 12.5, lineHeight: 17 },
 });
