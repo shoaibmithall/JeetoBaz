@@ -200,6 +200,54 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'draw-information-no-guarantee',
+    title: 'Draw Information & No Guarantee of Winning',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Information published on the Website regarding draws is provided to explain the relevant draw, its status, applicable conditions, and other information made available by JeetoBaz.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Participation in a draw does not constitute a guarantee that a participant will receive, obtain, or win a prize. No particular outcome, prize, result, or benefit is guaranteed to any participant solely by participating in a draw.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where a draw involves a selection process, the applicable selection process and conditions are governed by the relevant JeetoBaz Terms & Conditions and any draw-specific information published on the Website.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Draw dates, schedules, status, availability, participation conditions, and other related information may be updated or changed where permitted under the applicable Terms & Conditions. Users should refer to the latest information available on the Website before relying on previously published draw information.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Any winner announcement made by JeetoBaz is subject to the applicable verification and eligibility requirements described in the relevant Terms & Conditions. Being identified or announced as a potential or selected winner does not necessarily remove any applicable verification or eligibility requirements.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where winner information is published on the Website, such information is provided for transparency and informational purposes in accordance with the applicable JeetoBaz policies and privacy requirements.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'JeetoBaz does not represent or guarantee that participation in any particular draw will result in a specific outcome for an individual participant.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Nothing in this section should be interpreted as changing, replacing, or overriding the specific draw rules, eligibility requirements, winner-verification procedures, refund conditions, or other provisions contained in the applicable JeetoBaz Terms & Conditions or other relevant policies.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Users should carefully review the applicable Terms & Conditions and draw-specific information before participating in any activity offered through the Website.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
