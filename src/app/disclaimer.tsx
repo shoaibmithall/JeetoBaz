@@ -74,6 +74,43 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'accuracy-of-information',
+    title: 'Accuracy of Information',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz makes reasonable efforts to ensure that the information published on the Website is accurate, clear, relevant, and kept reasonably up to date. However, information available on the Website may occasionally contain typographical errors, omissions, formatting issues, outdated information, or other unintentional inaccuracies.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Information published on the Website may also change from time to time as products, services, platform features, draw information, availability, dates, or other operational details are updated.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'JeetoBaz reserves the right to correct, update, modify, replace, or remove inaccurate, incomplete, outdated, or otherwise incorrect information at any time without prior notice.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Although reasonable care is taken when preparing and publishing Website content, JeetoBaz does not represent or warrant that every piece of information available on the Website will always be complete, current, error-free, or suitable for every user\'s particular circumstances.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where information is subject to change, users should refer to the latest information displayed on the Website and the applicable Terms & Conditions or relevant policy before relying on that information.',
+      },
+      {
+        type: 'paragraph',
+        text: 'If a user identifies an apparent error or inaccurate information on the Website, they may report it to JeetoBaz through the contact information provided in this Disclaimer. JeetoBaz may review the reported information and make corrections where appropriate.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'A correction or update to Website content does not, by itself, modify any rights, obligations, eligibility requirements, refund conditions, shipping conditions, or other terms that are governed by the applicable policies of JeetoBaz.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
