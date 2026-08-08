@@ -384,6 +384,56 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'intellectual-property-website-content',
+    title: 'Intellectual Property & Website Content',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Unless otherwise stated, the JeetoBaz name, logo, branding, website design, graphics, written content, and other original materials on the Website are the intellectual property of JeetoBaz. Full ownership and permitted-use details are set out in the applicable Terms & Conditions.',
+      },
+      {
+        type: 'links',
+        items: [
+          {
+            label: 'Terms & Conditions',
+            description: 'See "Intellectual Property Rights" and "Permitted Use" for the complete ownership and usage terms.',
+            route: '/terms',
+          },
+        ],
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'The Website may contain trademarks, logos, product names, images, or other materials belonging to third parties. Such materials remain the property of their respective owners. The appearance of third-party materials on the Website does not by itself mean that JeetoBaz owns those materials or that the relevant third party endorses JeetoBaz.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Product names, brand names, trademarks, logos, photographs, and other third-party materials may be displayed where reasonably necessary to identify or describe a relevant product, service, prize, reference, or other content. Any rights associated with such third-party materials remain with their respective owners.',
+      },
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz may use photographs, product images, graphics, promotional materials, or other visual content obtained from manufacturers, suppliers, authorized sources, licensed resources, or other permitted sources. Ownership and usage rights for such third-party materials remain subject to the rights and permissions applicable to those materials.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where Website content includes information, quotations, references, links, or materials originating from third parties, such content should not be interpreted as being owned by JeetoBaz unless expressly stated otherwise.',
+      },
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz may update, replace, remove, or modify its Website content, branding, graphics, design, and other materials from time to time without prior notice.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'Nothing in this Disclaimer grants users a licence or other right to use JeetoBaz intellectual property except where such use is expressly permitted by JeetoBaz or applicable law.',
+      },
+      {
+        type: 'paragraph',
+        text: 'If a user believes that content appearing on the Website infringes their intellectual property rights, they may contact JeetoBaz using the official contact information provided on the Website with sufficient information to allow the matter to be reviewed.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
