@@ -6,6 +6,7 @@ import { BadgeCheck, Bell, ChevronRight, Globe2, Headphones, Menu, Moon, Scale, 
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/lib/i18n';
+import { ElasticPopIn, FadeInUpOnce } from '@/components/motion';
 
 type HomeHeaderProps = {
   unreadCount: number;
@@ -42,10 +43,16 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
 
         <View style={styles.brand}>
           <View style={styles.brandNameRow}>
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.brandLogo} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.brandName, { color: theme.gold }]}>JEETOBAZ</Text>
+            <ElasticPopIn>
+              <Image source={require('@/assets/images/icon-small.png')} style={styles.brandLogo} accessibilityLabel="JeetoBaz logo" />
+            </ElasticPopIn>
+            <ElasticPopIn delay={120}>
+              <Text style={[styles.brandName, { color: theme.gold }]}>JEETOBAZ</Text>
+            </ElasticPopIn>
           </View>
-          <Text role="heading" aria-level={1} style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
+          <FadeInUpOnce delay={320}>
+            <Text role="heading" aria-level={1} style={[styles.tagline, { color: theme.text }]}>{t('winBig')}</Text>
+          </FadeInUpOnce>
         </View>
 
         <TouchableOpacity

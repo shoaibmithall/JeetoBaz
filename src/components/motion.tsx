@@ -156,6 +156,78 @@ export function ShineSweep({ width, delay = 0 }: { width: number; delay?: number
 }
 
 /**
+ * One-shot "elastic pop" entrance: scales past its final size and settles back,
+ * with a matching fade-in. Intended for small brand elements (logo/wordmark)
+ * that should draw the eye once on mount, not loop.
+ */
+export function ElasticPopIn({
+  children,
+  delay = 0,
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reducedMotion = useReducedMotion();
+  const scale = useSharedValue(reducedMotion ? 1 : 0);
+  const opacity = useSharedValue(reducedMotion ? 1 : 0);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    scale.value = withDelay(
+      delay,
+      withSequence(
+        withTiming(1.15, { duration: 260, easing: Easing.out(Easing.quad) }),
+        withTiming(0.95, { duration: 140, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 140, easing: Easing.out(Easing.quad) }),
+      ),
+    );
+    opacity.value = withDelay(delay, withTiming(1, { duration: 200 }));
+  }, [reducedMotion, delay, scale, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>;
+}
+
+/**
+ * One-shot fade-up entrance: rises into place and fades in. Intended for text
+ * that should settle in shortly after a sibling element's own entrance.
+ */
+export function FadeInUpOnce({
+  children,
+  delay = 0,
+  distance = 12,
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  distance?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const reducedMotion = useReducedMotion();
+  const translateY = useSharedValue(reducedMotion ? 0 : distance);
+  const opacity = useSharedValue(reducedMotion ? 1 : 0);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    translateY.value = withDelay(delay, withTiming(0, { duration: 380, easing: Easing.out(Easing.cubic) }));
+    opacity.value = withDelay(delay, withTiming(1, { duration: 380 }));
+  }, [reducedMotion, delay, translateY, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>;
+}
+
+/**
  * Auto-scrolling horizontal row that loops seamlessly (the list is rendered twice
  * back-to-back, and the scroll position wraps once it passes the first copy).
  * Pauses on touch/drag (and mouse hover on web) and resumes shortly after the
