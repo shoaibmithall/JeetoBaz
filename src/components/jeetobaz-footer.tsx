@@ -93,6 +93,7 @@ const HELP_LINKS: FooterLink[] = [
   { label: 'Privacy Policy', route: '/privacy' },
   { label: 'Refund & Cancellation', route: '/refund-policy' },
   { label: 'Shipping Policy', route: '/shipping-policy' },
+  { label: 'Disclaimer', route: '/disclaimer' },
   { label: 'Support Center', route: '/help' },
   { label: 'Responsible Use Policy', route: '/about', params: { section: 'legal' } },
   { label: 'Registered & Verified', route: '/registered-verified' },
