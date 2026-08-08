@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ElementRef } from 'react
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { BrandedLoader } from '@/components/branded-loader';
+import { ButtonSheen } from '@/components/motion';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
@@ -211,7 +212,7 @@ export default function FavoritesScreen() {
         </View>
       ) : (
         <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
-        {products.map((product) => (
+        {products.map((product, index) => (
           <View key={product.id} style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <TouchableOpacity
               style={styles.heartButton}
@@ -243,6 +244,7 @@ export default function FavoritesScreen() {
                 style={styles.enterButton}
                 onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } })}
               >
+                <ButtonSheen delay={(index % 5) * 400} />
                 <Text style={styles.enterButtonText}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
               </TouchableOpacity>
             </View>
@@ -277,6 +279,6 @@ const styles = StyleSheet.create({
   productNameInLink: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   price: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginTop: 8 },
   entries: { color: '#aaa', fontSize: 13, marginTop: 5, marginBottom: 14 },
-  enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center' },
+  enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center', overflow: 'hidden' },
   enterButtonText: { color: '#000', fontSize: 15, fontWeight: 'bold' },
 });

@@ -228,6 +228,56 @@ export function FadeInUpOnce({
 }
 
 /**
+ * Periodic diagonal light sheen for primary CTA buttons (e.g. "Enter for Rs.X").
+ * Render as an extra child inside a button that has `overflow: 'hidden'` and a
+ * border radius -- it measures that parent via onLayout and sweeps within it.
+ * Unlike ShineSweep it repeats on a longer, slower cadence so it reads as a
+ * subtle premium accent rather than a constant attention-grabber, and a `delay`
+ * per instance keeps a grid of buttons from all sweeping in lockstep.
+ */
+export function ButtonSheen({ delay = 0 }: { delay?: number }) {
+  const reducedMotion = useReducedMotion();
+  const [width, setWidth] = useState(0);
+  const bandWidth = Math.max(width * 0.4, 30);
+  const translateX = useSharedValue(-bandWidth * 2);
+
+  useEffect(() => {
+    if (reducedMotion || !width) return;
+    translateX.value = -bandWidth * 2;
+    translateX.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withDelay(4200, withTiming(width + bandWidth, { duration: 900, easing: Easing.inOut(Easing.quad) })),
+          withTiming(-bandWidth * 2, { duration: 0 }),
+        ),
+        -1,
+        false,
+      ),
+    );
+  }, [reducedMotion, width, bandWidth, delay, translateX]);
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }, { rotate: '20deg' }] }));
+
+  if (reducedMotion) return null;
+
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      {width > 0 && (
+        <Animated.View style={[styles.sheenBand, { width: bandWidth }, animatedStyle]}>
+          <LinearGradient
+            colors={['transparent', 'rgba(255,255,255,0.5)', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.shineGradient}
+          />
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+/**
  * Auto-scrolling horizontal row that loops seamlessly (the list is rendered twice
  * back-to-back, and the scroll position wraps once it passes the first copy).
  * Pauses on touch/drag (and mouse hover on web) and resumes shortly after the
@@ -315,6 +365,7 @@ export function MarqueeRow<T>({
 
 const styles = StyleSheet.create({
   shineBand: { position: 'absolute', top: -40, bottom: -40 },
+  sheenBand: { position: 'absolute', top: -20, bottom: -20 },
   shineGradient: { flex: 1 },
   marqueeRow: { flexDirection: 'row' },
 });

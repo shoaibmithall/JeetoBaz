@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
 import { getRecentlyViewedProductIds, pruneRecentlyViewedProductIds } from '@/lib/recently-viewed';
 import { BrandedLoader } from '@/components/branded-loader';
+import { ButtonSheen } from '@/components/motion';
 import { DataErrorState } from '@/components/data-error-state';
 import type { Product } from '@/types/database';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -138,7 +139,7 @@ export default function RecentlyViewedScreen() {
         </View>
       ) : (
         <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
-        {products.map((product) => (
+        {products.map((product, index) => (
           <View key={product.id} style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             {product.slug ? (
               <Link href={`/product/${product.slug}`} asChild>
@@ -160,6 +161,7 @@ export default function RecentlyViewedScreen() {
                 style={styles.enterButton}
                 onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } })}
               >
+                <ButtonSheen delay={(index % 5) * 400} />
                 <Text style={styles.enterButtonText}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
               </TouchableOpacity>
             </View>
@@ -192,6 +194,6 @@ const styles = StyleSheet.create({
   productNameInLink: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   price: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginTop: 8 },
   entries: { color: '#aaa', fontSize: 13, marginTop: 5, marginBottom: 14 },
-  enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center' },
+  enterButton: { backgroundColor: '#FFD700', borderRadius: 8, padding: 14, alignItems: 'center', overflow: 'hidden' },
   enterButtonText: { color: '#000', fontSize: 15, fontWeight: 'bold' },
 });

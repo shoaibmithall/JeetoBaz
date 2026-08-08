@@ -13,7 +13,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import { HomeHeader } from '@/components/home-header';
 import { HomeMain, HomeNavigation, HomePageHeading, HomeSkipLink } from '@/components/home-semantics';
 import JeetoBazFooter from '@/components/jeetobaz-footer';
-import { AnimatedCounter, FloatingView, MarqueeRow, PressScale, ShineSweep } from '@/components/motion';
+import { AnimatedCounter, ButtonSheen, FloatingView, MarqueeRow, PressScale, ShineSweep } from '@/components/motion';
 import { ReferralFloatingBanner } from '@/components/referral-floating-banner';
 import { translate, useLanguage, type LanguageCode, type TranslationKey } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -356,6 +356,7 @@ const HomeProductCard = memo(function HomeProductCard({
           accessibilityRole="button"
           accessibilityLabel={`${t('enterFor')} Rs.${product.entry_fee || 1}: ${product.name}`}
         >
+          <ButtonSheen delay={((revealIndex ?? 0) % 5) * 400} />
           <Target color="#000" size={isCompactGrid ? 14 : 19} /><Text numberOfLines={1} style={[styles.buttonText, isCompactGrid && styles.buttonTextCompact]}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
         </PressScale>
       </View>
@@ -1771,7 +1772,7 @@ const styles = StyleSheet.create({
   spotsCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
   percent: { color: '#18a663', fontSize: 12, fontWeight: 'bold' },
   percentCompact: { fontSize: 12 },
-  button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 },
+  button: { backgroundColor: '#FFD700', padding: 15, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, overflow: 'hidden' },
   buttonCompact: { minHeight: 38, paddingHorizontal: 7, paddingVertical: 9, borderRadius: 7, gap: 4 },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   buttonTextCompact: { fontSize: 12, lineHeight: 16, flexShrink: 1 },
