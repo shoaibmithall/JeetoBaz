@@ -482,6 +482,43 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'changes-to-this-disclaimer',
+    title: 'Changes to This Disclaimer',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'JeetoBaz may update, revise, modify, expand, or otherwise change this Disclaimer from time to time to reflect changes in the Website, its features, services, operational practices, applicable requirements, or other relevant circumstances.',
+      },
+      {
+        type: 'paragraph',
+        text: 'When changes are made, JeetoBaz may update the "Last Updated" date displayed at the beginning of this Disclaimer to indicate that the content has been revised.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Users are encouraged to review this Disclaimer periodically to remain informed about the information and notices applicable to their use of the Website.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Unless otherwise stated, the updated version of this Disclaimer will become effective when it is published on the Website.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Where a change to this Disclaimer materially affects information that should reasonably be brought to users\' attention, JeetoBaz may provide an additional notice through the Website or another appropriate communication channel where reasonably practicable.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'The continued use of the Website after an updated version of this Disclaimer has been published may indicate that the user has had an opportunity to review the updated information. However, nothing in this section is intended to modify or override any rights, obligations, contractual terms, or legal requirements that cannot be modified in this manner.',
+      },
+      {
+        type: 'paragraph',
+        text: 'If a user does not understand a material change or has questions regarding the updated Disclaimer, they may contact JeetoBaz using the official contact information provided on the Website.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
