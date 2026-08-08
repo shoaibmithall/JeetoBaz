@@ -8,7 +8,12 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
 
-const CONTACT_EMAIL = 'complaintsjeetobaz@gmail.com';
+// support@ and privacy@ are confirmed-planned addresses, not yet created/monitored as of writing --
+// owner must activate both inboxes before this page goes live. complaintsjeetobaz@ is the only one
+// currently wired up anywhere else in the app (see help.tsx, privacy.tsx, about.tsx, login.tsx).
+const SUPPORT_EMAIL = 'support@jeetobaz.pk';
+const COMPLAINTS_EMAIL = 'complaintsjeetobaz@gmail.com';
+const PRIVACY_EMAIL = 'privacy@jeetobaz.pk';
 const CONTACT_PHONE_DISPLAY = '+92 337 2561482';
 const CONTACT_PHONE = '923372561482';
 
@@ -541,6 +546,10 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
       {
         type: 'paragraph',
+        text: 'Previous versions of this Disclaimer may be retained by JeetoBaz for administrative, compliance, or record-keeping purposes.',
+      },
+      {
+        type: 'paragraph',
         text: 'If a user does not understand a material change or has questions regarding the updated Disclaimer, they may contact JeetoBaz using the official contact information provided on the Website.',
       },
     ],
@@ -558,9 +567,21 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
         items: [
           {
             kind: 'email',
-            label: 'Email',
-            value: CONTACT_EMAIL,
-            note: 'For general questions, complaints, Website-related assistance, and reporting inaccurate information, users may contact JeetoBaz through this email address.',
+            label: 'General Support',
+            value: SUPPORT_EMAIL,
+            note: 'For general questions and Website-related assistance, users may contact JeetoBaz through the support email address.',
+          },
+          {
+            kind: 'email',
+            label: 'Complaints',
+            value: COMPLAINTS_EMAIL,
+            note: 'For complaints or matters requiring formal attention, users may contact JeetoBaz through the complaints email address.',
+          },
+          {
+            kind: 'email',
+            label: 'Privacy Matters',
+            value: PRIVACY_EMAIL,
+            note: 'For privacy-related questions or matters, users may contact JeetoBaz through the dedicated privacy contact address.',
           },
           {
             kind: 'phone',
