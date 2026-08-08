@@ -1,4 +1,4 @@
-import { Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
@@ -13,6 +13,15 @@ type HomeHeaderProps = {
 };
 
 type MenuRoute = '/language' | '/help' | '/share' | '/registered-verified' | '/explore' | '/why-fair';
+
+// Web-only: sticks this row to the top of the page's ScrollView while scrolling, matching the
+// reference site's behavior. `position: 'sticky'` isn't in React Native's own type union (it's an
+// RN-Web extension), and native platforms have no scrolling web document for it to stick to, so
+// this is scoped out entirely on native rather than passed through as a no-op style.
+const webStickyHeaderStyle = Platform.select({
+  web: { position: 'sticky', top: 0, zIndex: 20 } as const,
+  default: undefined,
+});
 
 export function HomeHeader({ unreadCount }: HomeHeaderProps) {
   const router = useRouter();
@@ -32,7 +41,7 @@ export function HomeHeader({ unreadCount }: HomeHeaderProps) {
 
   return (
     <>
-      <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
+      <View style={[styles.header, webStickyHeaderStyle, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
         <TouchableOpacity
           style={[styles.headerAction, { backgroundColor: theme.primarySoft }]}
           onPress={() => setMenuVisible(true)}
