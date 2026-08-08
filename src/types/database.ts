@@ -273,6 +273,24 @@ export type Testimonial = {
   created_at: string;
 };
 
+export type BlogCategory = 'getting-started' | 'how-it-works' | 'trust-safety' | 'payments' | 'winners-rewards';
+
+export type BlogPost = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: BlogCategory;
+  content: string;
+  cover_image: string;
+  read_minutes: number;
+  published_at: string;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProductFormData = {
   name: string;
   price: number;
@@ -433,6 +451,12 @@ export type Database = {
         Pick<Testimonial, 'reviewer_name' | 'review_text' | 'rating'> &
           Partial<Pick<Testimonial, 'draw_result_id' | 'source' | 'source_url' | 'is_visible' | 'sort_order'>>,
         Partial<Pick<Testimonial, 'is_visible' | 'sort_order'>>
+      >;
+      blog_posts: Table<
+        BlogPost,
+        Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'category' | 'content' | 'cover_image'> &
+          Partial<Pick<BlogPost, 'read_minutes' | 'published_at' | 'is_visible' | 'sort_order'>>,
+        Partial<Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'category' | 'content' | 'cover_image' | 'read_minutes' | 'published_at' | 'is_visible' | 'sort_order'>>
       >;
       push_subscriptions: Table<
         PushSubscriptionRow,

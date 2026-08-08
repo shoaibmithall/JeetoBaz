@@ -119,6 +119,8 @@ export default function RootLayout() {
         <Tabs.Screen name="why-fair" options={{ href: null }} />
         <Tabs.Screen name="transparency" options={{ href: null }} />
         <Tabs.Screen name="compare" options={{ href: null }} />
+        <Tabs.Screen name="blog/index" options={{ href: null }} />
+        <Tabs.Screen name="blog/[slug]" options={{ href: null }} />
         <Tabs.Screen name="certificates" options={{ href: null }} />
         <Tabs.Screen name="payment" options={{ href: null }} />
         <Tabs.Screen name="payment-response" options={{ href: null }} />
