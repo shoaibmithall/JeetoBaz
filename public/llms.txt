@@ -22,6 +22,7 @@ JeetoBaz is a prize draw platform, not a direct e-commerce store. The amount a u
 - [Frequently Asked Questions](https://jeetobaz.pk/faq): Common questions about accounts, entries, payments, and draws.
 - [Active prize campaigns](https://jeetobaz.pk/explore): Currently open draws.
 - [Compare Draws](https://jeetobaz.pk/compare): Side-by-side table of all active draws -- entry fee, total entries, spots left.
+- [JeetoBaz Blog](https://jeetobaz.pk/blog): Guides on how draws work, winner verification, payments, and platform transparency.
 - [Terms & Conditions](https://jeetobaz.pk/terms)
 - [Privacy Policy](https://jeetobaz.pk/privacy)
 - [Refund & Cancellation Policy](https://jeetobaz.pk/refund-policy)

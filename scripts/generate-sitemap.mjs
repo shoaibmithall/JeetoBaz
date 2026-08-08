@@ -29,6 +29,7 @@ const STATIC_PAGES = [
   { path: '/why-fair', changefreq: 'monthly', priority: '0.4' },
   { path: '/transparency', changefreq: 'monthly', priority: '0.5' },
   { path: '/compare', changefreq: 'daily', priority: '0.6' },
+  { path: '/blog', changefreq: 'weekly', priority: '0.6' },
 ];
 
 function escapeXml(value) {

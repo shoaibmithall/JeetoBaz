@@ -29,7 +29,16 @@ import {
   getAllTestimonials,
   updateTestimonialVisibility,
 } from '@/lib/testimonials';
-import type { AdminAuditLogEntry, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
+import {
+  BLOG_CATEGORIES,
+  createBlogPost,
+  deleteBlogPost,
+  estimateReadMinutes,
+  getAllBlogPosts,
+  resolveBlogCover,
+  updateBlogPost,
+} from '@/lib/blog';
+import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 import { PRODUCT_CATEGORIES } from '@/lib/product-categories';
 
@@ -78,7 +87,7 @@ function formatAuditDetails(details: Record<string, unknown>) {
 import { isValidSlug, slugify } from '@/lib/validation';
 import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
-  Award, BadgeCheck, BarChart3, Bell, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
+  Award, BadgeCheck, BarChart3, Bell, BookOpen, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Star, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
@@ -92,6 +101,7 @@ const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
 const BRAND_SHOWCASE_BUCKET = 'brand-showcase';
 const CERTIFICATES_BUCKET = 'winner-certificates';
 const PRODUCT_IMAGES_BUCKET = 'products';
+const BLOG_COVERS_BUCKET = 'blog-covers';
 
 function confirmAsync(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') {
@@ -302,6 +312,16 @@ export default function AdminScreen() {
   const [verificationEditingId, setVerificationEditingId] = useState<string | null>(null);
   const [verificationUploading, setVerificationUploading] = useState(false);
   const [verificationSaving, setVerificationSaving] = useState(false);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogSlug, setBlogSlug] = useState('');
+  const [blogExcerpt, setBlogExcerpt] = useState('');
+  const [blogCategory, setBlogCategory] = useState<BlogCategory>('how-it-works');
+  const [blogContent, setBlogContent] = useState('');
+  const [blogCoverImage, setBlogCoverImage] = useState('');
+  const [blogEditingId, setBlogEditingId] = useState<string | null>(null);
+  const [blogUploading, setBlogUploading] = useState(false);
+  const [blogSaving, setBlogSaving] = useState(false);
   const [brandShowcaseImages, setBrandShowcaseImages] = useState<BrandShowcaseImage[]>([]);
   const [brandShowcaseUploading, setBrandShowcaseUploading] = useState(false);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -360,6 +380,7 @@ export default function AdminScreen() {
       loadVerificationDocuments();
       loadBrandShowcaseImages();
       loadTestimonials();
+      loadBlogPosts();
     }
   }, [authenticated]);
 
@@ -1393,6 +1414,141 @@ export default function AdminScreen() {
     }
     if (verificationEditingId === document.id) resetVerificationForm();
     await loadVerificationDocuments();
+  }
+
+  async function loadBlogPosts() {
+    const { data, error } = await getAllBlogPosts();
+    if (error) {
+      console.warn('Unable to load blog posts:', error.message);
+      return;
+    }
+    setBlogPosts(data || []);
+  }
+
+  function resetBlogForm() {
+    setBlogTitle('');
+    setBlogSlug('');
+    setBlogExcerpt('');
+    setBlogCategory('how-it-works');
+    setBlogContent('');
+    setBlogCoverImage('');
+    setBlogEditingId(null);
+  }
+
+  function startBlogEdit(post: BlogPost) {
+    setBlogEditingId(post.id);
+    setBlogTitle(post.title);
+    setBlogSlug(post.slug);
+    setBlogExcerpt(post.excerpt);
+    setBlogCategory(post.category);
+    setBlogContent(post.content);
+    setBlogCoverImage(post.cover_image);
+  }
+
+  async function uploadBlogCover() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload a cover image.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.9,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      alert('Please select an image smaller than 5 MB.');
+      return;
+    }
+
+    setBlogUploading(true);
+    try {
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `covers/${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(BLOG_COVERS_BUCKET)
+        .upload(filePath, fileData, { contentType: mimeType, upsert: false });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(BLOG_COVERS_BUCKET).getPublicUrl(filePath);
+      setBlogCoverImage(data.publicUrl);
+      alert('Cover image uploaded. Save the article to publish it.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'Cover image upload failed.';
+      alert(message);
+    } finally {
+      setBlogUploading(false);
+    }
+  }
+
+  async function saveBlogPost() {
+    const title = blogTitle.trim();
+    const excerpt = blogExcerpt.trim();
+    const content = blogContent.trim();
+    const slug = slugify(blogSlug.trim() || title);
+    if (!title || !excerpt || !content || !blogCoverImage || !isValidSlug(slug)) {
+      alert('Title, slug, excerpt, content and a cover image are all required.');
+      return;
+    }
+
+    setBlogSaving(true);
+    const wasEditing = Boolean(blogEditingId);
+    const payload = {
+      slug,
+      title,
+      excerpt,
+      category: blogCategory,
+      content,
+      cover_image: blogCoverImage,
+      read_minutes: estimateReadMinutes(content),
+    };
+    const { error } = blogEditingId
+      ? await updateBlogPost(blogEditingId, payload)
+      : await createBlogPost(payload);
+    setBlogSaving(false);
+
+    if (error) {
+      alert('Article could not be saved. Error: ' + error.message);
+      return;
+    }
+
+    resetBlogForm();
+    await loadBlogPosts();
+    alert(wasEditing ? 'Article updated.' : 'Article published.');
+  }
+
+  async function toggleBlogVisibility(post: BlogPost) {
+    const { error } = await updateBlogPost(post.id, { is_visible: !post.is_visible });
+    if (error) {
+      alert('Article visibility could not be changed. Error: ' + error.message);
+      return;
+    }
+    await loadBlogPosts();
+  }
+
+  async function removeBlogPost(post: BlogPost) {
+    const confirmed = await confirmAsync('Delete article', `Delete "${post.title}"?`);
+    if (!confirmed) return;
+
+    const { error } = await deleteBlogPost(post.id);
+    if (error) {
+      alert('Article could not be deleted. Error: ' + error.message);
+      return;
+    }
+
+    if (blogEditingId === post.id) resetBlogForm();
+    await loadBlogPosts();
   }
 
   async function sendGlobalNotification() {
@@ -2679,6 +2835,122 @@ export default function AdminScreen() {
                         <Text style={styles.visibilityButtonText}>{document.is_visible ? 'Hide' : 'Show'}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeVerificationDocument(document)}>
+                        <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Blog Posts</Text></View>
+            <Text style={styles.settingHint}>Articles shown on the public JeetoBaz Blog. Content uses "## Heading" lines for headings and "- " lines for bullets -- everything else becomes paragraphs.</Text>
+            {blogEditingId ? (
+              <View style={styles.editBanner}>
+                <Pencil color={theme.gold} size={15} />
+                <Text style={styles.editBannerText}>Editing article</Text>
+              </View>
+            ) : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Article title"
+              placeholderTextColor={theme.subtle}
+              value={blogTitle}
+              onChangeText={setBlogTitle}
+              maxLength={160}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="URL slug (auto-generated from title if left blank)"
+              placeholderTextColor={theme.subtle}
+              value={blogSlug}
+              onChangeText={setBlogSlug}
+              autoCapitalize="none"
+              maxLength={160}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Short excerpt shown on the blog listing card"
+              placeholderTextColor={theme.subtle}
+              value={blogExcerpt}
+              onChangeText={setBlogExcerpt}
+              multiline
+              numberOfLines={2}
+              maxLength={300}
+            />
+            <View style={styles.categoryChipsWrap}>
+              {BLOG_CATEGORIES.map((entry) => (
+                <TouchableOpacity
+                  key={entry.key}
+                  style={[styles.categoryChip, blogCategory === entry.key && styles.categoryChipActive]}
+                  onPress={() => setBlogCategory(entry.key)}
+                >
+                  <Text style={[styles.categoryChipText, blogCategory === entry.key && { color: theme.gold }]}>{entry.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Article content -- use ## for headings and - for bullet lines"
+              placeholderTextColor={theme.subtle}
+              value={blogContent}
+              onChangeText={setBlogContent}
+              multiline
+              numberOfLines={10}
+              maxLength={20000}
+            />
+            <TouchableOpacity
+              style={[styles.photoUploadButton, blogUploading && styles.photoUploadDisabled]}
+              onPress={uploadBlogCover}
+              disabled={blogUploading}
+            >
+              {!blogUploading && <Camera color={theme.info} size={18} />}
+              <Text style={styles.photoUploadText}>{blogUploading ? 'Uploading...' : blogCoverImage ? 'Replace Cover Image' : 'Upload Cover Image'}</Text>
+            </TouchableOpacity>
+            {blogCoverImage ? <Image source={resolveBlogCover(blogCoverImage)} style={styles.verificationPreviewImage} resizeMode="cover" accessibilityLabel="Blog cover preview" /> : null}
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity
+                style={[styles.addButton, styles.settingsHalfButton, blogSaving && styles.photoUploadDisabled]}
+                onPress={saveBlogPost}
+                disabled={blogSaving}
+              >
+                {!blogSaving && <Save color="white" size={18} />}
+                <Text style={styles.addButtonText}>{blogSaving ? 'Saving...' : blogEditingId ? 'Save Changes' : 'Publish Article'}</Text>
+              </TouchableOpacity>
+              {blogEditingId ? (
+                <TouchableOpacity style={[styles.cancelButton, styles.settingsHalfButton]} onPress={resetBlogForm}>
+                  <X color={theme.danger} size={17} />
+                  <Text style={styles.cancelButtonText}>Cancel Edit</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <View style={styles.verificationList}>
+              {blogPosts.length === 0 ? (
+                <Text style={styles.emptyText}>No blog posts added yet.</Text>
+              ) : blogPosts.map((post) => (
+                <View key={post.id} style={[styles.verificationAdminCard, !post.is_visible && styles.verificationAdminCardHidden]}>
+                  <Image source={resolveBlogCover(post.cover_image)} style={styles.verificationAdminImage} resizeMode="cover" accessibilityLabel={`${post.title} cover`} />
+                  <View style={styles.verificationAdminContent}>
+                    <View style={styles.productHeader}>
+                      <Text style={styles.productName}>{post.title}</Text>
+                      <View style={[styles.statusBadge, post.is_visible ? styles.activeBadge : styles.completedBadge]}>
+                        <Circle color={post.is_visible ? theme.primary : theme.gold} size={8} fill={post.is_visible ? theme.primary : theme.gold} />
+                        <Text style={styles.statusText}>{post.is_visible ? 'Visible' : 'Hidden'}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.verificationAdminDescription}>{post.excerpt}</Text>
+                    <View style={styles.verificationActionRow}>
+                      <TouchableOpacity style={styles.editButton} onPress={() => startBlogEdit(post)}>
+                        <Pencil color={theme.info} size={16} /><Text style={styles.editButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => toggleBlogVisibility(post)}>
+                        {post.is_visible ? <EyeOff color={theme.gold} size={16} /> : <Eye color={theme.gold} size={16} />}
+                        <Text style={styles.visibilityButtonText}>{post.is_visible ? 'Hide' : 'Show'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeBlogPost(post)}>
                         <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
                       </TouchableOpacity>
                     </View>
