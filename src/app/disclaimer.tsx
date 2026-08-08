@@ -434,6 +434,54 @@ const DISCLAIMER_SECTIONS: DisclaimerSection[] = [
       },
     ],
   },
+  {
+    id: 'limitation-of-liability',
+    title: 'Limitation of Liability',
+    blocks: [
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'To the extent permitted by applicable law, JeetoBaz will not be responsible for losses, damages, costs, or consequences arising solely from a user\'s reliance on general information published on the Website where that information was not intended to constitute a specific representation, professional advice, or contractual commitment.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'The Website and its information may occasionally contain errors, omissions, temporary inaccuracies, technical issues, interruptions, or outdated information. To the extent permitted by applicable law, JeetoBaz will not be liable for losses arising solely from a user\'s reliance on information that was subsequently corrected, updated, withdrawn, or identified as inaccurate.',
+      },
+      {
+        type: 'paragraph',
+        text: 'To the extent permitted by applicable law, JeetoBaz will not be responsible for interruptions, delays, failures, or inaccuracies caused solely by circumstances outside JeetoBaz\'s reasonable control, including certain internet, telecommunications, hosting, third-party service, infrastructure, or technical failures.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'red',
+        text: 'JeetoBaz is not responsible for the content, actions, omissions, availability, security, privacy practices, or services of independent third parties solely because a third-party website, service, link, integration, or reference is accessible through or mentioned on the Website, except where responsibility is imposed by applicable law or an applicable agreement.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Users are responsible for reviewing the information and applicable policies relevant to their use of the Website before relying on that information or using a particular feature.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Nothing in this Disclaimer excludes or limits any liability, responsibility, right, remedy, or protection that cannot lawfully be excluded or limited under applicable law.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'Nothing in this section is intended to exclude liability for matters that applicable law does not permit JeetoBaz to exclude or limit.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Where the JeetoBaz Terms & Conditions or another applicable policy contains specific provisions governing liability, remedies, refunds, payments, delivery, participation, or other contractual matters, those provisions will apply to the extent applicable.',
+      },
+      {
+        type: 'paragraph',
+        tone: 'gold',
+        text: 'This limitation of liability is intended to operate only to the extent permitted by applicable law and should not be interpreted as removing any mandatory legal rights or protections available to users.',
+      },
+    ],
+  },
 ];
 
 function DisclaimerParagraph({ block }: { block: Extract<DisclaimerBlock, { type: 'paragraph' }> }) {
