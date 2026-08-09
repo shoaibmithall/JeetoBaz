@@ -10,11 +10,13 @@ import { useAuth } from '@/providers/AuthProvider';
 import { isNotificationForUser, isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
 import type { AppNotification } from '@/types/database';
 import { Bell } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const READ_KEY = 'readNotificationIds';
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const { user } = useAuth();
   const [phone, setPhone] = useState('');
@@ -149,7 +151,7 @@ export default function NotificationsScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.titleRow}><Bell color={theme.gold} size={22} /><Text style={[styles.title, { color: theme.text }]}>Notifications</Text></View>

@@ -191,7 +191,7 @@ export default function WalletScreen() {
       <View style={[styles.balanceBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <Text style={[styles.balanceLabel, { color: theme.muted }]}>Available Balance</Text>
         <Text style={[styles.balanceNumber, { color: theme.gold }]}>Rs. {balance.toLocaleString()}</Text>
-        <TouchableOpacity style={styles.topupBtn} onPress={() => router.push('/wallet-topup')}>
+        <TouchableOpacity style={styles.topupBtn} onPress={() => router.push({ pathname: '/wallet-topup', params: { from: '/wallet' } })}>
           <Plus color="#000" size={18} /><Text style={styles.topupBtnText}>Top Up</Text>
         </TouchableOpacity>
         {pendingTopupAmount != null ? (

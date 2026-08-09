@@ -8,6 +8,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { AuthRecoveryLayout, Badge, PrimaryButton } from '@/components/auth-recovery-layout';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { LockKeyhole, Mail, Send, Shield } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const STORAGE_KEY = 'otp_last_sent_at';
 const MAX_RESENDS = 3;
@@ -20,6 +21,7 @@ const RESET_EMAIL_STORAGE_KEY = 'password_reset_email';
 export default function ForgotPasswordScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
+  const goBack = useSafeBack('/login');
   const params = useLocalSearchParams<{ sessionExpired?: string }>();
   const showExpiredNotice = params.sessionExpired === '1';
   const [email, setEmail] = useState('');
@@ -272,7 +274,7 @@ export default function ForgotPasswordScreen() {
         <Text style={styles.rateLimitText}>{rateLimitError}</Text>
       ) : null}
 
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity onPress={goBack}>
         <Text style={[styles.backLink, { color: theme.primary }]}>← Back to Login</Text>
       </TouchableOpacity>
     </AuthRecoveryLayout>

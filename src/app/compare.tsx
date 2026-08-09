@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, Scale } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
@@ -9,13 +9,14 @@ import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import type { Product } from '@/types/database';
+import { useSafeBack } from '@/lib/safe-back';
 
 const COMPARE_COLUMNS = 'id, name, price, entry_fee, current_entries, max_entries, slug';
 
 export default function CompareScreen() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const router = useRouter();
+  const goBack = useSafeBack();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -67,7 +68,7 @@ export default function CompareScreen() {
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
+        <TouchableOpacity style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Back">
           <ArrowLeft color={theme.primary} size={20} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>

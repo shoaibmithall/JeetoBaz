@@ -13,6 +13,7 @@ import { recordRecentlyViewedProduct } from '@/lib/recently-viewed';
 import { pageSchema } from '@/lib/structured-data';
 import type { Product } from '@/types/database';
 import productSeoManifest from '@/generated/product-seo-manifest.json';
+import { useSafeBack } from '@/lib/safe-back';
 
 const BASE_URL = 'https://jeetobaz.pk';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
@@ -122,6 +123,7 @@ export default function ProductDetailScreen() {
   const { theme } = useAppTheme();
   const { t } = useLanguage();
   const router = useRouter();
+  const goBack = useSafeBack();
   const params = useLocalSearchParams<{ slug?: string | string[] }>();
   const slug = firstParam(params.slug);
 
@@ -378,7 +380,7 @@ export default function ProductDetailScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backBtn, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
       </View>

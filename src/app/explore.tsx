@@ -240,7 +240,7 @@ export default function WinnersScreen() {
                       </View>
                       {location ? <Text style={[styles.locationText, { color: theme.subtle }]} numberOfLines={1}>{location}</Text> : null}
                       {w.product_slug ? (
-                        <Link href={`/product/${w.product_slug}`} asChild>
+                        <Link href={`/product/${w.product_slug}?from=/explore` as never} asChild>
                           <Text style={[styles.prizeText, styles.prizeTextLink]} numberOfLines={1}>{w.product_name}</Text>
                         </Link>
                       ) : (

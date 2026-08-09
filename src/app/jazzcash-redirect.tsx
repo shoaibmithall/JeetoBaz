@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
 import { ShieldCheck } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const JAZZCASH_CHECKOUT_URL =
   'https://jqjrfnhqqfymwfsdkwmv.supabase.co/functions/v1/jazzcash-payment';
@@ -18,7 +19,7 @@ function firstValue(value?: string | string[]) {
 }
 
 export default function JazzCashRedirectScreen() {
-  const router = useRouter();
+  const goBack = useSafeBack();
   const params = useLocalSearchParams<{
     productId?: string | string[];
     phone?: string | string[];
@@ -81,7 +82,7 @@ export default function JazzCashRedirectScreen() {
           {error || 'Your secure sandbox checkout is being prepared.'}
         </Text>
         {error ? (
-          <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.button} onPress={goBack}>
             <Text style={styles.buttonText}>Return to JeetoBaz</Text>
           </TouchableOpacity>
         ) : (

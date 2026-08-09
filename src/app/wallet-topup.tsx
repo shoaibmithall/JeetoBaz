@@ -12,6 +12,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { checkWalletTopupCooldown, markWalletTopupSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, House, PartyPopper, TriangleAlert, Wallet } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -46,6 +47,7 @@ export default function WalletTopupScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const router = useRouter();
+  const goBack = useSafeBack();
   const { user } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
   const [amount, setAmount] = useState('');
@@ -251,7 +253,7 @@ export default function WalletTopupScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backBtn, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
         <View style={styles.titleRow}><Wallet color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>Wallet Top-Up</Text></View>

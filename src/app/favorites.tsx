@@ -225,7 +225,7 @@ export default function FavoritesScreen() {
             {/* Image + title share a single link so the card never has two links to the same
                 destination — the remove-favorite button above is a separate action, not a link. */}
             {product.slug ? (
-              <Link href={`/product/${product.slug}`} asChild>
+              <Link href={`/product/${product.slug}?from=/favorites` as never} asChild>
                 <TouchableOpacity accessibilityRole="link" accessibilityLabel={`View prize details: ${product.name}`}>
                   {product.image_url && <Image source={{ uri: product.image_url }} style={styles.image} resizeMode="cover" accessibilityLabel={`${product.name} prize`} />}
                   <Text style={[styles.productName, styles.productNameInLink, { color: theme.text }]}>{product.name}</Text>
@@ -242,7 +242,7 @@ export default function FavoritesScreen() {
               <Text style={[styles.entries, { color: theme.muted }]}>{(product.current_entries || 0).toLocaleString()} / {product.max_entries.toLocaleString()} entries</Text>
               <TouchableOpacity
                 style={styles.enterButton}
-                onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1 } })}
+                onPress={() => router.push({ pathname: '/payment', params: { productId: product.id, productName: product.name, entryFee: product.entry_fee || 1, from: '/favorites' } })}
               >
                 <ButtonSheen delay={(index % 5) * 400} />
                 <Text style={styles.enterButtonText}>{t('enterFor')} Rs.{product.entry_fee || 1}</Text>
