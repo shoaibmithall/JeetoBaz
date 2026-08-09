@@ -26,7 +26,7 @@ export default function MyActivityScreen() {
       </View>
 
       <View style={[styles.menuBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/entries', params: { source: 'activity' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/entries', params: { from: '/my-activity' } })}>
           <Target color="#FF6B6B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>My Entries</Text>
           <ChevronRight color={theme.subtle} size={20} />

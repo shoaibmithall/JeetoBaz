@@ -1,12 +1,13 @@
 import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ScrollView } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import Head from 'expo-router/head';
 import { AlertTriangle, ChevronRight, Mail, MapPin, Phone } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
+import { useSafeBack } from '@/lib/safe-back';
 
 // support@ and privacy@ are live as of Cloudflare Email Routing setup (both forward to
 // complaintsjeetobaz@, the address wired up elsewhere in the app -- see help.tsx, privacy.tsx,
@@ -727,7 +728,7 @@ function DisclaimerContact({ block }: { block: Extract<DisclaimerBlock, { type: 
 }
 
 export default function DisclaimerScreen() {
-  const router = useRouter();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
 
   const schema = pageSchema(
@@ -775,7 +776,7 @@ export default function DisclaimerScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={goBack}>
             <Text style={[styles.back, { color: theme.primary }]}>← Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.gold }]}>Disclaimer</Text>

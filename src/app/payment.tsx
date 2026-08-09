@@ -12,6 +12,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit';
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const RECEIPT_BUCKET = 'payment-receipts';
 const PAYMENT_ACCOUNTS = [
@@ -63,6 +64,7 @@ export default function PaymentScreen() {
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const router = useRouter();
+  const goBack = useSafeBack();
   const { user } = useAuth();
   const { productId, productName, entryFee } = useLocalSearchParams();
   const hasHydratedParams = useSyncExternalStore(
@@ -378,7 +380,7 @@ export default function PaymentScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backBtn, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
         <View style={styles.titleRow}><CreditCard color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>{t('payment')}</Text></View>
@@ -403,7 +405,7 @@ export default function PaymentScreen() {
               <Text style={styles.walletPayBtnText}>{walletSubmitting ? t('confirming') : `Pay Rs. ${entryFeeValue} Instantly`}</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.walletTopupLink} onPress={() => router.push('/wallet-topup')}>
+            <TouchableOpacity style={styles.walletTopupLink} onPress={() => router.push({ pathname: '/wallet-topup', params: { from: '/payment' } })}>
               <Text style={[styles.walletTopupLinkText, { color: theme.info }]}>Insufficient balance — Top up your wallet →</Text>
             </TouchableOpacity>
           )}

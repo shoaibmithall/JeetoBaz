@@ -9,6 +9,7 @@ import { DataErrorState } from '@/components/data-error-state';
 import { BLOG_CATEGORIES, getBlogCategoryLabel, getPublicBlogPosts, resolveBlogCover } from '@/lib/blog';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import type { BlogCategory, BlogPost } from '@/types/database';
+import { useSafeBack } from '@/lib/safe-back';
 
 type CategoryFilter = 'all' | BlogCategory;
 
@@ -18,6 +19,7 @@ function formatDate(iso: string) {
 
 export default function BlogIndexScreen() {
   const router = useRouter();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const columnCount = width >= 1100 ? 3 : width >= 700 ? 2 : 1;
@@ -85,7 +87,7 @@ export default function BlogIndexScreen() {
     </Head>
     <ScrollView style={[styles.screen, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
+        <TouchableOpacity style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Back">
           <ArrowLeft color={theme.primary} size={20} />
           <Text style={[styles.backText, { color: theme.primary }]}>Back</Text>
         </TouchableOpacity>

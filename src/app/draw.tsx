@@ -7,6 +7,7 @@ import type { Entry } from '@/types/database';
 import { useLanguage } from '@/lib/i18n';
 import { createUserNotification } from '@/lib/notifications';
 import { Clock, Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const DRAW_WINDOW_HOUR_PKT = 22;
@@ -38,6 +39,7 @@ function getDrawWindowStatus() {
 
 export default function DrawScreen() {
   const router = useRouter();
+  const goBack = useSafeBack('/admin');
   const { productId, productName } = useLocalSearchParams();
   const { t } = useLanguage();
   const productIdValue = Array.isArray(productId) ? productId[0] : productId;
@@ -223,7 +225,7 @@ export default function DrawScreen() {
     </Head>
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={styles.backBtn}>← {t('back')}</Text>
         </TouchableOpacity>
         <View style={styles.titleRow}><Dices color="#FFD700" size={20} /><Text style={styles.title}>{t('liveDrawTitle')}</Text></View>

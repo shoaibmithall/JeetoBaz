@@ -13,6 +13,7 @@ import type { Entry, Product, Transaction } from '@/types/database';
 import { formatDrawDate } from '@/lib/format-draw-date';
 import { useAppTheme } from '@/hooks/use-theme';
 import { CircleAlert, LockKeyhole, Target, Trophy } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 type EntryWithProduct = Entry & { products?: Product | null };
 type PendingPaymentWithProduct = Transaction & { products?: Product | null };
@@ -42,6 +43,7 @@ export default function MyEntriesScreen() {
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
+  const goBack = useSafeBack('/');
   const params = useLocalSearchParams<{ source?: string }>();
   const { width } = useWindowDimensions();
   const isCompact = width < 640;
@@ -299,7 +301,7 @@ export default function MyEntriesScreen() {
         </>
       )}
 
-      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : router.push('/')}>
+      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : goBack()}>
         <Text style={[styles.backBtnText, { color: theme.muted }]}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
