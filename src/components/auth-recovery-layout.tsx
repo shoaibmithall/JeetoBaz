@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useRouter } from 'expo-router';
+import { useSafeBack } from '@/lib/safe-back';
 
 interface TrustItem {
   icon: ReactNode;
@@ -26,6 +27,7 @@ export function AuthRecoveryLayout({
 }: AuthRecoveryLayoutProps) {
   const { theme } = useAppTheme();
   const router = useRouter();
+  const goBack = useSafeBack();
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
@@ -35,7 +37,7 @@ export function AuthRecoveryLayout({
         <View style={styles.wrapper}>
           <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
             {showBack && (
-              <TouchableOpacity onPress={onBack || (() => router.back())} style={styles.backBtn}>
+              <TouchableOpacity onPress={onBack || goBack} style={styles.backBtn}>
                 <ChevronLeft color={theme.text} size={24} />
               </TouchableOpacity>
             )}

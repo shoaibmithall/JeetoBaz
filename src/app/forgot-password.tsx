@@ -225,7 +225,7 @@ export default function ForgotPasswordScreen() {
       <meta name="robots" content="noindex, follow" />
       <meta name="description" content="Reset your JeetoBaz account password using email verification." />
     </Head>
-    <AuthRecoveryLayout trustItems={trustItems}>
+    <AuthRecoveryLayout trustItems={trustItems} onBack={goBack}>
       <Badge icon={<LockKeyhole color={theme.primary} size={16} />} text="Password Recovery" />
 
       <Text style={[styles.title, { color: theme.text }]}>Forgot Password?</Text>
