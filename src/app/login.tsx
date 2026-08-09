@@ -19,7 +19,7 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
 import {
-  Award, BadgeCheck, Bell, BellRing, CalendarDays, Camera, Check, ChevronRight, Circle, CircleHelp, CircleUserRound, ClipboardList,
+  Award, BadgeCheck, Bell, BellRing, CalendarDays, Camera, Check, ChevronDown, ChevronRight, ChevronUp, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
   MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, Shield, ShieldCheck, Smartphone, Sun, Ticket, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
@@ -48,6 +48,7 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme, mode, toggleThemeMode } = useAppTheme();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [personalInfoExpanded, setPersonalInfoExpanded] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [notificationPreferenceSaving, setNotificationPreferenceSaving] = useState<keyof NotificationPreferences | null>(null);
   const [pushSupported, setPushSupported] = useState(false);
@@ -524,7 +525,23 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <View style={styles.mobileDetailsGrid}>
+            <TouchableOpacity
+              style={[styles.personalInfoToggle, { backgroundColor: theme.background, borderColor: personalInfoExpanded ? theme.gold : theme.border }]}
+              onPress={() => setPersonalInfoExpanded((expanded) => !expanded)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: personalInfoExpanded }}
+              accessibilityLabel="Toggle personal information"
+            >
+              <User color={theme.primary} size={18} />
+              <Text style={[styles.personalInfoToggleText, { color: theme.text }]}>Personal Information</Text>
+              {personalInfoExpanded ? (
+                <ChevronUp color={theme.gold} size={20} />
+              ) : (
+                <ChevronDown color={theme.subtle} size={20} />
+              )}
+            </TouchableOpacity>
+
+            <View style={[styles.mobileDetailsGrid, !personalInfoExpanded && styles.mobileDetailsGridHidden]}>
               <View style={styles.mobileDetailsRow}>
                 <View style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}>
                   <View style={[styles.mobileDetailIcon, { borderColor: theme.border }]}>
@@ -1401,7 +1418,10 @@ const styles = StyleSheet.create({
   mobileProfileName: { maxWidth: '100%', fontSize: 24, fontWeight: '800', textAlign: 'left' },
   mobileVerifiedText: { fontSize: 12, fontWeight: '700' },
   mobileProfileAccent: { width: 40, height: 4, borderRadius: 2, marginTop: 12 },
+  personalInfoToggle: { flexDirection: 'row', alignItems: 'center', gap: 9, minHeight: 46, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, marginBottom: 10 },
+  personalInfoToggleText: { flex: 1, fontSize: 14, fontWeight: '700' },
   mobileDetailsGrid: { gap: 8 },
+  mobileDetailsGridHidden: { display: 'none' },
   mobileDetailsRow: { flexDirection: 'row', gap: 8 },
   mobileDetailTile: { flex: 1, minWidth: 0, minHeight: 70, borderRadius: 12, borderWidth: 1, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', gap: 8, overflow: 'hidden' },
   mobileDetailIcon: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
