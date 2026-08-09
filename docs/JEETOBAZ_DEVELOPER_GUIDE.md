@@ -92,6 +92,12 @@ Edit `src/lib/i18n.ts` — add to all 3 language objects.
 ### Step 3: Add Navigation (if needed)
 Edit `src/app/_layout.tsx` to add tab or stack screen.
 
+If the screen has a "Back" button, use `useSafeBack()` instead of plain
+`router.back()` — see [Back Navigation Pattern](#back-navigation-pattern)
+in section 8. This is not optional style preference; plain `router.back()`
+is broken for any screen reachable from a non-Home tab (Explore, Favorites,
+Profile).
+
 ### Step 4: Add Database Objects (if needed)
 Create SQL migration in `supabase/` folder. Follow existing patterns.
 
@@ -192,6 +198,53 @@ const { theme } = useAppTheme();
 const { t } = useLanguage();
 // Use t('translationKey')
 ```
+
+### Back Navigation Pattern
+**Never call `router.back()` directly in a screen.** Use `useSafeBack()`
+from `@/lib/safe-back` instead.
+
+Why: `src/app/_layout.tsx` registers every screen — including hidden ones
+(`href: null`) — as a sibling of the visible tabs in one flat `<Tabs>`
+tree, instead of nesting sub-pages inside a per-tab `Stack`. Because of
+that, `router.back()` from a screen reached off a non-Home tab (Explore,
+Favorites, Profile/`login.tsx`) does not reliably return to that tab — it
+can land on Home instead, which is confusing and was the subject of a
+multi-phase bug fix (PRs #236–#241, Aug 2026). Navigating from Home itself
+is unaffected, which is why this bug is easy to miss in ad-hoc testing:
+it only shows up when you actually start from a different tab.
+
+Basic usage — falls back to plain `router.back()` if the caller didn't
+specify anything, so it's always at least as safe as what a screen would
+otherwise do:
+```typescript
+import { useSafeBack } from '@/lib/safe-back';
+
+const goBack = useSafeBack();
+// ...
+<TouchableOpacity onPress={goBack}>
+```
+
+If a screen is reachable from exactly one known place (e.g. only ever
+opened from `/login`), give `useSafeBack` a hardcoded fallback so Back
+always lands somewhere sensible even without an explicit `from`:
+```typescript
+const goBack = useSafeBack('/login');
+```
+
+If a screen has several possible callers (footer link, tab menu, another
+screen), have each caller pass a `from` query param naming its own path,
+and let `useSafeBack()` read it with no fallback:
+```typescript
+// caller:
+router.push({ pathname: '/some-screen', params: { from: '/favorites' } });
+
+// some-screen.tsx:
+const goBack = useSafeBack();
+```
+
+`from` always wins over a hardcoded fallback, and a hardcoded fallback
+always wins over plain `router.back()`. See the comment in
+`src/lib/safe-back.ts` for the full mechanism.
 
 ---
 
