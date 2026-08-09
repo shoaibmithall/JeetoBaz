@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/providers/AuthProvider';
 import { getStoredValue, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
+import { useSafeBack } from '@/lib/safe-back';
 import { BrandedLoader } from '@/components/branded-loader';
 import { DataErrorState } from '@/components/data-error-state';
 import type { WalletTransactionRow, WalletTransactionType } from '@/types/database';
@@ -44,7 +45,8 @@ export default function WalletScreen() {
   const [cacheInfo, setCacheInfo] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack('/');
+  const params = useLocalSearchParams<{ from?: string }>();
   const { width } = useWindowDimensions();
   const isCompact = width < 640;
 
@@ -234,8 +236,8 @@ export default function WalletScreen() {
         })
       )}
 
-      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : router.push('/')}>
-        <Text style={[styles.backBtnText, { color: theme.muted }]}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
+      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={goBack}>
+        <Text style={[styles.backBtnText, { color: theme.muted }]}>← {params.from === '/login' ? 'Back to Profile' : t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
     </>

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
@@ -44,7 +44,6 @@ export default function MyEntriesScreen() {
   const [userPhone, setUserPhone] = useState('');
   const router = useRouter();
   const goBack = useSafeBack('/');
-  const params = useLocalSearchParams<{ source?: string }>();
   const { width } = useWindowDimensions();
   const isCompact = width < 640;
 
@@ -301,8 +300,8 @@ export default function MyEntriesScreen() {
         </>
       )}
 
-      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={() => params.source === 'profile' ? router.replace('/login') : goBack()}>
-        <Text style={[styles.backBtnText, { color: theme.muted }]}>← {params.source === 'profile' ? 'Back to Profile' : t('backToDraws')}</Text>
+      <TouchableOpacity style={[styles.backBtn, { borderColor: theme.border }]} onPress={goBack}>
+        <Text style={[styles.backBtnText, { color: theme.muted }]}>← {t('backToDraws')}</Text>
       </TouchableOpacity>
     </ScrollView>
     </>

@@ -1,6 +1,6 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
   Archive,
@@ -68,6 +68,7 @@ import {
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { getStoredValue } from '@/lib/storage';
+import { useSafeBack } from '@/lib/safe-back';
 
 const SUPPORT_EMAIL = 'privacy@jeetobaz.pk';
 const SUPPORT_WHATSAPP = '+92 337 2561482';
@@ -672,7 +673,7 @@ export default function PrivacyScreen() {
   const [userName, setUserName] = useState('Not provided');
   const [userPhone, setUserPhone] = useState('Not provided');
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const [query, setQuery] = useState('');
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
@@ -751,7 +752,7 @@ export default function PrivacyScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.back, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>

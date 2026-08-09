@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, BadgeCheck, FileCheck2 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -8,12 +8,13 @@ import { BrandedLoader } from '@/components/branded-loader';
 import { getPublicVerificationDocuments } from '@/lib/verification-documents';
 import type { VerificationDocument } from '@/types/database';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 
 export default function RegisteredVerifiedScreen() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
   const [documents, setDocuments] = useState<VerificationDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -63,7 +64,7 @@ export default function RegisteredVerifiedScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => (params.source === 'profile' ? router.replace('/login') : router.back())}
+          onPress={goBack}
           accessibilityRole="button"
           accessibilityLabel="Back to Profile"
         >

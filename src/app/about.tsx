@@ -15,6 +15,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 import {
   AppWindow,
   Award,
@@ -663,7 +664,8 @@ const LEGAL_FAQS = [
 
 export default function AboutJeetoBazScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ section?: string; source?: string }>();
+  const safeBack = useSafeBack();
+  const params = useLocalSearchParams<{ section?: string; from?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const [selected, setSelected] = useState<SectionId | null>(() => {
@@ -734,18 +736,14 @@ export default function AboutJeetoBazScreen() {
   function goBack() {
     if (selected) {
       const sectionParam = typeof params.section === 'string' ? params.section : undefined;
-      if (params.source === 'profile' && isSectionId(sectionParam)) {
-        router.replace('/login');
+      if (params.from && isSectionId(sectionParam)) {
+        safeBack();
         return;
       }
       setSelected(null);
       return;
     }
-    if (params.source === 'profile') {
-      router.replace('/login');
-      return;
-    }
-    router.back();
+    safeBack();
   }
 
   function sectionIcon(id: SectionId, size = 22) {

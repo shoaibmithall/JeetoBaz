@@ -454,7 +454,7 @@ export default function ProfileScreen() {
   }
 
   function openAboutSection(section: 'social' | 'works' | 'support') {
-    router.push({ pathname: '/about', params: { section, source: 'profile' } });
+    router.push({ pathname: '/about', params: { section, from: '/login' } });
   }
 
   if (authLoading || step === 'check') return (
@@ -875,13 +875,13 @@ export default function ProfileScreen() {
       ) : null}
 
       <View style={[styles.menuBox, isMobileProfile && styles.menuBoxMobile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/my-activity', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/my-activity', params: { from: '/login' } })}>
           <Ticket color="#FF6B6B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>My Activity</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/wallet', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/wallet', params: { from: '/login' } })}>
           <Wallet color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>My Wallet</Text>
           <ChevronRight color={theme.subtle} size={20} />
@@ -905,43 +905,43 @@ export default function ProfileScreen() {
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/referral', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/referral', params: { from: '/login' } })}>
           <UserPlus color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Refer & Earn</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/registered-verified', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/registered-verified', params: { from: '/login' } })}>
           <BadgeCheck color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Registered &amp; Verified</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/terms', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/terms', params: { from: '/login' } })}>
           <ClipboardList color="#6366F1" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('terms')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/privacy', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/privacy', params: { from: '/login' } })}>
           <LockKeyhole color="#EC4899" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>{t('privacyAccountData')}</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/refund-policy' as never, params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/refund-policy' as never, params: { from: '/login' } })}>
           <RotateCcw color="#F59E0B" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Refund & Cancellation</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/shipping-policy' as never, params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/shipping-policy' as never, params: { from: '/login' } })}>
           <Truck color="#18a663" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Shipping Policy</Text>
           <ChevronRight color={theme.subtle} size={20} />
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/faq', params: { source: 'profile' } })}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/faq', params: { from: '/login' } })}>
           <CircleHelp color="#3B82F6" size={21} />
           <Text style={[styles.menuText, { color: theme.gold }]}>Frequently Asked Questions</Text>
           <ChevronRight color={theme.subtle} size={20} />
@@ -968,7 +968,7 @@ export default function ProfileScreen() {
 
       <TouchableOpacity
         style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}
-        onPress={() => router.push({ pathname: '/about', params: { section: 'menu', source: 'profile' } })}
+        onPress={() => router.push({ pathname: '/about', params: { section: 'menu', from: '/login' } })}
         accessibilityRole="button"
         accessibilityLabel="Open About JeetoBaz"
       >
@@ -1126,12 +1126,12 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('helpCenter')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/faq', params: { source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/faq', params: { from: '/login' } }); }}>
               <CircleHelp color="#3B82F6" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Frequently Asked Questions</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', from: '/login' } }); }}>
               <Info color={theme.gold} size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>About JeetoBaz</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1153,22 +1153,22 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>LEGAL</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/terms', params: { source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/terms', params: { from: '/login' } }); }}>
               <ClipboardList color="#6366F1" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('terms')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/privacy', params: { source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/privacy', params: { from: '/login' } }); }}>
               <LockKeyhole color="#EC4899" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/refund-policy' as never, params: { source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/refund-policy' as never, params: { from: '/login' } }); }}>
               <RotateCcw color="#F59E0B" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Refund & Cancellation</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/shipping-policy' as never, params: { source: 'profile' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/shipping-policy' as never, params: { from: '/login' } }); }}>
               <Truck color="#18a663" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Shipping Policy</Text>
               <ChevronRight color={theme.subtle} size={18} />

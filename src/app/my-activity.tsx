@@ -1,13 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useAppTheme } from '@/hooks/use-theme';
 import { ChevronRight, Heart, History, Target, Ticket, Trophy } from 'lucide-react-native';
+import { useSafeBack } from '@/lib/safe-back';
 
 export default function MyActivityScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
 
   return (
     <>
@@ -18,7 +19,7 @@ export default function MyActivityScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surfaceAlt, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => (params.source === 'profile' ? router.replace('/login') : router.back())}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backBtn, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.titleRow}><Ticket color={theme.gold} size={20} /><Text style={[styles.title, { color: theme.gold }]}>My Activity</Text></View>

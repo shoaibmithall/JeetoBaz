@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
   Award,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 
 const WHY_FAIR_SECTIONS = [
   {
@@ -164,7 +165,7 @@ const WHY_FAIR_SECTIONS = [
 
 export default function WhyFairScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const [openSection, setOpenSection] = useState<string | null>(WHY_FAIR_SECTIONS[0].title);
 
@@ -204,7 +205,7 @@ export default function WhyFairScreen() {
       contentContainerStyle={styles.content}
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.back, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
