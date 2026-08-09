@@ -40,6 +40,7 @@ export default function Root({ children }: { children: ReactNode }) {
           })(window,document,'script','dataLayer','${GTM_CONTAINER_ID}');`}
         </script>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="p:domain_verify" content="3b332244fa70b73164da9cbb7e555b00" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
