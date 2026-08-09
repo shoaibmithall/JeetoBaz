@@ -78,6 +78,7 @@ function useFooterColors() {
 const QUICK_LINKS: FooterLink[] = [
   { label: 'All Draws', route: '/', resetFilters: true },
   { label: 'Compare Draws', route: '/compare' },
+  { label: 'JeetoBaz VS Jeeto Pakistan', route: '/jeetobaz-vs-jeeto-pakistan' },
   { label: 'How JeetoBaz Works', route: '/about', params: { section: 'works' } },
   { label: 'Past Winners', route: '/explore' },
   { label: 'JeetoBaz Blog', route: '/blog' },
