@@ -15,12 +15,14 @@ import { ArrowLeft, MapPin, Save } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
+import { useSafeBack } from '@/lib/safe-back';
 
 const MAX_LOCATION_LENGTH = 80;
 
 export default function ProfileLocationScreen() {
   const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
+  const goBack = useSafeBack('/login');
   const [city, setCity] = useState('');
   const [province, setProvince] = useState('');
   const [country, setCountry] = useState('');
@@ -96,7 +98,7 @@ export default function ProfileLocationScreen() {
       return;
     }
 
-    router.back();
+    goBack();
   };
 
   return (
@@ -112,7 +114,7 @@ export default function ProfileLocationScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}

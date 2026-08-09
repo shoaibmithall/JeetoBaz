@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Clock, LockKeyhole, Mail, Smartphone } from 'lucid
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
+import { useSafeBack } from '@/lib/safe-back';
 
 const PROVIDER_LABELS: Record<string, string> = {
   email: 'Email & Password',
@@ -23,6 +24,7 @@ function formatDateTime(value: string | null | undefined) {
 export default function LoginActivityScreen() {
   const { theme } = useAppTheme();
   const { user, isEmailVerified, loading } = useAuth();
+  const goBack = useSafeBack('/login');
 
   if (!loading && !user) {
     router.replace('/login');
@@ -52,7 +54,7 @@ export default function LoginActivityScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}
@@ -87,7 +89,7 @@ export default function LoginActivityScreen() {
             Don't recognize this activity? Change your password right away.
           </Text>
           <TouchableOpacity
-            onPress={() => router.push('/change-password' as never)}
+            onPress={() => router.push({ pathname: '/change-password', params: { from: '/login-activity' } } as never)}
             accessibilityRole="button"
             accessibilityLabel="Change password"
             style={styles.changePasswordButton}

@@ -15,6 +15,7 @@ import { ArrowLeft, CalendarDays, Save } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
+import { useSafeBack } from '@/lib/safe-back';
 
 function parseStoredDate(value: string | null | undefined) {
   const [year = '', month = '', day = ''] = (value || '').split('-');
@@ -31,6 +32,7 @@ function isValidDate(day: number, month: number, year: number) {
 export default function ProfileDateOfBirthScreen() {
   const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
+  const goBack = useSafeBack('/login');
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
@@ -131,7 +133,7 @@ export default function ProfileDateOfBirthScreen() {
       return;
     }
 
-    router.back();
+    goBack();
   };
 
   return (
@@ -147,7 +149,7 @@ export default function ProfileDateOfBirthScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}

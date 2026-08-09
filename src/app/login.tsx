@@ -554,7 +554,7 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity
                   style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
-                  onPress={() => router.push('/profile-location' as never)}
+                  onPress={() => router.push({ pathname: '/profile-location', params: { from: '/login' } } as never)}
                   accessibilityRole="button"
                   accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
                 >
@@ -580,7 +580,7 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity
                   style={[styles.mobileDetailTile, { backgroundColor: theme.background, borderColor: theme.border }]}
-                  onPress={() => router.push('/profile-date-of-birth' as never)}
+                  onPress={() => router.push({ pathname: '/profile-date-of-birth', params: { from: '/login' } } as never)}
                   accessibilityRole="button"
                   accessibilityLabel={dateOfBirth ? `Edit date of birth, currently ${formattedDateOfBirth}` : 'Add date of birth'}
                 >
@@ -705,7 +705,7 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity
                   style={styles.profileDetailItemDesktop}
-                  onPress={() => router.push('/profile-location' as never)}
+                  onPress={() => router.push({ pathname: '/profile-location', params: { from: '/login' } } as never)}
                   accessibilityRole="button"
                   accessibilityLabel={city ? `Edit city, currently ${city}` : 'Add city'}
                 >
@@ -740,7 +740,7 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity
                   style={styles.profileDetailItemDesktop}
-                  onPress={() => router.push('/profile-date-of-birth' as never)}
+                  onPress={() => router.push({ pathname: '/profile-date-of-birth', params: { from: '/login' } } as never)}
                   accessibilityRole="button"
                   accessibilityLabel={dateOfBirth ? `Edit date of birth, currently ${formattedDateOfBirth}` : 'Add date of birth'}
                 >
@@ -1001,17 +1001,17 @@ export default function ProfileScreen() {
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.settingsSectionLabel, { color: theme.muted, marginTop: 0 }]}>ACCOUNT</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/edit-profile' as never); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/edit-profile', params: { from: '/login' } } as never); }}>
               <User color="#3B82F6" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Edit Profile</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/change-email' as never); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/change-email', params: { from: '/login' } } as never); }}>
               <Mail color="#F59E0B" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Email</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/edit-profile' as never); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/edit-profile', params: { from: '/login' } } as never); }}>
               <Phone color="#18a663" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Phone</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1026,14 +1026,14 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Edit Date of Birth</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/change-password' as never); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/change-password', params: { from: '/login' } } as never); }}>
               <LockKeyhole color="#EC4899" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Password</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PRIVACY & SECURITY</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/login-activity' as never); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/login-activity', params: { from: '/login' } } as never); }}>
               <Smartphone color="#6366F1" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Login Activity</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1121,7 +1121,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>SUPPORT & INFO</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/help', params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/help', params: { from: '/login' } }); }}>
               <HeartHandshake color="#14B8A6" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('helpCenter')}</Text>
               <ChevronRight color={theme.subtle} size={18} />

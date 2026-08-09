@@ -9,12 +9,12 @@ import {
   View,
 } from 'react-native';
 import Head from 'expo-router/head';
-import { router } from 'expo-router';
 import { ArrowLeft, Check, Eye, EyeOff, LockKeyhole, Save } from 'lucide-react-native';
 
 import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 import { validatePassword } from '@/lib/auth-validation';
+import { useSafeBack } from '@/lib/safe-back';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
   let score = 0;
@@ -31,6 +31,7 @@ function getPasswordStrength(password: string): { level: number; label: string; 
 
 export default function ChangePasswordScreen() {
   const { theme } = useAppTheme();
+  const goBack = useSafeBack('/login');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -82,7 +83,7 @@ export default function ChangePasswordScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}
@@ -106,7 +107,7 @@ export default function ChangePasswordScreen() {
                 Your password has been changed successfully.
               </Text>
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={goBack}
                 accessibilityRole="button"
                 accessibilityLabel="Back to profile"
                 style={styles.saveButton}

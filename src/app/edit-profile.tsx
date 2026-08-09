@@ -18,10 +18,12 @@ import { supabase } from '@/lib/supabase';
 import { updateUserProfile } from '@/lib/auth';
 import { validateName, validatePhone } from '@/lib/auth-validation';
 import { normalizePakistaniMobile } from '@/lib/validation';
+import { useSafeBack } from '@/lib/safe-back';
 
 export default function EditProfileScreen() {
   const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
+  const goBack = useSafeBack('/login');
   const [name, setName] = useState('');
   const [inputPhone, setInputPhone] = useState('');
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function EditProfileScreen() {
       return;
     }
 
-    router.back();
+    goBack();
   };
 
   return (
@@ -102,7 +104,7 @@ export default function EditProfileScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}
