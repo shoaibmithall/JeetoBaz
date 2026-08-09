@@ -999,6 +999,16 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Phone</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/profile-location' as never); }}>
+              <MapPin color="#F97316" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Edit Location</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/profile-date-of-birth' as never); }}>
+              <CalendarDays color="#4a9eff" size={20} />
+              <Text style={[styles.settingsItemText, { color: theme.text }]}>Edit Date of Birth</Text>
+              <ChevronRight color={theme.subtle} size={18} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/change-password' as never); }}>
               <LockKeyhole color="#EC4899" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Change Password</Text>
