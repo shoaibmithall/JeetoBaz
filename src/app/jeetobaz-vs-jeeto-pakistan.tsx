@@ -17,7 +17,6 @@ import {
   Smartphone,
   Ticket,
   TicketCheck,
-  Tv,
   UserPlus,
   UserRound,
 } from 'lucide-react-native';
@@ -193,7 +192,7 @@ export default function JeetoBazVsJeetoPakistanScreen() {
       <SectionTitle theme={theme}>Two Different Experiences</SectionTitle>
       <View style={[styles.experienceRow, isMobile && styles.experienceRowMobile]}>
         <View style={[styles.experienceCard, { borderColor: theme.border }]}>
-          <Tv color={theme.subtle} size={30} />
+          <Image source={require('@/assets/images/vs-jeeto-pakistan/jeeto-pakistan-tv.png')} style={styles.experienceIcon} contentFit="contain" accessibilityLabel="Jeeto Pakistan television" />
           <Text style={styles.experienceTitle}>Jeeto Pakistan</Text>
           <Text style={styles.experienceSubtitle}>Television Game Show</Text>
           <View style={styles.experienceList}>
@@ -209,7 +208,7 @@ export default function JeetoBazVsJeetoPakistanScreen() {
         </View>
 
         <View style={[styles.experienceCard, styles.experienceCardBrand, { borderColor: theme.gold }]}>
-          <Smartphone color={theme.gold} size={30} />
+          <Image source={require('@/assets/images/vs-jeeto-pakistan/jeetobaz-mobile.png')} style={styles.experienceIcon} contentFit="contain" accessibilityLabel="JeetoBaz mobile app" />
           <Text style={[styles.experienceTitle, { color: theme.gold }]}>JeetoBaz</Text>
           <Text style={styles.experienceSubtitle}>Digital Prize Platform</Text>
           <View style={styles.experienceList}>
@@ -432,6 +431,7 @@ function createStyles(theme: Theme) {
     experienceRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, maxWidth: 900, alignSelf: 'center', width: '100%' },
     experienceRowMobile: { flexDirection: 'column' },
     experienceCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 20, backgroundColor: theme.surface, gap: 6 },
+    experienceIcon: { width: 56, height: 56 },
     experienceCardBrand: { backgroundColor: theme.primarySoft },
     experienceTitle: { color: theme.text, fontSize: 18, fontWeight: '800', marginTop: 8 },
     experienceSubtitle: { color: theme.muted, fontSize: 13, marginBottom: 10 },
