@@ -295,7 +295,7 @@ export default function JeetoBazVsJeetoPakistanScreen() {
 
       {/* See JeetoBaz in Action */}
       <SectionTitle theme={theme}>See JeetoBaz in Action</SectionTitle>
-      <View style={[styles.screenshotGrid, { flexBasis: `${100 / screenshotColumns}%` as never }]}>
+      <View style={styles.screenshotGrid}>
         {SCREENSHOTS.map((shot) => (
           <View key={shot.title} style={[styles.screenshotCard, { width: `${100 / screenshotColumns}%` as never }]}>
             <View style={[styles.screenshotFrame, { borderColor: theme.border, aspectRatio: SCREENSHOT_ASPECT_RATIO }]}>
