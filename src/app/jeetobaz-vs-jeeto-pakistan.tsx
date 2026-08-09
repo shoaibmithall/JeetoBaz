@@ -437,7 +437,7 @@ function createStyles(theme: Theme) {
     experienceSubtitle: { color: theme.muted, fontSize: 13, marginBottom: 10 },
     experienceList: { gap: 8 },
     vsBadge: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center' },
-    vsBadgeText: { color: theme.gold, fontWeight: '900', fontSize: 13 },
+    vsBadgeText: { color: theme.danger, fontWeight: '900', fontSize: 13 },
 
     comparisonStack: { paddingHorizontal: 16, gap: 12 },
     comparisonCard: { borderWidth: 1, borderRadius: 14, padding: 16, backgroundColor: theme.surface, gap: 10 },
