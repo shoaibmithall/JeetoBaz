@@ -9,17 +9,18 @@ import {
   View,
 } from 'react-native';
 import Head from 'expo-router/head';
-import { router } from 'expo-router';
 import { ArrowLeft, Check, Mail, Save } from 'lucide-react-native';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useAppTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 import { validateEmail } from '@/lib/auth-validation';
+import { useSafeBack } from '@/lib/safe-back';
 
 export default function ChangeEmailScreen() {
   const { theme } = useAppTheme();
   const { user } = useAuth();
+  const goBack = useSafeBack('/login');
   const [newEmail, setNewEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -67,7 +68,7 @@ export default function ChangeEmailScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             accessibilityRole="button"
             accessibilityLabel="Back to profile"
             style={styles.backButton}
@@ -91,7 +92,7 @@ export default function ChangeEmailScreen() {
                 Check {newEmail.trim() || 'your new inbox'} and tap the confirmation link to finish changing your email. It stays as {currentEmail} until then.
               </Text>
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={goBack}
                 accessibilityRole="button"
                 accessibilityLabel="Back to profile"
                 style={styles.saveButton}

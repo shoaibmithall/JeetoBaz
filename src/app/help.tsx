@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ChevronRight, Mail, MessageCircle } from 'lucide-react-native';
 import { getStoredValue } from '@/lib/storage';
@@ -8,6 +7,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
+import { useSafeBack } from '@/lib/safe-back';
 
 const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
 const SUPPORT_PHONE = '923372561482';
@@ -20,7 +20,7 @@ export default function HelpCenterScreen() {
   const [message, setMessage] = useState('');
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
-  const router = useRouter();
+  const goBack = useSafeBack();
   const { language, t } = useLanguage();
   const { theme } = useAppTheme();
 
@@ -134,7 +134,7 @@ export default function HelpCenterScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]} keyboardShouldPersistTaps="handled">
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
         <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>{t('helpCenter')}</Text>
