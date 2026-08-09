@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { LANGUAGE_OPTIONS, useLanguage, type LanguageCode } from '@/lib/i18n';
 import { Check } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 
 const SAMPLE_TEXT: Record<LanguageCode, string> = {
   en: 'JeetoBaz will use English across the app.',
@@ -14,12 +14,12 @@ const SAMPLE_TEXT: Record<LanguageCode, string> = {
 
 export default function LanguageScreen() {
   const { language, setLanguage, t } = useLanguage();
-  const router = useRouter();
   const { theme } = useAppTheme();
+  const goBack = useSafeBack();
 
   async function chooseLanguage(code: LanguageCode) {
     await setLanguage(code);
-    router.back();
+    goBack();
   }
 
   const langSchema = pageSchema('WebPage', '/language', 'Language', 'Choose your preferred language for the JeetoBaz experience and adjust available language settings for easier navigation and platform use.');
@@ -47,7 +47,7 @@ export default function LanguageScreen() {
     </Head>
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.backButton, { color: theme.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
         <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>{t('language')}</Text>

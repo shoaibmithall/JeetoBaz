@@ -1109,7 +1109,7 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>PREFERENCES</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push('/language'); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/language', params: { from: '/login' } }); }}>
               <Globe2 color="#3B82F6" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('language')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1126,12 +1126,12 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('helpCenter')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/faq', params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/faq', params: { source: 'profile' } }); }}>
               <CircleHelp color="#3B82F6" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Frequently Asked Questions</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/about', params: { section: 'menu', source: 'profile' } }); }}>
               <Info color={theme.gold} size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>About JeetoBaz</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1153,22 +1153,22 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <Text style={[styles.settingsSectionLabel, { color: theme.muted }]}>LEGAL</Text>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/terms', params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/terms', params: { source: 'profile' } }); }}>
               <ClipboardList color="#6366F1" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('terms')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/privacy', params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/privacy', params: { source: 'profile' } }); }}>
               <LockKeyhole color="#EC4899" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>{t('privacyAccountData')}</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/refund-policy' as never, params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/refund-policy' as never, params: { source: 'profile' } }); }}>
               <RotateCcw color="#F59E0B" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Refund & Cancellation</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/shipping-policy' as never, params: { source: 'settings' } }); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); router.push({ pathname: '/shipping-policy' as never, params: { source: 'profile' } }); }}>
               <Truck color="#18a663" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Shipping Policy</Text>
               <ChevronRight color={theme.subtle} size={18} />
