@@ -35,6 +35,7 @@ import {
 } from '@/lib/referrals';
 import { supabase } from '@/lib/supabase';
 import { pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 import type { Product } from '@/types/database';
 
 const APP_URL = 'https://jeetobaz.pk';
@@ -63,7 +64,8 @@ type Reward = {
 
 export default function ReferralScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ ref?: string; source?: string }>();
+  const goBack = useSafeBack();
+  const params = useLocalSearchParams<{ ref?: string }>();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const { user, loading: authLoading } = useAuth();
@@ -223,7 +225,7 @@ export default function ReferralScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <ArrowLeft color={theme.primary} size={22} />
           <Text style={[styles.backText, { color: theme.primary }]}>Back</Text>
         </TouchableOpacity>

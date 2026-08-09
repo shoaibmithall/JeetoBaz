@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import {
   Ban,
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 
 const REFUND_FAQS = [
   {
@@ -150,7 +151,7 @@ const REFUND_FAQS = [
 
 export default function RefundPolicyScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const [query, setQuery] = useState('');
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
@@ -197,7 +198,7 @@ export default function RefundPolicyScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-        <TouchableOpacity onPress={() => params.source === 'profile' ? router.replace('/login') : router.back()}>
+        <TouchableOpacity onPress={goBack}>
           <Text style={[styles.back, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>

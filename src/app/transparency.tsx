@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, BadgeCheck, ChevronRight, CircleHelp, Scale, ShieldCheck } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
+import { useSafeBack } from '@/lib/safe-back';
 
 const TRANSPARENCY_LINKS = [
   {
@@ -31,7 +32,7 @@ export default function TransparencyScreen() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const goBack = useSafeBack();
 
   const schema = pageSchema('WebPage', '/transparency', 'Transparency Center', 'JeetoBaz Transparency Center -- how draws are fair, how the platform is registered and verified, and answers to common questions.');
   const breadcrumb = breadcrumbSchema([{ name: 'Transparency Center', path: '/transparency' }]);
@@ -63,7 +64,7 @@ export default function TransparencyScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => (params.source === 'profile' ? router.replace('/login') : router.back())}
+          onPress={goBack}
           accessibilityRole="button"
           accessibilityLabel="Back"
         >
