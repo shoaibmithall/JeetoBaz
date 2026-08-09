@@ -86,15 +86,26 @@ export default function HelpCenterScreen() {
     }
 
     const ticketId = `JB-${Date.now().toString().slice(-8)}`;
+    const ticketText = `Ticket ID: ${ticketId}\nName: ${userName}\nPhone: ${userPhone}\n\nSubject: ${cleanSubject}\n\nIssue:\n${cleanMessage}`;
     const ticketSubject = encodeURIComponent(`[${ticketId}] ${cleanSubject}`);
-    const ticketBody = encodeURIComponent(
-      `Ticket ID: ${ticketId}\nName: ${userName}\nPhone: ${userPhone}\n\nIssue:\n${cleanMessage}`
-    );
+    const ticketBody = encodeURIComponent(ticketText);
+
+    // mailto: silently does nothing on devices with no default email app configured (no error
+    // is thrown, so `openLink`'s try/catch never fires) -- copying the ticket text is a
+    // best-effort fallback so the user can still paste it into any email or chat app.
+    if (Platform.OS === 'web' && navigator.clipboard) {
+      navigator.clipboard.writeText(ticketText).catch(() => {});
+    }
 
     openLink(
       `mailto:${COMPLAINTS_EMAIL}?subject=${ticketSubject}&body=${ticketBody}`,
       `Please email your issue to ${COMPLAINTS_EMAIL} and mention ticket ${ticketId}.`,
       true
+    );
+
+    showAlert(
+      `Ticket ${ticketId} ready`,
+      `Your email app should open now. If nothing happens, your ticket details have been copied -- paste them into an email to ${COMPLAINTS_EMAIL}, or WhatsApp us at ${SUPPORT_PHONE_DISPLAY} and mention ticket ${ticketId}.`
     );
   }
 
