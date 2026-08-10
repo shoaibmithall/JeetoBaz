@@ -52,15 +52,6 @@ export function HomeNavigation({ children }: ChildrenProps) {
   return <nav aria-label="Prize categories" style={{ display: 'contents' }}>{children}</nav>;
 }
 
-const headingWrapStyle: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  paddingTop: 10,
-  paddingBottom: 4,
-  paddingLeft: 16,
-  paddingRight: 16,
-};
-
 const quoteMarkStyle: CSSProperties = {
   opacity: 0.5,
   fontSize: '0.8em',
@@ -101,7 +92,7 @@ export function HomePageHeading({ backgroundColor, textColor }: HomePageHeadingP
   };
 
   return (
-    <div style={headingWrapStyle}>
+    <div style={visuallyHidden}>
       <style>{zoomInKeyframes}</style>
       <h1 style={headingStyle} className="jeetobaz-pill-zoom-in">
         <span style={quoteMarkStyle} aria-hidden="true">&ldquo;</span>
