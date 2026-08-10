@@ -92,8 +92,10 @@ export default function SignupScreen() {
     setTurnstileToken('');
 
     if (error) {
-      const msg = error.message || String(error) || 'Unknown error';
-      if (msg.includes('already registered')) {
+      const msg = error.message && error.message.trim() ? error.message : 'Something went wrong. Please try again.';
+      if (msg.toLowerCase().includes('phone number is already registered')) {
+        setErrors({ phone: 'This phone number is already registered. Try logging in or use a different number.' });
+      } else if (msg.includes('already registered')) {
         setErrors({ email: 'This email is already registered. Try logging in.' });
       } else {
         alert('Signup failed: ' + msg);
