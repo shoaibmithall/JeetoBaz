@@ -6,7 +6,7 @@ import Head from 'expo-router/head';
 import {
   ArrowRight, CalendarDays, CheckCircle2, CircleAlert,
   BadgeDollarSign, ChevronLeft, ChevronRight, Flame, Heart, ListFilter, LockKeyhole, Play, Scale, Search,
-  ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
+  Megaphone, ShieldCheck, Sparkles, Star, Target, Ticket, TrendingUp, UsersRound, X,
 } from 'lucide-react-native';
 import { CategoryBrowser } from '@/components/category-browser';
 import { DataErrorState } from '@/components/data-error-state';
@@ -1053,6 +1053,13 @@ export default function HomeScreen() {
         <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
       </View>
       <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
+
+      {announcement ? (
+        <View style={[styles.announcementBanner, { backgroundColor: colors.goldSoft, borderColor: colors.gold }]}>
+          <Megaphone color={colors.gold} size={18} />
+          <Text style={[styles.announcementText, { color: colors.text }]}>{announcement}</Text>
+        </View>
+      ) : null}
 
       {activeAdImage ? (
         <View style={[styles.adBannerCard, isCompact && styles.adBannerCardCompact, { backgroundColor: colors.surface, borderColor: colors.gold }]}>
