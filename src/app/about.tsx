@@ -673,16 +673,6 @@ export default function AboutJeetoBazScreen() {
     return isSectionId(sectionParam) ? sectionParam : null;
   });
   const contentWidth = Math.min(width - 30, 920);
-  const [whyQuery, setWhyQuery] = useState('');
-  const [openWhyItem, setOpenWhyItem] = useState<string | null>(null);
-
-  const filteredWhyFaqs = useMemo(() => {
-    const search = whyQuery.trim().toLowerCase();
-    if (!search) return WHY_FAQS;
-    return WHY_FAQS.filter(
-      (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
-    );
-  }, [whyQuery]);
 
   const [securityQuery, setSecurityQuery] = useState('');
   const [openSecurityItem, setOpenSecurityItem] = useState<string | null>(null);
@@ -887,62 +877,21 @@ export default function AboutJeetoBazScreen() {
             </Text>
           </View>
 
-          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Search color={theme.subtle} size={20} />
-            <TextInput
-              value={whyQuery}
-              onChangeText={setWhyQuery}
-              placeholder="Search why JeetoBaz..."
-              placeholderTextColor={theme.subtle}
-              style={[styles.worksSearchInput, { color: theme.text }]}
-            />
+          <View style={styles.worksFlatList}>
+            {WHY_FAQS.map((item, index) => (
+              <View
+                key={item.question}
+                style={[
+                  styles.worksFlatSection,
+                  { borderBottomColor: theme.border },
+                  index === WHY_FAQS.length - 1 && styles.worksFlatSectionLast,
+                ]}
+              >
+                <Text selectable style={[styles.worksFlatTitle, { color: theme.gold }]}>{item.question}</Text>
+                <Text selectable style={[styles.worksFlatAnswer, { color: theme.muted }]}>{item.answer}</Text>
+              </View>
+            ))}
           </View>
-
-          <View style={styles.worksList}>
-            {filteredWhyFaqs.map((item) => {
-              const expanded = openWhyItem === item.question;
-              const Icon = item.icon;
-              return (
-                <View
-                  key={item.question}
-                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
-                >
-                  <TouchableOpacity
-                    style={styles.worksQuestionRow}
-                    onPress={() => setOpenWhyItem(expanded ? null : item.question)}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded }}
-                  >
-                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
-                      <Icon color={item.iconColor} size={20} />
-                    </View>
-                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{item.question}</Text>
-                    {expanded ? (
-                      <ChevronDown color={theme.gold} size={21} />
-                    ) : (
-                      <ChevronRight color={theme.subtle} size={21} />
-                    )}
-                  </TouchableOpacity>
-                  {/*
-                    Always mounted, visibility toggled via `display` rather than
-                    conditionally rendering `null` -- see the same fix applied to the
-                    footer, FAQ, Terms, and Privacy pages: the static export always starts
-                    collapsed, so conditional mounting hid this section's real content from
-                    crawlers entirely.
-                  */}
-                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
-                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-
-          {filteredWhyFaqs.length === 0 ? (
-            <View style={styles.worksEmpty}>
-              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching reason found</Text>
-            </View>
-          ) : null}
 
           <Text selectable style={[styles.subheading, { color: theme.gold }]}>Why Participants Can Trust JeetoBaz</Text>
           {WHY_TRUST_ITEMS.map((item) => (
