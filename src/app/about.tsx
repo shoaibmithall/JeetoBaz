@@ -674,17 +674,6 @@ export default function AboutJeetoBazScreen() {
   });
   const contentWidth = Math.min(width - 30, 920);
 
-  const [securityQuery, setSecurityQuery] = useState('');
-  const [openSecurityItem, setOpenSecurityItem] = useState<string | null>(null);
-
-  const filteredSecurityFaqs = useMemo(() => {
-    const search = securityQuery.trim().toLowerCase();
-    if (!search) return SECURITY_FAQS;
-    return SECURITY_FAQS.filter(
-      (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
-    );
-  }, [securityQuery]);
-
   const [legalQuery, setLegalQuery] = useState('');
   const [openLegalItem, setOpenLegalItem] = useState<string | null>(null);
 
@@ -1025,62 +1014,21 @@ export default function AboutJeetoBazScreen() {
             We use structured processes to protect participants from unauthorized access, fraudulent activity, duplicate accounts, invalid payments and manipulation of campaign results.
           </Text>
 
-          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Search color={theme.subtle} size={20} />
-            <TextInput
-              value={securityQuery}
-              onChangeText={setSecurityQuery}
-              placeholder="Search trust & security..."
-              placeholderTextColor={theme.subtle}
-              style={[styles.worksSearchInput, { color: theme.text }]}
-            />
+          <View style={styles.worksFlatList}>
+            {SECURITY_FAQS.map((item, index) => (
+              <View
+                key={item.question}
+                style={[
+                  styles.worksFlatSection,
+                  { borderBottomColor: theme.border },
+                  index === SECURITY_FAQS.length - 1 && styles.worksFlatSectionLast,
+                ]}
+              >
+                <Text selectable style={[styles.worksFlatTitle, { color: theme.gold }]}>{item.question}</Text>
+                <Text selectable style={[styles.worksFlatAnswer, { color: theme.text }]}>{item.answer}</Text>
+              </View>
+            ))}
           </View>
-
-          <View style={styles.worksList}>
-            {filteredSecurityFaqs.map((item) => {
-              const expanded = openSecurityItem === item.question;
-              const Icon = item.icon;
-              return (
-                <View
-                  key={item.question}
-                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
-                >
-                  <TouchableOpacity
-                    style={styles.worksQuestionRow}
-                    onPress={() => setOpenSecurityItem(expanded ? null : item.question)}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded }}
-                  >
-                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
-                      <Icon color={item.iconColor} size={20} />
-                    </View>
-                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{item.question}</Text>
-                    {expanded ? (
-                      <ChevronDown color={theme.gold} size={21} />
-                    ) : (
-                      <ChevronRight color={theme.subtle} size={21} />
-                    )}
-                  </TouchableOpacity>
-                  {/*
-                    Always mounted, visibility toggled via `display` rather than
-                    conditionally rendering `null` -- see the same fix applied to the
-                    footer, FAQ, Terms, and Privacy pages: the static export always starts
-                    collapsed, so conditional mounting hid this section's real content from
-                    crawlers entirely.
-                  */}
-                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
-                    <Text selectable style={[styles.worksAnswerText, { color: theme.text }]}>{item.answer}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-
-          {filteredSecurityFaqs.length === 0 ? (
-            <View style={styles.worksEmpty}>
-              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching topic found</Text>
-            </View>
-          ) : null}
 
           <SectionCard title="Your Security Responsibilities" icon={<ShieldCheck color="#10B981" size={22} />}>
             {SECURITY_RESPONSIBILITIES}
