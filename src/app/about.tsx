@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   UIManager,
   View,
@@ -51,7 +50,6 @@ import {
   Rocket,
   Scale,
   ScrollText,
-  Search,
   ShieldAlert,
   ShieldCheck,
   Siren,
@@ -674,17 +672,6 @@ export default function AboutJeetoBazScreen() {
   });
   const contentWidth = Math.min(width - 30, 920);
 
-  const [legalQuery, setLegalQuery] = useState('');
-  const [openLegalItem, setOpenLegalItem] = useState<string | null>(null);
-
-  const filteredLegalFaqs = useMemo(() => {
-    const search = legalQuery.trim().toLowerCase();
-    if (!search) return LEGAL_FAQS;
-    return LEGAL_FAQS.filter(
-      (item) => item.question.toLowerCase().includes(search) || item.answer.toLowerCase().includes(search),
-    );
-  }, [legalQuery]);
-
   useEffect(() => {
     const sectionParam = typeof params.section === 'string' ? params.section : undefined;
     if (isSectionId(sectionParam)) {
@@ -1109,62 +1096,21 @@ export default function AboutJeetoBazScreen() {
           <DetailHero icon={<Scale color="#6366F1" size={38} />} title="Responsible Use Policy" />
           <Text selectable style={[styles.policyDate, { color: theme.gold, marginBottom: 16 }]}>Last Updated: 2026</Text>
 
-          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Search color={theme.subtle} size={20} />
-            <TextInput
-              value={legalQuery}
-              onChangeText={setLegalQuery}
-              placeholder="Search Responsible Use Policy..."
-              placeholderTextColor={theme.subtle}
-              style={[styles.worksSearchInput, { color: theme.text }]}
-            />
+          <View style={styles.worksFlatList}>
+            {LEGAL_FAQS.map((item, index) => (
+              <View
+                key={item.question}
+                style={[
+                  styles.worksFlatSection,
+                  { borderBottomColor: theme.border },
+                  index === LEGAL_FAQS.length - 1 && styles.worksFlatSectionLast,
+                ]}
+              >
+                <Text selectable style={[styles.worksFlatTitle, { color: theme.gold }]}>{item.question}</Text>
+                <Text selectable style={[styles.worksFlatAnswer, { color: theme.muted }]}>{item.answer}</Text>
+              </View>
+            ))}
           </View>
-
-          <View style={styles.worksList}>
-            {filteredLegalFaqs.map((item) => {
-              const expanded = openLegalItem === item.question;
-              const Icon = item.icon;
-              return (
-                <View
-                  key={item.question}
-                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
-                >
-                  <TouchableOpacity
-                    style={styles.worksQuestionRow}
-                    onPress={() => setOpenLegalItem(expanded ? null : item.question)}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded }}
-                  >
-                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
-                      <Icon color={item.iconColor} size={20} />
-                    </View>
-                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{item.question}</Text>
-                    {expanded ? (
-                      <ChevronDown color={theme.gold} size={21} />
-                    ) : (
-                      <ChevronRight color={theme.subtle} size={21} />
-                    )}
-                  </TouchableOpacity>
-                  {/*
-                    Always mounted, visibility toggled via `display` rather than
-                    conditionally rendering `null` -- see the same fix applied to the
-                    footer, FAQ, Terms, and Privacy pages: the static export always starts
-                    collapsed, so conditional mounting hid this section's real content from
-                    crawlers entirely.
-                  */}
-                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
-                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{item.answer}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-
-          {filteredLegalFaqs.length === 0 ? (
-            <View style={styles.worksEmpty}>
-              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching section found</Text>
-            </View>
-          ) : null}
 
           <Text selectable style={[styles.subheading, { color: theme.gold }]}>Explore More</Text>
           <TouchableOpacity style={[styles.navButtonRow, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => router.push('/terms')}>
