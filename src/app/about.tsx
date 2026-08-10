@@ -673,18 +673,8 @@ export default function AboutJeetoBazScreen() {
     return isSectionId(sectionParam) ? sectionParam : null;
   });
   const contentWidth = Math.min(width - 30, 920);
-  const [worksQuery, setWorksQuery] = useState('');
-  const [openWorksStep, setOpenWorksStep] = useState<string | null>(null);
   const [whyQuery, setWhyQuery] = useState('');
   const [openWhyItem, setOpenWhyItem] = useState<string | null>(null);
-
-  const filteredWorksSteps = useMemo(() => {
-    const search = worksQuery.trim().toLowerCase();
-    if (!search) return WORKS_STEPS;
-    return WORKS_STEPS.filter(
-      (step) => step.title.toLowerCase().includes(search) || step.text.toLowerCase().includes(search),
-    );
-  }, [worksQuery]);
 
   const filteredWhyFaqs = useMemo(() => {
     const search = whyQuery.trim().toLowerCase();
@@ -1010,62 +1000,21 @@ export default function AboutJeetoBazScreen() {
             JeetoBaz follows a clear and documented process from account registration to prize delivery. Every verified participant receives a unique ticket, and each winner is selected through the JeetoBaz automated random draw system.
           </Text>
 
-          <View style={[styles.worksSearchBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Search color={theme.subtle} size={20} />
-            <TextInput
-              value={worksQuery}
-              onChangeText={setWorksQuery}
-              placeholder="Search the process..."
-              placeholderTextColor={theme.subtle}
-              style={[styles.worksSearchInput, { color: theme.text }]}
-            />
+          <View style={styles.worksFlatList}>
+            {WORKS_STEPS.map((step, index) => (
+              <View
+                key={step.title}
+                style={[
+                  styles.worksFlatSection,
+                  { borderBottomColor: theme.border },
+                  index === WORKS_STEPS.length - 1 && styles.worksFlatSectionLast,
+                ]}
+              >
+                <Text selectable style={[styles.worksFlatTitle, { color: theme.gold }]}>{step.title}</Text>
+                <Text selectable style={[styles.worksFlatAnswer, { color: theme.muted }]}>{step.text}</Text>
+              </View>
+            ))}
           </View>
-
-          <View style={styles.worksList}>
-            {filteredWorksSteps.map((step) => {
-              const expanded = openWorksStep === step.title;
-              const Icon = step.icon;
-              return (
-                <View
-                  key={step.title}
-                  style={[styles.worksCard, { backgroundColor: theme.surface, borderColor: expanded ? theme.gold : theme.border }]}
-                >
-                  <TouchableOpacity
-                    style={styles.worksQuestionRow}
-                    onPress={() => setOpenWorksStep(expanded ? null : step.title)}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded }}
-                  >
-                    <View style={[styles.worksIconBox, { backgroundColor: theme.background }]}>
-                      <Icon color={step.iconColor} size={20} />
-                    </View>
-                    <Text style={[styles.worksQuestionText, { color: theme.gold, flex: 1 }]}>{step.title}</Text>
-                    {expanded ? (
-                      <ChevronDown color={theme.gold} size={21} />
-                    ) : (
-                      <ChevronRight color={theme.subtle} size={21} />
-                    )}
-                  </TouchableOpacity>
-                  {/*
-                    Always mounted, visibility toggled via `display` rather than
-                    conditionally rendering `null` -- see the same fix applied to the
-                    footer, FAQ, Terms, and Privacy pages: the static export always starts
-                    collapsed, so conditional mounting hid this section's real content from
-                    crawlers entirely.
-                  */}
-                  <View style={[styles.worksAnswerBox, { borderTopColor: theme.border }, !expanded && styles.worksAnswerBoxHidden]}>
-                    <Text selectable style={[styles.worksAnswerText, { color: theme.muted }]}>{step.text}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-
-          {filteredWorksSteps.length === 0 ? (
-            <View style={styles.worksEmpty}>
-              <Text style={[styles.worksEmptyTitle, { color: theme.gold }]}>No matching step found</Text>
-            </View>
-          ) : null}
 
           <View style={[styles.timelineSection, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <Text selectable style={[styles.timelineTitle, { color: theme.gold }]}>Draw Timeline</Text>
@@ -1612,6 +1561,11 @@ const styles = StyleSheet.create({
   worksAnswerText: { fontSize: 14, lineHeight: 22 },
   worksEmpty: { alignItems: 'center', padding: 30 },
   worksEmptyTitle: { fontSize: 16, fontWeight: '700' },
+  worksFlatList: { marginTop: 4 },
+  worksFlatSection: { borderBottomWidth: 1, paddingVertical: 24 },
+  worksFlatSectionLast: { borderBottomWidth: 0 },
+  worksFlatTitle: { fontSize: 22, fontWeight: '900', marginBottom: 10 },
+  worksFlatAnswer: { fontSize: 15, lineHeight: 24 },
   timelineSection: { borderWidth: 1, borderRadius: 18, padding: 18, marginTop: 22, alignItems: 'center' },
   timelineTitle: { fontSize: 19, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
   timelineNodeWrap: { alignItems: 'center', width: '100%' },
