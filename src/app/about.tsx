@@ -1405,7 +1405,7 @@ const styles = StyleSheet.create({
   worksEmpty: { alignItems: 'center', padding: 30 },
   worksEmptyTitle: { fontSize: 16, fontWeight: '700' },
   worksFlatList: { marginTop: 4 },
-  worksFlatSection: { borderBottomWidth: 1, paddingVertical: 24 },
+  worksFlatSection: { borderBottomWidth: 1, paddingVertical: 24, paddingHorizontal: 16 },
   worksFlatSectionLast: { borderBottomWidth: 0 },
   worksFlatTitle: { fontSize: 22, fontWeight: '900', marginBottom: 10 },
   worksFlatAnswer: { fontSize: 15, lineHeight: 24 },
