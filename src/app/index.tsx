@@ -1069,7 +1069,7 @@ export default function HomeScreen() {
               accessibilityLabel={`JeetoBaz featured offer ${activeAdIndex + 1} of ${homeAdImages.length}`}
               cachePolicy="disk"
               transition={180}
-              contentFit="cover"
+              contentFit="contain"
               style={styles.adBannerImage}
             />
           </FloatingView>
