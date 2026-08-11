@@ -2708,11 +2708,80 @@ export default function AdminScreen() {
     if (!query) return users;
 
     return users.filter((u) =>
-      [u.name, u.phone, u.email, u.member_number ? `JB-${u.member_number}` : null]
+      [u.name, u.phone, u.email, u.cnic, u.member_number ? `JB-${u.member_number}` : null]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(query))
     );
   }, [usersSearch, users]);
+
+  // Fraud signals, computed from data already loaded for the Users/Entries tabs -- no new
+  // fetch or migration needed. Small user/entry counts today make client-side grouping fine;
+  // revisit with a SQL view if the platform grows large enough for this to matter.
+  const duplicateCnicGroups = useMemo(() => {
+    const groups = new Map<string, User[]>();
+    for (const u of users) {
+      const key = u.cnic?.trim();
+      if (!key) continue;
+      const list = groups.get(key) || [];
+      list.push(u);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).filter(([, list]) => list.length > 1);
+  }, [users]);
+
+  const duplicateJazzcashGroups = useMemo(() => {
+    const groups = new Map<string, User[]>();
+    for (const u of users) {
+      const key = u.jazzcash_number?.trim();
+      if (!key) continue;
+      const list = groups.get(key) || [];
+      list.push(u);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).filter(([, list]) => list.length > 1);
+  }, [users]);
+
+  const duplicateDeviceGroups = useMemo(() => {
+    const groups = new Map<string, User[]>();
+    for (const u of users) {
+      const key = u.referral_device_token?.trim();
+      if (!key) continue;
+      const list = groups.get(key) || [];
+      list.push(u);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).filter(([, list]) => list.length > 1);
+  }, [users]);
+
+  const sameDrawMultiEntryGroups = useMemo(() => {
+    const phoneToCnic = new Map<string, string>();
+    for (const u of users) {
+      const cnic = u.cnic?.trim();
+      if (cnic) phoneToCnic.set(u.phone, cnic);
+    }
+    const groups = new Map<string, Entry[]>();
+    for (const e of entries) {
+      const cnic = phoneToCnic.get(e.phone);
+      if (!cnic) continue;
+      const key = `${e.product_id}::${cnic}`;
+      const list = groups.get(key) || [];
+      list.push(e);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries())
+      .filter(([, list]) => list.length > 1)
+      .map(([key, list]) => {
+        const [productId, cnic] = key.split('::');
+        return { productId, productName: products.find((p) => p.id === productId)?.name || 'Unknown draw', cnic, entries: list };
+      });
+  }, [users, entries, products]);
+
+  const totalFraudFlags = duplicateCnicGroups.length + duplicateJazzcashGroups.length + duplicateDeviceGroups.length + sameDrawMultiEntryGroups.length;
+
+  function jumpToUserInUsersTab(query: string) {
+    setActiveTab('users');
+    setUsersSearch(query);
+  }
 
   if (authLoading && !authenticated) return (
     <>
@@ -2798,19 +2867,20 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'draws', 'payments', 'wallet-topups', 'users', 'support', 'revenue', 'audit', 'settings'].map(tab => (
+        {['products', 'draws', 'payments', 'wallet-topups', 'users', 'fraud', 'support', 'revenue', 'audit', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             {tab === 'products' ? <Package color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'draws' ? <Trophy color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'payments' ? <ReceiptText color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'wallet-topups' ? <Wallet color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'users' ? <UsersRound color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
+              : tab === 'fraud' ? <TriangleAlert color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'support' ? <Mail color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'revenue' ? <DollarSign color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'audit' ? <History color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : <Settings color={activeTab === tab ? theme.gold : theme.subtle} size={19} />}
             <Text style={[styles.tabLabel, activeTab === tab && styles.activeTabText]}>
-              {tab === 'wallet-topups' ? 'Wallet Top-Ups' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'wallet-topups' ? 'Wallet Top-Ups' : tab === 'fraud' ? `Fraud${totalFraudFlags > 0 ? ` (${totalFraudFlags})` : ''}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -3671,6 +3741,97 @@ export default function AdminScreen() {
                 </View>
               );
             })}
+          </View>
+        )}
+
+        {activeTab === 'fraud' && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}><TriangleAlert color={theme.text} size={19} /><Text style={styles.sectionTitle}>Fraud Flags</Text></View>
+            <Text style={styles.settingHint}>
+              Automatic signals only — a match here doesn't prove wrongdoing (e.g. family members can legitimately
+              share a JazzCash account), but it's worth a manual look. Tap "Review in Users" to jump to that account
+              and ban it from there if needed.
+            </Text>
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionTitle}>Duplicate CNIC ({duplicateCnicGroups.length})</Text>
+            {duplicateCnicGroups.length === 0 ? (
+              <Text style={styles.emptyText}>No accounts share a CNIC.</Text>
+            ) : duplicateCnicGroups.map(([cnic, group]) => (
+              <View key={`cnic-${cnic}`} style={styles.verificationAdminCard}>
+                <View style={styles.verificationAdminContent}>
+                  <Text style={styles.userDate}>CNIC: {cnic} — {group.length} accounts</Text>
+                  {group.map((u) => (
+                    <View key={u.id} style={styles.inlineRow}>
+                      <Text style={styles.userName}>{u.name || 'Unknown'} ({u.phone})</Text>
+                      <TouchableOpacity style={styles.walletAdjustToggle} onPress={() => jumpToUserInUsersTab(cnic)}>
+                        <Text style={styles.walletAdjustToggleText}>Review in Users</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionTitle}>Duplicate JazzCash Number ({duplicateJazzcashGroups.length})</Text>
+            {duplicateJazzcashGroups.length === 0 ? (
+              <Text style={styles.emptyText}>No accounts share a JazzCash number.</Text>
+            ) : duplicateJazzcashGroups.map(([number, group]) => (
+              <View key={`jazzcash-${number}`} style={styles.verificationAdminCard}>
+                <View style={styles.verificationAdminContent}>
+                  <Text style={styles.userDate}>JazzCash: {number} — {group.length} accounts</Text>
+                  {group.map((u) => (
+                    <View key={u.id} style={styles.inlineRow}>
+                      <Text style={styles.userName}>{u.name || 'Unknown'} ({u.phone})</Text>
+                      <TouchableOpacity style={styles.walletAdjustToggle} onPress={() => jumpToUserInUsersTab(u.phone)}>
+                        <Text style={styles.walletAdjustToggleText}>Review in Users</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionTitle}>Duplicate Referral Device ({duplicateDeviceGroups.length})</Text>
+            {duplicateDeviceGroups.length === 0 ? (
+              <Text style={styles.emptyText}>No accounts were registered from the same referral device.</Text>
+            ) : duplicateDeviceGroups.map(([token, group]) => (
+              <View key={`device-${token}`} style={styles.verificationAdminCard}>
+                <View style={styles.verificationAdminContent}>
+                  <Text style={styles.userDate}>{group.length} accounts from one device</Text>
+                  {group.map((u) => (
+                    <View key={u.id} style={styles.inlineRow}>
+                      <Text style={styles.userName}>{u.name || 'Unknown'} ({u.phone})</Text>
+                      <TouchableOpacity style={styles.walletAdjustToggle} onPress={() => jumpToUserInUsersTab(u.phone)}>
+                        <Text style={styles.walletAdjustToggleText}>Review in Users</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionTitle}>Same Person, Multiple Entries in One Draw ({sameDrawMultiEntryGroups.length})</Text>
+            {sameDrawMultiEntryGroups.length === 0 ? (
+              <Text style={styles.emptyText}>No CNIC has more than one entry in the same draw.</Text>
+            ) : sameDrawMultiEntryGroups.map((group) => (
+              <View key={`${group.productId}-${group.cnic}`} style={styles.verificationAdminCard}>
+                <View style={styles.verificationAdminContent}>
+                  <Text style={styles.userDate}>{group.productName} — CNIC {group.cnic} — {group.entries.length} entries</Text>
+                  {group.entries.map((e) => (
+                    <View key={e.id} style={styles.inlineRow}>
+                      <Text style={styles.userName}>{e.name || 'Unknown'} ({e.phone})</Text>
+                      <TouchableOpacity style={styles.walletAdjustToggle} onPress={() => jumpToUserInUsersTab(e.phone)}>
+                        <Text style={styles.walletAdjustToggleText}>Review in Users</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
           </View>
         )}
 
