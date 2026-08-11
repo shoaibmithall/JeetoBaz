@@ -12,8 +12,9 @@ import {
   SUPPORT_PHONE_DISPLAY as SUPPORT_WHATSAPP,
   SUPPORT_WHATSAPP_LINK,
 } from '@/lib/contact-info';
+import { getContentPageSections, type ContentSection } from '@/lib/content-pages';
 
-const PRIVACY_FAQS = [
+export const PRIVACY_FAQS: ContentSection[] = [
   {
     category: 'Overview',
     question: 'Introduction',
@@ -458,13 +459,22 @@ const PRIVACY_FAQS = [
     answer:
       `For privacy questions, account-data requests, correction requests, account deletion or complaints, users may contact JeetoBaz through its official channels.\n\nBusiness Name: JeetoBaz\nSupport Email: ${SUPPORT_EMAIL}\nPrivacy Email: ${PRIVACY_EMAIL}\nPhone: ${SUPPORT_WHATSAPP.replace('+92 ', '0')}\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nUsers should not send passwords, OTPs or complete payment-card credentials by email, WhatsApp or support chat.`,
   },
-] as const;
+];
 
 export default function PrivacyScreen() {
   const [userName, setUserName] = useState('Not provided');
   const [userPhone, setUserPhone] = useState('Not provided');
+  const [sections, setSections] = useState<ContentSection[]>(PRIVACY_FAQS);
   const goBack = useSafeBack();
   const { theme } = useAppTheme();
+
+  useEffect(() => {
+    let active = true;
+    getContentPageSections('privacy').then(({ sections: overrideSections }) => {
+      if (active && overrideSections) setSections(overrideSections);
+    });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     Promise.all([getStoredValue('userName'), getStoredValue('userPhone')]).then(([name, phone]) => {
@@ -546,13 +556,13 @@ export default function PrivacyScreen() {
       </View>
 
       <View style={styles.list}>
-        {PRIVACY_FAQS.map((item, index) => (
+        {sections.map((item, index) => (
           <View
             key={item.question}
             style={[
               styles.section,
               { borderBottomColor: theme.border },
-              index === PRIVACY_FAQS.length - 1 && styles.sectionLast,
+              index === sections.length - 1 && styles.sectionLast,
             ]}
           >
             <Text style={[styles.sectionTitle, { color: theme.gold }]}>{index + 1}. {item.question}</Text>

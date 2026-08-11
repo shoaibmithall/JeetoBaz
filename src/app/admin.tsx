@@ -37,6 +37,18 @@ import {
   type NotificationTemplateKey,
 } from '@/lib/notification-templates';
 import {
+  CONTENT_PAGE_LABELS,
+  CONTENT_PAGE_SLUGS,
+  getContentPageSections,
+  saveContentPageSections,
+  type ContentPageSlug,
+  type ContentSection,
+} from '@/lib/content-pages';
+import { PRIVACY_FAQS } from './privacy';
+import { TERMS_FAQS } from './terms';
+import { REFUND_FAQS } from './refund-policy';
+import { SHIPPING_FAQS } from './shipping-policy';
+import {
   createVerificationDocument,
   deleteVerificationDocument,
   getAllVerificationDocuments,
@@ -111,6 +123,13 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 function formatAuditActionLabel(actionType: string) {
   return AUDIT_ACTION_LABELS[actionType] || actionType;
 }
+
+const CONTENT_PAGE_DEFAULTS: Record<ContentPageSlug, ContentSection[]> = {
+  privacy: PRIVACY_FAQS,
+  terms: TERMS_FAQS,
+  refund_policy: REFUND_FAQS,
+  shipping_policy: SHIPPING_FAQS,
+};
 
 function formatAuditDetails(details: Record<string, unknown>) {
   return Object.entries(details)
@@ -407,6 +426,10 @@ export default function AdminScreen() {
   });
   const [notificationTemplateSavingKey, setNotificationTemplateSavingKey] = useState<NotificationTemplateKey | null>(null);
   const [notificationTemplateSavedKey, setNotificationTemplateSavedKey] = useState<NotificationTemplateKey | null>(null);
+  const [contentPageSlug, setContentPageSlug] = useState<ContentPageSlug>('privacy');
+  const [contentPageDrafts, setContentPageDrafts] = useState<Record<ContentPageSlug, ContentSection[]>>({ ...CONTENT_PAGE_DEFAULTS });
+  const [contentPageSaving, setContentPageSaving] = useState(false);
+  const [contentPageSaved, setContentPageSaved] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
@@ -489,6 +512,7 @@ export default function AdminScreen() {
       loadDrawWindowHourSetting();
       loadPaymentAccountsSettings();
       loadNotificationTemplatesSettings();
+      loadContentPageSettings();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
       loadTestimonials();
@@ -1425,6 +1449,73 @@ export default function AdminScreen() {
       [key]: { title: NOTIFICATION_TEMPLATE_DEFAULTS[key].title, body: NOTIFICATION_TEMPLATE_DEFAULTS[key].body },
     }));
     void logAdminAction('settings_changed', null, { setting: 'notification_templates', template: key, reset: true });
+  }
+
+  async function loadContentPageSettings() {
+    const results = await Promise.all(
+      CONTENT_PAGE_SLUGS.map((slug) => getContentPageSections(slug).then((res) => [slug, res] as const)),
+    );
+    setContentPageDrafts((prev) => {
+      const next = { ...prev };
+      for (const [slug, res] of results) {
+        if (res.sections) next[slug] = res.sections;
+      }
+      return next;
+    });
+  }
+
+  function updateContentPageSectionField(index: number, field: keyof ContentSection, value: string) {
+    setContentPageDrafts((prev) => {
+      const pageSections = prev[contentPageSlug].slice();
+      pageSections[index] = { ...pageSections[index], [field]: value };
+      return { ...prev, [contentPageSlug]: pageSections };
+    });
+  }
+
+  function addContentPageSection() {
+    setContentPageDrafts((prev) => ({
+      ...prev,
+      [contentPageSlug]: [...prev[contentPageSlug], { category: '', question: '', answer: '' }],
+    }));
+  }
+
+  function removeContentPageSection(index: number) {
+    setContentPageDrafts((prev) => ({
+      ...prev,
+      [contentPageSlug]: prev[contentPageSlug].filter((_, i) => i !== index),
+    }));
+  }
+
+  async function saveContentPageSettings() {
+    const pageSections = contentPageDrafts[contentPageSlug];
+    if (pageSections.some((s) => !s.question.trim() || !s.answer.trim())) {
+      alert('Every section needs at least a title and body text.');
+      return;
+    }
+    setContentPageSaving(true);
+    const { sections, error } = await saveContentPageSections(contentPageSlug, pageSections);
+    setContentPageSaving(false);
+    if (error) {
+      alert('Content page could not be saved. Error: ' + error.message);
+      return;
+    }
+    setContentPageDrafts((prev) => ({ ...prev, [contentPageSlug]: sections }));
+    setContentPageSaved(true);
+    setTimeout(() => setContentPageSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'content_page', page: contentPageSlug });
+  }
+
+  async function resetContentPageSettings() {
+    const defaults = CONTENT_PAGE_DEFAULTS[contentPageSlug];
+    setContentPageSaving(true);
+    const { sections, error } = await saveContentPageSections(contentPageSlug, defaults);
+    setContentPageSaving(false);
+    if (error) {
+      alert('Content page could not be reset. Error: ' + error.message);
+      return;
+    }
+    setContentPageDrafts((prev) => ({ ...prev, [contentPageSlug]: sections }));
+    void logAdminAction('settings_changed', null, { setting: 'content_page', page: contentPageSlug, reset: true });
   }
 
   async function loadTrustBadgesSettings() {
@@ -4203,6 +4294,74 @@ export default function AdminScreen() {
                 );
               })}
             </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Content Pages</Text></View>
+            <Text style={styles.settingHint}>
+              Edit the section-by-section wording of the Privacy Policy, Terms & Conditions, Refund Policy, and Shipping
+              Policy pages. Changes here go live immediately on the public page.
+            </Text>
+            <View style={styles.categoryChipsWrap}>
+              {CONTENT_PAGE_SLUGS.map((slug) => (
+                <TouchableOpacity
+                  key={slug}
+                  style={[styles.categoryChip, contentPageSlug === slug && styles.categoryChipActive]}
+                  onPress={() => setContentPageSlug(slug)}
+                >
+                  <Text style={[styles.categoryChipText, contentPageSlug === slug && styles.categoryChipTextActive]}>
+                    {CONTENT_PAGE_LABELS[slug]}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.verificationList}>
+              {contentPageDrafts[contentPageSlug].map((section, index) => (
+                <View key={`${contentPageSlug}-${index}`} style={styles.verificationAdminCard}>
+                  <View style={styles.verificationAdminContent}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Category (groups sections together, e.g. Overview)"
+                      placeholderTextColor="#666"
+                      value={section.category}
+                      onChangeText={(value) => updateContentPageSectionField(index, 'category', value)}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Section title"
+                      placeholderTextColor="#666"
+                      value={section.question}
+                      onChangeText={(value) => updateContentPageSectionField(index, 'question', value)}
+                    />
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      placeholder="Section body text"
+                      placeholderTextColor="#666"
+                      value={section.answer}
+                      onChangeText={(value) => updateContentPageSectionField(index, 'answer', value)}
+                      multiline
+                      numberOfLines={4}
+                    />
+                    <TouchableOpacity style={styles.deleteWideButton} onPress={() => removeContentPageSection(index)}>
+                      <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Remove Section</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity style={[styles.addButton, styles.settingsHalfButton]} onPress={saveContentPageSettings} disabled={contentPageSaving}>
+                {contentPageSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+                <Text style={styles.addButtonText}>{contentPageSaving ? 'Saving...' : contentPageSaved ? 'Saved!' : `Save ${CONTENT_PAGE_LABELS[contentPageSlug]}`}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.photoUploadButton, styles.settingsHalfButton]} onPress={addContentPageSection}>
+                <Plus color="#4a9eff" size={18} />
+                <Text style={styles.photoUploadText}>Add Section</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.deleteWideButton} onPress={resetContentPageSettings} disabled={contentPageSaving}>
+              <Text style={styles.deleteWideButtonText}>Reset {CONTENT_PAGE_LABELS[contentPageSlug]} to Default</Text>
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
