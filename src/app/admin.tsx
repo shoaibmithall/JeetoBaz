@@ -75,7 +75,9 @@ const WINNER_STATUS_LABELS: Record<WinnerStatus, string> = {
 };
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
-  product_deleted: 'Product deleted',
+  product_deleted: 'Product moved to Recycle Bin',
+  product_restored: 'Product restored from Recycle Bin',
+  product_permanently_deleted: 'Product permanently deleted',
   product_edited: 'Product price/fee/date edited',
   product_status_changed: 'Product status changed',
   prize_status_updated: 'Prize delivery status updated',
@@ -270,6 +272,9 @@ export default function AdminScreen() {
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
+  const [deletedProducts, setDeletedProducts] = useState<Product[]>([]);
+  const [recycleBinExpanded, setRecycleBinExpanded] = useState(false);
+  const [recycleBinProcessingId, setRecycleBinProcessingId] = useState<string | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [drawsSearch, setDrawsSearch] = useState('');
   const [paymentsSearch, setPaymentsSearch] = useState('');
@@ -498,7 +503,10 @@ export default function AdminScreen() {
 
   async function fetchProducts() {
     const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-    if (data) setProducts(data);
+    if (data) {
+      setProducts(data.filter((p) => !p.is_deleted));
+      setDeletedProducts(data.filter((p) => p.is_deleted));
+    }
     await fetchDrawSessionStates();
   }
 
@@ -932,11 +940,41 @@ export default function AdminScreen() {
   }
 
   async function deleteProduct(id: string) {
-    const confirmed = await confirmAsync('Delete', 'Delete this product?');
+    const confirmed = await confirmAsync('Delete', 'Move this product to the Recycle Bin? It will disappear from the site but can be restored from Recycle Bin below.');
     if (!confirmed) return;
     const deletedProduct = products.find((p) => p.id === id);
-    await supabase.from('products').delete().eq('id', id);
+    const { error } = await supabase.from('products').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+      alert('Delete failed: ' + error.message);
+      return;
+    }
     void logAdminAction('product_deleted', id, { name: deletedProduct?.name });
+    fetchProducts();
+  }
+
+  async function restoreProduct(product: Product) {
+    setRecycleBinProcessingId(product.id);
+    const { error } = await supabase.from('products').update({ is_deleted: false, deleted_at: null }).eq('id', product.id);
+    setRecycleBinProcessingId(null);
+    if (error) {
+      alert('Restore failed: ' + error.message);
+      return;
+    }
+    void logAdminAction('product_restored', product.id, { name: product.name });
+    fetchProducts();
+  }
+
+  async function permanentlyDeleteProduct(product: Product) {
+    const confirmed = await confirmAsync('Delete Permanently', `Permanently delete "${product.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+    setRecycleBinProcessingId(product.id);
+    const { error } = await supabase.from('products').delete().eq('id', product.id);
+    setRecycleBinProcessingId(null);
+    if (error) {
+      alert('Permanent delete failed: ' + error.message);
+      return;
+    }
+    void logAdminAction('product_permanently_deleted', product.id, { name: product.name });
     fetchProducts();
   }
 
@@ -2702,6 +2740,48 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.walletAdjustToggle} onPress={() => setRecycleBinExpanded((v) => !v)}>
+              <Text style={styles.walletAdjustToggleText}>
+                {recycleBinExpanded ? 'Hide' : 'Show'} Recycle Bin ({deletedProducts.length})
+              </Text>
+            </TouchableOpacity>
+            {recycleBinExpanded && (
+              <View style={{ marginTop: 10 }}>
+                {deletedProducts.length === 0 ? (
+                  <Text style={styles.emptyText}>Recycle Bin is empty.</Text>
+                ) : (
+                  deletedProducts.map((p) => (
+                    <View key={p.id} style={styles.paymentCard}>
+                      <View style={styles.productHeader}>
+                        <Text style={styles.productName}>{p.name}</Text>
+                        <Text style={styles.paymentStatus}>Deleted</Text>
+                      </View>
+                      <Text style={styles.paymentLine}>Deleted: {p.deleted_at ? new Date(p.deleted_at).toLocaleString() : 'Unknown'}</Text>
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={styles.approveButton}
+                          onPress={() => restoreProduct(p)}
+                          disabled={recycleBinProcessingId === p.id}
+                        >
+                          <Check color="white" size={16} />
+                          <Text style={styles.approveButtonText}>{recycleBinProcessingId === p.id ? 'Working...' : 'Restore'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.rejectButton}
+                          onPress={() => permanentlyDeleteProduct(p)}
+                          disabled={recycleBinProcessingId === p.id}
+                        >
+                          <Trash2 color="#ff4444" size={16} />
+                          <Text style={styles.rejectButtonText}>Delete Permanently</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
           </View>
         )}
 
