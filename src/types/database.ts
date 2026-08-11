@@ -143,6 +143,10 @@ export type User = {
   member_number: number;
   // Added 2026-08-04 (Settings Phase 4): per-category opt-in/out, defaults to all-true in the DB.
   notification_preferences: NotificationPreferences;
+  // Added 2026-08-11 (Phase 3): admin ban/suspend. Defaults to false/null for every existing row.
+  is_banned: boolean;
+  ban_reason?: string | null;
+  banned_at?: string | null;
 };
 
 export type UserProfileDetails = {
