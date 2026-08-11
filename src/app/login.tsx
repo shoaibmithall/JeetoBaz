@@ -49,6 +49,9 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { theme, mode, toggleThemeMode } = useAppTheme();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [supportModalKind, setSupportModalKind] = useState<'feedback' | 'problem' | null>(null);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
   const [personalInfoExpanded, setPersonalInfoExpanded] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [notificationPreferenceSaving, setNotificationPreferenceSaving] = useState<keyof NotificationPreferences | null>(null);
@@ -282,28 +285,57 @@ export default function ProfileScreen() {
     setWalletBalance(walletRow?.balance ?? 0);
   }
 
-  async function sendFeedback() {
-    const subject = encodeURIComponent('JeetoBaz Feedback');
+  function openSupportModal(kind: 'feedback' | 'problem') {
+    setSupportMessage('');
+    setSupportModalKind(kind);
+  }
+
+  async function sendSupportViaEmail(kind: 'feedback' | 'problem', message: string) {
+    const subject = encodeURIComponent(kind === 'feedback' ? 'JeetoBaz Feedback' : '[Problem Report] JeetoBaz');
     const body = encodeURIComponent(
-      `Hi JeetoBaz team,\n\nMy feedback:\n\n\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
+      kind === 'feedback'
+        ? `Hi JeetoBaz team,\n\nMy feedback:\n\n${message}\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
+        : `Hi JeetoBaz team,\n\nI'd like to report a problem:\n\n${message}\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
     );
     try {
       await Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
     } catch {
-      alert(`Unable to open email. Please email your feedback to ${SUPPORT_EMAIL}.`);
+      alert(`Unable to open email. Please email us at ${SUPPORT_EMAIL}.`);
     }
   }
 
-  async function reportProblem() {
-    const subject = encodeURIComponent('[Problem Report] JeetoBaz');
-    const body = encodeURIComponent(
-      `Hi JeetoBaz team,\n\nI'd like to report a problem:\n\nWhat happened:\n\n\nWhere (page/screen):\n\n\nName: ${name || 'Not provided'}\nPhone: ${phone || 'Not provided'}`
-    );
-    try {
-      await Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
-    } catch {
-      alert(`Unable to open email. Please email your problem report to ${SUPPORT_EMAIL}.`);
+  async function submitSupportTicket() {
+    if (!supportModalKind) return;
+    const message = supportMessage.trim();
+    if (!message) {
+      alert('Please describe your feedback or problem before sending.');
+      return;
     }
+
+    setSupportSubmitting(true);
+    const { error } = await supabase.from('support_tickets').insert({
+      phone: phone || null,
+      name: name || null,
+      subject: supportModalKind === 'feedback' ? 'JeetoBaz Feedback' : '[Problem Report] JeetoBaz',
+      message,
+      kind: supportModalKind,
+    });
+    setSupportSubmitting(false);
+
+    if (error) {
+      await sendSupportViaEmail(supportModalKind, message);
+      setSupportModalKind(null);
+      return;
+    }
+
+    setSupportModalKind(null);
+    alert('Thanks! Your message has been sent to the JeetoBaz team.');
+  }
+
+  async function sendSupportTicketByEmailInstead() {
+    if (!supportModalKind) return;
+    await sendSupportViaEmail(supportModalKind, supportMessage.trim());
+    setSupportModalKind(null);
   }
 
   async function shareJeetoBaz() {
@@ -1144,12 +1176,12 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Share JeetoBaz</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void sendFeedback(); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); openSupportModal('feedback'); }}>
               <MessageSquare color="#F97316" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Send Feedback</Text>
               <ChevronRight color={theme.subtle} size={18} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); void reportProblem(); }}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => { setSettingsVisible(false); openSupportModal('problem'); }}>
               <Flag color="#EF4444" size={20} />
               <Text style={[styles.settingsItemText, { color: theme.text }]}>Report a Problem</Text>
               <ChevronRight color={theme.subtle} size={18} />
@@ -1183,6 +1215,47 @@ export default function ProfileScreen() {
               <Text style={[styles.settingsItemText, { color: '#ff4444' }]}>Logout</Text>
             </TouchableOpacity>
           </ScrollView>
+        </View>
+      </View>
+    </Modal>
+
+    <Modal visible={!!supportModalKind} transparent animationType="fade" onRequestClose={() => setSupportModalKind(null)}>
+      <View style={styles.supportModalBackdrop}>
+        <View style={[styles.supportModalCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.supportModalTitle, { color: theme.gold }]}>
+            {supportModalKind === 'problem' ? 'Report a Problem' : 'Send Feedback'}
+          </Text>
+          <Text style={[styles.supportModalHint, { color: theme.muted }]}>
+            {supportModalKind === 'problem'
+              ? 'Tell us what happened and which screen it was on.'
+              : 'Tell us what you think — we read every message.'}
+          </Text>
+          <TextInput
+            style={[styles.supportModalInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
+            placeholder={supportModalKind === 'problem' ? 'What went wrong?' : 'Your feedback...'}
+            placeholderTextColor="#666"
+            value={supportMessage}
+            onChangeText={setSupportMessage}
+            multiline
+            numberOfLines={5}
+          />
+          <TouchableOpacity
+            style={[styles.primaryButton, supportSubmitting && styles.buttonDisabled]}
+            onPress={submitSupportTicket}
+            disabled={supportSubmitting}
+          >
+            {supportSubmitting ? (
+              <ActivityIndicator color="#000" size="small" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Send</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={sendSupportTicketByEmailInstead}>
+            <Text style={[styles.supportModalEmailLink, { color: theme.subtle }]}>Email us instead</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setSupportModalKind(null)}>
+            <Text style={[styles.supportModalCancel, { color: theme.subtle }]}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -1378,6 +1451,14 @@ const styles = StyleSheet.create({
   primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 16 },
   buttonDisabled: { backgroundColor: '#555' },
   primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
+
+  supportModalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  supportModalCard: { width: '100%', maxWidth: 420, borderRadius: 16, borderWidth: 1, padding: 22 },
+  supportModalTitle: { fontSize: 19, fontWeight: '800', marginBottom: 6 },
+  supportModalHint: { fontSize: 13, marginBottom: 14 },
+  supportModalInput: { borderWidth: 1, borderRadius: 10, padding: 14, fontSize: 14, minHeight: 110, textAlignVertical: 'top', marginBottom: 14 },
+  supportModalEmailLink: { fontSize: 13, textAlign: 'center', marginBottom: 10, textDecorationLine: 'underline' },
+  supportModalCancel: { fontSize: 13, textAlign: 'center' },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 12 },
   dividerLine: { flex: 1, height: 1 },

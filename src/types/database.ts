@@ -192,6 +192,22 @@ export type Transaction = {
   user_id?: string | null;
 };
 
+export type SupportTicketKind = 'feedback' | 'problem';
+export type SupportTicketStatus = 'open' | 'resolved';
+
+export type SupportTicket = {
+  id: string;
+  phone: string | null;
+  name: string | null;
+  subject: string;
+  message: string;
+  kind: SupportTicketKind;
+  status: SupportTicketStatus;
+  admin_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
 export type RefundRequestStatus = 'pending' | 'approved' | 'rejected';
 
 export type RefundRequest = {
@@ -453,6 +469,11 @@ export type Database = {
         RefundRequest,
         Pick<RefundRequest, 'transaction_id' | 'phone' | 'amount'> & Partial<Pick<RefundRequest, 'reason'>>,
         Partial<Pick<RefundRequest, 'status' | 'admin_note' | 'resolved_at'>>
+      >;
+      support_tickets: Table<
+        SupportTicket,
+        Pick<SupportTicket, 'subject' | 'message'> & Partial<Pick<SupportTicket, 'phone' | 'name' | 'kind'>>,
+        Partial<Pick<SupportTicket, 'status' | 'admin_note' | 'resolved_at'>>
       >;
       verification_documents: Table<
         VerificationDocument,
