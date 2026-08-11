@@ -118,6 +118,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   refund_rejected: 'Refund rejected',
   settings_changed: 'Settings changed',
   notification_sent: 'Notification sent to all users',
+  user_banned: 'User banned',
+  user_unbanned: 'User unbanned',
 };
 
 function formatAuditActionLabel(actionType: string) {
@@ -366,6 +368,9 @@ export default function AdminScreen() {
   const [refundFormExpandedPhone, setRefundFormExpandedPhone] = useState<string | null>(null);
   const [refundDrafts, setRefundDrafts] = useState<Record<string, { transactionId: string; reason: string }>>({});
   const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [banFormExpandedPhone, setBanFormExpandedPhone] = useState<string | null>(null);
+  const [banReasonDrafts, setBanReasonDrafts] = useState<Record<string, string>>({});
+  const [banSaving, setBanSaving] = useState<string | null>(null);
   const [refundResolvingId, setRefundResolvingId] = useState<string | null>(null);
   const [walletAdjustSaving, setWalletAdjustSaving] = useState<string | null>(null);
   const [usersSearch, setUsersSearch] = useState('');
@@ -2500,6 +2505,51 @@ export default function AdminScreen() {
     alert('Refund request logged as pending.');
   }
 
+  async function banUser(user: User) {
+    const reason = (banReasonDrafts[user.phone] || '').trim();
+    const confirmed = await confirmAsync(
+      'Ban User',
+      `Ban ${user.name || user.phone}? They will no longer be able to submit new payments or wallet top-ups.`
+    );
+    if (!confirmed) return;
+
+    setBanSaving(user.id);
+    const { error } = await supabase
+      .from('users')
+      .update({ is_banned: true, ban_reason: reason || null, banned_at: new Date().toISOString() })
+      .eq('id', user.id);
+    setBanSaving(null);
+
+    if (error) {
+      alert('Could not ban user: ' + error.message);
+      return;
+    }
+
+    setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, is_banned: true, ban_reason: reason || null, banned_at: new Date().toISOString() } : u)));
+    setBanFormExpandedPhone(null);
+    void logAdminAction('user_banned', user.id, { phone: user.phone, reason: reason || undefined });
+  }
+
+  async function unbanUser(user: User) {
+    const confirmed = await confirmAsync('Unban User', `Unban ${user.name || user.phone}? They will be able to submit payments and top-ups again.`);
+    if (!confirmed) return;
+
+    setBanSaving(user.id);
+    const { error } = await supabase
+      .from('users')
+      .update({ is_banned: false, ban_reason: null, banned_at: null })
+      .eq('id', user.id);
+    setBanSaving(null);
+
+    if (error) {
+      alert('Could not unban user: ' + error.message);
+      return;
+    }
+
+    setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, is_banned: false, ban_reason: null, banned_at: null } : u)));
+    void logAdminAction('user_unbanned', user.id, { phone: user.phone });
+  }
+
   async function approveRefundRequest(request: RefundRequest) {
     const confirmed = await confirmAsync('Approve Refund', `Credit Rs. ${request.amount} to this user's wallet as a refund?`);
     if (!confirmed) return;
@@ -3472,8 +3522,17 @@ export default function AdminScreen() {
               const walletDraft = getWalletAdjustDraft(u.phone);
               return (
                 <View key={u.id} style={styles.userCard}>
-                  <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
+                  <View style={styles.productHeader}>
+                    <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
+                    {u.is_banned && (
+                      <View style={[styles.statusBadge, styles.rejectedBadge]}>
+                        <Circle color={theme.danger} size={8} fill={theme.danger} />
+                        <Text style={styles.statusText}>Banned</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.userPhone}>{u.phone}</Text>
+                  {u.is_banned && u.ban_reason && <Text style={styles.userDate}>Ban reason: {u.ban_reason}</Text>}
                   {u.email && <Text style={styles.userDate}>Email: {u.email}</Text>}
                   {u.cnic && <Text style={styles.userDate}>CNIC: {u.cnic}</Text>}
                   {u.jazzcash_number && <Text style={styles.userDate}>JazzCash: {u.jazzcash_number}</Text>}
@@ -3579,6 +3638,34 @@ export default function AdminScreen() {
                       </>
                     );
                   })()}
+                  {u.is_banned ? (
+                    <TouchableOpacity style={styles.deleteWideButton} onPress={() => unbanUser(u)} disabled={banSaving === u.id}>
+                      <Text style={styles.deleteWideButtonText}>{banSaving === u.id ? 'Saving...' : 'Unban User'}</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.walletAdjustToggle}
+                        onPress={() => setBanFormExpandedPhone(banFormExpandedPhone === u.phone ? null : u.phone)}
+                      >
+                        <Text style={styles.walletAdjustToggleText}>{banFormExpandedPhone === u.phone ? 'Cancel' : 'Ban User'}</Text>
+                      </TouchableOpacity>
+                      {banFormExpandedPhone === u.phone && (
+                        <View style={styles.walletAdjustForm}>
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Ban reason — optional (visible to admins only)"
+                            placeholderTextColor="#666"
+                            value={banReasonDrafts[u.phone] || ''}
+                            onChangeText={(text) => setBanReasonDrafts((prev) => ({ ...prev, [u.phone]: text }))}
+                          />
+                          <TouchableOpacity style={styles.deleteWideButton} onPress={() => banUser(u)} disabled={banSaving === u.id}>
+                            <Text style={styles.deleteWideButtonText}>{banSaving === u.id ? 'Saving...' : 'Confirm Ban'}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </>
+                  )}
                 </View>
               );
             })}

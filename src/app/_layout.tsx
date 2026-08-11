@@ -12,6 +12,7 @@ import { PromoEntryInterstitial } from '@/components/promo-entry-interstitial';
 import { FirstVisitSignupPrompt } from '@/components/first-visit-signup-prompt';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { UpdateAvailableBanner } from '@/components/update-available-banner';
+import { BannedAccountNotice } from '@/components/banned-account-notice';
 
 export default function RootLayout() {
   const { t } = useLanguage();
@@ -163,6 +164,7 @@ export default function RootLayout() {
       <FirstVisitSignupPrompt />
       <CookieConsentBanner />
       <UpdateAvailableBanner />
+      <BannedAccountNotice />
     </>
     </AuthProvider>
   );
