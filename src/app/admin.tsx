@@ -51,7 +51,7 @@ import {
   resolveBlogCover,
   updateBlogPost,
 } from '@/lib/blog';
-import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
+import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, RefundRequest, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 import { PRODUCT_CATEGORIES } from '@/lib/product-categories';
 import { downloadCsv } from '@/lib/csv-export';
@@ -86,6 +86,9 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   wallet_topup_rejected: 'Wallet top-up rejected',
   wallet_balance_adjusted: 'Wallet balance adjusted',
   draw_run: 'Draw run',
+  refund_requested: 'Refund requested',
+  refund_approved: 'Refund approved',
+  refund_rejected: 'Refund rejected',
 };
 
 function formatAuditActionLabel(actionType: string) {
@@ -277,6 +280,11 @@ export default function AdminScreen() {
   const [walletBalances, setWalletBalances] = useState<Record<string, number>>({});
   const [walletAdjustExpandedPhone, setWalletAdjustExpandedPhone] = useState<string | null>(null);
   const [walletAdjustDrafts, setWalletAdjustDrafts] = useState<Record<string, { amount: string; type: WalletTransactionType; reason: string }>>({});
+  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [refundFormExpandedPhone, setRefundFormExpandedPhone] = useState<string | null>(null);
+  const [refundDrafts, setRefundDrafts] = useState<Record<string, { transactionId: string; reason: string }>>({});
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [refundResolvingId, setRefundResolvingId] = useState<string | null>(null);
   const [walletAdjustSaving, setWalletAdjustSaving] = useState<string | null>(null);
   const [usersSearch, setUsersSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
@@ -394,6 +402,7 @@ export default function AdminScreen() {
       fetchTransactions();
       fetchWalletTopupRequests();
       fetchWalletBalances();
+      fetchRefundRequests();
       fetchDrawResults();
       fetchAuditLog();
       loadAnnouncement();
@@ -2111,6 +2120,121 @@ export default function AdminScreen() {
     alert(`Wallet updated. New balance: Rs. ${rpcResult.new_balance}`);
   }
 
+  async function fetchRefundRequests() {
+    const { data } = await supabase.from('refund_requests').select('*').order('created_at', { ascending: false });
+    if (data) setRefundRequests(data);
+  }
+
+  function getRefundDraft(phone: string) {
+    return refundDrafts[phone] || { transactionId: '', reason: '' };
+  }
+
+  async function submitRefundRequest(phone: string) {
+    const draft = getRefundDraft(phone);
+    if (!draft.transactionId) {
+      alert('Select which payment this refund is for.');
+      return;
+    }
+    const txn = transactions.find((t) => t.id === draft.transactionId);
+    if (!txn) {
+      alert('That payment could not be found. Try refreshing the page.');
+      return;
+    }
+
+    const confirmed = await confirmAsync(
+      'Log Refund Request',
+      `Log a refund request for Rs. ${txn.amount} against this payment? This does not credit the wallet yet -- you'll approve or reject it from the Refund Requests list.`
+    );
+    if (!confirmed) return;
+
+    setRefundSubmitting(true);
+    const { error } = await supabase.from('refund_requests').insert({
+      transaction_id: txn.id,
+      phone,
+      amount: txn.amount,
+      reason: draft.reason.trim() || null,
+    });
+    setRefundSubmitting(false);
+
+    if (error) {
+      alert('Could not log refund request: ' + error.message);
+      return;
+    }
+
+    setRefundDrafts((prev) => ({ ...prev, [phone]: { transactionId: '', reason: '' } }));
+    setRefundFormExpandedPhone(null);
+    void logAdminAction('refund_requested', txn.id, { phone, amount: txn.amount, reason: draft.reason.trim() || undefined });
+    await fetchRefundRequests();
+    alert('Refund request logged as pending.');
+  }
+
+  async function approveRefundRequest(request: RefundRequest) {
+    const confirmed = await confirmAsync('Approve Refund', `Credit Rs. ${request.amount} to this user's wallet as a refund?`);
+    if (!confirmed) return;
+
+    setRefundResolvingId(request.id);
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('adjust_wallet_balance_atomic', {
+        p_phone: request.phone,
+        p_amount: request.amount,
+        p_type: 'refund' as WalletTransactionType,
+        p_reference: request.reason || `Refund for transaction ${request.transaction_id}`,
+      })
+      .single();
+
+    if (rpcError || !rpcResult?.ok) {
+      setRefundResolvingId(null);
+      alert('Refund failed: ' + (rpcError?.message || rpcResult?.error || 'Unknown error.'));
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from('refund_requests')
+      .update({ status: 'approved', resolved_at: new Date().toISOString() })
+      .eq('id', request.id);
+    setRefundResolvingId(null);
+
+    if (updateError) {
+      alert('Wallet was credited, but the refund request could not be marked approved: ' + updateError.message);
+    }
+
+    setWalletBalances((prev) => ({ ...prev, [request.phone]: rpcResult.new_balance ?? prev[request.phone] ?? 0 }));
+    await createUserNotification({
+      title: 'Refund approved',
+      body: `Rs. ${request.amount} has been refunded to your JeetoBaz wallet.`,
+      targetPhone: request.phone,
+      kind: 'payment-confirmed',
+    });
+    void logAdminAction('refund_approved', request.id, { phone: request.phone, amount: request.amount, new_balance: rpcResult.new_balance });
+    await fetchRefundRequests();
+  }
+
+  async function rejectRefundRequest(request: RefundRequest) {
+    const confirmed = await confirmAsync('Reject Refund', 'Reject this refund request? No wallet credit will be made.');
+    if (!confirmed) return;
+
+    setRefundResolvingId(request.id);
+    const { error } = await supabase
+      .from('refund_requests')
+      .update({ status: 'rejected', resolved_at: new Date().toISOString() })
+      .eq('id', request.id);
+    setRefundResolvingId(null);
+
+    if (error) {
+      alert('Could not reject refund request: ' + error.message);
+      return;
+    }
+
+    await createUserNotification({
+      title: 'Refund request declined',
+      body: `Your refund request could not be approved. Please contact support if you have questions.`,
+      targetPhone: request.phone,
+      kind: 'payment-rejected',
+    });
+    void logAdminAction('refund_rejected', request.id, { phone: request.phone, amount: request.amount });
+    await fetchRefundRequests();
+  }
+
   const totalRevenue = products.reduce((sum, p) => sum + ((p.current_entries || 0) * (p.entry_fee || 1)), 0);
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
@@ -2638,6 +2762,43 @@ export default function AdminScreen() {
               <Download color="#4a9eff" size={16} />
               <Text style={styles.photoUploadText}>Export All Payments CSV ({transactions.length} total)</Text>
             </TouchableOpacity>
+
+            <View style={styles.divider} />
+            <View style={styles.sectionTitleRow}>
+              <ReceiptText color={theme.text} size={19} />
+              <Text style={styles.sectionTitle}>Refund Requests ({refundRequests.filter((r) => r.status === 'pending').length} pending)</Text>
+            </View>
+            {refundRequests.length === 0 ? (
+              <Text style={styles.emptyText}>No refund requests logged yet. Log one from a user's card on the Users tab.</Text>
+            ) : (
+              refundRequests.map((request) => (
+                <View key={request.id} style={styles.paymentCard}>
+                  <View style={styles.productHeader}>
+                    <Text style={styles.productName}>Rs. {request.amount} — {request.phone}</Text>
+                    <View style={[
+                      styles.statusBadge,
+                      request.status === 'approved' ? styles.activeBadge : request.status === 'rejected' ? styles.rejectedBadge : styles.pendingBadge,
+                    ]}>
+                      <Text style={styles.statusText}>{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</Text>
+                    </View>
+                  </View>
+                  {request.reason && <Text style={styles.paymentLine}>Reason: {request.reason}</Text>}
+                  <Text style={styles.paymentLine}>Logged: {new Date(request.created_at).toLocaleString()}</Text>
+                  {request.status === 'pending' && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity style={styles.approveButton} onPress={() => approveRefundRequest(request)} disabled={refundResolvingId === request.id}>
+                        <Check color="white" size={16} /><Text style={styles.approveButtonText}>{refundResolvingId === request.id ? 'Working...' : 'Approve & Credit Wallet'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.rejectButton} onPress={() => rejectRefundRequest(request)} disabled={refundResolvingId === request.id}>
+                        <X color="#ff4444" size={16} /><Text style={styles.rejectButtonText}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ))
+            )}
+            <View style={styles.divider} />
+
             {pendingPayments.length > 0 && (
               <View style={styles.productSearchBox}>
                 <Search color={theme.muted} size={20} />
@@ -2926,6 +3087,53 @@ export default function AdminScreen() {
                       </TouchableOpacity>
                     </View>
                   )}
+                  {(() => {
+                    const refundExpanded = refundFormExpandedPhone === u.phone;
+                    const refundDraft = getRefundDraft(u.phone);
+                    const approvedTxns = transactions.filter((t) => t.phone === u.phone && t.status === 'approved');
+                    return (
+                      <>
+                        <TouchableOpacity
+                          style={styles.walletAdjustToggle}
+                          onPress={() => setRefundFormExpandedPhone(refundExpanded ? null : u.phone)}
+                        >
+                          <Text style={styles.walletAdjustToggleText}>{refundExpanded ? 'Cancel' : 'Request Refund'}</Text>
+                        </TouchableOpacity>
+                        {refundExpanded && (
+                          <View style={styles.walletAdjustForm}>
+                            {approvedTxns.length === 0 ? (
+                              <Text style={styles.emptyText}>No approved payments found for this user to refund.</Text>
+                            ) : (
+                              approvedTxns.map((txn) => (
+                                <TouchableOpacity
+                                  key={txn.id}
+                                  style={[styles.statusBadge, refundDraft.transactionId === txn.id ? styles.activeBadge : styles.completedBadge]}
+                                  onPress={() => setRefundDrafts((prev) => ({ ...prev, [u.phone]: { ...refundDraft, transactionId: txn.id } }))}
+                                >
+                                  <Text style={styles.tabLabel}>Rs. {txn.amount} — {new Date(txn.created_at).toLocaleDateString()}</Text>
+                                </TouchableOpacity>
+                              ))
+                            )}
+                            <TextInput
+                              style={styles.input}
+                              placeholder="Reason for refund"
+                              placeholderTextColor="#666"
+                              value={refundDraft.reason}
+                              onChangeText={(text) => setRefundDrafts((prev) => ({ ...prev, [u.phone]: { ...refundDraft, reason: text } }))}
+                            />
+                            <TouchableOpacity
+                              style={styles.approveButton}
+                              onPress={() => submitRefundRequest(u.phone)}
+                              disabled={refundSubmitting || approvedTxns.length === 0}
+                            >
+                              <ReceiptText color="white" size={16} />
+                              <Text style={styles.approveButtonText}>{refundSubmitting ? 'Logging...' : 'Log Refund Request'}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </>
+                    );
+                  })()}
                 </View>
               );
             })}
@@ -3664,6 +3872,8 @@ function createStyles(theme: AdminTheme) {
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 },
   activeBadge: { backgroundColor: theme.primarySoft },
   completedBadge: { backgroundColor: theme.goldSoft },
+  pendingBadge: { backgroundColor: '#F59E0B33' },
+  rejectedBadge: { backgroundColor: '#ff444433' },
   statusText: { fontSize: 12, fontWeight: 'bold', color: theme.primary },
   description: { color: theme.muted, fontSize: 13, marginBottom: 6, fontStyle: 'italic' },
   drawDateText: { color: theme.info, fontSize: 13, marginBottom: 6 },
