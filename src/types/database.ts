@@ -34,6 +34,10 @@ export type Entry = {
   transaction_id?: string | null;
   entry_source?: string;
   referral_reward_id?: string | null;
+  // Added 2026-08-11 (Phase 3): admin can exclude a specific entry from the winner pool before a
+  // draw runs, without deleting the entry. Defaults to false/null for every existing row.
+  is_disqualified: boolean;
+  disqualified_reason?: string | null;
 };
 
 export type PrizeStatus = 'pending' | 'processing' | 'shipped' | 'delivered';

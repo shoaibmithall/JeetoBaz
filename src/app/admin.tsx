@@ -120,6 +120,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   notification_sent: 'Notification sent to all users',
   user_banned: 'User banned',
   user_unbanned: 'User unbanned',
+  entry_disqualified: 'Entry disqualified from draw',
+  entry_requalified: 'Entry requalified for draw',
 };
 
 function formatAuditActionLabel(actionType: string) {

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import Head from 'expo-router/head';
@@ -62,6 +62,9 @@ export default function DrawScreen() {
   const [, setWindowTick] = useState(0);
   const [drawWindowHour, setDrawWindowHour] = useState(DEFAULT_DRAW_WINDOW_HOUR);
   const [notificationTemplateOverrides, setNotificationTemplateOverrides] = useState<Partial<Record<NotificationTemplateKey, NotificationTemplate>>>({});
+  const [disqualifySaving, setDisqualifySaving] = useState<string | null>(null);
+  const [disqualifyFormExpandedId, setDisqualifyFormExpandedId] = useState<string | null>(null);
+  const [disqualifyReasonDrafts, setDisqualifyReasonDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -124,6 +127,58 @@ export default function DrawScreen() {
     }
   }
 
+  async function disqualifyEntry(entry: Entry) {
+    const reason = (disqualifyReasonDrafts[entry.id] || '').trim();
+    setDisqualifySaving(entry.id);
+    const { error } = await supabase
+      .from('entries')
+      .update({ is_disqualified: true, disqualified_reason: reason || null })
+      .eq('id', entry.id);
+    setDisqualifySaving(null);
+
+    if (error) {
+      alert('Could not disqualify this entry: ' + error.message);
+      return;
+    }
+
+    setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, is_disqualified: true, disqualified_reason: reason || null } : e)));
+    setDisqualifyFormExpandedId(null);
+    try {
+      await supabase.from('admin_audit_log').insert({
+        action_type: 'entry_disqualified',
+        target_id: entry.id,
+        details: { product_id: productIdValue, phone: entry.phone, reason: reason || undefined },
+      });
+    } catch {
+      // Best-effort only — never let audit logging block the action.
+    }
+  }
+
+  async function requalifyEntry(entry: Entry) {
+    setDisqualifySaving(entry.id);
+    const { error } = await supabase
+      .from('entries')
+      .update({ is_disqualified: false, disqualified_reason: null })
+      .eq('id', entry.id);
+    setDisqualifySaving(null);
+
+    if (error) {
+      alert('Could not requalify this entry: ' + error.message);
+      return;
+    }
+
+    setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, is_disqualified: false, disqualified_reason: null } : e)));
+    try {
+      await supabase.from('admin_audit_log').insert({
+        action_type: 'entry_requalified',
+        target_id: entry.id,
+        details: { product_id: productIdValue, phone: entry.phone },
+      });
+    } catch {
+      // Best-effort only — never let audit logging block the action.
+    }
+  }
+
   async function startSpin() {
     if (entries.length === 0) {
       alert('No approved entries found for this draw.');
@@ -159,6 +214,7 @@ export default function DrawScreen() {
       name: result.winner_name,
       ticket_number: result.winner_ticket_number,
       created_at: result.drawn_at,
+      is_disqualified: false,
     };
 
     let count = 0;
@@ -274,26 +330,71 @@ export default function DrawScreen() {
         <View style={styles.flex}>
           <View style={styles.listTitleRow}>
             {phase === 'showing' ? <UsersRound color="#FFD700" size={18} /> : <Dices color="#FFD700" size={18} />}
-            <Text style={styles.listTitle}>{phase === 'showing' ? `${entries.length} ${t('participants')}:` : t('selectingWinner')}</Text>
+            <Text style={styles.listTitle}>
+              {phase === 'showing'
+                ? `${entries.length} ${t('participants')}:${entries.some((e) => e.is_disqualified) ? ` (${entries.filter((e) => e.is_disqualified).length} disqualified — excluded from draw)` : ''}`
+                : t('selectingWinner')}
+            </Text>
           </View>
           <ScrollView style={styles.list}>
             {entries.map((entry, index) => (
-              <View key={entry.id} style={[
-                styles.entryRow,
-                highlighted === index && styles.entryHighlighted
-              ]}>
-                <Text style={[styles.entryNum, highlighted === index && styles.whiteText]}>
-                  #{index + 1}
-                </Text>
-                <View style={styles.entryInfo}>
-                  <Text style={[styles.entryName, highlighted === index && styles.whiteText]}>
-                    {entry.name ? maskName(entry.name) : t('notProvided')}
+              <View key={entry.id} style={styles.entryWrap}>
+                <View style={[
+                  styles.entryRow,
+                  highlighted === index && styles.entryHighlighted,
+                  entry.is_disqualified && styles.entryDisqualified,
+                ]}>
+                  <Text style={[styles.entryNum, highlighted === index && styles.whiteText]}>
+                    #{index + 1}
                   </Text>
-                  <Text style={[styles.entryPhone, highlighted === index && styles.whiteText]}>
-                    {maskPhone(entry.phone)}
-                  </Text>
+                  <View style={styles.entryInfo}>
+                    <Text style={[styles.entryName, highlighted === index && styles.whiteText]}>
+                      {entry.name ? maskName(entry.name) : t('notProvided')}
+                    </Text>
+                    <Text style={[styles.entryPhone, highlighted === index && styles.whiteText]}>
+                      {maskPhone(entry.phone)}
+                    </Text>
+                    {entry.is_disqualified && (
+                      <Text style={styles.entryDisqualifiedLabel}>
+                        Disqualified{entry.disqualified_reason ? `: ${entry.disqualified_reason}` : ''}
+                      </Text>
+                    )}
+                  </View>
+                  {highlighted === index && <MousePointer2 color="white" size={18} />}
+                  {phase === 'showing' && (
+                    <TouchableOpacity
+                      style={styles.entryDisqualifyToggle}
+                      onPress={() => entry.is_disqualified
+                        ? requalifyEntry(entry)
+                        : setDisqualifyFormExpandedId(disqualifyFormExpandedId === entry.id ? null : entry.id)}
+                      disabled={disqualifySaving === entry.id}
+                    >
+                      <Text style={styles.entryDisqualifyToggleText}>
+                        {disqualifySaving === entry.id ? '...' : entry.is_disqualified ? 'Requalify' : 'Disqualify'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {highlighted === index && <MousePointer2 color="white" size={18} />}
+                {phase === 'showing' && disqualifyFormExpandedId === entry.id && !entry.is_disqualified && (
+                  <View style={styles.entryDisqualifyForm}>
+                    <TextInput
+                      style={styles.entryDisqualifyInput}
+                      placeholder="Reason — optional"
+                      placeholderTextColor="#666"
+                      value={disqualifyReasonDrafts[entry.id] || ''}
+                      onChangeText={(text) => setDisqualifyReasonDrafts((prev) => ({ ...prev, [entry.id]: text }))}
+                    />
+                    <TouchableOpacity
+                      style={styles.entryDisqualifyConfirm}
+                      onPress={() => disqualifyEntry(entry)}
+                      disabled={disqualifySaving === entry.id}
+                    >
+                      <Text style={styles.entryDisqualifyConfirmText}>
+                        {disqualifySaving === entry.id ? 'Saving...' : 'Confirm Disqualify'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ))}
           </ScrollView>
@@ -390,6 +491,15 @@ const styles = StyleSheet.create({
   entryName: { color: 'white', fontSize: 15, fontWeight: 'bold' },
   entryPhone: { color: '#aaa', fontSize: 13, fontFamily: 'monospace', marginTop: 2 },
   whiteText: { color: 'white', fontWeight: 'bold' },
+  entryWrap: {},
+  entryDisqualified: { opacity: 0.55, borderColor: '#ff4444' },
+  entryDisqualifiedLabel: { color: '#ff8080', fontSize: 12, fontWeight: 'bold', marginTop: 3 },
+  entryDisqualifyToggle: { backgroundColor: '#2b0d0d', borderWidth: 1, borderColor: '#ff4444', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
+  entryDisqualifyToggleText: { color: '#ff8080', fontSize: 12, fontWeight: 'bold' },
+  entryDisqualifyForm: { backgroundColor: '#071b13', borderRadius: 10, borderWidth: 1, borderColor: '#174a35', padding: 12, marginHorizontal: 15, marginTop: -4, marginBottom: 6 },
+  entryDisqualifyInput: { backgroundColor: '#04140e', borderWidth: 1, borderColor: '#174a35', borderRadius: 8, padding: 10, color: 'white', marginBottom: 8 },
+  entryDisqualifyConfirm: { backgroundColor: '#ff4444', borderRadius: 8, padding: 10, alignItems: 'center' },
+  entryDisqualifyConfirmText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
   windowBanner: { flexDirection: 'row', alignItems: 'center', gap: 7, marginHorizontal: 15, marginBottom: 10, padding: 12, borderRadius: 10, borderWidth: 1 },
   windowBannerOpen: { backgroundColor: '#082d1e', borderColor: '#18a663' },
   windowBannerClosed: { backgroundColor: '#2a2105', borderColor: '#FFD700' },
