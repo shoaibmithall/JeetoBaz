@@ -1846,6 +1846,12 @@ export default function AdminScreen() {
   async function rejectPaymentCore(txn: Transaction): Promise<{ ok: boolean; message: string }> {
     const { error } = await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
     if (error) return { ok: false, message: 'Reject failed: ' + error.message };
+    await createUserNotification({
+      title: 'Payment could not be verified',
+      body: `Your payment of Rs. ${txn.amount} could not be confirmed. Please double-check your receipt and try again, or contact support if you believe this is a mistake.`,
+      targetPhone: txn.phone,
+      kind: 'payment-rejected',
+    });
     void logAdminAction('payment_rejected', txn.id, { product_id: txn.product_id, phone: txn.phone });
     return { ok: true, message: 'Payment rejected.' };
   }
@@ -1952,6 +1958,13 @@ export default function AdminScreen() {
 
     if (rpcError) return { ok: false, message: 'Reject failed: ' + rpcError.message };
     if (!rpcResult?.ok) return { ok: false, message: rpcResult?.error || 'Reject failed.' };
+
+    await createUserNotification({
+      title: 'Wallet top-up could not be verified',
+      body: `Your wallet top-up of Rs. ${request.amount} could not be confirmed. Please double-check your receipt and try again, or contact support if you believe this is a mistake.`,
+      targetPhone: request.phone,
+      kind: 'payment-rejected',
+    });
 
     void logAdminAction('wallet_topup_rejected', request.id, { phone: request.phone, amount: request.amount });
     return { ok: true, message: 'Top-up request rejected.' };
