@@ -4,6 +4,11 @@ export const HOME_AD_IMAGES_KEY = 'home_ad_images';
 export const ANNOUNCEMENT_KEY = 'announcement';
 export const GOOGLE_REVIEW_LINK_KEY = 'google_review_link';
 export const PAYMENT_ACCOUNTS_KEY = 'payment_accounts';
+export const HOME_TRUST_BADGES_KEY = 'home_trust_badges';
+
+// The home page trust strip always shows exactly 3 labels (fixed icons per position), so
+// this is deliberately a 3-item tuple rather than a free-form list like home_ad_images.
+export const DEFAULT_TRUST_BADGES: [string, string, string] = ['Locked Results', 'Transparent', 'Made for Pakistan'];
 
 export type PaymentAccount = {
   method: string;
@@ -89,6 +94,37 @@ export async function saveGoogleReviewLink(value: string) {
     .upsert({ key: GOOGLE_REVIEW_LINK_KEY, value: link });
 
   return { link, error };
+}
+
+function normalizeTrustBadges(value: unknown): [string, string, string] {
+  const raw = Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string').map((item) => item.trim())
+    : [];
+  return [
+    raw[0]?.trim() || DEFAULT_TRUST_BADGES[0],
+    raw[1]?.trim() || DEFAULT_TRUST_BADGES[1],
+    raw[2]?.trim() || DEFAULT_TRUST_BADGES[2],
+  ];
+}
+
+export async function getTrustBadges() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', HOME_TRUST_BADGES_KEY)
+    .maybeSingle();
+
+  if (error) return { badges: DEFAULT_TRUST_BADGES, error };
+  return { badges: data?.value ? normalizeTrustBadges(data.value) : DEFAULT_TRUST_BADGES, error: null };
+}
+
+export async function saveTrustBadges(badges: [string, string, string]) {
+  const cleanBadges = normalizeTrustBadges(badges);
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ key: HOME_TRUST_BADGES_KEY, value: cleanBadges });
+
+  return { badges: cleanBadges, error };
 }
 
 function normalizePaymentAccounts(value: unknown): PaymentAccount[] {

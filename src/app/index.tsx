@@ -19,7 +19,7 @@ import { translate, useLanguage, type LanguageCode, type TranslationKey } from '
 import { supabase } from '@/lib/supabase';
 import { getStoredStringArray, getStoredValue, removeStoredValues, setStoredValue } from '@/lib/storage';
 import { loadOfflineCache, saveOfflineCache } from '@/lib/offline-cache';
-import { getAnnouncement, getHomeAdImages } from '@/lib/app-settings';
+import { DEFAULT_TRUST_BADGES, getAnnouncement, getHomeAdImages, getTrustBadges } from '@/lib/app-settings';
 import { getPublicBrandShowcaseImages } from '@/lib/brand-showcase';
 import { getPublicTestimonials } from '@/lib/testimonials';
 import { isNotificationKindAllowed, type NotificationPreferences } from '@/lib/notifications';
@@ -402,6 +402,7 @@ export default function HomeScreen() {
   const [cacheInfo, setCacheInfo] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [announcement, setAnnouncement] = useState('');
+  const [trustBadges, setTrustBadges] = useState<[string, string, string]>(DEFAULT_TRUST_BADGES);
   const [homeAdImages, setHomeAdImages] = useState<string[]>([]);
   const [activeAdIndex, setActiveAdIndex] = useState(0);
   const [adsLoading, setAdsLoading] = useState(true);
@@ -595,6 +596,7 @@ export default function HomeScreen() {
     setHasHydratedLayout(true);
     fetchHomeAds();
     fetchAnnouncement();
+    fetchTrustBadges();
     fetchBrandShowcase();
     fetchTestimonials();
     const timer = setInterval(() => setTime(new Date()), 60000);
@@ -729,7 +731,7 @@ export default function HomeScreen() {
     }
 
     try {
-      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement(), fetchBrandShowcase(), fetchTestimonials()]);
+      await Promise.all([fetchProducts(), fetchHomeAds(), fetchAnnouncement(), fetchTrustBadges(), fetchBrandShowcase(), fetchTestimonials()]);
     } finally {
       setRefreshing(false);
       setPullDistance(0);
@@ -797,6 +799,11 @@ export default function HomeScreen() {
   async function fetchAnnouncement() {
     const { announcement: latestAnnouncement, error } = await getAnnouncement();
     if (!error) setAnnouncement(latestAnnouncement);
+  }
+
+  async function fetchTrustBadges() {
+    const { badges, error } = await getTrustBadges();
+    if (!error) setTrustBadges(badges);
   }
 
   async function handleEnter(product: Product) {
@@ -1048,9 +1055,9 @@ export default function HomeScreen() {
       <HomeHeader unreadCount={unreadCount} />
 
       <View style={[styles.trustBar, isCompact && styles.trustBarCompact, { backgroundColor: colors.primarySoft, borderBottomColor: colors.borderSoft }]}>
-        <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>Locked Results</Text></View>
-        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{t('transparent')}</Text></View>
-        <Text style={[styles.trustItem, { color: colors.primary }]}>Made for Pakistan</Text>
+        <View style={styles.iconText}><ShieldCheck color={colors.primary} size={15} /><Text style={[styles.trustItem, { color: colors.primary }]}>{trustBadges[0]}</Text></View>
+        <View style={styles.iconText}><LockKeyhole color={colors.primary} size={14} /><Text style={[styles.trustItem, { color: colors.primary }]}>{trustBadges[1]}</Text></View>
+        <Text style={[styles.trustItem, { color: colors.primary }]}>{trustBadges[2]}</Text>
       </View>
       <HomePageHeading backgroundColor={colors.primarySoft} textColor={theme.danger} />
 
