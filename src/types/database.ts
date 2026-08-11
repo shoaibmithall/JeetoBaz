@@ -19,6 +19,8 @@ export type Product = {
   slug?: string | null;
   indexable?: boolean;
   category?: string | null;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
 };
 
 export type Entry = {
@@ -412,7 +414,7 @@ export type Database = {
           current_entries?: number | null;
           status?: string;
         },
-        Partial<ProductFormData> & Partial<Pick<Product, 'current_entries' | 'status' | 'winner_phone'>>
+        Partial<ProductFormData> & Partial<Pick<Product, 'current_entries' | 'status' | 'winner_phone' | 'is_deleted' | 'deleted_at'>>
       >;
       entries: Table<
         Entry,
