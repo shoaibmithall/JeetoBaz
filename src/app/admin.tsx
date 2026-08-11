@@ -270,6 +270,8 @@ export default function AdminScreen() {
   const [productSearch, setProductSearch] = useState('');
   const [drawsSearch, setDrawsSearch] = useState('');
   const [paymentsSearch, setPaymentsSearch] = useState('');
+  const [paymentsHistorySearch, setPaymentsHistorySearch] = useState('');
+  const [paymentsHistoryExpanded, setPaymentsHistoryExpanded] = useState(false);
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<Set<string>>(new Set());
   const [bulkPaymentsProcessing, setBulkPaymentsProcessing] = useState(false);
   const [walletTopupRequests, setWalletTopupRequests] = useState<WalletTopupRequest[]>([]);
@@ -2316,6 +2318,21 @@ export default function AdminScreen() {
   }, [paymentsSearch, pendingPayments, products]);
   const allFilteredPaymentsSelected = filteredPendingPayments.length > 0
     && filteredPendingPayments.every((txn) => selectedPaymentIds.has(txn.id));
+  const filteredPaymentsHistory = useMemo(() => {
+    const query = paymentsHistorySearch.trim().toLowerCase();
+    if (!query) return transactions;
+
+    return transactions.filter((txn) => {
+      const product = products.find((p) => p.id === txn.product_id);
+      return [product?.name, txn.user_name, txn.phone, txn.payment_method, txn.status]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [paymentsHistorySearch, transactions, products]);
+  const HISTORY_PREVIEW_LIMIT = 25;
+  const visiblePaymentsHistory = paymentsHistoryExpanded || paymentsHistorySearch.trim()
+    ? filteredPaymentsHistory
+    : filteredPaymentsHistory.slice(0, HISTORY_PREVIEW_LIMIT);
 
   useEffect(() => {
     setSelectedPaymentIds(new Set());
@@ -2927,6 +2944,62 @@ export default function AdminScreen() {
                 </View>
               );
             })}
+
+            <View style={styles.divider} />
+            <View style={styles.sectionTitleRow}>
+              <History color={theme.text} size={19} />
+              <Text style={styles.sectionTitle}>Full Payment History ({transactions.length})</Text>
+            </View>
+            <View style={styles.productSearchBox}>
+              <Search color={theme.muted} size={20} />
+              <TextInput
+                style={styles.productSearchInput}
+                placeholder="Search all payments by product, name, phone, method, or status..."
+                placeholderTextColor={theme.muted}
+                value={paymentsHistorySearch}
+                onChangeText={setPaymentsHistorySearch}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+                accessibilityLabel="Search full payment history"
+              />
+              {paymentsHistorySearch.length > 0 && (
+                <TouchableOpacity onPress={() => setPaymentsHistorySearch('')} accessibilityLabel="Clear payment history search">
+                  <X color={theme.muted} size={20} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {transactions.length === 0 ? (
+              <Text style={styles.emptyText}>No payments recorded yet.</Text>
+            ) : filteredPaymentsHistory.length === 0 ? (
+              <Text style={styles.emptyText}>No payments match “{paymentsHistorySearch.trim()}”.</Text>
+            ) : (
+              visiblePaymentsHistory.map((txn) => {
+                const product = products.find((p) => p.id === txn.product_id);
+                return (
+                  <View key={txn.id} style={styles.paymentCard}>
+                    <View style={styles.productHeader}>
+                      <Text style={styles.productName}>{product?.name || 'Unknown Draw'}</Text>
+                      <View style={[
+                        styles.statusBadge,
+                        txn.status === 'approved' ? styles.activeBadge : txn.status === 'rejected' ? styles.rejectedBadge : styles.pendingBadge,
+                      ]}>
+                        <Text style={styles.statusText}>{txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.paymentLine}>Method: {txn.payment_method || 'Not provided'}</Text>
+                    <Text style={styles.paymentLine}>Amount: Rs. {txn.amount}</Text>
+                    <Text style={styles.paymentLine}>App User: {txn.user_name || 'Unknown'} ({txn.phone})</Text>
+                    <Text style={styles.paymentLine}>Date: {new Date(txn.created_at).toLocaleString()}</Text>
+                  </View>
+                );
+              })
+            )}
+            {!paymentsHistoryExpanded && !paymentsHistorySearch.trim() && filteredPaymentsHistory.length > HISTORY_PREVIEW_LIMIT && (
+              <TouchableOpacity style={styles.visibilityButton} onPress={() => setPaymentsHistoryExpanded(true)}>
+                <Text style={styles.visibilityButtonText}>Show all {filteredPaymentsHistory.length} payments</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
