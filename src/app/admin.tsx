@@ -345,6 +345,7 @@ export default function AdminScreen() {
   const [turnstileError, setTurnstileError] = useState('');
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [activeTab, setActiveTab] = useState('products');
+  const [expandedSettingsSections, setExpandedSettingsSections] = useState<Set<string>>(new Set());
   const [products, setProducts] = useState<Product[]>([]);
   const [deletedProducts, setDeletedProducts] = useState<Product[]>([]);
   const [recycleBinExpanded, setRecycleBinExpanded] = useState(false);
@@ -2783,6 +2784,14 @@ export default function AdminScreen() {
     setUsersSearch(query);
   }
 
+  function toggleSettingsSection(key: string) {
+    setExpandedSettingsSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
   if (authLoading && !authenticated) return (
     <>
     <Head>
@@ -3930,7 +3939,14 @@ export default function AdminScreen() {
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><Settings color={theme.text} size={19} /><Text style={styles.sectionTitle}>App Settings</Text></View>
 
-            <View style={styles.settingLabelRow}><Sun color={theme.text} size={17} /><Text style={styles.settingLabel}>Admin Panel Theme</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('theme')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Sun color={theme.text} size={17} /><Text style={styles.settingLabel}>Admin Panel Theme</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('theme') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('theme') && (
+            <>
             <Text style={styles.settingHint}>Choose the appearance used throughout the admin panel.</Text>
             <View style={styles.themeSelector}>
               <TouchableOpacity
@@ -3948,10 +3964,19 @@ export default function AdminScreen() {
                 <Text style={[styles.themeOptionText, mode === 'dark' && styles.themeOptionTextSelected]}>Dark Mode</Text>
               </TouchableOpacity>
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><BadgeCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Registered &amp; Verified Documents</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('verification')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <BadgeCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Registered &amp; Verified Documents</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('verification') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('verification') && (
+            <>
             <Text style={styles.settingHint}>Upload and manage documents shown on the public Registered &amp; Verified page.</Text>
             {verificationEditingId ? (
               <View style={styles.editBanner}>
@@ -4034,10 +4059,19 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Blog Posts</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('blog')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Blog Posts</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('blog') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('blog') && (
+            <>
             <Text style={styles.settingHint}>Articles shown on the public JeetoBaz Blog. Content uses "## Heading" lines for headings and "- " lines for bullets -- everything else becomes paragraphs.</Text>
             {blogEditingId ? (
               <View style={styles.editBanner}>
@@ -4150,10 +4184,19 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Camera color={theme.text} size={17} /><Text style={styles.settingLabel}>Brand Showcase Images</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('brand-showcase')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Camera color={theme.text} size={17} /><Text style={styles.settingLabel}>Brand Showcase Images</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('brand-showcase') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('brand-showcase') && (
+            <>
             <Text style={styles.settingHint}>Just photos, no names or claims -- shown in the "JeetoBaz Style" carousel on the home page.</Text>
             <TouchableOpacity
               style={[styles.photoUploadButton, brandShowcaseUploading && styles.photoUploadDisabled]}
@@ -4190,10 +4233,19 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Testimonials</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('testimonials')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Testimonials</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('testimonials') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('testimonials') && (
+            <>
             <Text style={styles.settingHint}>
               Paste a real winner&apos;s actual review word-for-word (from Google, Trustpilot, WhatsApp, or the
               website) -- never write one yourself. Shown on the About page with review structured data.
@@ -4279,10 +4331,19 @@ export default function AdminScreen() {
                 </View>
               ))}
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Announcement Banner</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('announcement')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Announcement Banner</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('announcement') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('announcement') && (
+            <>
             <Text style={styles.settingHint}>This message will appear near the top of the home page for all users.</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -4297,10 +4358,19 @@ export default function AdminScreen() {
               {announcementSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
               <Text style={styles.addButtonText}>{announcementSaved ? 'Saved!' : 'Save Announcement'}</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Google Review Link</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('google-review')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Star color={theme.text} size={17} /><Text style={styles.settingLabel}>Google Review Link</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('google-review') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('google-review') && (
+            <>
             <Text style={styles.settingHint}>
               Once a winner&apos;s status is set to Verified below, they automatically get an in-app notification asking
               for a review, linking here. Get this link from Google Business Profile → Get more reviews.
@@ -4318,10 +4388,19 @@ export default function AdminScreen() {
               {googleReviewLinkSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
               <Text style={styles.addButtonText}>{googleReviewLinkSaved ? 'Saved!' : 'Save Review Link'}</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Camera color={theme.text} size={17} /><Text style={styles.settingLabel}>Home Ad Images</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('home-ads')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Camera color={theme.text} size={17} /><Text style={styles.settingLabel}>Home Ad Images</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('home-ads') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('home-ads') && (
+            <>
             <Text style={styles.settingHint}>These images appear one at a time in the home-page carousel. Maximum 10 images.</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -4353,10 +4432,19 @@ export default function AdminScreen() {
                 ))}
               </ScrollView>
             ) : null}
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Dices color={theme.text} size={17} /><Text style={styles.settingLabel}>Draw Window Hour</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('draw-window')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Dices color={theme.text} size={17} /><Text style={styles.settingLabel}>Draw Window Hour</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('draw-window') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('draw-window') && (
+            <>
             <Text style={styles.settingHint}>
               Draws can only be run during this hour, Pakistan time (24-hour format, e.g. 22 = 10 PM). Currently enforced both
               here and by the database — changing it here updates both immediately.
@@ -4373,10 +4461,19 @@ export default function AdminScreen() {
               {drawWindowHourSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
               <Text style={styles.addButtonText}>{drawWindowHourSaving ? 'Saving...' : drawWindowHourSaved ? 'Saved!' : 'Save Draw Window'}</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><ShieldCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Home Trust Badges</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('trust-badges')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <ShieldCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Home Trust Badges</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('trust-badges') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('trust-badges') && (
+            <>
             <Text style={styles.settingHint}>The 3 short labels shown in the strip near the top of the home page.</Text>
             <TextInput
               style={styles.input}
@@ -4403,10 +4500,19 @@ export default function AdminScreen() {
               {trustBadgesSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
               <Text style={styles.addButtonText}>{trustBadgesSaving ? 'Saving...' : trustBadgesSaved ? 'Saved!' : 'Save Trust Badges'}</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><CreditCard color={theme.text} size={17} /><Text style={styles.settingLabel}>Payment Accounts</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('payment-accounts')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <CreditCard color={theme.text} size={17} /><Text style={styles.settingLabel}>Payment Accounts</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('payment-accounts') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('payment-accounts') && (
+            <>
             <Text style={styles.settingHint}>
               The account numbers and QR codes shown to users on the payment and wallet top-up screens. Toggle
               Active/Inactive to hide a method without deleting it (e.g. if an account gets temporarily blocked).
@@ -4482,10 +4588,19 @@ export default function AdminScreen() {
                 <Text style={styles.photoUploadText}>Add Payment Method</Text>
               </TouchableOpacity>
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Notification Templates</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('notification-templates')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Notification Templates</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('notification-templates') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('notification-templates') && (
+            <>
             <Text style={styles.settingHint}>
               The wording sent to users for each automatic notification. {'{{variable}}'} placeholders are filled in automatically when
               a notification is sent — do not remove them, but you can move them anywhere in the sentence.
@@ -4544,10 +4659,19 @@ export default function AdminScreen() {
                 );
               })}
             </View>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Content Pages</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('content-pages')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <BookOpen color={theme.text} size={17} /><Text style={styles.settingLabel}>Content Pages</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('content-pages') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('content-pages') && (
+            <>
             <Text style={styles.settingHint}>
               Edit the section-by-section wording of the Privacy Policy, Terms & Conditions, Refund Policy, and Shipping
               Policy pages. Changes here go live immediately on the public page.
@@ -4612,10 +4736,19 @@ export default function AdminScreen() {
             <TouchableOpacity style={styles.deleteWideButton} onPress={resetContentPageSettings} disabled={contentPageSaving}>
               <Text style={styles.deleteWideButtonText}>Reset {CONTENT_PAGE_LABELS[contentPageSlug]} to Default</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><Send color={theme.text} size={17} /><Text style={styles.settingLabel}>Send Notification</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('send-notification')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <Send color={theme.text} size={17} /><Text style={styles.settingLabel}>Send Notification</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('send-notification') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('send-notification') && (
+            <>
             <Text style={styles.settingHint}>This notification will appear on every user's Notifications page.</Text>
             <TextInput
               style={styles.input}
@@ -4636,16 +4769,34 @@ export default function AdminScreen() {
             <TouchableOpacity style={styles.addButton} onPress={sendGlobalNotification} disabled={notificationSending}>
               {!notificationSending && <Send color="white" size={18} />}<Text style={styles.addButtonText}>{notificationSending ? 'Sending...' : 'Send to All Users'}</Text>
             </TouchableOpacity>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><LockKeyhole color={theme.text} size={17} /><Text style={styles.settingLabel}>Secure Admin Login</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('secure-login')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <LockKeyhole color={theme.text} size={17} /><Text style={styles.settingLabel}>Secure Admin Login</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('secure-login') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('secure-login') && (
+            <>
             <Text style={styles.settingHint}>Admin: {ADMIN_EMAIL}</Text>
             <Text style={styles.settingNote}>The password is managed securely through Supabase Authentication.</Text>
+            </>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.settingLabelRow}><BarChart3 color={theme.text} size={17} /><Text style={styles.settingLabel}>Quick Stats</Text></View>
+            <TouchableOpacity style={styles.settingsSectionToggle} onPress={() => toggleSettingsSection('quick-stats')}>
+              <View style={styles.settingsSectionToggleLeft}>
+                <BarChart3 color={theme.text} size={17} /><Text style={styles.settingLabel}>Quick Stats</Text>
+              </View>
+              <ChevronDown color={theme.subtle} size={18} style={[styles.settingsChevron, expandedSettingsSections.has('quick-stats') && styles.settingsChevronOpen]} />
+            </TouchableOpacity>
+            {expandedSettingsSections.has('quick-stats') && (
+            <>
             <View style={styles.quickStats}>
               <Text style={styles.quickStat}>Live URL: jeetobaz.pk</Text>
               <Text style={styles.quickStat}>Products: {products.length}</Text>
@@ -4655,6 +4806,8 @@ export default function AdminScreen() {
               <Text style={styles.quickStat}>Pending Wallet Top-Ups: {walletTopupRequests.length}</Text>
               <Text style={styles.quickStat}>Revenue: Rs. {totalRevenue.toLocaleString()}</Text>
             </View>
+            </>
+            )}
           </View>
         )}
 
@@ -4810,6 +4963,10 @@ function createStyles(theme: AdminTheme) {
   settingLabel: { color: theme.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   settingLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   settingHint: { color: theme.muted, fontSize: 13, marginBottom: 10 },
+  settingsSectionToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  settingsSectionToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  settingsChevron: { transform: [{ rotate: '0deg' }] },
+  settingsChevronOpen: { transform: [{ rotate: '180deg' }] },
   settingNote: { color: theme.subtle, fontSize: 12, marginBottom: 15 },
   divider: { height: 1, backgroundColor: theme.border, marginVertical: 20 },
   themeSelector: { flexDirection: 'row', gap: 10, marginBottom: 4 },
