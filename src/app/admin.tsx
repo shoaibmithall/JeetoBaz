@@ -76,6 +76,7 @@ const WINNER_STATUS_LABELS: Record<WinnerStatus, string> = {
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   product_deleted: 'Product deleted',
+  product_edited: 'Product price/fee/date edited',
   product_status_changed: 'Product status changed',
   prize_status_updated: 'Prize delivery status updated',
   winner_status_updated: 'Winner verification status updated',
@@ -89,6 +90,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   refund_requested: 'Refund requested',
   refund_approved: 'Refund approved',
   refund_rejected: 'Refund rejected',
+  settings_changed: 'Settings changed',
+  notification_sent: 'Notification sent to all users',
 };
 
 function formatAuditActionLabel(actionType: string) {
@@ -863,10 +866,20 @@ export default function AdminScreen() {
     };
 
     if (currentEditId) {
+      const previousProduct = products.find((p) => p.id === currentEditId);
       const { error } = await supabase.from('products').update(productData).eq('id', currentEditId).select();
       if (error) alert('Save failed: ' + error.message);
       else {
         if (normalizedSlug) pingIndexNow(`/product/${normalizedSlug}`);
+        if (previousProduct) {
+          const changes: Record<string, unknown> = {};
+          if (previousProduct.price !== parsedPrice) changes.price = { from: previousProduct.price, to: parsedPrice };
+          if (previousProduct.entry_fee !== parsedEntryFee) changes.entry_fee = { from: previousProduct.entry_fee, to: parsedEntryFee };
+          if ((previousProduct.draw_date || null) !== (drawDate || null)) changes.draw_date = { from: previousProduct.draw_date, to: drawDate || null };
+          if (Object.keys(changes).length > 0) {
+            void logAdminAction('product_edited', currentEditId, { name: productName, ...changes });
+          }
+        }
         alert('Product updated!'); cancelEdit(); fetchProducts();
       }
     } else {
@@ -1126,6 +1139,7 @@ export default function AdminScreen() {
     await setStoredValue('announcement', savedAnnouncement);
     setAnnouncementSaved(true);
     setTimeout(() => setAnnouncementSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'announcement' });
   }
 
   async function loadGoogleReviewLink() {
@@ -1142,6 +1156,7 @@ export default function AdminScreen() {
     setGoogleReviewLink(link);
     setGoogleReviewLinkSaved(true);
     setTimeout(() => setGoogleReviewLinkSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'google_review_link' });
   }
 
   function parseHomeAdImagesInput() {
@@ -1166,6 +1181,7 @@ export default function AdminScreen() {
     setHomeAdImagesInput(images.join('\n'));
     setHomeAdImagesSaved(true);
     setTimeout(() => setHomeAdImagesSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'home_ad_images', count: images.length });
   }
 
   async function uploadHomeAdImage() {
@@ -1242,6 +1258,7 @@ export default function AdminScreen() {
     setTrustBadges(badges);
     setTrustBadgesSaved(true);
     setTimeout(() => setTrustBadgesSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'home_trust_badges', badges });
   }
 
   function updateTrustBadge(index: 0 | 1 | 2, value: string) {
@@ -1268,6 +1285,10 @@ export default function AdminScreen() {
     setPaymentAccounts(accounts);
     setPaymentAccountsSaved(true);
     setTimeout(() => setPaymentAccountsSaved(false), 2000);
+    void logAdminAction('settings_changed', null, {
+      setting: 'payment_accounts',
+      methods: accounts.map((a) => `${a.method}${a.active ? '' : ' (inactive)'}`),
+    });
   }
 
   function updatePaymentAccountField(index: number, field: 'method' | 'number' | 'accountTitle', value: string) {
@@ -1785,6 +1806,7 @@ export default function AdminScreen() {
 
     setNotificationTitle('');
     setNotificationBody('');
+    void logAdminAction('notification_sent', null, { title });
     alert('Notification sent to all users.');
   }
 
