@@ -10,7 +10,20 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
-import { getAnnouncement, getGoogleReviewLink, getHomeAdImages, getPaymentAccounts, saveAnnouncement as saveAnnouncementSetting, saveGoogleReviewLink, saveHomeAdImages, savePaymentAccounts, type PaymentAccount } from '@/lib/app-settings';
+import {
+  DEFAULT_TRUST_BADGES,
+  getAnnouncement,
+  getGoogleReviewLink,
+  getHomeAdImages,
+  getPaymentAccounts,
+  getTrustBadges,
+  saveAnnouncement as saveAnnouncementSetting,
+  saveGoogleReviewLink,
+  saveHomeAdImages,
+  savePaymentAccounts,
+  saveTrustBadges,
+  type PaymentAccount,
+} from '@/lib/app-settings';
 import {
   createVerificationDocument,
   deleteVerificationDocument,
@@ -91,7 +104,7 @@ import {
   Award, BadgeCheck, BarChart3, Bell, BookOpen, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList, CreditCard,
   Dices, DollarSign, Download, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Star, Trash2,
-  Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
+  Search, ShieldCheck, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
 } from 'lucide-react-native';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
@@ -303,6 +316,9 @@ export default function AdminScreen() {
   const [homeAdImagesInput, setHomeAdImagesInput] = useState('');
   const [homeAdImagesSaved, setHomeAdImagesSaved] = useState(false);
   const [homeAdUploading, setHomeAdUploading] = useState(false);
+  const [trustBadges, setTrustBadges] = useState<[string, string, string]>(DEFAULT_TRUST_BADGES);
+  const [trustBadgesSaving, setTrustBadgesSaving] = useState(false);
+  const [trustBadgesSaved, setTrustBadgesSaved] = useState(false);
   const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
   const [paymentAccountsSaving, setPaymentAccountsSaving] = useState(false);
   const [paymentAccountsSaved, setPaymentAccountsSaved] = useState(false);
@@ -383,6 +399,7 @@ export default function AdminScreen() {
       loadAnnouncement();
       loadGoogleReviewLink();
       loadHomeAdImages();
+      loadTrustBadgesSettings();
       loadPaymentAccountsSettings();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
@@ -1193,6 +1210,32 @@ export default function AdminScreen() {
     } finally {
       setHomeAdUploading(false);
     }
+  }
+
+  async function loadTrustBadgesSettings() {
+    const { badges } = await getTrustBadges();
+    setTrustBadges(badges);
+  }
+
+  async function saveTrustBadgesSettings() {
+    setTrustBadgesSaving(true);
+    const { badges, error } = await saveTrustBadges(trustBadges);
+    setTrustBadgesSaving(false);
+    if (error) {
+      alert('Trust badges could not be saved. Error: ' + error.message);
+      return;
+    }
+    setTrustBadges(badges);
+    setTrustBadgesSaved(true);
+    setTimeout(() => setTrustBadgesSaved(false), 2000);
+  }
+
+  function updateTrustBadge(index: 0 | 1 | 2, value: string) {
+    setTrustBadges((current) => {
+      const next: [string, string, string] = [...current];
+      next[index] = value;
+      return next;
+    });
   }
 
   async function loadPaymentAccountsSettings() {
@@ -3370,6 +3413,36 @@ export default function AdminScreen() {
                 ))}
               </ScrollView>
             ) : null}
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><ShieldCheck color={theme.text} size={17} /><Text style={styles.settingLabel}>Home Trust Badges</Text></View>
+            <Text style={styles.settingHint}>The 3 short labels shown in the strip near the top of the home page.</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Locked Results"
+              placeholderTextColor="#666"
+              value={trustBadges[0]}
+              onChangeText={(value) => updateTrustBadge(0, value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Transparent"
+              placeholderTextColor="#666"
+              value={trustBadges[1]}
+              onChangeText={(value) => updateTrustBadge(1, value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Made for Pakistan"
+              placeholderTextColor="#666"
+              value={trustBadges[2]}
+              onChangeText={(value) => updateTrustBadge(2, value)}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={saveTrustBadgesSettings} disabled={trustBadgesSaving}>
+              {trustBadgesSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+              <Text style={styles.addButtonText}>{trustBadgesSaving ? 'Saving...' : trustBadgesSaved ? 'Saved!' : 'Save Trust Badges'}</Text>
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
