@@ -1,11 +1,13 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
 import Head from 'expo-router/head';
 import { RotateCcw } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { useSafeBack } from '@/lib/safe-back';
+import { getContentPageSections, type ContentSection } from '@/lib/content-pages';
 
-const REFUND_FAQS = [
+export const REFUND_FAQS: ContentSection[] = [
   {
     category: 'Overview',
     question: 'Introduction',
@@ -96,11 +98,20 @@ const REFUND_FAQS = [
     answer:
       'For refund-related questions or payment issues, please contact JeetoBaz Support through the official support channels available on the JeetoBaz website or mobile application. Please include your registered mobile number, transaction ID, date of payment, draw or prize name, a description of the issue, and supporting screenshots if available. This helps our support team investigate and resolve your request more efficiently.',
   },
-] as const;
+];
 
 export default function RefundPolicyScreen() {
   const goBack = useSafeBack();
   const { theme } = useAppTheme();
+  const [sections, setSections] = useState<ContentSection[]>(REFUND_FAQS);
+
+  useEffect(() => {
+    let active = true;
+    getContentPageSections('refund_policy').then(({ sections: overrideSections }) => {
+      if (active && overrideSections) setSections(overrideSections);
+    });
+    return () => { active = false; };
+  }, []);
 
   const refundSchema = pageSchema('WebPage', '/refund-policy', 'Refund & Cancellation Policy', 'Review the JeetoBaz Refund & Cancellation Policy covering entry purchases, refund eligibility, payment issues, and processing timelines.');
   const breadcrumb = breadcrumbSchema([{ name: 'Refund & Cancellation Policy', path: '/refund-policy' }]);
@@ -150,13 +161,13 @@ export default function RefundPolicyScreen() {
       </View>
 
       <View style={styles.list}>
-        {REFUND_FAQS.map((item, index) => (
+        {sections.map((item, index) => (
           <View
             key={item.question}
             style={[
               styles.section,
               { borderBottomColor: theme.border },
-              index === REFUND_FAQS.length - 1 && styles.sectionLast,
+              index === sections.length - 1 && styles.sectionLast,
             ]}
           >
             <Text style={[styles.sectionTitle, { color: theme.gold }]}>{index + 1}. {item.question}</Text>

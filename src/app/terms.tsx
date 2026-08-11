@@ -1,12 +1,14 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
 import Head from 'expo-router/head';
 import { ClipboardList } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { useSafeBack } from '@/lib/safe-back';
 import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from '@/lib/contact-info';
+import { getContentPageSections, type ContentSection } from '@/lib/content-pages';
 
-const TERMS_FAQS = [
+export const TERMS_FAQS: ContentSection[] = [
   {
     category: 'Overview',
     question: 'Introduction',
@@ -421,11 +423,20 @@ const TERMS_FAQS = [
     answer:
       'These Terms & Conditions become effective from the date published on the JeetoBaz Platform and remain in force until amended or replaced by JeetoBaz in accordance with applicable law.',
   },
-] as const;
+];
 
 export default function TermsScreen() {
   const goBack = useSafeBack();
   const { theme } = useAppTheme();
+  const [sections, setSections] = useState<ContentSection[]>(TERMS_FAQS);
+
+  useEffect(() => {
+    let active = true;
+    getContentPageSections('terms').then(({ sections: overrideSections }) => {
+      if (active && overrideSections) setSections(overrideSections);
+    });
+    return () => { active = false; };
+  }, []);
 
   const termsSchema = pageSchema('WebPage', '/terms', 'Terms & Conditions', 'Review the Terms and Conditions governing JeetoBaz accounts, prize campaigns, entries, payments, draws, platform use, and user responsibilities.');
   const breadcrumb = breadcrumbSchema([{ name: 'Terms & Conditions', path: '/terms' }]);
@@ -475,13 +486,13 @@ export default function TermsScreen() {
       </View>
 
       <View style={styles.list}>
-        {TERMS_FAQS.map((item, index) => (
+        {sections.map((item, index) => (
           <View
             key={item.question}
             style={[
               styles.section,
               { borderBottomColor: theme.border },
-              index === TERMS_FAQS.length - 1 && styles.sectionLast,
+              index === sections.length - 1 && styles.sectionLast,
             ]}
           >
             <Text style={[styles.sectionTitle, { color: theme.gold }]}>{index + 1}. {item.question}</Text>

@@ -1,11 +1,13 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
 import Head from 'expo-router/head';
 import { Truck } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { useSafeBack } from '@/lib/safe-back';
+import { getContentPageSections, type ContentSection } from '@/lib/content-pages';
 
-const SHIPPING_FAQS = [
+export const SHIPPING_FAQS: ContentSection[] = [
   {
     category: 'Overview',
     question: 'Introduction',
@@ -126,11 +128,20 @@ const SHIPPING_FAQS = [
     answer:
       'For delivery-related questions or prize collection assistance, please contact JeetoBaz Support through the official support channels available on the JeetoBaz website or mobile application. When contacting support, please include your registered mobile number, winner ID (if available), prize name, draw reference, delivery address (if applicable), a description of the issue, and supporting photos or documents if required. This information helps us process your request efficiently.',
   },
-] as const;
+];
 
 export default function ShippingPolicyScreen() {
   const goBack = useSafeBack();
   const { theme } = useAppTheme();
+  const [sections, setSections] = useState<ContentSection[]>(SHIPPING_FAQS);
+
+  useEffect(() => {
+    let active = true;
+    getContentPageSections('shipping_policy').then(({ sections: overrideSections }) => {
+      if (active && overrideSections) setSections(overrideSections);
+    });
+    return () => { active = false; };
+  }, []);
 
   const shippingSchema = pageSchema('WebPage', '/shipping-policy', 'Shipping Policy', 'Review the JeetoBaz Shipping Policy covering prize delivery, winner verification, delivery timelines, and prize collection procedures.');
   const breadcrumb = breadcrumbSchema([{ name: 'Shipping Policy', path: '/shipping-policy' }]);
@@ -180,13 +191,13 @@ export default function ShippingPolicyScreen() {
       </View>
 
       <View style={styles.list}>
-        {SHIPPING_FAQS.map((item, index) => (
+        {sections.map((item, index) => (
           <View
             key={item.question}
             style={[
               styles.section,
               { borderBottomColor: theme.border },
-              index === SHIPPING_FAQS.length - 1 && styles.sectionLast,
+              index === sections.length - 1 && styles.sectionLast,
             ]}
           >
             <Text style={[styles.sectionTitle, { color: theme.gold }]}>{index + 1}. {item.question}</Text>
