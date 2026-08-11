@@ -356,6 +356,8 @@ export default function ProfileScreen() {
       } else {
         alert('Login failed: ' + error.message);
       }
+    } else {
+      alert('Login successful!');
     }
     setLoading(false);
   }
