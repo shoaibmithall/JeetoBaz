@@ -2059,6 +2059,12 @@ export default function AdminScreen() {
   const activeDraws = products.filter(p => p.status === 'active').length;
   const completedDraws = products.filter(p => p.status === 'completed').length;
   const pendingPayments = transactions.filter((txn) => txn.status === 'pending');
+  const overdueDraws = useMemo(() => {
+    const now = Date.now();
+    return products.filter((product) => (
+      product.status === 'active' && product.draw_date && new Date(product.draw_date).getTime() < now
+    ));
+  }, [products]);
   const filteredProducts = useMemo(() => {
     const query = productSearch.trim().toLowerCase();
     if (!query) return products;
@@ -2231,6 +2237,20 @@ export default function AdminScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {overdueDraws.length > 0 && (
+        <TouchableOpacity
+          style={styles.overdueDrawsBanner}
+          onPress={() => setActiveTab('products')}
+          accessibilityRole="button"
+        >
+          <TriangleAlert color="#FFD700" size={17} />
+          <Text style={styles.overdueDrawsBannerText}>
+            {overdueDraws.length} draw{overdueDraws.length > 1 ? 's' : ''} past its scheduled date and not yet run: {overdueDraws.map((p) => p.name).slice(0, 3).join(', ')}
+            {overdueDraws.length > 3 ? ` +${overdueDraws.length - 3} more` : ''}. Tap to review.
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <ScrollView style={styles.content}>
 
@@ -3499,6 +3519,8 @@ function createStyles(theme: AdminTheme) {
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 },
   editBanner: { backgroundColor: theme.goldSoft, borderWidth: 1, borderColor: theme.gold, borderRadius: 8, padding: 8, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   editBannerText: { color: theme.gold, fontSize: 13, textAlign: 'center' },
+  overdueDrawsBanner: { backgroundColor: '#3a2a05', borderBottomWidth: 1, borderBottomColor: theme.gold, paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  overdueDrawsBannerText: { color: theme.gold, fontSize: 13, flex: 1, flexWrap: 'wrap' },
   input: { backgroundColor: theme.surface, borderRadius: 10, borderWidth: 1, borderColor: theme.border, color: theme.text, padding: 15, marginBottom: 12, fontSize: 14 },
   categoryLabel: { color: theme.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 },
   categoryChipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
