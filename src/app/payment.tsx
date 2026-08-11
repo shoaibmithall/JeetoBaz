@@ -13,17 +13,26 @@ import { checkPaymentCooldown, markPaymentSubmitAttempt } from '@/lib/rate-limit
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, CreditCard, House, PartyPopper, TriangleAlert, Wallet, Zap } from 'lucide-react-native';
 import { useSafeBack } from '@/lib/safe-back';
+import { getPaymentAccounts, type PaymentAccount } from '@/lib/app-settings';
+import { PAYMENT_QR_FALLBACK } from '@/lib/payment-qr-fallback';
 
 const RECEIPT_BUCKET = 'payment-receipts';
-const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/jazzcash.jpg') },
-  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/easypaisa.jpg') },
-  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/nayapay.jpg') },
-  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/upaisa.jpg') },
-  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: null },
-  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/zindigi.jpg') },
-  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', qrImage: require('@/assets/images/payment-qr/alliedbank.jpg') },
+// Safety net: used until the admin-editable accounts load from Supabase, and if that
+// fetch ever fails or returns nothing, so a network hiccup never blocks a payment.
+const FALLBACK_PAYMENT_ACCOUNTS: PaymentAccount[] = [
+  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
 ];
+
+function resolveQrImage(account: PaymentAccount) {
+  if (account.qrImageUrl) return { uri: account.qrImageUrl };
+  return PAYMENT_QR_FALLBACK[account.method] ?? null;
+}
 
 function subscribeToHydration() {
   return () => {};
@@ -75,7 +84,9 @@ export default function PaymentScreen() {
   const productIdValue = hasHydratedParams ? firstParam(productId) : '';
   const productNameValue = hasHydratedParams ? firstParam(productName, 'Selected draw') : 'Selected draw';
   const entryFeeValue = hasHydratedParams ? firstParam(entryFee, '1') : '1';
-  const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
+  const [accounts, setAccounts] = useState<PaymentAccount[]>(FALLBACK_PAYMENT_ACCOUNTS);
+  const activeAccounts = accounts.filter((account) => account.active);
+  const [selectedMethod, setSelectedMethod] = useState(FALLBACK_PAYMENT_ACCOUNTS[0].method);
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [receiptPreviewError, setReceiptPreviewError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -87,10 +98,20 @@ export default function PaymentScreen() {
   const [walletSubmitting, setWalletSubmitting] = useState(false);
   const [walletError, setWalletError] = useState('');
   const [paidVia, setPaidVia] = useState<'wallet' | 'manual'>('manual');
-  const [qrPreview, setQrPreview] = useState<typeof PAYMENT_ACCOUNTS[number] | null>(null);
+  const [qrPreview, setQrPreview] = useState<PaymentAccount | null>(null);
   const submittingRef = useRef(false);
   const canSubmit = Boolean(receipt && productIdValue && !loading);
   const entryFeeNumber = Number(entryFeeValue) || 0;
+
+  useEffect(() => {
+    getPaymentAccounts().then(({ accounts: fetched }) => {
+      const active = fetched.filter((account) => account.active);
+      if (active.length) {
+        setAccounts(fetched);
+        setSelectedMethod((current) => (active.some((account) => account.method === current) ? current : active[0].method));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
@@ -424,7 +445,9 @@ export default function PaymentScreen() {
       <View style={styles.paymentBox}>
         <Text style={[styles.payTitle, { color: theme.text }]}>{t('sendPaymentTo')}:</Text>
 
-        {PAYMENT_ACCOUNTS.map((account) => (
+        {activeAccounts.map((account) => {
+          const qrImage = resolveQrImage(account);
+          return (
           <TouchableOpacity
             key={account.method}
             style={[
@@ -442,15 +465,16 @@ export default function PaymentScreen() {
                 <Text style={[styles.methodNumber, { color: theme.gold }]}>{account.number}</Text>
               </TouchableOpacity>
               <Text style={[styles.methodAccount, { color: theme.primary }]}>{account.accountTitle}</Text>
-              <Text style={[styles.copyHint, { color: theme.subtle }]}>{account.qrImage ? 'Tap number to copy, or tap QR to enlarge' : 'Tap number to copy'}</Text>
+              <Text style={[styles.copyHint, { color: theme.subtle }]}>{qrImage ? 'Tap number to copy, or tap QR to enlarge' : 'Tap number to copy'}</Text>
             </View>
-            {account.qrImage && (
+            {qrImage && (
               <TouchableOpacity style={styles.methodQrBox} onPress={() => setQrPreview(account)} accessibilityRole="button" accessibilityLabel={`Enlarge ${account.method} payment QR code`}>
-                <Image source={account.qrImage} style={styles.methodQrImage} resizeMode="contain" />
+                <Image source={qrImage} style={styles.methodQrImage} resizeMode="contain" />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
-        ))}
+          );
+        })}
 
         <View style={[styles.stepsBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
           <Text style={[styles.stepsTitle, { color: theme.primary }]}>{t('howToPay')}:</Text>
@@ -519,8 +543,8 @@ export default function PaymentScreen() {
       <TouchableOpacity style={styles.qrModalBackdrop} activeOpacity={1} onPress={() => setQrPreview(null)}>
         <View style={styles.qrModalCard}>
           <Text style={styles.qrModalTitle}>{qrPreview?.method}</Text>
-          {qrPreview?.qrImage ? (
-            <Image source={qrPreview.qrImage} style={styles.qrModalImage} resizeMode="contain" accessibilityLabel={`${qrPreview.method} payment QR code`} />
+          {qrPreview && resolveQrImage(qrPreview) ? (
+            <Image source={resolveQrImage(qrPreview) ?? undefined} style={styles.qrModalImage} resizeMode="contain" accessibilityLabel={`${qrPreview.method} payment QR code`} />
           ) : null}
           <TouchableOpacity style={styles.qrModalCloseBtn} onPress={() => setQrPreview(null)}>
             <Text style={styles.qrModalCloseText}>Close</Text>
