@@ -8,6 +8,7 @@ import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
+import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
 import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
@@ -135,6 +136,7 @@ export default function SignupScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+          <AuthHeaderGlow />
           <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backBtn}>
             <ChevronLeft color={theme.text} size={24} />
           </TouchableOpacity>
@@ -145,6 +147,7 @@ export default function SignupScreen() {
         </View>
 
         <View style={[styles.signupCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <AuthCardGlow />
           <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
             <Shield color="#18a663" size={16} />
             <Text style={styles.secureBadgeText}>Create Your Account</Text>
@@ -372,13 +375,13 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
   scrollContent: { paddingBottom: 40 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
   backBtn: { padding: 4 },
   logoRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   logoImage: { width: 40, height: 40, borderRadius: 8 },
   logo: { fontSize: 28, fontWeight: 'bold', color: 'white' },
 
-  signupCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24 },
+  signupCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24, overflow: 'hidden' },
 
   secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
   secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },

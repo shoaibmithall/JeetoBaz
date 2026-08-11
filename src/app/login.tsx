@@ -15,6 +15,7 @@ import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { BrandedLoader } from '@/components/branded-loader';
+import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
@@ -1214,6 +1215,7 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
+          <AuthHeaderGlow />
           <View style={styles.logoRow}>
             <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
             <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
@@ -1222,6 +1224,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={[styles.loginCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <AuthCardGlow />
           <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
             <Shield color="#18a663" size={16} />
             <Text style={styles.secureBadgeText}>Secure Account Access</Text>
@@ -1347,13 +1350,13 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
   scrollContent: { paddingBottom: 40 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 50, paddingHorizontal: 20, alignItems: 'center' },
+  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 50, paddingHorizontal: 20, alignItems: 'center', overflow: 'hidden' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoImage: { width: 50, height: 50, borderRadius: 10 },
   logo: { fontSize: 40, fontWeight: 'bold', color: 'white' },
   tagline: { fontSize: 13, color: '#9aac9f', marginTop: 10, textAlign: 'center', lineHeight: 18 },
 
-  loginCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24 },
+  loginCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24, overflow: 'hidden' },
 
   secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
   secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },
