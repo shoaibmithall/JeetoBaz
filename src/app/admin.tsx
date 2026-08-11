@@ -2473,12 +2473,15 @@ export default function AdminScreen() {
             {filteredDrawResults.map((result) => {
               const draft = getPrizeStatusDraft(result);
               const winnerDraft = getWinnerStatusDraft(result);
+              const winnerUser = users.find((u) => u.phone === result.winner_phone);
               return (
                 <View key={result.id} style={styles.paymentCard}>
                   <View style={styles.productHeader}>
                     <Text style={styles.productName}>{result.products?.name || 'Unknown Draw'}</Text>
                   </View>
                   <Text style={styles.paymentLine}>Winner: {result.winner_name} ({result.winner_phone})</Text>
+                  {winnerUser?.cnic && <Text style={styles.paymentLine}>CNIC: {winnerUser.cnic}</Text>}
+                  {winnerUser?.jazzcash_number && <Text style={styles.paymentLine}>JazzCash: {winnerUser.jazzcash_number}</Text>}
                   <Text style={styles.paymentLine}>Ticket: {result.winner_ticket_number}</Text>
                   <Text style={styles.paymentLine}>Drawn: {new Date(result.drawn_at).toLocaleString()}</Text>
                   <Text style={styles.paymentLine}>Winner Verification Status:</Text>
@@ -2790,6 +2793,8 @@ export default function AdminScreen() {
                   <View style={styles.inlineRow}><UserRound color={theme.text} size={16} /><Text style={styles.userName}>{u.name || 'Unknown'}</Text></View>
                   <Text style={styles.userPhone}>{u.phone}</Text>
                   {u.email && <Text style={styles.userDate}>Email: {u.email}</Text>}
+                  {u.cnic && <Text style={styles.userDate}>CNIC: {u.cnic}</Text>}
+                  {u.jazzcash_number && <Text style={styles.userDate}>JazzCash: {u.jazzcash_number}</Text>}
                   <Text style={styles.userDate}>Member ID: JB-{u.member_number}</Text>
                   <Text style={styles.userDate}>City: {details?.city || 'Not added'}</Text>
                   <Text style={styles.userDate}>Date of Birth: {details?.date_of_birth ? new Date(details.date_of_birth).toLocaleDateString() : 'Not added'}</Text>
