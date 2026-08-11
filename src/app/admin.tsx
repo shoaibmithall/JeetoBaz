@@ -41,6 +41,7 @@ import {
 import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 import { PRODUCT_CATEGORIES } from '@/lib/product-categories';
+import { downloadCsv } from '@/lib/csv-export';
 
 type DrawResultWithProduct = DrawResult & { products?: Product | null };
 const TESTIMONIAL_SOURCES: TestimonialSource[] = ['google', 'trustpilot', 'website', 'whatsapp'];
@@ -88,7 +89,7 @@ import { isValidSlug, slugify } from '@/lib/validation';
 import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
   Award, BadgeCheck, BarChart3, Bell, BookOpen, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList, CreditCard,
-  Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
+  Dices, DollarSign, Download, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Star, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
 } from 'lucide-react-native';
@@ -480,6 +481,19 @@ export default function AdminScreen() {
     if (data) setUsers(data);
   }
 
+  function exportUsersCsv() {
+    downloadCsv('jeetobaz-users.csv', users.map((u) => ({
+      member_id: `JB-${u.member_number}`,
+      name: u.name,
+      phone: u.phone,
+      email: u.email || '',
+      cnic: u.cnic || '',
+      jazzcash_number: u.jazzcash_number || '',
+      referral_code: u.referral_code || '',
+      created_at: u.created_at,
+    })));
+  }
+
   async function fetchUserProfileDetails() {
     const { data } = await supabase.from('user_profile_details').select('auth_user_id, city, date_of_birth');
     if (!data) return;
@@ -503,6 +517,21 @@ export default function AdminScreen() {
       setTransactions(visibleTransactions);
       loadReceiptUrls(visibleTransactions);
     }
+  }
+
+  function exportTransactionsCsv() {
+    downloadCsv('jeetobaz-payments.csv', transactions.map((txn) => ({
+      id: txn.id,
+      product_id: txn.product_id,
+      phone: txn.phone,
+      sender_name: txn.sender_name || '',
+      sender_phone: txn.sender_phone || '',
+      amount: txn.amount,
+      payment_method: txn.payment_method || '',
+      jazzcash_txn_id: txn.jazzcash_txn_id,
+      status: txn.status,
+      created_at: txn.created_at,
+    })));
   }
 
   async function clearPendingPaymentsWithExistingEntries(items: Transaction[]) {
@@ -904,6 +933,30 @@ export default function AdminScreen() {
       .order('drawn_at', { ascending: false });
     if (data) setDrawResults(data as unknown as DrawResultWithProduct[]);
     await fetchCertificates();
+  }
+
+  function exportWinnersCsv() {
+    downloadCsv('jeetobaz-winners.csv', drawResults.map((result) => ({
+      product: result.products?.name || 'Unknown Draw',
+      winner_name: result.winner_name,
+      winner_phone: result.winner_phone,
+      ticket_number: result.winner_ticket_number,
+      total_entries: result.total_entries,
+      drawn_at: result.drawn_at,
+      prize_status: result.prize_status,
+      winner_status: result.winner_status,
+    })));
+  }
+
+  function exportEntriesCsv() {
+    downloadCsv('jeetobaz-entries.csv', entries.map((entry) => ({
+      product_id: entry.product_id,
+      name: entry.name || '',
+      phone: entry.phone,
+      ticket_number: entry.ticket_number || '',
+      entry_source: entry.entry_source || '',
+      created_at: entry.created_at,
+    })));
   }
 
   async function fetchCertificates() {
@@ -2377,6 +2430,16 @@ export default function AdminScreen() {
         {activeTab === 'draws' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><Trophy color={theme.text} size={19} /><Text style={styles.sectionTitle}>Completed Draws ({drawResults.length})</Text></View>
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity style={[styles.photoUploadButton, styles.settingsHalfButton]} onPress={exportWinnersCsv}>
+                <Download color="#4a9eff" size={16} />
+                <Text style={styles.photoUploadText}>Export Winners CSV</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.photoUploadButton, styles.settingsHalfButton]} onPress={exportEntriesCsv}>
+                <Download color="#4a9eff" size={16} />
+                <Text style={styles.photoUploadText}>Export Entries CSV</Text>
+              </TouchableOpacity>
+            </View>
             {drawResults.length > 0 && (
               <View style={styles.productSearchBox}>
                 <Search color={theme.muted} size={20} />
@@ -2492,6 +2555,10 @@ export default function AdminScreen() {
         {activeTab === 'payments' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><ReceiptText color={theme.text} size={19} /><Text style={styles.sectionTitle}>Pending Payments ({pendingPayments.length})</Text></View>
+            <TouchableOpacity style={styles.photoUploadButton} onPress={exportTransactionsCsv}>
+              <Download color="#4a9eff" size={16} />
+              <Text style={styles.photoUploadText}>Export All Payments CSV ({transactions.length} total)</Text>
+            </TouchableOpacity>
             {pendingPayments.length > 0 && (
               <View style={styles.productSearchBox}>
                 <Search color={theme.muted} size={20} />
@@ -2680,6 +2747,10 @@ export default function AdminScreen() {
         {activeTab === 'users' && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}><UsersRound color={theme.text} size={19} /><Text style={styles.sectionTitle}>All Users ({users.length})</Text></View>
+            <TouchableOpacity style={styles.photoUploadButton} onPress={exportUsersCsv}>
+              <Download color="#4a9eff" size={16} />
+              <Text style={styles.photoUploadText}>Export Users CSV</Text>
+            </TouchableOpacity>
             {users.length > 0 && (
               <View style={styles.productSearchBox}>
                 <Search color={theme.muted} size={20} />
