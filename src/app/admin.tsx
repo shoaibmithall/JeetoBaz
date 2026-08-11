@@ -51,7 +51,7 @@ import {
   resolveBlogCover,
   updateBlogPost,
 } from '@/lib/blog';
-import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, RefundRequest, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
+import type { AdminAuditLogEntry, BlogCategory, BlogPost, BrandShowcaseImage, DrawResult, Entry, PrizeStatus, Product, ProductFormData, RefundRequest, SupportTicket, Testimonial, TestimonialSource, Transaction, User, VerificationDocument, WalletTopupRequest, WalletTransactionType, WinnerStatus } from '@/types/database';
 import { buildDrawDateIso, formatDrawDate, parseDrawDateParts } from '@/lib/format-draw-date';
 import { PRODUCT_CATEGORIES } from '@/lib/product-categories';
 import { downloadCsv } from '@/lib/csv-export';
@@ -281,6 +281,8 @@ export default function AdminScreen() {
   const [walletAdjustExpandedPhone, setWalletAdjustExpandedPhone] = useState<string | null>(null);
   const [walletAdjustDrafts, setWalletAdjustDrafts] = useState<Record<string, { amount: string; type: WalletTransactionType; reason: string }>>({});
   const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [supportTicketResolvingId, setSupportTicketResolvingId] = useState<string | null>(null);
   const [refundFormExpandedPhone, setRefundFormExpandedPhone] = useState<string | null>(null);
   const [refundDrafts, setRefundDrafts] = useState<Record<string, { transactionId: string; reason: string }>>({});
   const [refundSubmitting, setRefundSubmitting] = useState(false);
@@ -403,6 +405,7 @@ export default function AdminScreen() {
       fetchWalletTopupRequests();
       fetchWalletBalances();
       fetchRefundRequests();
+      fetchSupportTickets();
       fetchDrawResults();
       fetchAuditLog();
       loadAnnouncement();
@@ -2120,6 +2123,41 @@ export default function AdminScreen() {
     alert(`Wallet updated. New balance: Rs. ${rpcResult.new_balance}`);
   }
 
+  async function fetchSupportTickets() {
+    const { data } = await supabase.from('support_tickets').select('*').order('created_at', { ascending: false });
+    if (data) setSupportTickets(data);
+  }
+
+  async function resolveSupportTicket(ticket: SupportTicket) {
+    setSupportTicketResolvingId(ticket.id);
+    const { error } = await supabase
+      .from('support_tickets')
+      .update({ status: 'resolved', resolved_at: new Date().toISOString() })
+      .eq('id', ticket.id);
+    setSupportTicketResolvingId(null);
+
+    if (error) {
+      alert('Could not mark resolved: ' + error.message);
+      return;
+    }
+    await fetchSupportTickets();
+  }
+
+  async function reopenSupportTicket(ticket: SupportTicket) {
+    setSupportTicketResolvingId(ticket.id);
+    const { error } = await supabase
+      .from('support_tickets')
+      .update({ status: 'open', resolved_at: null })
+      .eq('id', ticket.id);
+    setSupportTicketResolvingId(null);
+
+    if (error) {
+      alert('Could not reopen: ' + error.message);
+      return;
+    }
+    await fetchSupportTickets();
+  }
+
   async function fetchRefundRequests() {
     const { data } = await supabase.from('refund_requests').select('*').order('created_at', { ascending: false });
     if (data) setRefundRequests(data);
@@ -2401,13 +2439,14 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.tabBar}>
-        {['products', 'draws', 'payments', 'wallet-topups', 'users', 'revenue', 'audit', 'settings'].map(tab => (
+        {['products', 'draws', 'payments', 'wallet-topups', 'users', 'support', 'revenue', 'audit', 'settings'].map(tab => (
           <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => setActiveTab(tab)}>
             {tab === 'products' ? <Package color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'draws' ? <Trophy color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'payments' ? <ReceiptText color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'wallet-topups' ? <Wallet color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'users' ? <UsersRound color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
+              : tab === 'support' ? <Mail color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'revenue' ? <DollarSign color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : tab === 'audit' ? <History color={activeTab === tab ? theme.gold : theme.subtle} size={19} />
               : <Settings color={activeTab === tab ? theme.gold : theme.subtle} size={19} />}
@@ -3137,6 +3176,43 @@ export default function AdminScreen() {
                 </View>
               );
             })}
+          </View>
+        )}
+
+        {activeTab === 'support' && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Mail color={theme.text} size={19} />
+              <Text style={styles.sectionTitle}>Support Inbox ({supportTickets.filter((t) => t.status === 'open').length} open)</Text>
+            </View>
+            {supportTickets.length === 0 ? (
+              <Text style={styles.emptyText}>No feedback or problem reports yet.</Text>
+            ) : (
+              supportTickets.map((ticket) => (
+                <View key={ticket.id} style={[styles.paymentCard, ticket.status === 'resolved' && styles.verificationAdminCardHidden]}>
+                  <View style={styles.productHeader}>
+                    <Text style={styles.productName}>{ticket.subject}</Text>
+                    <View style={[styles.statusBadge, ticket.kind === 'problem' ? styles.rejectedBadge : styles.activeBadge]}>
+                      <Text style={styles.statusText}>{ticket.kind === 'problem' ? 'Problem' : 'Feedback'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.paymentLine}>{ticket.message}</Text>
+                  <Text style={styles.paymentLine}>From: {ticket.name || 'Unknown'} ({ticket.phone || 'No phone'})</Text>
+                  <Text style={styles.paymentLine}>Received: {new Date(ticket.created_at).toLocaleString()}</Text>
+                  <View style={styles.actionRow}>
+                    {ticket.status === 'open' ? (
+                      <TouchableOpacity style={styles.approveButton} onPress={() => resolveSupportTicket(ticket)} disabled={supportTicketResolvingId === ticket.id}>
+                        <Check color="white" size={16} /><Text style={styles.approveButtonText}>{supportTicketResolvingId === ticket.id ? 'Working...' : 'Mark Resolved'}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => reopenSupportTicket(ticket)} disabled={supportTicketResolvingId === ticket.id}>
+                        <Text style={styles.visibilityButtonText}>{supportTicketResolvingId === ticket.id ? 'Working...' : 'Reopen'}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              ))
+            )}
           </View>
         )}
 
