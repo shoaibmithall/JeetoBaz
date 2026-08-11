@@ -30,6 +30,7 @@ import {
   YouTubeIcon,
 } from '@/components/social-icons';
 import { useAppTheme } from '@/hooks/use-theme';
+import { SOCIAL_LINKS as SOCIAL_URLS } from '@/lib/contact-info';
 
 type FooterLink = {
   label: string;
@@ -121,10 +122,10 @@ const CATEGORY_ITEMS: FooterLink[] = [
 // and Follow JeetoBaz sections. These are NOT generic homepage URLs (facebook.com/, etc.), which
 // is what used to be here and opened each platform's generic app/feed instead of JeetoBaz's page.
 const SOCIAL_LINKS: { icon: ReactNode; url: string; label: string }[] = [
-  { icon: <FacebookIcon size={38} />, url: 'https://www.facebook.com/share/17uAJE6AQY/?mibextid=wwXIfr', label: 'Facebook' },
-  { icon: <InstagramIcon size={38} />, url: 'https://www.instagram.com/jeetobaz?igsh=ZWZpaGxyajY4Mmxy&utm_source=qr', label: 'Instagram' },
-  { icon: <TikTokIcon size={38} />, url: 'https://www.tiktok.com/@jeetobaz?_r=1&_t=ZS-97wXLf85a2G', label: 'TikTok' },
-  { icon: <YouTubeIcon size={38} />, url: 'https://youtube.com/@jeetobaz?si=XIzw2WyovPCZZjv8', label: 'YouTube' },
+  { icon: <FacebookIcon size={38} />, url: SOCIAL_URLS.facebook, label: 'Facebook' },
+  { icon: <InstagramIcon size={38} />, url: SOCIAL_URLS.instagram, label: 'Instagram' },
+  { icon: <TikTokIcon size={38} />, url: SOCIAL_URLS.tiktok, label: 'TikTok' },
+  { icon: <YouTubeIcon size={38} />, url: SOCIAL_URLS.youtube, label: 'YouTube' },
   { icon: <WhatsAppIcon size={38} />, url: 'https://wa.me/923372561482', label: 'WhatsApp' },
 ];
 

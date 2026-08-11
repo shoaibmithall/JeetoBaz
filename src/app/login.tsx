@@ -16,6 +16,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { BrandedLoader } from '@/components/branded-loader';
 import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
+import { SUPPORT_EMAIL } from '@/lib/contact-info';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
 import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push-notifications';
@@ -28,7 +29,6 @@ import {
 
 const PROFILE_AVATAR_BUCKET = 'profile-avatars';
 const USER_AVATAR_STORAGE_KEY = 'userAvatarUrl';
-const SUPPORT_EMAIL = 'support@jeetobaz.pk';
 
 function avatarStorageKey(userId: string) {
   return `${USER_AVATAR_STORAGE_KEY}:${userId}`;

@@ -4,6 +4,7 @@ import { ClipboardList } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { useSafeBack } from '@/lib/safe-back';
+import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from '@/lib/contact-info';
 
 const TERMS_FAQS = [
   {
@@ -412,7 +413,7 @@ const TERMS_FAQS = [
     category: 'Policy & Support',
     question: 'Contact Information',
     answer:
-      'For questions, complaints or legal notices, users may contact JeetoBaz through its official channels:\n\nBusiness Name: JeetoBaz\nEmail: support@jeetobaz.pk\nPhone: 0337-2561482\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nOfficial announcements and policy updates will be published through JeetoBaz\'s authorized communication channels.',
+      `For questions, complaints or legal notices, users may contact JeetoBaz through its official channels:\n\nBusiness Name: JeetoBaz\nEmail: ${SUPPORT_EMAIL}\nPhone: ${SUPPORT_PHONE_DISPLAY.replace('+92 ', '0').replace(/ /g, '-')}\nWebsite: https://jeetobaz.pk\nOffice Address: Hyderabad, Sindh, Pakistan\n\nOfficial announcements and policy updates will be published through JeetoBaz's authorized communication channels.`,
   },
   {
     category: 'Policy & Support',
