@@ -13,16 +13,19 @@ import { checkWalletTopupCooldown, markWalletTopupSubmitAttempt } from '@/lib/ra
 import { PaymentBrandLogo } from '@/components/payment-brand-logo';
 import { CheckCircle2, House, PartyPopper, TriangleAlert, Wallet } from 'lucide-react-native';
 import { useSafeBack } from '@/lib/safe-back';
+import { getPaymentAccounts, type PaymentAccount } from '@/lib/app-settings';
 
 const RECEIPT_BUCKET = 'payment-receipts';
-const PAYMENT_ACCOUNTS = [
-  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed' },
-  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed' },
+// Safety net: used until the admin-editable accounts load from Supabase, and if that
+// fetch ever fails or returns nothing, so a network hiccup never blocks a top-up.
+const FALLBACK_PAYMENT_ACCOUNTS: PaymentAccount[] = [
+  { method: 'JazzCash', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'Easypaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'NayaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'UPaisa', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'SadaPay', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'JS Bank / Zindigi App', number: '03706814892', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
+  { method: 'My ABL Allied Bank / Bank Transfer', number: '08530010142159150013', accountTitle: 'Shoaib Ahmed', qrImageUrl: null, active: true },
 ];
 
 type ReceiptAsset = {
@@ -49,7 +52,9 @@ export default function WalletTopupScreen() {
   const router = useRouter();
   const goBack = useSafeBack();
   const { user } = useAuth();
-  const [selectedMethod, setSelectedMethod] = useState(PAYMENT_ACCOUNTS[0].method);
+  const [accounts, setAccounts] = useState<PaymentAccount[]>(FALLBACK_PAYMENT_ACCOUNTS);
+  const activeAccounts = accounts.filter((account) => account.active);
+  const [selectedMethod, setSelectedMethod] = useState(FALLBACK_PAYMENT_ACCOUNTS[0].method);
   const [amount, setAmount] = useState('');
   const [receipt, setReceipt] = useState<ReceiptAsset | null>(null);
   const [receiptPreviewError, setReceiptPreviewError] = useState('');
@@ -61,6 +66,16 @@ export default function WalletTopupScreen() {
   const submittingRef = useRef(false);
   const amountValue = Number(amount);
   const canSubmit = Boolean(receipt && amount && amountValue >= 1 && amountValue <= 1000000 && !loading);
+
+  useEffect(() => {
+    getPaymentAccounts().then(({ accounts: fetched }) => {
+      const active = fetched.filter((account) => account.active);
+      if (active.length) {
+        setAccounts(fetched);
+        setSelectedMethod((current) => (active.some((account) => account.method === current) ? current : active[0].method));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     Promise.all([getStoredValue('userPhone'), getStoredValue('userName')]).then(
@@ -276,7 +291,7 @@ export default function WalletTopupScreen() {
       <View style={styles.paymentBox}>
         <Text style={[styles.payTitle, { color: theme.text }]}>{t('sendPaymentTo')}:</Text>
 
-        {PAYMENT_ACCOUNTS.map((account) => (
+        {activeAccounts.map((account) => (
           <TouchableOpacity
             key={account.method}
             style={[

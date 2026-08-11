@@ -10,7 +10,7 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnst
 import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
-import { getAnnouncement, getGoogleReviewLink, getHomeAdImages, saveAnnouncement as saveAnnouncementSetting, saveGoogleReviewLink, saveHomeAdImages } from '@/lib/app-settings';
+import { getAnnouncement, getGoogleReviewLink, getHomeAdImages, getPaymentAccounts, saveAnnouncement as saveAnnouncementSetting, saveGoogleReviewLink, saveHomeAdImages, savePaymentAccounts, type PaymentAccount } from '@/lib/app-settings';
 import {
   createVerificationDocument,
   deleteVerificationDocument,
@@ -87,7 +87,7 @@ function formatAuditDetails(details: Record<string, unknown>) {
 import { isValidSlug, slugify } from '@/lib/validation';
 import { pingIndexNow, pingIndexNowBulk } from '@/lib/indexnow';
 import {
-  Award, BadgeCheck, BarChart3, Bell, BookOpen, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList,
+  Award, BadgeCheck, BarChart3, Bell, BookOpen, CalendarDays, Camera, Check, CheckSquare, ChevronDown, Circle, ClipboardList, CreditCard,
   Dices, DollarSign, Eye, EyeOff, History, LockKeyhole, Mail, Moon, Package, Pencil,
   Plus, ReceiptText, Rocket, Save, Send, Settings, Square, Star, Trash2,
   Search, Sun, TriangleAlert, Trophy, Truck, UserRound, UsersRound, Wallet, Wand2, X,
@@ -97,6 +97,7 @@ const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 const RECEIPT_BUCKET = 'payment-receipts';
 const WINNER_MEDIA_BUCKET = 'winner-media';
 const HOME_ADS_BUCKET = 'home-ads';
+const PAYMENT_QR_CODES_BUCKET = 'payment-qr-codes';
 const VERIFICATION_DOCUMENTS_BUCKET = 'verification-documents';
 const BRAND_SHOWCASE_BUCKET = 'brand-showcase';
 const CERTIFICATES_BUCKET = 'winner-certificates';
@@ -301,6 +302,10 @@ export default function AdminScreen() {
   const [homeAdImagesInput, setHomeAdImagesInput] = useState('');
   const [homeAdImagesSaved, setHomeAdImagesSaved] = useState(false);
   const [homeAdUploading, setHomeAdUploading] = useState(false);
+  const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
+  const [paymentAccountsSaving, setPaymentAccountsSaving] = useState(false);
+  const [paymentAccountsSaved, setPaymentAccountsSaved] = useState(false);
+  const [paymentQrUploadingIndex, setPaymentQrUploadingIndex] = useState<number | null>(null);
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
@@ -377,6 +382,7 @@ export default function AdminScreen() {
       loadAnnouncement();
       loadGoogleReviewLink();
       loadHomeAdImages();
+      loadPaymentAccountsSettings();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
       loadTestimonials();
@@ -1133,6 +1139,100 @@ export default function AdminScreen() {
       alert(message);
     } finally {
       setHomeAdUploading(false);
+    }
+  }
+
+  async function loadPaymentAccountsSettings() {
+    const { accounts } = await getPaymentAccounts();
+    setPaymentAccounts(accounts);
+  }
+
+  async function savePaymentAccountsSettings(nextAccounts = paymentAccounts) {
+    setPaymentAccountsSaving(true);
+    const { accounts, error } = await savePaymentAccounts(nextAccounts);
+    setPaymentAccountsSaving(false);
+    if (error) {
+      alert('Payment accounts could not be saved. Error: ' + error.message);
+      return;
+    }
+    setPaymentAccounts(accounts);
+    setPaymentAccountsSaved(true);
+    setTimeout(() => setPaymentAccountsSaved(false), 2000);
+  }
+
+  function updatePaymentAccountField(index: number, field: 'method' | 'number' | 'accountTitle', value: string) {
+    setPaymentAccounts((current) => current.map((account, i) => (i === index ? { ...account, [field]: value } : account)));
+  }
+
+  function togglePaymentAccountActive(index: number) {
+    setPaymentAccounts((current) => {
+      const next = current.map((account, i) => (i === index ? { ...account, active: !account.active } : account));
+      void savePaymentAccountsSettings(next);
+      return next;
+    });
+  }
+
+  function addPaymentAccountRow() {
+    setPaymentAccounts((current) => [...current, { method: '', number: '', accountTitle: '', qrImageUrl: null, active: true }]);
+  }
+
+  function removePaymentAccountRow(index: number) {
+    Alert.alert('Remove payment method?', 'Users will no longer see this option on the payment screen once you save.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          const next = paymentAccounts.filter((_, i) => i !== index);
+          setPaymentAccounts(next);
+          void savePaymentAccountsSettings(next);
+        },
+      },
+    ]);
+  }
+
+  async function uploadPaymentAccountQr(index: number) {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Photo permission is required to upload a QR code.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setPaymentQrUploadingIndex(index);
+    try {
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const response = await fetch(asset.uri);
+      const fileData = await response.arrayBuffer();
+      const filePath = `${Date.now()}.${extension}`;
+      const { error } = await supabase.storage
+        .from(PAYMENT_QR_CODES_BUCKET)
+        .upload(filePath, fileData, { contentType: mimeType, upsert: false });
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from(PAYMENT_QR_CODES_BUCKET).getPublicUrl(filePath);
+      const next = paymentAccounts.map((account, i) => (i === index ? { ...account, qrImageUrl: data.publicUrl } : account));
+      setPaymentAccounts(next);
+      await savePaymentAccountsSettings(next);
+      alert('QR code uploaded and saved.');
+    } catch (error) {
+      const message = error && typeof error === 'object' && 'message' in error
+        ? String(error.message)
+        : 'QR code upload failed.';
+      alert(message);
+    } finally {
+      setPaymentQrUploadingIndex(null);
     }
   }
 
@@ -3164,6 +3264,85 @@ export default function AdminScreen() {
 
             <View style={styles.divider} />
 
+            <View style={styles.settingLabelRow}><CreditCard color={theme.text} size={17} /><Text style={styles.settingLabel}>Payment Accounts</Text></View>
+            <Text style={styles.settingHint}>
+              The account numbers and QR codes shown to users on the payment and wallet top-up screens. Toggle
+              Active/Inactive to hide a method without deleting it (e.g. if an account gets temporarily blocked).
+            </Text>
+            <View style={styles.verificationList}>
+              {paymentAccounts.length === 0 ? (
+                <Text style={styles.emptyText}>No payment accounts configured yet.</Text>
+              ) : paymentAccounts.map((account, index) => (
+                <View key={`payment-account-${index}`} style={[styles.verificationAdminCard, !account.active && styles.verificationAdminCardHidden]}>
+                  <View style={styles.verificationAdminContent}>
+                    <View style={styles.productHeader}>
+                      <TextInput
+                        style={[styles.input, styles.paymentAccountMethodInput]}
+                        placeholder="Method name e.g. JazzCash"
+                        placeholderTextColor="#666"
+                        value={account.method}
+                        onChangeText={(value) => updatePaymentAccountField(index, 'method', value)}
+                      />
+                      <View style={[styles.statusBadge, account.active ? styles.activeBadge : styles.completedBadge]}>
+                        <Circle color={account.active ? theme.primary : theme.gold} size={8} fill={account.active ? theme.primary : theme.gold} />
+                        <Text style={styles.statusText}>{account.active ? 'Active' : 'Inactive'}</Text>
+                      </View>
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Account number"
+                      placeholderTextColor="#666"
+                      value={account.number}
+                      onChangeText={(value) => updatePaymentAccountField(index, 'number', value)}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Account title"
+                      placeholderTextColor="#666"
+                      value={account.accountTitle}
+                      onChangeText={(value) => updatePaymentAccountField(index, 'accountTitle', value)}
+                    />
+                    {account.qrImageUrl ? (
+                      <Image source={{ uri: account.qrImageUrl }} style={styles.paymentAccountQrPreview} resizeMode="contain" accessibilityLabel={`${account.method || 'Payment'} QR code`} />
+                    ) : (
+                      <Text style={styles.settingNote}>No custom QR uploaded — the app's default QR for this method name is used, if one exists.</Text>
+                    )}
+                    <View style={styles.verificationActionRow}>
+                      <TouchableOpacity
+                        style={[styles.photoUploadButton, paymentQrUploadingIndex === index && styles.photoUploadDisabled]}
+                        onPress={() => uploadPaymentAccountQr(index)}
+                        disabled={paymentQrUploadingIndex === index}
+                      >
+                        {paymentQrUploadingIndex !== index && <Camera color="#4a9eff" size={16} />}
+                        <Text style={styles.photoUploadText}>{paymentQrUploadingIndex === index ? 'Uploading...' : 'Upload QR'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.visibilityButton} onPress={() => togglePaymentAccountActive(index)}>
+                        {account.active ? <EyeOff color={theme.gold} size={16} /> : <Eye color={theme.gold} size={16} />}
+                        <Text style={styles.visibilityButtonText}>{account.active ? 'Deactivate' : 'Activate'}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.deleteWideButton} onPress={() => removePaymentAccountRow(index)}>
+                        <Trash2 color={theme.danger} size={16} /><Text style={styles.deleteWideButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+            <View style={styles.settingsButtonRow}>
+              <TouchableOpacity style={[styles.addButton, styles.settingsHalfButton]} onPress={() => savePaymentAccountsSettings()} disabled={paymentAccountsSaving}>
+                {paymentAccountsSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+                <Text style={styles.addButtonText}>{paymentAccountsSaving ? 'Saving...' : paymentAccountsSaved ? 'Saved!' : 'Save Payment Accounts'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.photoUploadButton, styles.settingsHalfButton]} onPress={addPaymentAccountRow}>
+                <Plus color="#4a9eff" size={18} />
+                <Text style={styles.photoUploadText}>Add Payment Method</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
             <View style={styles.settingLabelRow}><Send color={theme.text} size={17} /><Text style={styles.settingLabel}>Send Notification</Text></View>
             <Text style={styles.settingHint}>This notification will appear on every user's Notifications page.</Text>
             <TextInput
@@ -3276,6 +3455,8 @@ function createStyles(theme: AdminTheme) {
   settingsHalfButton: { flex: 1 },
   adPreviewRow: { marginBottom: 4 },
   adPreviewImage: { width: 150, height: 72, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: theme.border },
+  paymentAccountMethodInput: { flex: 1, marginBottom: 0, marginRight: 10 },
+  paymentAccountQrPreview: { width: 96, height: 96, borderRadius: 8, marginTop: 8, borderWidth: 1, borderColor: theme.border, alignSelf: 'flex-start' },
   verificationPreviewImage: { width: '100%', height: 260, borderRadius: 10, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border, marginBottom: 12 },
   verificationList: { marginTop: 14 },
   verificationAdminCard: { backgroundColor: theme.surface, borderRadius: 12, borderWidth: 1, borderColor: theme.border, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 12 },
