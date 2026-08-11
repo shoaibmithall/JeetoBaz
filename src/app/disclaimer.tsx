@@ -8,15 +8,13 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
 import { useSafeBack } from '@/lib/safe-back';
-
-// support@ and privacy@ are live as of Cloudflare Email Routing setup (both forward to
-// complaintsjeetobaz@, the address wired up elsewhere in the app -- see help.tsx, privacy.tsx,
-// about.tsx, login.tsx). All three inboxes route to the same monitored Gmail account.
-const SUPPORT_EMAIL = 'support@jeetobaz.pk';
-const COMPLAINTS_EMAIL = 'complaintsjeetobaz@gmail.com';
-const PRIVACY_EMAIL = 'privacy@jeetobaz.pk';
-const CONTACT_PHONE_DISPLAY = '+92 337 2561482';
-const CONTACT_PHONE = '923372561482';
+import {
+  COMPLAINTS_EMAIL,
+  PRIVACY_EMAIL,
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE as CONTACT_PHONE,
+  SUPPORT_PHONE_DISPLAY as CONTACT_PHONE_DISPLAY,
+} from '@/lib/contact-info';
 
 // Matches the fix already applied to help.tsx: react-native-web's Linking.openURL() always opens
 // a new tab, which leaves a stray blank tab behind for mailto: links when no mail app is

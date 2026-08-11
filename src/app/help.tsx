@@ -8,12 +8,7 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { showAlert } from '@/lib/alert';
 import { useSafeBack } from '@/lib/safe-back';
-
-const SUPPORT_PHONE_DISPLAY = '+92 337 2561482';
-const SUPPORT_PHONE = '923372561482';
-const COMPLAINTS_EMAIL = 'complaintsjeetobaz@gmail.com';
-const SUPPORT_EMAIL = 'support@jeetobaz.pk';
-const PRIVACY_EMAIL = 'privacy@jeetobaz.pk';
+import { COMPLAINTS_EMAIL, PRIVACY_EMAIL, SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } from '@/lib/contact-info';
 
 export default function HelpCenterScreen() {
   const [subject, setSubject] = useState('');
