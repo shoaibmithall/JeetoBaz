@@ -28,6 +28,15 @@ import {
   type PaymentAccount,
 } from '@/lib/app-settings';
 import {
+  NOTIFICATION_TEMPLATE_DEFAULTS,
+  NOTIFICATION_TEMPLATE_KEYS,
+  getNotificationTemplateOverrides,
+  renderNotificationTemplate,
+  saveNotificationTemplateOverrides,
+  type NotificationTemplate,
+  type NotificationTemplateKey,
+} from '@/lib/notification-templates';
+import {
   createVerificationDocument,
   deleteVerificationDocument,
   getAllVerificationDocuments,
@@ -388,6 +397,16 @@ export default function AdminScreen() {
   const [paymentAccountsSaving, setPaymentAccountsSaving] = useState(false);
   const [paymentAccountsSaved, setPaymentAccountsSaved] = useState(false);
   const [paymentQrUploadingIndex, setPaymentQrUploadingIndex] = useState<number | null>(null);
+  const [notificationTemplateOverrides, setNotificationTemplateOverrides] = useState<Partial<Record<NotificationTemplateKey, NotificationTemplate>>>({});
+  const [notificationTemplateDrafts, setNotificationTemplateDrafts] = useState<Record<NotificationTemplateKey, NotificationTemplate>>(() => {
+    const drafts = {} as Record<NotificationTemplateKey, NotificationTemplate>;
+    for (const key of NOTIFICATION_TEMPLATE_KEYS) {
+      drafts[key] = { title: NOTIFICATION_TEMPLATE_DEFAULTS[key].title, body: NOTIFICATION_TEMPLATE_DEFAULTS[key].body };
+    }
+    return drafts;
+  });
+  const [notificationTemplateSavingKey, setNotificationTemplateSavingKey] = useState<NotificationTemplateKey | null>(null);
+  const [notificationTemplateSavedKey, setNotificationTemplateSavedKey] = useState<NotificationTemplateKey | null>(null);
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationSending, setNotificationSending] = useState(false);
@@ -469,6 +488,7 @@ export default function AdminScreen() {
       loadTrustBadgesSettings();
       loadDrawWindowHourSetting();
       loadPaymentAccountsSettings();
+      loadNotificationTemplatesSettings();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
       loadTestimonials();
@@ -942,8 +962,7 @@ export default function AdminScreen() {
       else {
         if (normalizedSlug) pingIndexNow(`/product/${normalizedSlug}`);
         await createUserNotification({
-          title: 'New contest added',
-          body: `${productName} is now live. Enter the draw today!`,
+          ...renderNotificationTemplate('new_contest', { productName }, notificationTemplateOverrides),
           kind: 'new-contest',
           link: '/',
         });
@@ -1190,10 +1209,11 @@ export default function AdminScreen() {
       const { link: reviewLink } = await getGoogleReviewLink();
       const prizeName = result.products?.name || 'your prize';
       await createUserNotification({
-        title: 'Congratulations again! 🎉',
-        body: reviewLink
-          ? `Your win of ${prizeName} is now verified. If you have a minute, a quick honest review would mean a lot to us.`
-          : `Your win of ${prizeName} is now verified. Thank you for being part of JeetoBaz!`,
+        ...renderNotificationTemplate(
+          reviewLink ? 'review_request_with_link' : 'review_request_no_link',
+          { prizeName },
+          notificationTemplateOverrides,
+        ),
         targetPhone: result.winner_phone,
         link: reviewLink || null,
         kind: 'review-request',
@@ -1348,6 +1368,63 @@ export default function AdminScreen() {
     setDrawWindowHourSaved(true);
     setTimeout(() => setDrawWindowHourSaved(false), 2000);
     void logAdminAction('settings_changed', null, { setting: 'draw_window_hour_pkt', hour });
+  }
+
+  async function loadNotificationTemplatesSettings() {
+    const { overrides } = await getNotificationTemplateOverrides();
+    setNotificationTemplateOverrides(overrides);
+    setNotificationTemplateDrafts((prev) => {
+      const next = { ...prev };
+      for (const key of NOTIFICATION_TEMPLATE_KEYS) {
+        const override = overrides[key];
+        next[key] = override
+          ? { title: override.title, body: override.body }
+          : { title: NOTIFICATION_TEMPLATE_DEFAULTS[key].title, body: NOTIFICATION_TEMPLATE_DEFAULTS[key].body };
+      }
+      return next;
+    });
+  }
+
+  function updateNotificationTemplateDraft(key: NotificationTemplateKey, field: 'title' | 'body', value: string) {
+    setNotificationTemplateDrafts((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  }
+
+  async function saveNotificationTemplate(key: NotificationTemplateKey) {
+    const draft = notificationTemplateDrafts[key];
+    if (!draft.title.trim() || !draft.body.trim()) {
+      alert('Title and message cannot be empty.');
+      return;
+    }
+    setNotificationTemplateSavingKey(key);
+    const nextOverrides = { ...notificationTemplateOverrides, [key]: draft };
+    const { overrides, error } = await saveNotificationTemplateOverrides(nextOverrides);
+    setNotificationTemplateSavingKey(null);
+    if (error) {
+      alert('Template could not be saved. Error: ' + error.message);
+      return;
+    }
+    setNotificationTemplateOverrides(overrides);
+    setNotificationTemplateSavedKey(key);
+    setTimeout(() => setNotificationTemplateSavedKey((current) => (current === key ? null : current)), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'notification_templates', template: key });
+  }
+
+  async function resetNotificationTemplate(key: NotificationTemplateKey) {
+    setNotificationTemplateSavingKey(key);
+    const nextOverrides = { ...notificationTemplateOverrides };
+    delete nextOverrides[key];
+    const { overrides, error } = await saveNotificationTemplateOverrides(nextOverrides);
+    setNotificationTemplateSavingKey(null);
+    if (error) {
+      alert('Template could not be reset. Error: ' + error.message);
+      return;
+    }
+    setNotificationTemplateOverrides(overrides);
+    setNotificationTemplateDrafts((prev) => ({
+      ...prev,
+      [key]: { title: NOTIFICATION_TEMPLATE_DEFAULTS[key].title, body: NOTIFICATION_TEMPLATE_DEFAULTS[key].body },
+    }));
+    void logAdminAction('settings_changed', null, { setting: 'notification_templates', template: key, reset: true });
   }
 
   async function loadTrustBadgesSettings() {
@@ -1960,8 +2037,7 @@ export default function AdminScreen() {
       }
       const existingProductName = products.find((p) => p.id === txn.product_id)?.name || 'your draw';
       await createUserNotification({
-        title: 'Payment confirmed',
-        body: `Your payment for ${existingProductName} has been confirmed. Your entry is already active.`,
+        ...renderNotificationTemplate('payment_confirmed_existing_entry', { productName: existingProductName }, notificationTemplateOverrides),
         targetPhone: entryPhone,
         kind: 'payment-confirmed',
         link: '/entries',
@@ -2000,8 +2076,7 @@ export default function AdminScreen() {
 
     const productName = product?.name || 'your draw';
     await createUserNotification({
-      title: 'Payment confirmed',
-      body: `Your entry for ${productName} has been approved. Good luck!`,
+      ...renderNotificationTemplate('payment_confirmed', { productName }, notificationTemplateOverrides),
       targetPhone: entryPhone,
       kind: 'payment-confirmed',
       link: '/entries',
@@ -2009,8 +2084,7 @@ export default function AdminScreen() {
 
     if (rpcResult?.new_entries != null && product && rpcResult.new_entries >= product.max_entries) {
       await createUserNotification({
-        title: 'Draw ready',
-        body: `${productName} has reached the required number of participants. JeetoBaz will announce the draw date and time.`,
+        ...renderNotificationTemplate('draw_ready', { productName }, notificationTemplateOverrides),
         kind: 'draw-ready',
         link: '/',
       });
@@ -2034,8 +2108,7 @@ export default function AdminScreen() {
     const { error } = await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txn.id);
     if (error) return { ok: false, message: 'Reject failed: ' + error.message };
     await createUserNotification({
-      title: 'Payment could not be verified',
-      body: `Your payment of Rs. ${txn.amount} could not be confirmed. Please double-check your receipt and try again, or contact support if you believe this is a mistake.`,
+      ...renderNotificationTemplate('payment_rejected', { amount: txn.amount }, notificationTemplateOverrides),
       targetPhone: txn.phone,
       kind: 'payment-rejected',
     });
@@ -2120,8 +2193,7 @@ export default function AdminScreen() {
     }
 
     await createUserNotification({
-      title: 'Wallet topped up',
-      body: `Rs. ${request.amount} has been added to your wallet.`,
+      ...renderNotificationTemplate('wallet_topped_up', { amount: request.amount }, notificationTemplateOverrides),
       targetPhone: request.phone,
       kind: 'payment-confirmed',
     });
@@ -2147,8 +2219,7 @@ export default function AdminScreen() {
     if (!rpcResult?.ok) return { ok: false, message: rpcResult?.error || 'Reject failed.' };
 
     await createUserNotification({
-      title: 'Wallet top-up could not be verified',
-      body: `Your wallet top-up of Rs. ${request.amount} could not be confirmed. Please double-check your receipt and try again, or contact support if you believe this is a mistake.`,
+      ...renderNotificationTemplate('wallet_topup_rejected', { amount: request.amount }, notificationTemplateOverrides),
       targetPhone: request.phone,
       kind: 'payment-rejected',
     });
@@ -2370,8 +2441,7 @@ export default function AdminScreen() {
 
     setWalletBalances((prev) => ({ ...prev, [request.phone]: rpcResult.new_balance ?? prev[request.phone] ?? 0 }));
     await createUserNotification({
-      title: 'Refund approved',
-      body: `Rs. ${request.amount} has been refunded to your JeetoBaz wallet.`,
+      ...renderNotificationTemplate('refund_approved', { amount: request.amount }, notificationTemplateOverrides),
       targetPhone: request.phone,
       kind: 'payment-confirmed',
     });
@@ -2396,8 +2466,7 @@ export default function AdminScreen() {
     }
 
     await createUserNotification({
-      title: 'Refund request declined',
-      body: `Your refund request could not be approved. Please contact support if you have questions.`,
+      ...renderNotificationTemplate('refund_rejected', {}, notificationTemplateOverrides),
       targetPhone: request.phone,
       kind: 'payment-rejected',
     });
@@ -4071,6 +4140,68 @@ export default function AdminScreen() {
                 <Plus color="#4a9eff" size={18} />
                 <Text style={styles.photoUploadText}>Add Payment Method</Text>
               </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><Bell color={theme.text} size={17} /><Text style={styles.settingLabel}>Notification Templates</Text></View>
+            <Text style={styles.settingHint}>
+              The wording sent to users for each automatic notification. {'{{variable}}'} placeholders are filled in automatically when
+              a notification is sent — do not remove them, but you can move them anywhere in the sentence.
+            </Text>
+            <View style={styles.verificationList}>
+              {NOTIFICATION_TEMPLATE_KEYS.map((key) => {
+                const isCustom = Boolean(notificationTemplateOverrides[key]);
+                const draft = notificationTemplateDrafts[key];
+                const isSaving = notificationTemplateSavingKey === key;
+                return (
+                  <View key={key} style={styles.verificationAdminCard}>
+                    <View style={styles.verificationAdminContent}>
+                      <View style={styles.productHeader}>
+                        <Text style={styles.settingLabel}>{NOTIFICATION_TEMPLATE_DEFAULTS[key].label}</Text>
+                        <View style={[styles.statusBadge, isCustom ? styles.activeBadge : styles.completedBadge]}>
+                          <Circle color={isCustom ? theme.primary : theme.gold} size={8} fill={isCustom ? theme.primary : theme.gold} />
+                          <Text style={styles.statusText}>{isCustom ? 'Custom' : 'Default'}</Text>
+                        </View>
+                      </View>
+                      {NOTIFICATION_TEMPLATE_DEFAULTS[key].variables.length > 0 ? (
+                        <Text style={styles.settingNote}>
+                          Available: {NOTIFICATION_TEMPLATE_DEFAULTS[key].variables.map((v) => `{{${v}}}`).join(', ')}
+                        </Text>
+                      ) : null}
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Notification title"
+                        placeholderTextColor="#666"
+                        value={draft.title}
+                        onChangeText={(value) => updateNotificationTemplateDraft(key, 'title', value)}
+                      />
+                      <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder="Notification message"
+                        placeholderTextColor="#666"
+                        value={draft.body}
+                        onChangeText={(value) => updateNotificationTemplateDraft(key, 'body', value)}
+                        multiline
+                        numberOfLines={3}
+                      />
+                      <View style={styles.verificationActionRow}>
+                        <TouchableOpacity style={styles.addButton} onPress={() => saveNotificationTemplate(key)} disabled={isSaving}>
+                          {notificationTemplateSavedKey === key ? <Check color="white" size={16} /> : <Save color="white" size={16} />}
+                          <Text style={styles.addButtonText}>
+                            {isSaving ? 'Saving...' : notificationTemplateSavedKey === key ? 'Saved!' : 'Save'}
+                          </Text>
+                        </TouchableOpacity>
+                        {isCustom ? (
+                          <TouchableOpacity style={styles.deleteWideButton} onPress={() => resetNotificationTemplate(key)} disabled={isSaving}>
+                            <Text style={styles.deleteWideButtonText}>Reset to Default</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
 
             <View style={styles.divider} />
