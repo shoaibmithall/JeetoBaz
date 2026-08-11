@@ -9,6 +9,7 @@ import { createUserNotification } from '@/lib/notifications';
 import { Clock, Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
 import { useSafeBack } from '@/lib/safe-back';
 import { DEFAULT_DRAW_WINDOW_HOUR, getDrawWindowHour } from '@/lib/app-settings';
+import { getNotificationTemplateOverrides, renderNotificationTemplate, type NotificationTemplate, type NotificationTemplateKey } from '@/lib/notification-templates';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
 
@@ -60,6 +61,7 @@ export default function DrawScreen() {
   const [productSlug, setProductSlug] = useState<string | null>(null);
   const [, setWindowTick] = useState(0);
   const [drawWindowHour, setDrawWindowHour] = useState(DEFAULT_DRAW_WINDOW_HOUR);
+  const [notificationTemplateOverrides, setNotificationTemplateOverrides] = useState<Partial<Record<NotificationTemplateKey, NotificationTemplate>>>({});
 
   useEffect(() => {
     let active = true;
@@ -72,6 +74,10 @@ export default function DrawScreen() {
 
     getDrawWindowHour().then(({ hour }) => {
       if (active) setDrawWindowHour(hour);
+    });
+
+    getNotificationTemplateOverrides().then(({ overrides }) => {
+      if (active) setNotificationTemplateOverrides(overrides);
     });
 
     return () => { active = false; };
@@ -173,15 +179,13 @@ export default function DrawScreen() {
   async function sendWinnerNotifications(w: Entry) {
     const productTitle = productNameValue || 'JeetoBaz draw';
     await createUserNotification({
-      title: 'You won!',
-      body: `Congratulations! Aap ${productTitle} ke lucky winner select hue hain. JeetoBaz support aap se contact karega.`,
+      ...renderNotificationTemplate('winner_alert', { productName: productTitle }, notificationTemplateOverrides),
       targetPhone: w.phone,
       kind: 'winner-alert',
       link: '/entries',
     });
     await createUserNotification({
-      title: 'Winner announced',
-      body: `${productTitle} ka winner announce ho gaya hai. Past Winners page par result check karein.`,
+      ...renderNotificationTemplate('winner_announced', { productName: productTitle }, notificationTemplateOverrides),
       kind: 'winner-announced',
       link: '/explore',
     });
