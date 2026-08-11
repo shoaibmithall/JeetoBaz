@@ -192,6 +192,20 @@ export type Transaction = {
   user_id?: string | null;
 };
 
+export type RefundRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export type RefundRequest = {
+  id: string;
+  transaction_id: string;
+  phone: string;
+  amount: number;
+  reason: string | null;
+  status: RefundRequestStatus;
+  admin_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
 export type AdminAuditLogEntry = {
   id: string;
   action_type: string;
@@ -434,6 +448,11 @@ export type Database = {
         AdminSetting,
         Pick<AdminSetting, 'key' | 'value'>,
         Partial<Pick<AdminSetting, 'value'>>
+      >;
+      refund_requests: Table<
+        RefundRequest,
+        Pick<RefundRequest, 'transaction_id' | 'phone' | 'amount'> & Partial<Pick<RefundRequest, 'reason'>>,
+        Partial<Pick<RefundRequest, 'status' | 'admin_note' | 'resolved_at'>>
       >;
       verification_documents: Table<
         VerificationDocument,
