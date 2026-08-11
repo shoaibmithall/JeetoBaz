@@ -11,13 +11,16 @@ import { useAppTheme } from '@/hooks/use-theme';
 import { AppThemes } from '@/constants/theme';
 import { createNotification, createUserNotification } from '@/lib/notifications';
 import {
+  DEFAULT_DRAW_WINDOW_HOUR,
   DEFAULT_TRUST_BADGES,
   getAnnouncement,
+  getDrawWindowHour,
   getGoogleReviewLink,
   getHomeAdImages,
   getPaymentAccounts,
   getTrustBadges,
   saveAnnouncement as saveAnnouncementSetting,
+  saveDrawWindowHour,
   saveGoogleReviewLink,
   saveHomeAdImages,
   savePaymentAccounts,
@@ -143,16 +146,40 @@ function confirmAsync(title: string, message: string): Promise<boolean> {
 // live countdown timer on Home silently breaks on for any typo/unexpected format) with a picker
 // that always produces a valid, unambiguous date. Remount via `key` (see call site) rather than a
 // sync effect to reset to a different product's existing value when switching between products.
+function formatHour12Label(hour24: number) {
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const displayHour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${displayHour}:00 ${period}`;
+}
+
+function computeSevenDaysFromNowAtHour(windowHour: number) {
+  const target = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Karachi',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(target);
+  const day = parts.find((p) => p.type === 'day')?.value || '';
+  const month = parts.find((p) => p.type === 'month')?.value || '';
+  const year = parts.find((p) => p.type === 'year')?.value || '';
+  const hour12 = windowHour % 12 === 0 ? 12 : windowHour % 12;
+  const meridiem: 'AM' | 'PM' = windowHour >= 12 ? 'PM' : 'AM';
+  return { day, month, year, hour12: String(hour12), minute: '00', meridiem };
+}
+
 function DrawDatePicker({
   value,
   onChange,
   styles,
   theme,
+  defaultWindowHour = 22,
 }: {
   value: string;
   onChange: (next: string) => void;
   styles: ReturnType<typeof createStyles>;
   theme: AdminTheme;
+  defaultWindowHour?: number;
 }) {
   const existing = parseDrawDateParts(value);
   const [day, setDay] = useState(existing ? String(existing.day) : '');
@@ -187,6 +214,21 @@ function DrawDatePicker({
   return (
     <View style={styles.drawDatePicker}>
       <Text style={styles.drawDatePickerLabel}>Draw Date & Time (Pakistan time) -- set once entries fill up</Text>
+      <TouchableOpacity
+        style={styles.walletAdjustToggle}
+        onPress={() => {
+          const suggestion = computeSevenDaysFromNowAtHour(defaultWindowHour);
+          setDay(suggestion.day);
+          setMonth(suggestion.month);
+          setYear(suggestion.year);
+          setHour12(suggestion.hour12);
+          setMinute(suggestion.minute);
+          setMeridiem(suggestion.meridiem);
+          commit(suggestion);
+        }}
+      >
+        <Text style={styles.walletAdjustToggleText}>Fill: +7 Days at {formatHour12Label(defaultWindowHour)}</Text>
+      </TouchableOpacity>
       <View style={styles.drawDateRow}>
         <TextInput
           style={styles.drawDateField}
@@ -336,6 +378,9 @@ export default function AdminScreen() {
   const [homeAdImagesInput, setHomeAdImagesInput] = useState('');
   const [homeAdImagesSaved, setHomeAdImagesSaved] = useState(false);
   const [homeAdUploading, setHomeAdUploading] = useState(false);
+  const [drawWindowHourInput, setDrawWindowHourInput] = useState(String(DEFAULT_DRAW_WINDOW_HOUR));
+  const [drawWindowHourSaving, setDrawWindowHourSaving] = useState(false);
+  const [drawWindowHourSaved, setDrawWindowHourSaved] = useState(false);
   const [trustBadges, setTrustBadges] = useState<[string, string, string]>(DEFAULT_TRUST_BADGES);
   const [trustBadgesSaving, setTrustBadgesSaving] = useState(false);
   const [trustBadgesSaved, setTrustBadgesSaved] = useState(false);
@@ -422,6 +467,7 @@ export default function AdminScreen() {
       loadGoogleReviewLink();
       loadHomeAdImages();
       loadTrustBadgesSettings();
+      loadDrawWindowHourSetting();
       loadPaymentAccountsSettings();
       loadVerificationDocuments();
       loadBrandShowcaseImages();
@@ -1278,6 +1324,30 @@ export default function AdminScreen() {
     } finally {
       setHomeAdUploading(false);
     }
+  }
+
+  async function loadDrawWindowHourSetting() {
+    const { hour } = await getDrawWindowHour();
+    setDrawWindowHourInput(String(hour));
+  }
+
+  async function saveDrawWindowHourSetting() {
+    const parsedHour = Number(drawWindowHourInput);
+    if (!Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {
+      alert('Enter an hour from 0 to 23 (24-hour format, Pakistan time).');
+      return;
+    }
+    setDrawWindowHourSaving(true);
+    const { hour, error } = await saveDrawWindowHour(parsedHour);
+    setDrawWindowHourSaving(false);
+    if (error) {
+      alert('Draw window could not be saved. Error: ' + error.message);
+      return;
+    }
+    setDrawWindowHourInput(String(hour));
+    setDrawWindowHourSaved(true);
+    setTimeout(() => setDrawWindowHourSaved(false), 2000);
+    void logAdminAction('settings_changed', null, { setting: 'draw_window_hour_pkt', hour });
   }
 
   async function loadTrustBadgesSettings() {
@@ -2613,6 +2683,7 @@ export default function AdminScreen() {
           onChange={setDrawDate}
           styles={styles}
           theme={theme}
+          defaultWindowHour={Number(drawWindowHourInput) || DEFAULT_DRAW_WINDOW_HOUR}
         />
 
               <TouchableOpacity style={styles.seoToggle} onPress={() => setSeoExpanded((prev) => !prev)}>
@@ -3872,6 +3943,26 @@ export default function AdminScreen() {
                 ))}
               </ScrollView>
             ) : null}
+
+            <View style={styles.divider} />
+
+            <View style={styles.settingLabelRow}><Dices color={theme.text} size={17} /><Text style={styles.settingLabel}>Draw Window Hour</Text></View>
+            <Text style={styles.settingHint}>
+              Draws can only be run during this hour, Pakistan time (24-hour format, e.g. 22 = 10 PM). Currently enforced both
+              here and by the database — changing it here updates both immediately.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="22"
+              placeholderTextColor="#666"
+              value={drawWindowHourInput}
+              onChangeText={setDrawWindowHourInput}
+              keyboardType="number-pad"
+            />
+            <TouchableOpacity style={styles.addButton} onPress={saveDrawWindowHourSetting} disabled={drawWindowHourSaving}>
+              {drawWindowHourSaved ? <Check color="white" size={18} /> : <Save color="white" size={18} />}
+              <Text style={styles.addButtonText}>{drawWindowHourSaving ? 'Saving...' : drawWindowHourSaved ? 'Saved!' : 'Save Draw Window'}</Text>
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 

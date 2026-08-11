@@ -5,6 +5,8 @@ export const ANNOUNCEMENT_KEY = 'announcement';
 export const GOOGLE_REVIEW_LINK_KEY = 'google_review_link';
 export const PAYMENT_ACCOUNTS_KEY = 'payment_accounts';
 export const HOME_TRUST_BADGES_KEY = 'home_trust_badges';
+export const DRAW_WINDOW_HOUR_KEY = 'draw_window_hour_pkt';
+export const DEFAULT_DRAW_WINDOW_HOUR = 22;
 
 // The home page trust strip always shows exactly 3 labels (fixed icons per position), so
 // this is deliberately a 3-item tuple rather than a free-form list like home_ad_images.
@@ -94,6 +96,28 @@ export async function saveGoogleReviewLink(value: string) {
     .upsert({ key: GOOGLE_REVIEW_LINK_KEY, value: link });
 
   return { link, error };
+}
+
+export async function getDrawWindowHour() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', DRAW_WINDOW_HOUR_KEY)
+    .maybeSingle();
+
+  if (error) return { hour: DEFAULT_DRAW_WINDOW_HOUR, error };
+  const parsed = Number(data?.value);
+  const hour = Number.isInteger(parsed) && parsed >= 0 && parsed <= 23 ? parsed : DEFAULT_DRAW_WINDOW_HOUR;
+  return { hour, error: null };
+}
+
+export async function saveDrawWindowHour(hour: number) {
+  const cleanHour = Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : DEFAULT_DRAW_WINDOW_HOUR;
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ key: DRAW_WINDOW_HOUR_KEY, value: cleanHour });
+
+  return { hour: cleanHour, error };
 }
 
 function normalizeTrustBadges(value: unknown): [string, string, string] {

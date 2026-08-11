@@ -8,9 +8,15 @@ import { useLanguage } from '@/lib/i18n';
 import { createUserNotification } from '@/lib/notifications';
 import { Clock, Dices, House, List, LockKeyhole, MousePointer2, Radio, Target, Trophy, UsersRound } from 'lucide-react-native';
 import { useSafeBack } from '@/lib/safe-back';
+import { DEFAULT_DRAW_WINDOW_HOUR, getDrawWindowHour } from '@/lib/app-settings';
 
 const ADMIN_EMAIL = 'shoaibmithall@gmail.com';
-const DRAW_WINDOW_HOUR_PKT = 22;
+
+function formatHour12(hour: number) {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:00 ${period}`;
+}
 
 function getKarachiParts() {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -24,17 +30,18 @@ function getKarachiParts() {
   return { hour, minute };
 }
 
-function getDrawWindowStatus() {
+function getDrawWindowStatus(windowHour: number) {
   const { hour, minute } = getKarachiParts();
-  if (hour === DRAW_WINDOW_HOUR_PKT) {
+  const windowLabel = `${formatHour12(windowHour)}–${formatHour12(windowHour)}:59`;
+  if (hour === windowHour) {
     const minutesLeft = 59 - minute;
-    return { isOpen: true, label: `Draw window is open — closes in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'} (10:59 PM PKT)` };
+    return { isOpen: true, label: `Draw window is open — closes in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'} (${windowLabel} PKT)` };
   }
-  const hoursUntil = ((DRAW_WINDOW_HOUR_PKT - hour) % 24 + 24) % 24;
+  const hoursUntil = ((windowHour - hour) % 24 + 24) % 24;
   const totalMinutesUntil = hoursUntil * 60 - minute;
   const h = Math.floor(totalMinutesUntil / 60);
   const m = totalMinutesUntil % 60;
-  return { isOpen: false, label: `Draws can only run 10:00–10:59 PM PKT. Opens in ${h}h ${m}m.` };
+  return { isOpen: false, label: `Draws can only run ${windowLabel} PKT. Opens in ${h}h ${m}m.` };
 }
 
 export default function DrawScreen() {
@@ -52,6 +59,7 @@ export default function DrawScreen() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [productSlug, setProductSlug] = useState<string | null>(null);
   const [, setWindowTick] = useState(0);
+  const [drawWindowHour, setDrawWindowHour] = useState(DEFAULT_DRAW_WINDOW_HOUR);
 
   useEffect(() => {
     let active = true;
@@ -60,6 +68,10 @@ export default function DrawScreen() {
       if (!active) return;
       setIsAdmin(data.session?.user.email?.toLowerCase() === ADMIN_EMAIL);
       setAuthLoading(false);
+    });
+
+    getDrawWindowHour().then(({ hour }) => {
+      if (active) setDrawWindowHour(hour);
     });
 
     return () => { active = false; };
@@ -282,7 +294,7 @@ export default function DrawScreen() {
             ))}
           </ScrollView>
           {phase === 'showing' && (() => {
-            const windowStatus = getDrawWindowStatus();
+            const windowStatus = getDrawWindowStatus(drawWindowHour);
             return (
               <>
                 <View style={[styles.windowBanner, windowStatus.isOpen ? styles.windowBannerOpen : styles.windowBannerClosed]}>
