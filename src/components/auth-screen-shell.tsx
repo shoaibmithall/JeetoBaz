@@ -1,7 +1,8 @@
 import { Image, Text, TouchableOpacity, View, StyleSheet, useWindowDimensions } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Shield, ShieldCheck } from 'lucide-react-native';
+import { ChevronLeft, Lock, Shield, ShieldCheck } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { DEFAULT_TRUST_BADGES, getTrustBadges } from '@/lib/app-settings';
 
@@ -22,6 +23,23 @@ const RAIL_GREEN_SOFT = 'rgba(24,166,99,0.14)';
 const LOGO_ASPECT_RATIO = 742 / 635;
 
 const SPLIT_BREAKPOINT = 760;
+
+// A thin gold "picture frame" corner bracket -- purely decorative, mirrored for the two corners.
+function CornerFlourish({ corner }: { corner: 'top-right' | 'bottom-left' }) {
+  const d = corner === 'top-right'
+    ? 'M14 4 H42 Q52 4 52 14 V42'
+    : 'M42 52 H14 Q4 52 4 42 V14';
+  return (
+    <Svg
+      width={56}
+      height={56}
+      viewBox="0 0 56 56"
+      style={[styles.cornerFlourish, corner === 'top-right' ? styles.cornerTopRight : styles.cornerBottomLeft]}
+    >
+      <Path d={d} stroke={RAIL_GOLD} strokeWidth={1.5} strokeOpacity={0.55} strokeLinecap="round" fill="none" />
+    </Svg>
+  );
+}
 
 export type AuthTrustItem = { icon: ComponentType<{ color?: string; size?: number }>; label: string };
 
@@ -59,6 +77,8 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
       <View style={[styles.shell, isSplit && styles.shellSplit, isSplit && { borderColor: RAIL_GOLD_BORDER }]}>
 
         <View style={[styles.rail, isSplit ? styles.railSplit : styles.railStacked]}>
+          {isSplit && <CornerFlourish corner="top-right" />}
+          {isSplit && <CornerFlourish corner="bottom-left" />}
           <Image
             source={require('@/assets/images/jeetobaz-logo-hero.png')}
             style={{ width: logoWidth, height: logoHeight, marginBottom: isSplit ? 18 : 10 }}
@@ -74,6 +94,18 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
               </View>
             ))}
           </View>
+          {isSplit && (
+            <View style={styles.railFooter}>
+              <View style={styles.railFooterRow}>
+                <Shield color={RAIL_MUTED} size={11} />
+                <Text style={styles.railFooterText}>Secure Platform</Text>
+              </View>
+              <View style={styles.railFooterRow}>
+                <Lock color={RAIL_MUTED} size={11} />
+                <Text style={styles.railFooterText}>Your data is protected</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }, isSplit && styles.cardSplit]}>
@@ -82,6 +114,12 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
               <ChevronLeft color={theme.text} size={22} />
             </TouchableOpacity>
           )}
+          <Image
+            source={require('@/assets/images/icon-small.png')}
+            style={styles.cardBadgeIcon}
+            resizeMode="contain"
+            accessibilityLabel="JeetoBaz"
+          />
           <View style={[styles.eyebrowBadge, { backgroundColor: theme.primarySoft }]}>
             <Shield color={RAIL_GREEN} size={16} />
             <Text style={styles.eyebrowText}>{eyebrow}</Text>
@@ -141,10 +179,20 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   badgeText: { color: RAIL_TEXT, fontSize: 12.5, fontWeight: '600' },
 
+  cornerFlourish: { position: 'absolute' },
+  cornerTopRight: { top: 14, right: 14 },
+  cornerBottomLeft: { bottom: 14, left: 14 },
+
+  railFooter: { position: 'absolute', bottom: 26, left: 38, gap: 6 },
+  railFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  railFooterText: { color: RAIL_MUTED, fontSize: 11 },
+
   card: { padding: 24, position: 'relative', overflow: 'hidden' },
   cardSplit: { width: '58%', justifyContent: 'center' },
 
   backBtn: { position: 'absolute', top: 18, left: 16, zIndex: 2, padding: 4 },
+
+  cardBadgeIcon: { width: 52, height: 52, borderRadius: 13, alignSelf: 'center', marginBottom: 16 },
 
   eyebrowBadge: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
