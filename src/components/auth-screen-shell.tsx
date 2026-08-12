@@ -7,8 +7,10 @@ import { DEFAULT_TRUST_BADGES, getTrustBadges } from '@/lib/app-settings';
 
 // The brand rail is a deliberate, theme-independent choice -- it stays this black/gold treatment
 // in both light and dark app mode, because that's where the gold logo mark reads best. Only the
-// form card (children) follows the app's light/dark theme.
-const RAIL_BG = '#000000';
+// form card (children) follows the app's light/dark theme. RAIL_BG is JeetoBaz's own dark-theme
+// background token (AppThemes.dark.background in constants/theme.ts), not an arbitrary black --
+// it reads as near-black but carries the brand's established dark tone.
+const RAIL_BG = '#020d09';
 const RAIL_TEXT = '#f5f7f4';
 const RAIL_MUTED = '#9aac9f';
 const RAIL_GOLD = '#FFD700';

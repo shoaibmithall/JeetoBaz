@@ -378,9 +378,9 @@ const styles = StyleSheet.create({
   consentText: { flex: 1, fontSize: 13, lineHeight: 19 },
   consentLink: { color: '#18a663', fontWeight: '600' },
 
-  primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 16 },
+  primaryButton: { backgroundColor: '#18a663', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 16 },
   buttonDisabled: { backgroundColor: '#555' },
-  primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
+  primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#fff' },
 
   switchText: { color: '#9aac9f', fontSize: 14, textAlign: 'center' },
   switchHighlight: { color: '#18a663', fontWeight: 'bold' },
