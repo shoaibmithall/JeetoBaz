@@ -8,8 +8,8 @@ import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
-import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
-import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
+import { AuthScreenShell } from '@/components/auth-screen-shell';
+import { Check, Eye, EyeOff, LockKeyhole, Mail, Phone, Shield, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
   let score = 0;
@@ -135,27 +135,17 @@ export default function SignupScreen() {
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <AuthHeaderGlow />
-          <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backBtn}>
-            <ChevronLeft color={theme.text} size={24} />
-          </TouchableOpacity>
-          <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
-          </View>
-        </View>
-
-        <View style={[styles.signupCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <AuthCardGlow />
-          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
-            <Shield color="#18a663" size={16} />
-            <Text style={styles.secureBadgeText}>Create Your Account</Text>
-          </View>
-
-          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Join JeetoBaz</Text>
-          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Start winning prizes today!</Text>
-
+        <AuthScreenShell
+          eyebrow="Create Your Account"
+          title="Join JeetoBaz"
+          subtitle="Start winning prizes today!"
+          onBack={() => router.replace('/login')}
+          trustItems={[
+            { icon: Shield, label: 'Secure Sign Up' },
+            { icon: Check, label: 'Email Verification' },
+            { icon: LockKeyhole, label: 'Data Protected' },
+          ]}
+        >
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>
             <User color={theme.muted} size={18} />
             <TextInput
@@ -340,32 +330,7 @@ export default function SignupScreen() {
               <Text style={styles.switchHighlight}>Sign In</Text>
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.trustStrip}>
-          <View style={styles.trustItem}>
-            <Shield color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Sign Up</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <Check color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Email Verification</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <LockKeyhole color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Data Protected</Text>
-          </View>
-        </View>
-
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
-          </TouchableOpacity>
-          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
-          </TouchableOpacity>
-        </View>
+        </AuthScreenShell>
       </ScrollView>
     </View>
     </>
