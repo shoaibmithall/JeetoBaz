@@ -4,19 +4,20 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, Shield, ShieldCheck } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
 import { DEFAULT_TRUST_BADGES, getTrustBadges } from '@/lib/app-settings';
-import { AuthCardGlow } from '@/components/auth-decor';
 
-// The brand rail is a deliberate, theme-independent choice -- it stays this dark green/gold
-// treatment in both light and dark app mode, because that's where the gold logo mark reads best.
-// Only the form card (children) follows the app's light/dark theme.
-const RAIL_BG = '#04140e';
-const RAIL_BG_ALT = '#071b13';
-const RAIL_BORDER = '#174a35';
+// The brand rail is a deliberate, theme-independent choice -- it stays this black/gold treatment
+// in both light and dark app mode, because that's where the gold logo mark reads best. Only the
+// form card (children) follows the app's light/dark theme.
+const RAIL_BG = '#000000';
 const RAIL_TEXT = '#f5f7f4';
 const RAIL_MUTED = '#9aac9f';
 const RAIL_GOLD = '#FFD700';
+const RAIL_GOLD_BORDER = 'rgba(255,215,0,0.35)';
 const RAIL_GREEN = '#18a663';
 const RAIL_GREEN_SOFT = 'rgba(24,166,99,0.14)';
+
+// The logo asset's real aspect ratio (height/width), so it scales without distortion at any size.
+const LOGO_ASPECT_RATIO = 742 / 635;
 
 const SPLIT_BREAKPOINT = 760;
 
@@ -46,29 +47,23 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
     return () => { active = false; };
   }, []);
 
+  // Fits the logo to a sensible size at every width -- wide enough to read clearly on a large
+  // desktop rail, small enough not to crowd the compact mobile header strip.
+  const logoWidth = isSplit ? Math.min(200, width * 0.14) : Math.max(84, Math.min(120, width * 0.28));
+  const logoHeight = logoWidth * LOGO_ASPECT_RATIO;
+
   return (
     <View style={[styles.outer, isSplit && styles.outerSplit, { backgroundColor: isSplit ? theme.background : RAIL_BG }]}>
-      <View style={[styles.shell, isSplit && styles.shellSplit, isSplit && { borderColor: theme.border }]}>
+      <View style={[styles.shell, isSplit && styles.shellSplit, isSplit && { borderColor: RAIL_GOLD_BORDER }]}>
 
         <View style={[styles.rail, isSplit ? styles.railSplit : styles.railStacked]}>
-          <View style={[styles.railGlow, styles.railGlowGold]} />
-          <View style={[styles.railGlow, styles.railGlowGreen]} />
           <Image
             source={require('@/assets/images/jeetobaz-logo-hero.png')}
-            style={[styles.heroLogo, !isSplit && styles.heroLogoCompact]}
+            style={{ width: logoWidth, height: logoHeight, marginBottom: isSplit ? 18 : 10 }}
             resizeMode="contain"
             accessibilityLabel="JeetoBaz"
           />
-          {isSplit && (
-            <>
-              <Text style={styles.railHeadline}>
-                Pakistan's <Text style={styles.railHeadlineAccent}>transparent</Text> prize platform
-              </Text>
-              <Text style={styles.railLede}>
-                Enter live draws, track every entry, and follow verified winners -- all in one place.
-              </Text>
-            </>
-          )}
+          <Text style={styles.railTagline}>Pakistan's Transparent Prize Campaign Platform</Text>
           <View style={[styles.badgeRow, !isSplit && styles.badgeRowCompact]}>
             {trustBadges.map((label) => (
               <View key={label} style={styles.badge}>
@@ -80,7 +75,6 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }, isSplit && styles.cardSplit]}>
-          <AuthCardGlow />
           {onBack && (
             <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
               <ChevronLeft color={theme.text} size={22} />
@@ -134,29 +128,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  rail: { overflow: 'hidden', backgroundColor: RAIL_BG, position: 'relative' },
+  rail: { backgroundColor: RAIL_BG },
   railStacked: { paddingTop: 46, paddingBottom: 22, paddingHorizontal: 20, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: RAIL_GOLD },
-  railSplit: { width: '42%', paddingVertical: 48, paddingHorizontal: 38, justifyContent: 'center', gap: 18 },
+  railSplit: { width: '42%', paddingVertical: 48, paddingHorizontal: 38, alignItems: 'center', justifyContent: 'center' },
 
-  railGlow: { position: 'absolute', borderRadius: 999, opacity: 0.16 },
-  railGlowGold: { width: 220, height: 220, backgroundColor: RAIL_GOLD, top: -120, left: -60 },
-  railGlowGreen: { width: 200, height: 200, backgroundColor: RAIL_GREEN, bottom: -110, right: -70 },
+  railTagline: { fontSize: 13, color: RAIL_MUTED, textAlign: 'center', lineHeight: 19, marginBottom: 18, maxWidth: 260 },
 
-  heroLogo: { width: 190, height: 198, marginBottom: 14 },
-  heroLogoCompact: { width: 96, height: 100, marginBottom: 10 },
-
-  railHeadline: { fontSize: 26, fontWeight: '800', color: RAIL_TEXT, lineHeight: 33 },
-  railHeadlineAccent: { color: RAIL_GOLD },
-  railLede: { fontSize: 14, color: RAIL_MUTED, lineHeight: 21, maxWidth: 320 },
-
-  badgeRow: { gap: 10, marginTop: 6 },
-  badgeRowCompact: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
-  badge: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: RAIL_BG_ALT, borderWidth: 1, borderColor: RAIL_BORDER,
-    borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, alignSelf: 'flex-start',
-  },
-  badgeText: { color: RAIL_TEXT, fontSize: 12.5, fontWeight: '700' },
+  badgeRow: { alignItems: 'center', gap: 8 },
+  badgeRowCompact: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 4 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  badgeText: { color: RAIL_TEXT, fontSize: 12.5, fontWeight: '600' },
 
   card: { padding: 24, position: 'relative', overflow: 'hidden' },
   cardSplit: { width: '58%', justifyContent: 'center' },
