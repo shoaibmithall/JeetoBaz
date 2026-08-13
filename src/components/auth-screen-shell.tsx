@@ -1,5 +1,5 @@
 import { Image, Text, TouchableOpacity, View, StyleSheet, useWindowDimensions } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Lock, Shield, ShieldCheck } from 'lucide-react-native';
@@ -23,6 +23,52 @@ const RAIL_GREEN_SOFT = 'rgba(24,166,99,0.14)';
 const LOGO_ASPECT_RATIO = 742 / 635;
 
 const SPLIT_BREAKPOINT = 760;
+
+// Fixed (not random) positions for the rail's decorative gold bokeh blobs and sparkle dots, in a
+// 400x700 virtual canvas that the backdrop SVG scales/crops to cover the rail at any real size.
+// Kept as static data so the texture is stable across renders instead of reshuffling.
+const BOKEH_BLOBS = [
+  { x: 90, y: 110, r: 95 },
+  { x: 330, y: 70, r: 60 },
+  { x: 55, y: 540, r: 100 },
+  { x: 350, y: 610, r: 75 },
+  { x: 205, y: 330, r: 140 },
+];
+
+const SPARKLES = [
+  { x: 40, y: 55, r: 1.6 }, { x: 135, y: 35, r: 1.2 }, { x: 255, y: 65, r: 1.8 },
+  { x: 355, y: 125, r: 1.3 }, { x: 65, y: 245, r: 1.5 }, { x: 335, y: 275, r: 1.4 },
+  { x: 150, y: 445, r: 1.6 }, { x: 285, y: 495, r: 1.2 }, { x: 45, y: 600, r: 1.5 },
+  { x: 375, y: 645, r: 1.3 }, { x: 205, y: 195, r: 1.4 }, { x: 110, y: 660, r: 1.5 },
+];
+
+// The rail's dark-luxury texture -- soft green depth glow, low-opacity gold bokeh, and a scatter
+// of tiny sparkle dots -- built entirely from SVG gradients/shapes rather than a bitmap asset, so
+// it scales cleanly to any rail size without needing an uploaded background image.
+function RailBackdrop() {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFill}>
+      <Defs>
+        <RadialGradient id="depth" cx="50%" cy="12%" r="80%">
+          <Stop offset="0%" stopColor={RAIL_GREEN} stopOpacity={0.14} />
+          <Stop offset="100%" stopColor={RAIL_GREEN} stopOpacity={0} />
+        </RadialGradient>
+        <RadialGradient id="bokeh" cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor={RAIL_GOLD} stopOpacity={0.14} />
+          <Stop offset="55%" stopColor={RAIL_GOLD} stopOpacity={0.045} />
+          <Stop offset="100%" stopColor={RAIL_GOLD} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Rect x={0} y={0} width={400} height={700} fill="url(#depth)" />
+      {BOKEH_BLOBS.map((b, i) => (
+        <Circle key={i} cx={b.x} cy={b.y} r={b.r} fill="url(#bokeh)" />
+      ))}
+      {SPARKLES.map((s, i) => (
+        <Circle key={i} cx={s.x} cy={s.y} r={s.r} fill={RAIL_GOLD} opacity={0.35} />
+      ))}
+    </Svg>
+  );
+}
 
 // A thin gold "picture frame" corner bracket -- purely decorative, mirrored for the two corners.
 function CornerFlourish({ corner }: { corner: 'top-right' | 'bottom-left' }) {
@@ -77,6 +123,7 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
       <View style={[styles.shell, isSplit && styles.shellSplit, isSplit && { borderColor: RAIL_GOLD_BORDER }]}>
 
         <View style={[styles.rail, isSplit ? styles.railSplit : styles.railStacked]}>
+          <RailBackdrop />
           {isSplit && <CornerFlourish corner="top-right" />}
           {isSplit && <CornerFlourish corner="bottom-left" />}
           <Image
@@ -168,7 +215,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  rail: { backgroundColor: RAIL_BG },
+  rail: { backgroundColor: RAIL_BG, overflow: 'hidden' },
   railStacked: { paddingTop: 46, paddingBottom: 22, paddingHorizontal: 20, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: RAIL_GOLD },
   railSplit: { width: '42%', paddingVertical: 48, paddingHorizontal: 38, alignItems: 'center', justifyContent: 'center' },
 
