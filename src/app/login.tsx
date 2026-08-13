@@ -15,7 +15,7 @@ import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { BrandedLoader } from '@/components/branded-loader';
-import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
+import { AuthScreenShell } from '@/components/auth-screen-shell';
 import { SUPPORT_EMAIL } from '@/lib/contact-info';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
@@ -1287,25 +1287,16 @@ export default function ProfileScreen() {
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <AuthHeaderGlow />
-          <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
-          </View>
-          <Text style={[styles.tagline, { color: theme.muted }]}>Pakistan's Transparent Prize Campaign Platform</Text>
-        </View>
-
-        <View style={[styles.loginCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <AuthCardGlow />
-          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
-            <Shield color="#18a663" size={16} />
-            <Text style={styles.secureBadgeText}>Secure Account Access</Text>
-          </View>
-
-          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Welcome Back</Text>
-          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Sign in to your account</Text>
-
+        <AuthScreenShell
+          eyebrow="Secure Account Access"
+          title="Welcome Back"
+          subtitle="Sign in to your account"
+          trustItems={[
+            { icon: Shield, label: 'Secure Login' },
+            { icon: Check, label: 'Verified Platform' },
+            { icon: LockKeyhole, label: 'Protected Information' },
+          ]}
+        >
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
             <Mail color={theme.muted} size={18} />
             <TextInput
@@ -1380,40 +1371,14 @@ export default function ProfileScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.createAccountButton}
+            style={[styles.createAccountButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}
             onPress={() => router.push('/signup' as never)}
           >
-            <Image source={require('@/assets/images/jeetobaz-logo-gold.png')} style={styles.createAccountLogo} accessibilityLabel="JeetoBaz logo" />
-            <Text style={styles.createAccountLabel}>
-              New to JeetoBaz? <Text style={styles.createAccountHighlight}>Create Account</Text>
+            <Text style={[styles.createAccountLabel, { color: theme.muted }]}>
+              New to JeetoBaz? <Text style={[styles.createAccountHighlight, { color: theme.primary }]}>Create Account</Text>
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.trustStrip}>
-          <View style={styles.trustItem}>
-            <Shield color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Login</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <Check color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Verified Platform</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <LockKeyhole color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Protected Information</Text>
-          </View>
-        </View>
-
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
-          </TouchableOpacity>
-          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
-          </TouchableOpacity>
-        </View>
+        </AuthScreenShell>
       </ScrollView>
     </View>
     </>
@@ -1464,10 +1429,9 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1 },
   dividerText: { fontSize: 13 },
 
-  createAccountButton: { backgroundColor: '#ff4444', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, gap: 10 },
-  createAccountLogo: { width: 26, height: 26, borderRadius: 6 },
-  createAccountLabel: { fontSize: 14, color: 'white' },
-  createAccountHighlight: { fontWeight: 'bold', color: 'white' },
+  createAccountButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, borderWidth: 1 },
+  createAccountLabel: { fontSize: 14 },
+  createAccountHighlight: { fontWeight: 'bold' },
 
   trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
