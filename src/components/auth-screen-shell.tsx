@@ -1,10 +1,8 @@
-import { Image, Text, TouchableOpacity, View, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, Text, View, StyleSheet, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
-import { useRouter } from 'expo-router';
-import { ChevronLeft, Lock, Shield, ShieldCheck } from 'lucide-react-native';
+import { type ReactNode } from 'react';
+import { Lock, Shield, ShieldCheck } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
-import { DEFAULT_TRUST_BADGES, getTrustBadges } from '@/lib/app-settings';
 
 // The brand rail is a deliberate, theme-independent choice -- it stays this black/gold treatment
 // in both light and dark app mode, because that's where the gold logo mark reads best. Only the
@@ -87,61 +85,52 @@ function CornerFlourish({ corner }: { corner: 'top-right' | 'bottom-left' }) {
   );
 }
 
-export type AuthTrustItem = { icon: ComponentType<{ color?: string; size?: number }>; label: string };
-
 type AuthScreenShellProps = {
-  eyebrow: string;
   title: string;
   subtitle: string;
-  onBack?: () => void;
-  trustItems: AuthTrustItem[];
   children: ReactNode;
 };
 
-export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, children }: AuthScreenShellProps) {
-  const router = useRouter();
+const RAIL_TRUST_ITEMS = [
+  '100% Transparent Draw Process',
+  'Verified Winners & Real Prizes',
+  'Secure & Trusted Platform',
+] as const;
+
+export function AuthScreenShell({ title, subtitle, children }: AuthScreenShellProps) {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isSplit = width >= SPLIT_BREAKPOINT;
-  const [trustBadges, setTrustBadges] = useState<[string, string, string]>(DEFAULT_TRUST_BADGES);
-
-  useEffect(() => {
-    let active = true;
-    getTrustBadges().then(({ badges }) => {
-      if (active) setTrustBadges(badges);
-    });
-    return () => { active = false; };
-  }, []);
 
   // Fits the logo to a sensible size at every width -- wide enough to read clearly on a large
   // desktop rail, small enough not to crowd the compact mobile header strip.
-  const logoWidth = isSplit ? Math.min(200, width * 0.14) : Math.max(84, Math.min(120, width * 0.28));
+  const logoWidth = Math.min(200, width * 0.14);
   const logoHeight = logoWidth * LOGO_ASPECT_RATIO;
 
   return (
-    <View style={[styles.outer, isSplit && styles.outerSplit, { backgroundColor: isSplit ? theme.background : RAIL_BG }]}>
+    <View style={[styles.outer, isSplit ? styles.outerSplit : styles.outerStacked, { backgroundColor: theme.background }]}>
       <View style={[styles.shell, isSplit && styles.shellSplit, isSplit && { borderColor: RAIL_GOLD_BORDER }]}>
 
-        <View style={[styles.rail, isSplit ? styles.railSplit : styles.railStacked]}>
-          <RailBackdrop />
-          {isSplit && <CornerFlourish corner="top-right" />}
-          {isSplit && <CornerFlourish corner="bottom-left" />}
-          <Image
-            source={require('@/assets/images/jeetobaz-logo-hero.png')}
-            style={{ width: logoWidth, height: logoHeight, marginBottom: isSplit ? 18 : 10 }}
-            resizeMode="contain"
-            accessibilityLabel="JeetoBaz"
-          />
-          <Text style={styles.railTagline}>Pakistan's Transparent Prize Campaign Platform</Text>
-          <View style={[styles.badgeRow, !isSplit && styles.badgeRowCompact]}>
-            {trustBadges.map((label) => (
+        {isSplit && (
+          <View style={[styles.rail, styles.railSplit]}>
+            <RailBackdrop />
+            <CornerFlourish corner="top-right" />
+            <CornerFlourish corner="bottom-left" />
+            <Image
+              source={require('@/assets/images/jeetobaz-logo-hero.png')}
+              style={{ width: logoWidth, height: logoHeight, marginBottom: 18 }}
+              resizeMode="contain"
+              accessibilityLabel="JeetoBaz"
+            />
+            <Text style={styles.railTagline}>Pakistan's Transparent Prize Campaign Platform</Text>
+            <View style={styles.badgeRow}>
+              {RAIL_TRUST_ITEMS.map((label) => (
               <View key={label} style={styles.badge}>
-                <ShieldCheck color={RAIL_GREEN} size={13} />
+                <ShieldCheck color={RAIL_GOLD} size={13} />
                 <Text style={styles.badgeText}>{label}</Text>
               </View>
-            ))}
-          </View>
-          {isSplit && (
+              ))}
+            </View>
             <View style={styles.railFooter}>
               <View style={styles.railFooterRow}>
                 <Shield color={RAIL_MUTED} size={11} />
@@ -152,49 +141,20 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
                 <Text style={styles.railFooterText}>Your data is protected</Text>
               </View>
             </View>
-          )}
-        </View>
+          </View>
+        )}
 
-        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }, isSplit && styles.cardSplit]}>
-          {onBack && (
-            <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-              <ChevronLeft color={theme.text} size={22} />
-            </TouchableOpacity>
-          )}
+        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }, isSplit ? styles.cardSplit : styles.cardStacked]}>
           <Image
             source={require('@/assets/images/icon-small.png')}
             style={styles.cardBadgeIcon}
             resizeMode="contain"
             accessibilityLabel="JeetoBaz"
           />
-          <View style={[styles.eyebrowBadge, { backgroundColor: theme.primarySoft }]}>
-            <Shield color={RAIL_GREEN} size={16} />
-            <Text style={styles.eyebrowText}>{eyebrow}</Text>
-          </View>
-
-          <Text role="heading" aria-level={1} style={[styles.title, { color: theme.gold }]}>{title}</Text>
+          <Text role="heading" aria-level={1} style={[styles.title, { color: theme.text }]}>{title}</Text>
           <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text>
 
           {children}
-
-          <View style={styles.trustStrip}>
-            {trustItems.map(({ icon: Icon, label }) => (
-              <View key={label} style={styles.trustItem}>
-                <Icon color={RAIL_GREEN} size={14} />
-                <Text style={[styles.trustText, { color: theme.subtle }]}>{label}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.footerLinks}>
-            <TouchableOpacity onPress={() => router.push('/terms')}>
-              <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
-            </TouchableOpacity>
-            <Text style={[styles.footerDot, { color: theme.subtle }]}>&bull;</Text>
-            <TouchableOpacity onPress={() => router.push('/privacy')}>
-              <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </View>
@@ -202,10 +162,11 @@ export function AuthScreenShell({ eyebrow, title, subtitle, onBack, trustItems, 
 }
 
 const styles = StyleSheet.create({
-  outer: {},
+  outer: { width: '100%' },
   outerSplit: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
+  outerStacked: { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 16 },
 
-  shell: { width: '100%' },
+  shell: { width: '100%', maxWidth: 380 },
   shellSplit: {
     flexDirection: 'row',
     width: '100%',
@@ -216,13 +177,11 @@ const styles = StyleSheet.create({
   },
 
   rail: { backgroundColor: RAIL_BG, overflow: 'hidden' },
-  railStacked: { paddingTop: 46, paddingBottom: 22, paddingHorizontal: 20, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: RAIL_GOLD },
   railSplit: { width: '42%', paddingVertical: 48, paddingHorizontal: 38, alignItems: 'center', justifyContent: 'center' },
 
   railTagline: { fontSize: 13, color: RAIL_MUTED, textAlign: 'center', lineHeight: 19, marginBottom: 18, maxWidth: 260 },
 
   badgeRow: { alignItems: 'center', gap: 8 },
-  badgeRowCompact: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 4 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   badgeText: { color: RAIL_TEXT, fontSize: 12.5, fontWeight: '600' },
 
@@ -234,27 +193,12 @@ const styles = StyleSheet.create({
   railFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   railFooterText: { color: RAIL_MUTED, fontSize: 11 },
 
-  card: { padding: 24, position: 'relative', overflow: 'hidden' },
-  cardSplit: { width: '58%', justifyContent: 'center' },
+  card: { padding: 24, position: 'relative' },
+  cardSplit: { width: '58%', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 42 },
+  cardStacked: { width: '100%', borderRadius: 16, borderWidth: 1, boxShadow: '0 4px 18px rgba(0, 0, 0, 0.08)' },
 
-  backBtn: { position: 'absolute', top: 18, left: 16, zIndex: 2, padding: 4 },
-
-  cardBadgeIcon: { width: 52, height: 52, borderRadius: 13, alignSelf: 'center', marginBottom: 16 },
-
-  eyebrowBadge: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    marginBottom: 20, paddingVertical: 8, backgroundColor: RAIL_GREEN_SOFT, borderRadius: 8,
-  },
-  eyebrowText: { color: RAIL_GREEN, fontSize: 12, fontWeight: '600' },
+  cardBadgeIcon: { width: 42, height: 42, borderRadius: 10, alignSelf: 'center', marginBottom: 16 },
 
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
   subtitle: { fontSize: 14, textAlign: 'center', marginBottom: 24 },
-
-  trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, flexWrap: 'wrap' },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustText: { fontSize: 11, fontWeight: '500' },
-
-  footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 },
-  footerLink: { fontSize: 12 },
-  footerDot: { fontSize: 12 },
 });

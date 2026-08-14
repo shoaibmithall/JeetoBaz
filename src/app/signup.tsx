@@ -136,15 +136,8 @@ export default function SignupScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <AuthScreenShell
-          eyebrow="Create Your Account"
-          title="Join JeetoBaz"
-          subtitle="Start winning prizes today!"
-          onBack={() => router.replace('/login')}
-          trustItems={[
-            { icon: Shield, label: 'Secure Sign Up' },
-            { icon: Check, label: 'Email Verification' },
-            { icon: LockKeyhole, label: 'Data Protected' },
-          ]}
+          title="Create Your Account"
+          subtitle="Join JeetoBaz and start winning!"
         >
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>
             <User color={theme.muted} size={18} />

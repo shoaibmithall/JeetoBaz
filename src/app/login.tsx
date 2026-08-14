@@ -1288,14 +1288,8 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <AuthScreenShell
-          eyebrow="Secure Account Access"
           title="Welcome Back"
           subtitle="Sign in to your account"
-          trustItems={[
-            { icon: Shield, label: 'Secure Login' },
-            { icon: Check, label: 'Verified Platform' },
-            { icon: LockKeyhole, label: 'Protected Information' },
-          ]}
         >
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
             <Mail color={theme.muted} size={18} />
@@ -1363,12 +1357,6 @@ export default function ProfileScreen() {
               </>
             )}
           </TouchableOpacity>
-
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.muted }]}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-          </View>
 
           <TouchableOpacity
             style={[styles.createAccountButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}
