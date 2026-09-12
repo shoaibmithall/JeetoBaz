@@ -10,8 +10,9 @@ if (indexable.length === 0) {
   throw new Error('Static SEO check requires at least one indexable product page.');
 }
 
-if (!html.includes('data-jeetobaz-static-seo="true"')) {
-  throw new Error('Homepage static SEO navigation marker is missing.');
+const markerMatches = html.match(/data-jeetobaz-static-seo="true"/g) || [];
+if (markerMatches.length !== 1) {
+  throw new Error(`Homepage static SEO navigation marker count must be exactly 1, found ${markerMatches.length}.`);
 }
 
 const productLinkMatches = html.match(/href="\/product\//g) || [];
@@ -28,4 +29,4 @@ if (!html.includes('Latest JeetoBaz prize pages')) {
   throw new Error('Homepage static SEO navigation heading is missing.');
 }
 
-console.log(`Homepage static SEO check passed with ${productLinkMatches.length} crawlable product link(s).`);
+console.log(`Homepage static SEO check passed with ${productLinkMatches.length} crawlable product link(s) and one unique injection marker.`);
