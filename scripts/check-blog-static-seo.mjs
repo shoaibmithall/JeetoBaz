@@ -12,6 +12,20 @@ async function firstExisting(paths) {
   return null;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#x27;');
+}
+
+function htmlContainsText(html, value) {
+  const text = String(value);
+  return html.includes(text) || html.includes(escapeHtml(text));
+}
+
 const manifestPath = 'src/generated/blog-seo-manifest.json';
 let manifest;
 try {
@@ -43,7 +57,7 @@ if (visible.length > 0) {
   if (!indexHtml.includes(expectedHref)) {
     throw new Error(`[check-blog-static-seo] Static /blog HTML is missing article link: ${first.slug}`);
   }
-  if (!indexHtml.includes(String(first.title))) {
+  if (!htmlContainsText(indexHtml, first.title)) {
     throw new Error(`[check-blog-static-seo] Static /blog HTML is missing article title: ${first.title}`);
   }
 
@@ -64,7 +78,7 @@ if (visible.length > 0) {
 
   const articleHtml = await readFile(articlePath, 'utf8');
   const canonical = `https://jeetobaz.pk/blog/${first.slug}`;
-  if (!articleHtml.includes(String(first.title))) {
+  if (!htmlContainsText(articleHtml, first.title)) {
     throw new Error(`[check-blog-static-seo] Static article title is missing: ${first.title}`);
   }
   if (!articleHtml.includes(canonical)) {
@@ -79,7 +93,7 @@ if (visible.length > 0) {
     .slice(0, 5)
     .join(' ');
 
-  if (contentProbe && !articleHtml.includes(contentProbe)) {
+  if (contentProbe && !htmlContainsText(articleHtml, contentProbe)) {
     throw new Error('[check-blog-static-seo] Static article body content is missing.');
   }
 }
