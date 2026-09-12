@@ -10,8 +10,22 @@ import { BlogContent } from '@/components/blog-content';
 import { getBlogCategoryLabel, getPublicBlogPost, getPublicBlogPosts, resolveBlogCover } from '@/lib/blog';
 import { ORG_ID, SITE_ID, pageSchema } from '@/lib/structured-data';
 import type { BlogPost } from '@/types/database';
+import blogSeoManifest from '@/generated/blog-seo-manifest.json';
 
 const BASE_URL = 'https://jeetobaz.pk';
+const staticBlogPosts = (blogSeoManifest as BlogPost[]).filter(
+  (entry) => entry.is_visible !== false && Boolean(entry.slug && entry.title),
+);
+const staticPostBySlug = new Map(staticBlogPosts.map((entry) => [entry.slug, entry]));
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  return staticBlogPosts.map((entry) => ({ slug: entry.slug }));
+}
+
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] || '';
+  return value || '';
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -20,116 +34,136 @@ function formatDate(iso: string) {
 export default function BlogPostScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { slug } = useLocalSearchParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const params = useLocalSearchParams<{ slug?: string | string[] }>();
+  const slug = firstParam(params.slug);
+  const initialStaticPost = slug ? staticPostBySlug.get(slug) || null : null;
+  const [post, setPost] = useState<BlogPost | null>(initialStaticPost);
   const [related, setRelated] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [loadErrorSlug, setLoadErrorSlug] = useState<string | null>(null);
+  const [notFoundSlug, setNotFoundSlug] = useState<string | null>(null);
+
+  const staticPostForSlug = slug ? staticPostBySlug.get(slug) || null : null;
+  const activePost = post?.slug === slug ? post : staticPostForSlug;
+  const currentLoadError = Boolean(slug && loadErrorSlug === slug);
+  const currentNotFound = !slug || notFoundSlug === slug;
 
   useEffect(() => {
-    if (slug) fetchPost(slug);
+    if (slug) void fetchPost(slug);
   }, [slug]);
 
   async function fetchPost(postSlug: string) {
-    setLoading(true);
-    setLoadError(false);
-    setNotFound(false);
+    const snapshot = staticPostBySlug.get(postSlug) || null;
     const { data, error } = await getPublicBlogPost(postSlug);
+
     if (error) {
-      setLoadError(true);
-      setLoading(false);
+      if (!snapshot) setLoadErrorSlug(postSlug);
       return;
     }
+
     if (!data) {
-      setNotFound(true);
-      setLoading(false);
+      setPost(null);
+      setRelated([]);
+      setLoadErrorSlug(null);
+      setNotFoundSlug(postSlug);
       return;
     }
+
     setPost(data);
+    setLoadErrorSlug(null);
+    setNotFoundSlug(null);
     const { data: allPosts } = await getPublicBlogPosts();
     setRelated((allPosts || []).filter((entry) => entry.category === data.category && entry.id !== data.id).slice(0, 3));
-    setLoading(false);
   }
 
   const pageUrl = `${BASE_URL}/blog/${slug}`;
-  const coverUrl = post?.cover_image.startsWith('http') ? post.cover_image : `${BASE_URL}/og-image.png`;
+  const coverUrl = activePost?.cover_image.startsWith('http') ? activePost.cover_image : `${BASE_URL}/og-image.png`;
 
   const webPageSchema = useMemo(() => {
-    if (!post) return null;
-    return pageSchema('WebPage', `/blog/${post.slug}`, post.title, post.excerpt);
-  }, [post]);
+    if (!activePost) return null;
+    return pageSchema('WebPage', `/blog/${activePost.slug}`, activePost.title, activePost.excerpt);
+  }, [activePost]);
 
   const articleSchema = useMemo(() => {
-    if (!post) return null;
+    if (!activePost) return null;
     return {
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: post.title,
-      description: post.excerpt,
+      headline: activePost.title,
+      description: activePost.excerpt,
       image: coverUrl,
-      datePublished: post.published_at,
-      dateModified: post.updated_at,
+      datePublished: activePost.published_at,
+      dateModified: activePost.updated_at,
       author: { '@id': ORG_ID },
       publisher: { '@id': ORG_ID },
       mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
       isPartOf: { '@id': SITE_ID },
     };
-  }, [post, coverUrl, pageUrl]);
+  }, [activePost, coverUrl, pageUrl]);
 
   const breadcrumbSchemaJson = useMemo(() => {
-    if (!post) return null;
+    if (!activePost) return null;
     return {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${BASE_URL}/` },
         { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE_URL}/blog` },
-        { '@type': 'ListItem', position: 3, name: post.title, item: pageUrl },
+        { '@type': 'ListItem', position: 3, name: activePost.title, item: pageUrl },
       ],
     };
-  }, [post, pageUrl]);
+  }, [activePost, pageUrl]);
 
-  if (loading) return (
+  if (!activePost && !currentLoadError && !currentNotFound) return (
     <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
       <BrandedLoader message="Loading article..." />
     </View>
   );
 
-  if (notFound) return (
-    <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
-      <Text style={[styles.notFoundTitle, { color: theme.text }]}>Article not found</Text>
-      <TouchableOpacity onPress={() => router.push('/blog' as never)}>
-        <Text style={[styles.notFoundLink, { color: theme.primary }]}>Back to Blog</Text>
-      </TouchableOpacity>
-    </View>
+  if (currentNotFound) return (
+    <>
+      <Head>
+        <title>Article Not Found | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+      </Head>
+      <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
+        <Text style={[styles.notFoundTitle, { color: theme.text }]}>Article not found</Text>
+        <TouchableOpacity onPress={() => router.push('/blog' as never)}>
+          <Text style={[styles.notFoundLink, { color: theme.primary }]}>Back to Blog</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 
-  if (loadError || !post) return (
-    <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
-      <DataErrorState onRetry={() => slug && fetchPost(slug)} />
-    </View>
+  if (currentLoadError || !activePost) return (
+    <>
+      <Head>
+        <meta name="robots" content="noindex, follow" />
+      </Head>
+      <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
+        <DataErrorState onRetry={() => slug && fetchPost(slug)} />
+      </View>
+    </>
   );
 
   return (
     <>
     <Head>
-      <title>{post.title} | JeetoBaz Blog</title>
+      <title>{activePost.title} | JeetoBaz Blog</title>
       <meta name="robots" content="index, follow" />
-      <meta name="description" content={post.excerpt} />
+      <meta name="description" content={activePost.excerpt} />
       <link rel="canonical" href={pageUrl} />
       <meta property="og:type" content="article" />
-      <meta property="og:title" content={post.title} />
-      <meta property="og:description" content={post.excerpt} />
+      <meta property="og:title" content={activePost.title} />
+      <meta property="og:description" content={activePost.excerpt} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:site_name" content="JeetoBaz" />
       <meta property="og:locale" content="en_PK" />
       <meta property="og:image" content={coverUrl} />
-      <meta property="og:image:alt" content={post.title} />
+      <meta property="og:image:alt" content={activePost.title} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@jeetobaz" />
-      <meta name="twitter:title" content={post.title} />
-      <meta name="twitter:description" content={post.excerpt} />
+      <meta name="twitter:title" content={activePost.title} />
+      <meta name="twitter:description" content={activePost.excerpt} />
       <meta name="twitter:image" content={coverUrl} />
       {webPageSchema ? <script type="application/ld+json">{JSON.stringify(webPageSchema)}</script> : null}
       {articleSchema ? <script type="application/ld+json">{JSON.stringify(articleSchema)}</script> : null}
@@ -143,23 +177,23 @@ export default function BlogPostScreen() {
         </TouchableOpacity>
       </View>
 
-      <Image source={resolveBlogCover(post.cover_image)} style={styles.cover} resizeMode="cover" accessibilityLabel={post.title} />
+      <Image source={resolveBlogCover(activePost.cover_image)} style={styles.cover} resizeMode="cover" accessibilityLabel={activePost.title} />
 
       <View style={styles.articleHeader}>
         <View style={[styles.categoryBadge, { backgroundColor: theme.primarySoft }]}>
-          <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(post.category)}</Text>
+          <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(activePost.category)}</Text>
         </View>
-        <Text role="heading" aria-level={1} style={[styles.title, { color: theme.text }]}>{post.title}</Text>
+        <Text role="heading" aria-level={1} style={[styles.title, { color: theme.text }]}>{activePost.title}</Text>
         <View style={styles.metaRow}>
-          <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(post.published_at)}</Text>
+          <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(activePost.published_at)}</Text>
           <View style={[styles.metaDivider, { backgroundColor: theme.subtle }]} />
           <Clock3 color={theme.subtle} size={13} />
-          <Text style={[styles.metaText, { color: theme.subtle }]}>{post.read_minutes} min read</Text>
+          <Text style={[styles.metaText, { color: theme.subtle }]}>{activePost.read_minutes} min read</Text>
         </View>
       </View>
 
       <View style={styles.body}>
-        <BlogContent content={post.content} />
+        <BlogContent content={activePost.content} />
       </View>
 
       <View style={[styles.ctaBox, { backgroundColor: theme.primarySoft, borderColor: theme.primary }]}>
@@ -176,17 +210,18 @@ export default function BlogPostScreen() {
         <View style={styles.relatedSection}>
           <Text style={[styles.relatedTitle, { color: theme.gold }]}>Related Articles</Text>
           {related.map((entry) => (
-            <TouchableOpacity
-              key={entry.id}
-              style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-              onPress={() => router.push(`/blog/${entry.slug}` as never)}
-            >
-              <Image source={resolveBlogCover(entry.cover_image)} style={styles.relatedImage} resizeMode="cover" accessibilityLabel={entry.title} />
-              <View style={styles.relatedBody}>
-                <Text style={[styles.relatedCardTitle, { color: theme.text }]} numberOfLines={2}>{entry.title}</Text>
-                <Text style={[styles.metaText, { color: theme.subtle }]}>{entry.read_minutes} min read</Text>
-              </View>
-            </TouchableOpacity>
+            <Link key={entry.id} href={`/blog/${entry.slug}`} asChild>
+              <TouchableOpacity
+                style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                accessibilityRole="link"
+              >
+                <Image source={resolveBlogCover(entry.cover_image)} style={styles.relatedImage} resizeMode="cover" accessibilityLabel={entry.title} />
+                <View style={styles.relatedBody}>
+                  <Text style={[styles.relatedCardTitle, { color: theme.text }]} numberOfLines={2}>{entry.title}</Text>
+                  <Text style={[styles.metaText, { color: theme.subtle }]}>{entry.read_minutes} min read</Text>
+                </View>
+              </TouchableOpacity>
+            </Link>
           ))}
         </View>
       ) : null}

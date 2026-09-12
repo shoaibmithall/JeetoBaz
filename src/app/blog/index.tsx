@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import Head from 'expo-router/head';
 import { ArrowLeft, BookOpen, Clock3, Search } from 'lucide-react-native';
 import { useAppTheme } from '@/hooks/use-theme';
@@ -10,15 +10,19 @@ import { BLOG_CATEGORIES, getBlogCategoryLabel, getPublicBlogPosts, resolveBlogC
 import { breadcrumbSchema, pageSchema } from '@/lib/structured-data';
 import type { BlogCategory, BlogPost } from '@/types/database';
 import { useSafeBack } from '@/lib/safe-back';
+import blogSeoManifest from '@/generated/blog-seo-manifest.json';
 
 type CategoryFilter = 'all' | BlogCategory;
+
+const staticBlogPosts = (blogSeoManifest as BlogPost[])
+  .filter((post) => post.is_visible !== false && Boolean(post.slug && post.title))
+  .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function BlogIndexScreen() {
-  const router = useRouter();
   const goBack = useSafeBack();
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -29,8 +33,8 @@ export default function BlogIndexScreen() {
     ? (width - (gridPadding * 2) - (gridGap * (columnCount - 1))) / columnCount
     : undefined;
 
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<BlogPost[]>(staticBlogPosts);
+  const [loading, setLoading] = useState(staticBlogPosts.length === 0);
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
@@ -40,11 +44,14 @@ export default function BlogIndexScreen() {
   }, []);
 
   async function fetchPosts() {
-    setLoading(true);
+    if (staticBlogPosts.length === 0) setLoading(true);
     setLoadError(false);
     const { data, error } = await getPublicBlogPosts();
-    if (error) setLoadError(true);
-    else setPosts(data || []);
+    if (error) {
+      if (staticBlogPosts.length === 0) setLoadError(true);
+    } else {
+      setPosts(data || []);
+    }
     setLoading(false);
   }
 
@@ -145,51 +152,52 @@ export default function BlogIndexScreen() {
       ) : (
         <>
           {featured ? (
-            <TouchableOpacity
-              style={[styles.featuredCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-              onPress={() => router.push(`/blog/${featured.slug}` as never)}
-              accessibilityRole="link"
-            >
-              <Image source={resolveBlogCover(featured.cover_image)} style={styles.featuredImage} resizeMode="cover" accessibilityLabel={featured.title} />
-              <View style={styles.featuredBody}>
-                <View style={[styles.categoryBadge, { backgroundColor: theme.primarySoft }]}>
-                  <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(featured.category)}</Text>
+            <Link href={`/blog/${featured.slug}`} asChild>
+              <TouchableOpacity
+                style={[styles.featuredCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                accessibilityRole="link"
+              >
+                <Image source={resolveBlogCover(featured.cover_image)} style={styles.featuredImage} resizeMode="cover" accessibilityLabel={featured.title} />
+                <View style={styles.featuredBody}>
+                  <View style={[styles.categoryBadge, { backgroundColor: theme.primarySoft }]}>
+                    <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(featured.category)}</Text>
+                  </View>
+                  <Text style={[styles.featuredTitle, { color: theme.text }]}>{featured.title}</Text>
+                  <Text style={[styles.excerpt, { color: theme.muted }]} numberOfLines={2}>{featured.excerpt}</Text>
+                  <View style={styles.metaRow}>
+                    <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(featured.published_at)}</Text>
+                    <View style={styles.metaDivider} />
+                    <Clock3 color={theme.subtle} size={13} />
+                    <Text style={[styles.metaText, { color: theme.subtle }]}>{featured.read_minutes} min read</Text>
+                  </View>
                 </View>
-                <Text style={[styles.featuredTitle, { color: theme.text }]}>{featured.title}</Text>
-                <Text style={[styles.excerpt, { color: theme.muted }]} numberOfLines={2}>{featured.excerpt}</Text>
-                <View style={styles.metaRow}>
-                  <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(featured.published_at)}</Text>
-                  <View style={styles.metaDivider} />
-                  <Clock3 color={theme.subtle} size={13} />
-                  <Text style={[styles.metaText, { color: theme.subtle }]}>{featured.read_minutes} min read</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </Link>
           ) : null}
 
           <View style={[styles.grid, columnCount > 1 && styles.gridMultiColumn]}>
             {rest.map((post) => (
-              <TouchableOpacity
-                key={post.id}
-                style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}
-                onPress={() => router.push(`/blog/${post.slug}` as never)}
-                accessibilityRole="link"
-              >
-                <Image source={resolveBlogCover(post.cover_image)} style={styles.cardImage} resizeMode="cover" accessibilityLabel={post.title} />
-                <View style={styles.cardBody}>
-                  <View style={[styles.categoryBadge, { backgroundColor: theme.primarySoft }]}>
-                    <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(post.category)}</Text>
+              <Link key={post.id} href={`/blog/${post.slug}`} asChild>
+                <TouchableOpacity
+                  style={[styles.card, columnCount > 1 && { width: cardWidth }, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                  accessibilityRole="link"
+                >
+                  <Image source={resolveBlogCover(post.cover_image)} style={styles.cardImage} resizeMode="cover" accessibilityLabel={post.title} />
+                  <View style={styles.cardBody}>
+                    <View style={[styles.categoryBadge, { backgroundColor: theme.primarySoft }]}>
+                      <Text style={[styles.categoryBadgeText, { color: theme.primary }]}>{getBlogCategoryLabel(post.category)}</Text>
+                    </View>
+                    <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>{post.title}</Text>
+                    <Text style={[styles.excerpt, { color: theme.muted }]} numberOfLines={2}>{post.excerpt}</Text>
+                    <View style={styles.metaRow}>
+                      <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(post.published_at)}</Text>
+                      <View style={styles.metaDivider} />
+                      <Clock3 color={theme.subtle} size={13} />
+                      <Text style={[styles.metaText, { color: theme.subtle }]}>{post.read_minutes} min read</Text>
+                    </View>
                   </View>
-                  <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>{post.title}</Text>
-                  <Text style={[styles.excerpt, { color: theme.muted }]} numberOfLines={2}>{post.excerpt}</Text>
-                  <View style={styles.metaRow}>
-                    <Text style={[styles.metaText, { color: theme.subtle }]}>{formatDate(post.published_at)}</Text>
-                    <View style={styles.metaDivider} />
-                    <Clock3 color={theme.subtle} size={13} />
-                    <Text style={[styles.metaText, { color: theme.subtle }]}>{post.read_minutes} min read</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </Link>
             ))}
           </View>
         </>
