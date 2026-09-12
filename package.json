@@ -39,15 +39,15 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "prestart": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs --dev",
+    "prestart": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs --dev && node --env-file-if-exists=.env ./scripts/generate-blog-seo-manifest.mjs --dev",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "preweb": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs --dev",
+    "preweb": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs --dev && node --env-file-if-exists=.env ./scripts/generate-blog-seo-manifest.mjs --dev",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs && node ./scripts/generate-sitemap.mjs && expo export -p web && node ./scripts/inject-homepage-static-seo.mjs"
+    "build": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs && node --env-file-if-exists=.env ./scripts/generate-blog-seo-manifest.mjs && node ./scripts/generate-sitemap.mjs && expo export -p web && node ./scripts/inject-homepage-static-seo.mjs && node ./scripts/check-blog-static-seo.mjs"
   },
   "private": true
 }
