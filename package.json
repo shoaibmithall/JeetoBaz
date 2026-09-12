@@ -47,7 +47,7 @@
     "preweb": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs --dev",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs && node ./scripts/generate-sitemap.mjs && expo export -p web"
+    "build": "node --env-file-if-exists=.env ./scripts/generate-product-seo-manifest.mjs && node ./scripts/generate-sitemap.mjs && expo export -p web && node ./scripts/inject-homepage-static-seo.mjs"
   },
   "private": true
 }
