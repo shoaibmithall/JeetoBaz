@@ -1,10 +1,9 @@
-name: Static SEO Safe Check
+name: Homepage Static SEO Safe Check
 
 on:
   push:
     branches:
       - seo/homepage-crawlability-safe
-      - seo/blog-static-foundation-safe
 
 permissions:
   contents: read
@@ -37,6 +36,3 @@ jobs:
 
       - name: Check raw homepage SEO output
         run: node scripts/check-homepage-static-seo.mjs
-
-      - name: Check raw blog SEO output
-        run: node scripts/check-blog-static-seo.mjs
