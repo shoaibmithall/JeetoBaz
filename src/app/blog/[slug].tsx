@@ -10,8 +10,22 @@ import { BlogContent } from '@/components/blog-content';
 import { getBlogCategoryLabel, getPublicBlogPost, getPublicBlogPosts, resolveBlogCover } from '@/lib/blog';
 import { ORG_ID, SITE_ID, pageSchema } from '@/lib/structured-data';
 import type { BlogPost } from '@/types/database';
+import blogSeoManifest from '@/generated/blog-seo-manifest.json';
 
 const BASE_URL = 'https://jeetobaz.pk';
+const staticBlogPosts = (blogSeoManifest as BlogPost[]).filter(
+  (entry) => entry.is_visible !== false && Boolean(entry.slug && entry.title),
+);
+const staticPostBySlug = new Map(staticBlogPosts.map((entry) => [entry.slug, entry]));
+
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
+  return staticBlogPosts.map((entry) => ({ slug: entry.slug }));
+}
+
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] || '';
+  return value || '';
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -20,32 +34,57 @@ function formatDate(iso: string) {
 export default function BlogPostScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { slug } = useLocalSearchParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const params = useLocalSearchParams<{ slug?: string | string[] }>();
+  const slug = firstParam(params.slug);
+  const initialStaticPost = slug ? staticPostBySlug.get(slug) || null : null;
+  const [post, setPost] = useState<BlogPost | null>(initialStaticPost);
   const [related, setRelated] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialStaticPost);
   const [loadError, setLoadError] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (slug) fetchPost(slug);
-  }, [slug]);
-
-  async function fetchPost(postSlug: string) {
-    setLoading(true);
-    setLoadError(false);
-    setNotFound(false);
-    const { data, error } = await getPublicBlogPost(postSlug);
-    if (error) {
-      setLoadError(true);
-      setLoading(false);
-      return;
-    }
-    if (!data) {
+    if (!slug) {
+      setPost(null);
+      setRelated([]);
+      setLoadError(false);
       setNotFound(true);
       setLoading(false);
       return;
     }
+
+    const snapshot = staticPostBySlug.get(slug) || null;
+    setPost(snapshot);
+    setRelated([]);
+    setLoadError(false);
+    setNotFound(false);
+    setLoading(!snapshot);
+    void fetchPost(slug, snapshot);
+  }, [slug]);
+
+  async function fetchPost(postSlug: string, snapshot: BlogPost | null = staticPostBySlug.get(postSlug) || null) {
+    if (!snapshot) setLoading(true);
+    setLoadError(false);
+    setNotFound(false);
+
+    const { data, error } = await getPublicBlogPost(postSlug);
+    if (error) {
+      if (!snapshot) {
+        setPost(null);
+        setLoadError(true);
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (!data) {
+      setPost(null);
+      setRelated([]);
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
     setPost(data);
     const { data: allPosts } = await getPublicBlogPosts();
     setRelated((allPosts || []).filter((entry) => entry.category === data.category && entry.id !== data.id).slice(0, 3));
@@ -97,18 +136,29 @@ export default function BlogPostScreen() {
   );
 
   if (notFound) return (
-    <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
-      <Text style={[styles.notFoundTitle, { color: theme.text }]}>Article not found</Text>
-      <TouchableOpacity onPress={() => router.push('/blog' as never)}>
-        <Text style={[styles.notFoundLink, { color: theme.primary }]}>Back to Blog</Text>
-      </TouchableOpacity>
-    </View>
+    <>
+      <Head>
+        <title>Article Not Found | JeetoBaz</title>
+        <meta name="robots" content="noindex, follow" />
+      </Head>
+      <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
+        <Text style={[styles.notFoundTitle, { color: theme.text }]}>Article not found</Text>
+        <TouchableOpacity onPress={() => router.push('/blog' as never)}>
+          <Text style={[styles.notFoundLink, { color: theme.primary }]}>Back to Blog</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 
   if (loadError || !post) return (
-    <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
-      <DataErrorState onRetry={() => slug && fetchPost(slug)} />
-    </View>
+    <>
+      <Head>
+        <meta name="robots" content="noindex, follow" />
+      </Head>
+      <View style={[styles.stateScreen, { backgroundColor: theme.background }]}>
+        <DataErrorState onRetry={() => slug && fetchPost(slug, staticPostBySlug.get(slug) || null)} />
+      </View>
+    </>
   );
 
   return (
@@ -176,17 +226,18 @@ export default function BlogPostScreen() {
         <View style={styles.relatedSection}>
           <Text style={[styles.relatedTitle, { color: theme.gold }]}>Related Articles</Text>
           {related.map((entry) => (
-            <TouchableOpacity
-              key={entry.id}
-              style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-              onPress={() => router.push(`/blog/${entry.slug}` as never)}
-            >
-              <Image source={resolveBlogCover(entry.cover_image)} style={styles.relatedImage} resizeMode="cover" accessibilityLabel={entry.title} />
-              <View style={styles.relatedBody}>
-                <Text style={[styles.relatedCardTitle, { color: theme.text }]} numberOfLines={2}>{entry.title}</Text>
-                <Text style={[styles.metaText, { color: theme.subtle }]}>{entry.read_minutes} min read</Text>
-              </View>
-            </TouchableOpacity>
+            <Link key={entry.id} href={`/blog/${entry.slug}`} asChild>
+              <TouchableOpacity
+                style={[styles.relatedCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                accessibilityRole="link"
+              >
+                <Image source={resolveBlogCover(entry.cover_image)} style={styles.relatedImage} resizeMode="cover" accessibilityLabel={entry.title} />
+                <View style={styles.relatedBody}>
+                  <Text style={[styles.relatedCardTitle, { color: theme.text }]} numberOfLines={2}>{entry.title}</Text>
+                  <Text style={[styles.metaText, { color: theme.subtle }]}>{entry.read_minutes} min read</Text>
+                </View>
+              </TouchableOpacity>
+            </Link>
           ))}
         </View>
       ) : null}
