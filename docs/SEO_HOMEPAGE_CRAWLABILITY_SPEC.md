@@ -2,35 +2,36 @@
 
 ## Problem
 
-JeetoBaz is exported as a static Expo Router web app, but the homepage initializes `products` as an empty array and loads active products from Supabase only after the client hydrates. The raw exported homepage HTML can therefore contain a loading/empty state instead of the current active product cards and crawlable product links.
+JeetoBaz is exported as a static Expo Router web app, but the homepage initializes its live `products` state empty and fetches active draws from Supabase after hydration. The raw exported homepage HTML therefore has no crawlable `/product/<slug>` links even though individual product pages are pre-generated and listed in the sitemap.
 
 ## Goal
 
-Make active JeetoBaz product cards and `/product/<slug>` links available in the initial statically exported homepage HTML while preserving all existing live Supabase refresh behavior after hydration.
+Give search crawlers and users a small, accurate set of crawlable product-page links in the raw homepage HTML without changing the React homepage data flow, hydration state, draw logic, payment logic, or live Supabase behavior.
 
 ## Safety Constraints
 
 - Do not change draw logic, payments, authentication, admin behavior, database writes, or winner selection.
-- Do not deploy directly from the feature branch.
-- Preserve the current Expo Router static-output architecture.
-- Reuse the existing build-time Supabase product manifest pipeline rather than introducing a new backend or framework.
-- Only public product fields already displayed on the public homepage may be embedded in the static manifest.
-- After hydration, the existing Supabase query remains the source of fresh live data.
+- Do not change the live homepage `products` state or its Supabase refresh path.
+- Do not rewrite React-rendered markup inside the root after export, because that could create hydration mismatches.
+- Do not expand the product manifest with new database fields for this fix.
+- Reuse the existing generated product SEO manifest, which already contains public `slug`, `name`, `description`, `entryFee`, `indexable`, and `lastModified` values.
+- Preserve Expo Router static output and GitHub Pages deployment.
 - No secrets may be committed.
 - Production `main` must remain unchanged until a reviewed PR is deliberately merged.
 
 ## Required Behavior
 
-1. The build-time product manifest must contain enough public fields to create valid homepage `Product` objects for active draws.
-2. The homepage must seed its initial `products` state from active, non-deleted, indexable build-time manifest rows that have a slug.
-3. The homepage must not present the initial product section as loading when static manifest products are available.
-4. Existing `fetchProducts()` must still refresh from Supabase on focus and update offline cache.
-5. Exported `dist/index.html` must contain at least one crawlable `/product/` link when active products exist in the manifest.
-6. Exported `dist/index.html` must not report `Active Draws` as `0 found` when active manifest products exist.
-7. Existing product detail static generation and sitemap generation must continue to work with the expanded manifest.
+1. After `expo export -p web`, a post-export script must read the existing generated product SEO manifest and `dist/index.html`.
+2. It must select a small set of recent indexable product pages with valid slugs and names.
+3. It must inject a user-visible, lightweight `Latest JeetoBaz prize pages` navigation section immediately before `</body>`, outside the React root, so hydration behavior is untouched.
+4. Every injected link must be HTML-escaped and point to `/product/<encoded-slug>`.
+5. The injected section must be idempotent: running the script twice must not duplicate it.
+6. If there are no indexable products or `</body>` is missing, the script must fail the build rather than silently producing malformed output.
+7. Existing product-page static generation, sitemap generation, live product fetching, and runtime UI must remain unchanged.
 
 ## Verification
 
-- A test/check script must inspect the static homepage HTML and fail if active manifest products exist but the exported homepage has no product links or reports `0 found`.
-- `npm run build` must complete successfully with the repository's normal build environment.
-- Existing product route static generation must remain intact.
+- A check script must inspect `dist/index.html` after a full build and fail if the static SEO section or crawlable product links are missing.
+- The check must verify at least one expected manifest slug is present in the homepage HTML.
+- `npm run build` must complete successfully with the normal repository build environment.
+- The final diff must contain no changes to draw, payment, auth, admin, Supabase mutation, or winner-selection code.
