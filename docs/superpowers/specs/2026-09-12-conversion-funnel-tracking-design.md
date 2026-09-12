@@ -93,6 +93,8 @@ Supporting events:
 - `payment_failed`
 - `wallet_topup_clicked`
 
+For this design, `source_page` means the in-app path/surface where the tracked action originated, for example `/product/<slug>`, `/`, `/favorites`, or `/recently-viewed`. It must never contain query-string or hash values that could carry sensitive data.
+
 ### 5.1 `campaign_view`
 
 Meaning: a user has viewed an eligible product/campaign detail page.
@@ -139,13 +141,17 @@ Rules:
 
 ### 5.4 `payment_method_selected`
 
-Meaning: user selected a manual payment method or chose the wallet path.
+Meaning: user explicitly chose a manual payment method or explicitly started the wallet path.
 
 Expected parameters:
 - `product_id`
 - `entry_fee`
 - `payment_type`: `manual` or `wallet`
 - `payment_method`: a non-sensitive label such as `JazzCash`, `Easypaisa`, or `wallet`
+
+Rules:
+- manual event fires on a real method-card tap, not merely because the first method is selected by default
+- wallet event fires when the user presses the wallet-pay action
 
 Never include account numbers or sender details.
 
@@ -186,6 +192,25 @@ Expected wallet parameters:
 - `payment_type`: `wallet`
 - optionally `entry_id` only if it is treated as a non-sensitive technical identifier and GTM configuration does not expose it unnecessarily. Default implementation should omit it unless needed.
 
+### 5.7 `signup_started`
+
+Meaning: the user has shown real signup intent, not merely loaded the page.
+
+Initial definition:
+- fire once per signup-screen mount on the first meaningful form interaction, such as editing name, phone, email, or password, or pressing the signup button
+- do not fire just because `/signup` rendered
+
+No entered form values are sent.
+
+### 5.8 `signup_completed`
+
+Meaning: `signUpWithEmail` completed successfully and the app is about to navigate to the email-verification step.
+
+Rules:
+- fire only on the successful signup branch
+- do not fire for validation errors, existing-email responses, existing-phone responses, or failed signup attempts
+- no email, phone, name, password, or auth identifiers are sent
+
 ## 6. Analytics Helper
 
 Create:
@@ -222,13 +247,14 @@ The analytics layer MUST NOT send:
 - wallet balance
 - sender phone/name
 - raw transaction reference that could identify a person
+- URL query strings or hash fragments
 
 Allowed examples:
 - product ID
 - product slug
 - product name
 - entry fee
-- source page/path
+- source page/path without query/hash
 - payment type
 - payment-method label
 
@@ -251,6 +277,7 @@ Rendering and React hydration can cause repeated component execution, so view ev
 Rules:
 - `campaign_view`: one event per product page mount/product ID
 - `payment_viewed`: one event per payment mount/product ID
+- `signup_started`: one event per signup-screen mount
 - click events: no global dedupe; each real user click can be tracked
 - success events: fire only after the corresponding success response/state transition
 - retries that fail must not emit success events
