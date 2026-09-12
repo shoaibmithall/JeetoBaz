@@ -47,6 +47,13 @@ if (visible.length > 0) {
     throw new Error(`[check-blog-static-seo] Static /blog HTML is missing article title: ${first.title}`);
   }
 
+  if (visible.length > 1) {
+    const second = visible[1];
+    if (!indexHtml.includes(`/blog/${encodeURIComponent(String(second.slug))}`)) {
+      throw new Error(`[check-blog-static-seo] Static /blog HTML is missing second article link: ${second.slug}`);
+    }
+  }
+
   const articlePath = await firstExisting([
     `dist/blog/${first.slug}.html`,
     `dist/blog/${first.slug}/index.html`,
