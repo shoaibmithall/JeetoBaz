@@ -31,5 +31,8 @@ jobs:
           EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.EXPO_PUBLIC_TURNSTILE_SITE_KEY }}
         run: npm run build
 
+      - name: Re-run injector to verify idempotency
+        run: node scripts/inject-homepage-static-seo.mjs
+
       - name: Check raw homepage SEO output
         run: node scripts/check-homepage-static-seo.mjs
