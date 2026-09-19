@@ -9,22 +9,32 @@ function positionTawkLauncher() {
   const isMobile =
     window.matchMedia('(max-width: 768px)').matches ||
     window.matchMedia('(pointer: coarse)').matches;
-  const launcherBottom = isMobile ? 116 : 92;
+  const launcherBottom = isMobile ? 132 : 108;
 
   document.querySelectorAll<HTMLIFrameElement>('iframe').forEach((frame) => {
     const siblingFrames = frame.parentElement?.querySelectorAll(':scope > iframe').length ?? 0;
-    if (siblingFrames < 3) return;
+    const title = frame.title.toLowerCase();
+    const src = frame.src.toLowerCase();
+    const isTawkFrame = title.includes('chat') || src.includes('tawk.to') || siblingFrames >= 3;
+    if (!isTawkFrame) return;
 
-    const minHeight = Number.parseFloat(frame.style.minHeight);
-    const zIndex = frame.style.zIndex;
-    const desiredBottom =
-      Number.isFinite(minHeight) && minHeight <= 100 && zIndex === '1000003'
-        ? launcherBottom
-        : Number.isFinite(minHeight) && minHeight <= 120 && zIndex === '1000004'
-          ? launcherBottom + 10
-          : null;
+    const computedStyle = window.getComputedStyle(frame);
+    const measuredHeight = frame.getBoundingClientRect().height;
+    const fallbackHeights = [frame.style.height, computedStyle.height, frame.style.minHeight, computedStyle.minHeight]
+      .map((value) => Number.parseFloat(value));
+    const renderedHeight = measuredHeight > 0
+      ? measuredHeight
+      : fallbackHeights.find((height) => Number.isFinite(height) && height > 0);
 
-    if (desiredBottom === null || frame.style.bottom === `${desiredBottom}px`) return;
+    // Tawk renders the launcher/close control in a small iframe and the open chat panel in a
+    // much taller one. Only move the small controls so the full conversation window keeps its
+    // intended size and the launcher cannot cover JeetoBaz's fixed Profile tab.
+    const isLauncherFrame = Number.isFinite(renderedHeight) && renderedHeight! <= 140;
+    if (!isLauncherFrame) return;
+
+    const desiredBottom = renderedHeight! > 100 ? launcherBottom + 10 : launcherBottom;
+
+    if (frame.style.bottom === `${desiredBottom}px`) return;
     frame.style.setProperty('bottom', `${desiredBottom}px`, 'important');
   });
 }
