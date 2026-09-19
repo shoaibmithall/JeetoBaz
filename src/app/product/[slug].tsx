@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAppTheme } from '@/hooks/use-theme';
 import { useLanguage, type TranslationKey } from '@/lib/i18n';
 import { ButtonSheen } from '@/components/motion';
+import { ProductHeroImage } from '@/components/product-hero-image';
 import { getProductCategory } from '@/lib/product-categories';
 import { recordRecentlyViewedProduct } from '@/lib/recently-viewed';
 import { pageSchema } from '@/lib/structured-data';
@@ -18,6 +19,7 @@ import { useSafeBack } from '@/lib/safe-back';
 const BASE_URL = 'https://jeetobaz.pk';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const DEFAULT_TWITTER_IMAGE = `${BASE_URL}/twitter-image.png`;
+const IPHONE_18_PRO_MAX_SLUG = 'win-iphone-18-pro-max-jeetobaz-pk';
 const PRODUCT_COLUMNS = 'id, name, price, status, current_entries, max_entries, entry_fee, image_url, description, draw_date, live_link, seo_title, meta_description, meta_keywords, slug, indexable';
 
 // Only fields that already exist on `products` (verified live schema, Phase 3.5 audit) are used
@@ -42,6 +44,8 @@ type StaticProductEntry = {
   imageUrl: string;
   description: string;
   entryFee: number;
+  price: number;
+  maxEntries: number;
 };
 
 // Escapes `<` so a value containing e.g. `</script>` can't break out of the JSON-LD script tag,
@@ -254,6 +258,8 @@ export default function ProductDetailScreen() {
         imageUrl: product.image_url || '',
         description: product.description || '',
         entryFee: product.entry_fee || 1,
+        price: product.price || 0,
+        maxEntries: product.max_entries || 0,
       }
     : staticEntry
       ? {
@@ -265,6 +271,8 @@ export default function ProductDetailScreen() {
           imageUrl: staticEntry.imageUrl,
           description: staticEntry.description,
           entryFee: staticEntry.entryFee,
+          price: staticEntry.price || 0,
+          maxEntries: staticEntry.maxEntries || 0,
         }
       : null;
 
@@ -317,6 +325,9 @@ export default function ProductDetailScreen() {
   const robotsContent = meta.indexable ? 'index, follow' : 'noindex, follow';
   const ogImage = meta.imageUrl || DEFAULT_OG_IMAGE;
   const twitterImage = meta.imageUrl || DEFAULT_TWITTER_IMAGE;
+  const imageAlt = slug === IPHONE_18_PRO_MAX_SLUG
+    ? 'iPhone 18 Pro Max prize draw in Pakistan on JeetoBaz'
+    : `${meta.name} prize campaign on JeetoBaz`;
 
   const currentEntries = product?.current_entries || 0;
   const maxEntries = product?.max_entries || 1;
@@ -330,7 +341,18 @@ export default function ProductDetailScreen() {
   // (fabricating either is a Google structured-data policy risk, not just a copy nitpick). Google
   // Search Console confirmed pages using `Product` here were already invalid/ineligible for rich
   // results without one of those three, so WebPage is both the honest and the actually-working type.
-  const productJsonLd = pageSchema('WebPage', `/product/${slug}`, meta.name, pageDescription);
+  const productJsonLd = {
+    ...pageSchema('WebPage', `/product/${slug}`, meta.name, pageDescription),
+    ...(meta.imageUrl
+      ? {
+          primaryImageOfPage: {
+            '@type': 'ImageObject',
+            contentUrl: meta.imageUrl,
+            caption: imageAlt,
+          },
+        }
+      : {}),
+  };
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -387,13 +409,7 @@ export default function ProductDetailScreen() {
 
       <View style={{ height: 260 }}>
         {meta.imageUrl ? (
-          <ExpoImage
-            source={{ uri: meta.imageUrl }}
-            accessibilityLabel={`${meta.name} prize`}
-            contentFit="contain"
-            cachePolicy="disk"
-            style={styles.productImage}
-          />
+          <ProductHeroImage sourceUri={meta.imageUrl} alt={imageAlt} />
         ) : (
           <View style={[styles.productImageFallback, { backgroundColor: theme.surfaceAlt }]}>
             <Ticket color={theme.gold} size={38} />
@@ -442,6 +458,15 @@ export default function ProductDetailScreen() {
         )}
       </View>
 
+      {slug === IPHONE_18_PRO_MAX_SLUG ? (
+        <IPhone18ProMaxSeoContent
+          theme={theme}
+          entryFee={entryFee}
+          prizeValue={meta.price}
+          totalSpots={meta.maxEntries}
+        />
+      ) : null}
+
       {relatedProducts.length > 0 ? (
         <View style={styles.relatedSection}>
           <Text style={[styles.relatedTitle, { color: theme.text }]}>{t('relatedProducts')}</Text>
@@ -454,6 +479,104 @@ export default function ProductDetailScreen() {
       ) : null}
     </ScrollView>
     </>
+  );
+}
+
+function IPhone18ProMaxSeoContent({
+  theme,
+  entryFee,
+  prizeValue,
+  totalSpots,
+}: {
+  theme: ReturnType<typeof useAppTheme>['theme'];
+  entryFee: number;
+  prizeValue: number;
+  totalSpots: number;
+}) {
+  return (
+    <View style={[styles.editorialSection, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <Text role="heading" aria-level={2} style={[styles.editorialTitle, { color: theme.text }]}>
+        Win iPhone 18 Pro Max in Pakistan with JeetoBaz
+      </Text>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        JeetoBaz gives eligible participants in Pakistan a clear way to enter the iPhone 18 Pro Max
+        prize campaign. Each entry costs Rs. {entryFee.toLocaleString()}, while the prize value shown
+        for this campaign is Rs. {prizeValue.toLocaleString()}. Before entering, review the available
+        spots, campaign progress, eligibility requirements and published draw information on this page.
+      </Text>
+
+      <Text role="heading" aria-level={2} style={[styles.editorialHeading, { color: theme.text }]}>
+        iPhone 18 Pro Max prize draw details
+      </Text>
+      <View style={styles.editorialList}>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>• Entry fee: Rs. {entryFee.toLocaleString()} per entry</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>• Prize value displayed: Rs. {prizeValue.toLocaleString()}</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>• Total campaign spots: {totalSpots.toLocaleString()}</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>• Participation: subject to JeetoBaz eligibility and campaign terms</Text>
+      </View>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        The entry fee is the cost of one prize-draw entry; it is not the sale price of the iPhone.
+        The live counter above shows campaign participation and remaining spots. Product variant,
+        colour, storage, PTA status, warranty and fulfilment information should be read from the
+        confirmed campaign details and official JeetoBaz updates before participation.
+      </Text>
+
+      <Text role="heading" aria-level={2} style={[styles.editorialHeading, { color: theme.text }]}>
+        How to enter the iPhone prize campaign
+      </Text>
+      <View style={styles.editorialList}>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>1. Sign in to your verified JeetoBaz account.</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>2. Check the entry fee, remaining spots and campaign status above.</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>3. Tap “Enter for Rs.{entryFee.toLocaleString()}” and complete the available payment process.</Text>
+        <Text style={[styles.editorialText, { color: theme.muted }]}>4. Keep your confirmed entry record and follow JeetoBaz for draw updates.</Text>
+      </View>
+
+      <Text role="heading" aria-level={2} style={[styles.editorialHeading, { color: theme.text }]}>
+        Fairness, winner selection and proof
+      </Text>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        The campaign proceeds according to the status, scheduling information and rules published by
+        JeetoBaz. Read how the platform approaches equal entries and winner selection on the{' '}
+        <Link href="/why-fair" style={[styles.editorialLink, { color: theme.primary }]}>Why JeetoBaz Is Fair</Link>{' '}
+        page, and review the verification process on the{' '}
+        <Link href="/transparency" style={[styles.editorialLink, { color: theme.primary }]}>Transparency</Link>{' '}
+        page. Completed campaign results and available winner evidence can be checked in the{' '}
+        <Link href="/winner" style={[styles.editorialLink, { color: theme.primary }]}>Past Winners</Link>{' '}
+        section.
+      </Text>
+
+      <Text role="heading" aria-level={2} style={[styles.editorialHeading, { color: theme.text }]}>
+        Frequently asked questions
+      </Text>
+      <Text role="heading" aria-level={3} style={[styles.faqQuestion, { color: theme.text }]}>
+        How much does one iPhone 18 Pro Max entry cost?
+      </Text>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        One entry currently costs Rs. {entryFee.toLocaleString()}. Always confirm the amount shown on
+        the payment screen before completing your transaction.
+      </Text>
+      <Text role="heading" aria-level={3} style={[styles.faqQuestion, { color: theme.text }]}>
+        When will the winner be selected?
+      </Text>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        Follow the live campaign status and any draw schedule displayed by JeetoBaz. A date should not
+        be assumed unless it is officially shown on the campaign page or announced through an official
+        JeetoBaz channel.
+      </Text>
+      <Text role="heading" aria-level={3} style={[styles.faqQuestion, { color: theme.text }]}>
+        Where can I read the complete rules?
+      </Text>
+      <Text style={[styles.editorialText, { color: theme.muted }]}>
+        Review the{' '}
+        <Link href="/terms" style={[styles.editorialLink, { color: theme.primary }]}>Terms and Conditions</Link>{' '}
+        before entering. For common account, payment and campaign questions, visit the{' '}
+        <Link href="/faq" style={[styles.editorialLink, { color: theme.primary }]}>JeetoBaz FAQ</Link>.
+      </Text>
+
+      <Link href="/explore" style={[styles.editorialCta, { color: theme.primary, borderColor: theme.primary }]}>
+        Explore more active prize campaigns
+      </Link>
+    </View>
   );
 }
 
@@ -514,7 +637,6 @@ const styles = StyleSheet.create({
   header: { padding: 20, borderBottomWidth: 2 },
   backBtn: { fontSize: 16, fontWeight: 'bold' },
 
-  productImage: { width: '100%', height: 260 },
   productImageFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   body: { margin: 15, borderRadius: 16, borderWidth: 1, padding: 20 },
@@ -542,4 +664,12 @@ const styles = StyleSheet.create({
 
   enterButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 12, overflow: 'hidden' },
   enterButtonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  editorialSection: { marginHorizontal: 15, marginBottom: 22, borderRadius: 16, borderWidth: 1, padding: 20 },
+  editorialTitle: { fontSize: 22, lineHeight: 29, fontWeight: '800', marginBottom: 12 },
+  editorialHeading: { fontSize: 18, lineHeight: 25, fontWeight: '800', marginTop: 18, marginBottom: 8 },
+  editorialText: { fontSize: 14, lineHeight: 22, marginBottom: 9 },
+  editorialList: { gap: 3, marginBottom: 8 },
+  editorialLink: { fontWeight: '700', textDecorationLine: 'underline' },
+  faqQuestion: { fontSize: 15, lineHeight: 22, fontWeight: '800', marginTop: 8, marginBottom: 4 },
+  editorialCta: { alignSelf: 'flex-start', borderWidth: 1, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, fontWeight: '800', marginTop: 12 },
 });

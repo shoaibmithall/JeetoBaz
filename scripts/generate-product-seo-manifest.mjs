@@ -84,7 +84,7 @@ try {
 async function main() {
   const endpoint =
     `${SUPABASE_URL}/rest/v1/products` +
-    '?select=slug,name,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee,created_at' +
+    '?select=slug,name,price,max_entries,seo_title,meta_description,meta_keywords,indexable,image_url,description,entry_fee,created_at' +
     '&slug=not.is.null';
 
   let response;
@@ -134,6 +134,8 @@ async function main() {
       imageUrl: row.image_url || '',
       description: row.description || '',
       entryFee: typeof row.entry_fee === 'number' ? row.entry_fee : 1,
+      price: typeof row.price === 'number' ? row.price : 0,
+      maxEntries: typeof row.max_entries === 'number' ? row.max_entries : 0,
       lastModified: toValidIsoDateOrNull(row.created_at),
     }));
 
