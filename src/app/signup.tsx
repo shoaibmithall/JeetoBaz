@@ -1,4 +1,4 @@
-import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
@@ -8,8 +8,9 @@ import { normalizePakistaniMobile } from '@/lib/validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
-import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
-import { Check, ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, Phone, Rocket, Shield, User } from 'lucide-react-native';
+import { AuthScreenShell } from '@/components/auth-screen-shell';
+import { AUTH_BRAND } from '@/constants/auth-theme';
+import { Check, Eye, EyeOff, LockKeyhole, Mail, Phone, User } from 'lucide-react-native';
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
   let score = 0;
@@ -99,7 +100,7 @@ export default function SignupScreen() {
       } else if (msg.includes('already registered')) {
         setErrors({ email: 'This email is already registered. Try logging in.' });
       } else {
-        alert('Signup failed: ' + msg);
+        setErrors({ form: msg });
       }
     } else if (data.user && data.user.identities && data.user.identities.length === 0) {
       setErrors({ email: 'This email is already registered. Try logging in.' });
@@ -134,40 +135,33 @@ export default function SignupScreen() {
       <script type="application/ld+json">{JSON.stringify(signupSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <AuthHeaderGlow />
-          <TouchableOpacity onPress={() => router.replace('/login')} style={styles.backBtn}>
-            <ChevronLeft color={theme.text} size={24} />
-          </TouchableOpacity>
-          <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
-          </View>
-        </View>
-
-        <View style={[styles.signupCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <AuthCardGlow />
-          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
-            <Shield color="#18a663" size={16} />
-            <Text style={styles.secureBadgeText}>Create Your Account</Text>
-          </View>
-
-          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Join JeetoBaz</Text>
-          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Start winning prizes today!</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+      >
+        <AuthScreenShell title="Create your account" subtitle="Join JeetoBaz and start exploring prizes">
+          {errors.form ? (
+            <View style={[styles.formError, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
+              <Text accessibilityRole="alert" style={[styles.formErrorText, { color: theme.danger }]}>{errors.form}</Text>
+            </View>
+          ) : null}
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.name ? '#ff4444' : theme.border }]}>
             <User color={theme.muted} size={18} />
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
-              placeholder="Full Name"
-              placeholderTextColor="#666"
+              placeholder="Full name"
+              placeholderTextColor={theme.subtle}
+              autoComplete="name"
+              textContentType="name"
+              accessibilityLabel="Full name"
               value={name}
               onChangeText={(v) => { setName(v); setErrors((e) => ({ ...e, name: '' })); }}
               maxLength={80}
             />
           </View>
-          {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+          {errors.name ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.name}</Text> : null}
           <Text style={[styles.fieldHint, { color: theme.subtle }]}>As per CNIC</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.phone ? '#ff4444' : theme.border }]}>
@@ -176,14 +170,17 @@ export default function SignupScreen() {
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="3001234567"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               keyboardType="phone-pad"
+              autoComplete="tel"
+              textContentType="telephoneNumber"
+              accessibilityLabel="Mobile number"
               value={phone}
               onChangeText={(v) => { setInputPhone(normalizePakistaniMobile(v)); setErrors((e) => ({ ...e, phone: '' })); }}
               maxLength={10}
             />
           </View>
-          {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+          {errors.phone ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.phone}</Text> : null}
           <Text style={[styles.fieldHint, { color: theme.subtle }]}>Use a mobile number registered in your own name</Text>
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: errors.email ? '#ff4444' : theme.border }]}>
@@ -191,10 +188,13 @@ export default function SignupScreen() {
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="Email address"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
+              accessibilityLabel="Email address"
               value={email}
               onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: '' })); }}
             />
@@ -206,7 +206,7 @@ export default function SignupScreen() {
               )
             )}
           </View>
-          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          {errors.email ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.email}</Text> : null}
           {email.length > 0 && (
             <Text style={[styles.fieldHint, { color: isEmailValid ? '#18a663' : '#ff4444' }]}>
               {isEmailValid ? '✓ Valid email address' : '✕ Invalid email address'}
@@ -218,16 +218,24 @@ export default function SignupScreen() {
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="Password"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              accessibilityLabel="Password"
               value={password}
               onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: '' })); }}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowPassword(!showPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
               {showPassword ? <EyeOff color={theme.muted} size={18} /> : <Eye color={theme.muted} size={18} />}
             </TouchableOpacity>
           </View>
-          {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+          {errors.password ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.password}</Text> : null}
 
           {password.length > 0 && (
             <View style={styles.strengthContainer}>
@@ -253,8 +261,11 @@ export default function SignupScreen() {
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="Confirm Password"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              accessibilityLabel="Confirm password"
               value={confirmPassword}
               onChangeText={(v) => { setConfirmPassword(v); setErrors((e) => ({ ...e, confirmPassword: '' })); }}
             />
@@ -266,7 +277,7 @@ export default function SignupScreen() {
               )
             )}
           </View>
-          {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+          {errors.confirmPassword ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.confirmPassword}</Text> : null}
 
           <View style={[styles.passwordRequirements, { backgroundColor: theme.surfaceAlt }]}>
             <Text style={[styles.reqTitle, { color: theme.muted }]}>Password Requirements</Text>
@@ -299,8 +310,11 @@ export default function SignupScreen() {
           <TouchableOpacity
             style={styles.consentRow}
             onPress={() => setAgeAccepted(!ageAccepted)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: ageAccepted }}
+            accessibilityLabel="I agree to the Terms of Use and Privacy Policy"
           >
-            <View style={[styles.checkbox, ageAccepted && styles.checkboxChecked]}>
+            <View style={[styles.checkbox, { borderColor: theme.subtle }, ageAccepted && styles.checkboxChecked]}>
               {ageAccepted ? <Check color="white" size={12} strokeWidth={3} /> : null}
             </View>
             <Text style={[styles.consentText, { color: theme.muted }]}>
@@ -310,19 +324,21 @@ export default function SignupScreen() {
               <Text style={styles.consentLink} onPress={() => router.push('/privacy')}>Privacy Policy</Text>
             </Text>
           </TouchableOpacity>
-          {errors.age ? <Text style={styles.errorText}>{errors.age}</Text> : null}
+          {errors.age ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.age}</Text> : null}
 
           <TurnstileWidget
             ref={turnstileRef}
             onVerify={(token) => { setTurnstileToken(token); setErrors((e) => ({ ...e, turnstile: '' })); }}
             onExpire={() => setTurnstileToken('')}
           />
-          {errors.turnstile ? <Text style={styles.errorText}>{errors.turnstile}</Text> : null}
+          {errors.turnstile ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{errors.turnstile}</Text> : null}
 
           <TouchableOpacity
-            style={[styles.primaryButton, (loading || !ageAccepted) && styles.buttonDisabled]}
+            style={[styles.primaryButton, { backgroundColor: loading || !ageAccepted ? theme.border : AUTH_BRAND.gold }]}
             onPress={handleSignup}
             disabled={loading || !ageAccepted}
+            accessibilityRole="button"
+            accessibilityState={{ busy: loading, disabled: loading || !ageAccepted }}
           >
             {loading ? (
               <ActivityIndicator color="#000" size="small" accessibilityLabel="Creating account" />
@@ -334,38 +350,17 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.replace('/login')}>
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => router.replace('/login')}
+            accessibilityRole="link"
+          >
             <Text style={[styles.switchText, { color: theme.muted }]}>
               Already have an account?{' '}
-              <Text style={styles.switchHighlight}>Sign In</Text>
+              <Text style={[styles.switchHighlight, { color: theme.primary }]}>Sign In</Text>
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.trustStrip}>
-          <View style={styles.trustItem}>
-            <Shield color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Sign Up</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <Check color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Email Verification</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <LockKeyhole color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Data Protected</Text>
-          </View>
-        </View>
-
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
-          </TouchableOpacity>
-          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
-          </TouchableOpacity>
-        </View>
+        </AuthScreenShell>
       </ScrollView>
     </View>
     </>
@@ -374,23 +369,12 @@ export default function SignupScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
-  scrollContent: { paddingBottom: 40 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
-  backBtn: { padding: 4 },
-  logoRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  logoImage: { width: 40, height: 40, borderRadius: 8 },
-  logo: { fontSize: 28, fontWeight: 'bold', color: 'white' },
-
-  signupCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24, overflow: 'hidden' },
-
-  secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
-  secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },
-
-  welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
-  welcomeSubtitle: { fontSize: 14, color: '#9aac9f', textAlign: 'center', marginBottom: 24 },
-
-  inputContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, marginBottom: 4, paddingHorizontal: 14, gap: 10 },
-  inputField: { flex: 1, padding: 16, fontSize: 16 },
+  scrollContent: { flexGrow: 1 },
+  formError: { borderWidth: 1, borderRadius: 12, borderCurve: 'continuous', padding: 12, marginBottom: 14 },
+  formErrorText: { fontSize: 12.5, fontWeight: '600', lineHeight: 18 },
+  inputContainer: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderCurve: 'continuous', borderWidth: 1, marginBottom: 4, paddingHorizontal: 14, gap: 10 },
+  inputField: { flex: 1, minHeight: 52, paddingVertical: 14, fontSize: 16 },
+  iconButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   phoneCode: { paddingVertical: 16, paddingLeft: 10, paddingRight: 12, fontSize: 14, borderRightWidth: 1, borderRightColor: '#174a35' },
   errorText: { color: '#ff4444', fontSize: 12, marginBottom: 4, marginLeft: 4 },
   fieldHint: { color: '#5e7468', fontSize: 11, marginBottom: 14, marginLeft: 4 },
@@ -409,22 +393,14 @@ const styles = StyleSheet.create({
 
   consentRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4, gap: 10 },
   checkbox: { width: 18, height: 18, borderWidth: 1.5, borderColor: '#5e7468', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  checkboxChecked: { backgroundColor: '#18a663', borderColor: '#18a663' },
+  checkboxChecked: { backgroundColor: AUTH_BRAND.emerald, borderColor: AUTH_BRAND.emerald },
   consentText: { flex: 1, fontSize: 13, lineHeight: 19 },
-  consentLink: { color: '#18a663', fontWeight: '600' },
+  consentLink: { color: AUTH_BRAND.emerald, fontWeight: '700' },
 
-  primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 16 },
-  buttonDisabled: { backgroundColor: '#555' },
+  primaryButton: { minHeight: 54, paddingHorizontal: 18, borderRadius: 12, borderCurve: 'continuous', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 16, marginBottom: 12 },
   primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
 
   switchText: { color: '#9aac9f', fontSize: 14, textAlign: 'center' },
-  switchHighlight: { color: '#18a663', fontWeight: 'bold' },
-
-  trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustText: { color: '#5e7468', fontSize: 11, fontWeight: '500' },
-
-  footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 },
-  footerLink: { color: '#5e7468', fontSize: 12 },
-  footerDot: { color: '#5e7468', fontSize: 12 },
+  switchHighlight: { fontWeight: '800' },
+  switchButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 });
