@@ -1,6 +1,6 @@
 import { Image, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Share, Platform, useWindowDimensions, Modal, Switch, Linking } from 'react-native';
 import { useState, useEffect, useMemo, useRef, useCallback, type ElementRef } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,7 +15,8 @@ import { validateEmail } from '@/lib/auth-validation';
 import { useAppTheme } from '@/hooks/use-theme';
 import { pageSchema } from '@/lib/structured-data';
 import { BrandedLoader } from '@/components/branded-loader';
-import { AuthHeaderGlow, AuthCardGlow } from '@/components/auth-decor';
+import { AuthScreenShell } from '@/components/auth-screen-shell';
+import { AUTH_BRAND } from '@/constants/auth-theme';
 import { SUPPORT_EMAIL } from '@/lib/contact-info';
 import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { subscribeScrollToTop } from '@/lib/home-scroll';
@@ -23,7 +24,7 @@ import { getActivePushSubscription, isPushSupported, subscribeToPush, unsubscrib
 import {
   Award, BadgeCheck, Bell, BellRing, CalendarDays, Camera, Check, ChevronDown, ChevronRight, ChevronUp, Circle, CircleHelp, CircleUserRound, ClipboardList,
   Copy, Eye, EyeOff, Flag, Gift, Globe2, Info, HeartHandshake, LockKeyhole, LogOut, Mail, MailCheck, Megaphone, MessageSquare,
-  MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, Shield, ShieldCheck, Smartphone, Sun, Ticket, Trophy,
+  MapPin, Medal, Moon, Phone, Rocket, RotateCcw, Settings, Share2, ShieldCheck, Smartphone, Sun, Ticket, Trophy,
   Truck, User, UserPlus, UsersRound, Wallet, X,
 } from 'lucide-react-native';
 
@@ -80,6 +81,7 @@ export default function ProfileScreen() {
   const [successfulReferrals, setSuccessfulReferrals] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [emailError, setEmailError] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileError, setTurnstileError] = useState('');
@@ -127,6 +129,17 @@ export default function ProfileScreen() {
   const [profileExists, setProfileExists] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: step === 'profile' ? undefined : { display: 'none' },
+    });
+
+    return () => {
+      navigation.setOptions({ tabBarStyle: undefined });
+    };
+  }, [navigation, step]);
 
   const memberSince = useMemo(() => {
     const dateStr = profileCreatedAt || user?.created_at;
@@ -363,10 +376,11 @@ export default function ProfileScreen() {
     const validationError = validateEmail(email);
     if (validationError) {
       setEmailError(validationError);
+      setLoginError('');
       return;
     }
     if (!password) {
-      alert('Please enter your password.');
+      setLoginError('Please enter your password.');
       return;
     }
 
@@ -377,6 +391,7 @@ export default function ProfileScreen() {
 
     setLoading(true);
     setEmailError('');
+    setLoginError('');
     setTurnstileError('');
     const { error } = await signInWithEmail(email.trim().toLowerCase(), password, turnstileToken || undefined);
 
@@ -385,12 +400,10 @@ export default function ProfileScreen() {
 
     if (error) {
       if (error.message.includes('Invalid login credentials')) {
-        alert('Invalid email or password. Please try again.');
+        setLoginError('Invalid email or password. Please try again.');
       } else {
-        alert('Login failed: ' + error.message);
+        setLoginError('We could not sign you in. Please try again.');
       }
-    } else {
-      alert('Login successful!');
     }
     setLoading(false);
   }
@@ -1286,52 +1299,54 @@ export default function ProfileScreen() {
       <script type="application/ld+json">{JSON.stringify(loginSchema)}</script>
     </Head>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.gold }]}>
-          <AuthHeaderGlow />
-          <View style={styles.logoRow}>
-            <Image source={require('@/assets/images/icon-small.png')} style={styles.logoImage} accessibilityLabel="JeetoBaz logo" />
-            <Text style={[styles.logo, { color: theme.gold }]}>JeetoBaz</Text>
-          </View>
-          <Text style={[styles.tagline, { color: theme.muted }]}>Pakistan's Transparent Prize Campaign Platform</Text>
-        </View>
-
-        <View style={[styles.loginCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <AuthCardGlow />
-          <View style={[styles.secureBadge, { backgroundColor: theme.primarySoft }]}>
-            <Shield color="#18a663" size={16} />
-            <Text style={styles.secureBadgeText}>Secure Account Access</Text>
-          </View>
-
-          <Text role="heading" aria-level={1} style={[styles.welcomeTitle, { color: theme.gold }]}>Welcome Back</Text>
-          <Text style={[styles.welcomeSubtitle, { color: theme.muted }]}>Sign in to your account</Text>
-
+      <ScrollView
+        contentContainerStyle={styles.authScrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
+      >
+        <AuthScreenShell title="Welcome Back" subtitle="Sign in to continue">
+          {loginError ? (
+            <View style={[styles.authFormError, { backgroundColor: theme.dangerSoft, borderColor: theme.danger }]}>
+              <Text accessibilityRole="alert" style={[styles.authFormErrorText, { color: theme.danger }]}>{loginError}</Text>
+            </View>
+          ) : null}
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: emailError ? '#ff4444' : theme.border }]}>
             <Mail color={theme.muted} size={18} />
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="Email address"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
+              accessibilityLabel="Email address"
               value={email}
-              onChangeText={(v) => { setEmail(v); setEmailError(''); }}
+              onChangeText={(v) => { setEmail(v); setEmailError(''); setLoginError(''); }}
             />
           </View>
-          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          {emailError ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{emailError}</Text> : null}
 
           <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <LockKeyhole color={theme.muted} size={18} />
             <TextInput
               style={[styles.inputField, { color: theme.text }]}
               placeholder="Password"
-              placeholderTextColor="#666"
+              placeholderTextColor={theme.subtle}
               secureTextEntry={!showPassword}
+              autoComplete="current-password"
+              textContentType="password"
+              accessibilityLabel="Password"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(value) => { setPassword(value); setLoginError(''); }}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowPassword(!showPassword)}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
               {showPassword ? <EyeOff color={theme.muted} size={18} /> : <Eye color={theme.muted} size={18} />}
             </TouchableOpacity>
           </View>
@@ -1340,14 +1355,21 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.rememberRow}
               onPress={() => setRememberMe(!rememberMe)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: rememberMe }}
+              accessibilityLabel="Keep me signed in"
             >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              <View style={[styles.checkbox, { borderColor: theme.subtle }, rememberMe && styles.checkboxChecked]}>
                 {rememberMe ? <Check color="white" size={12} strokeWidth={3} /> : null}
               </View>
               <Text style={[styles.rememberText, { color: theme.muted }]}>Keep me signed in</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/forgot-password' as never)}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
+            <TouchableOpacity
+              style={styles.textLinkButton}
+              onPress={() => router.push('/forgot-password' as never)}
+              accessibilityRole="link"
+            >
+              <Text style={[styles.forgotText, { color: theme.gold }]}>Forgot password?</Text>
             </TouchableOpacity>
           </View>
 
@@ -1356,12 +1378,14 @@ export default function ProfileScreen() {
             onVerify={(token) => { setTurnstileToken(token); setTurnstileError(''); }}
             onExpire={() => setTurnstileToken('')}
           />
-          {turnstileError ? <Text style={styles.errorText}>{turnstileError}</Text> : null}
+          {turnstileError ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.danger }]}>{turnstileError}</Text> : null}
 
           <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.buttonDisabled]}
+            style={[styles.primaryButton, { backgroundColor: loading ? theme.border : AUTH_BRAND.gold }]}
             onPress={handleEmailLogin}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityState={{ busy: loading, disabled: loading }}
           >
             {loading ? (
               <ActivityIndicator color="#000" size="small" accessibilityLabel="Signing in" />
@@ -1373,47 +1397,16 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.muted }]}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-          </View>
-
           <TouchableOpacity
-            style={styles.createAccountButton}
+            style={[styles.createAccountButton, { backgroundColor: theme.surfaceAlt, borderColor: theme.border }]}
             onPress={() => router.push('/signup' as never)}
+            accessibilityRole="link"
           >
-            <Image source={require('@/assets/images/jeetobaz-logo-gold.png')} style={styles.createAccountLogo} accessibilityLabel="JeetoBaz logo" />
-            <Text style={styles.createAccountLabel}>
-              New to JeetoBaz? <Text style={styles.createAccountHighlight}>Create Account</Text>
+            <Text style={[styles.createAccountLabel, { color: theme.muted }]}>
+              New to JeetoBaz? <Text style={[styles.createAccountHighlight, { color: theme.primary }]}>Create Account</Text>
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.trustStrip}>
-          <View style={styles.trustItem}>
-            <Shield color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Secure Login</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <Check color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Verified Platform</Text>
-          </View>
-          <View style={styles.trustItem}>
-            <LockKeyhole color="#18a663" size={14} />
-            <Text style={[styles.trustText, { color: theme.subtle }]}>Protected Information</Text>
-          </View>
-        </View>
-
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => router.push('/terms')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Terms</Text>
-          </TouchableOpacity>
-          <Text style={[styles.footerDot, { color: theme.subtle }]}>•</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy')}>
-            <Text style={[styles.footerLink, { color: theme.subtle }]}>Privacy</Text>
-          </TouchableOpacity>
-        </View>
+        </AuthScreenShell>
       </ScrollView>
     </View>
     </>
@@ -1422,33 +1415,23 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d09' },
-  scrollContent: { paddingBottom: 40 },
-  header: { backgroundColor: '#04140e', borderBottomColor: '#FFD700', borderBottomWidth: 2, paddingVertical: 50, paddingHorizontal: 20, alignItems: 'center', overflow: 'hidden' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoImage: { width: 50, height: 50, borderRadius: 10 },
-  logo: { fontSize: 40, fontWeight: 'bold', color: 'white' },
-  tagline: { fontSize: 13, color: '#9aac9f', marginTop: 10, textAlign: 'center', lineHeight: 18 },
-
-  loginCard: { backgroundColor: '#071b13', marginHorizontal: 20, marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#174a35', padding: 24, overflow: 'hidden' },
-
-  secureBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20, paddingVertical: 8, backgroundColor: '#0a2419', borderRadius: 8 },
-  secureBadgeText: { color: '#18a663', fontSize: 12, fontWeight: '600' },
-
-  welcomeTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 4 },
-  welcomeSubtitle: { fontSize: 14, color: '#9aac9f', textAlign: 'center', marginBottom: 24 },
-
-  inputContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, marginBottom: 12, paddingHorizontal: 14, gap: 10 },
-  inputField: { flex: 1, padding: 16, fontSize: 16 },
+  authScrollContent: { flexGrow: 1 },
+  authFormError: { borderWidth: 1, borderRadius: 12, borderCurve: 'continuous', padding: 12, marginBottom: 14 },
+  authFormErrorText: { fontSize: 12.5, fontWeight: '600', lineHeight: 18 },
+  inputContainer: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderCurve: 'continuous', borderWidth: 1, marginBottom: 12, paddingHorizontal: 14, gap: 10 },
+  inputField: { flex: 1, minHeight: 52, paddingVertical: 14, fontSize: 16 },
+  iconButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   errorText: { color: '#ff4444', fontSize: 12, marginBottom: 10, marginLeft: 4 },
 
-  optionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  optionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
+  rememberRow: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 8 },
   checkbox: { width: 18, height: 18, borderWidth: 1.5, borderColor: '#5e7468', borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  checkboxChecked: { backgroundColor: '#18a663', borderColor: '#18a663' },
+  checkboxChecked: { backgroundColor: AUTH_BRAND.emerald, borderColor: AUTH_BRAND.emerald },
   rememberText: { fontSize: 13 },
-  forgotText: { color: '#FFD700', fontSize: 13, fontWeight: '600' },
+  textLinkButton: { minHeight: 40, justifyContent: 'center' },
+  forgotText: { fontSize: 13, fontWeight: '700' },
 
-  primaryButton: { backgroundColor: '#FFD700', padding: 18, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginBottom: 16 },
+  primaryButton: { minHeight: 54, paddingHorizontal: 18, borderRadius: 12, borderCurve: 'continuous', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 18, marginBottom: 12 },
   buttonDisabled: { backgroundColor: '#555' },
   primaryButtonText: { fontSize: 17, fontWeight: 'bold', color: '#000' },
 
@@ -1460,22 +1443,9 @@ const styles = StyleSheet.create({
   supportModalEmailLink: { fontSize: 13, textAlign: 'center', marginBottom: 10, textDecorationLine: 'underline' },
   supportModalCancel: { fontSize: 13, textAlign: 'center' },
 
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 12 },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { fontSize: 13 },
-
-  createAccountButton: { backgroundColor: '#ff4444', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, gap: 10 },
-  createAccountLogo: { width: 26, height: 26, borderRadius: 6 },
-  createAccountLabel: { fontSize: 14, color: 'white' },
-  createAccountHighlight: { fontWeight: 'bold', color: 'white' },
-
-  trustStrip: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 24, paddingHorizontal: 20, flexWrap: 'wrap' },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  trustText: { color: '#5e7468', fontSize: 11, fontWeight: '500' },
-
-  footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16 },
-  footerLink: { color: '#5e7468', fontSize: 12 },
-  footerDot: { color: '#5e7468', fontSize: 12 },
+  createAccountButton: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, borderCurve: 'continuous', borderWidth: 1 },
+  createAccountLabel: { fontSize: 14, textAlign: 'center' },
+  createAccountHighlight: { fontWeight: '800' },
 
   profileLoading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   profileLoadingText: { fontSize: 14, fontWeight: '600' },

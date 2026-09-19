@@ -1,9 +1,28 @@
 import { useEffect } from 'react';
+import { usePathname } from 'expo-router';
 import { Platform } from 'react-native';
 
 const TAWK_SITE_ID = '6a5cbc301c52dc1d4c7edfcb';
 const TAWK_WIDGET_ID = '1jtt3u7ge';
 const SCRIPT_ID = 'tawkto-script';
+const AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/verify-reset-otp', '/reset-password', '/verify-email'];
+
+type TawkApi = {
+  hideWidget?: () => void;
+  showWidget?: () => void;
+  onLoad?: () => void;
+};
+
+declare global {
+  interface Window {
+    Tawk_API?: TawkApi;
+  }
+}
+
+function setTawkVisibility(hidden: boolean) {
+  if (hidden) window.Tawk_API?.hideWidget?.();
+  else window.Tawk_API?.showWidget?.();
+}
 
 function positionTawkLauncher() {
   const isMobile =
@@ -40,6 +59,9 @@ function positionTawkLauncher() {
 }
 
 export function TawkToWidget() {
+  const pathname = usePathname();
+  const isAuthRoute = AUTH_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     if (typeof document === 'undefined') return;
@@ -73,6 +95,27 @@ export function TawkToWidget() {
       if (addedScript) document.getElementById(SCRIPT_ID)?.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const currentApi: TawkApi = window.Tawk_API ?? {};
+    const previousOnLoad = currentApi.onLoad;
+    const handleLoad = () => {
+      previousOnLoad?.();
+      setTawkVisibility(isAuthRoute);
+    };
+    currentApi.onLoad = handleLoad;
+    window.Tawk_API = currentApi;
+    setTawkVisibility(isAuthRoute);
+
+    return () => {
+      const activeApi = window.Tawk_API;
+      if (activeApi?.onLoad === handleLoad) {
+        activeApi.onLoad = previousOnLoad;
+      }
+    };
+  }, [isAuthRoute]);
 
   return null;
 }
