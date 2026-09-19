@@ -350,6 +350,7 @@ export default function AdminScreen() {
   const [deletedProducts, setDeletedProducts] = useState<Product[]>([]);
   const [recycleBinExpanded, setRecycleBinExpanded] = useState(false);
   const [recycleBinProcessingId, setRecycleBinProcessingId] = useState<string | null>(null);
+  const [productStatusUpdatingId, setProductStatusUpdatingId] = useState<string | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [drawsSearch, setDrawsSearch] = useState('');
   const [paymentsSearch, setPaymentsSearch] = useState('');
@@ -1077,7 +1078,13 @@ export default function AdminScreen() {
 
   async function toggleStatus(p: Product) {
     const newStatus = p.status === 'active' ? 'completed' : 'active';
-    await supabase.from('products').update({ status: newStatus }).eq('id', p.id);
+    setProductStatusUpdatingId(p.id);
+    const { error } = await supabase.from('products').update({ status: newStatus }).eq('id', p.id);
+    setProductStatusUpdatingId(null);
+    if (error) {
+      alert(`Product could not be ${newStatus === 'active' ? 'shown' : 'hidden'}. Error: ${error.message}`);
+      return;
+    }
     void logAdminAction('product_status_changed', p.id, { name: p.name, from: p.status, to: newStatus });
     fetchProducts();
   }
@@ -3092,6 +3099,17 @@ export default function AdminScreen() {
                     <TouchableOpacity style={styles.drawButton} onPress={() => router.push({ pathname: '/draw', params: { productId: p.id, productName: p.name } })}>
                       <Dices color="#000" size={15} /><Text style={styles.drawButtonText}>Draw</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.productVisibilityButton, productStatusUpdatingId === p.id && styles.photoUploadDisabled]}
+                      onPress={() => toggleStatus(p)}
+                      disabled={productStatusUpdatingId === p.id}
+                      accessibilityLabel={p.status === 'active' ? `Hide ${p.name}` : `Show ${p.name}`}
+                    >
+                      {p.status === 'active' ? <EyeOff color={theme.gold} size={15} /> : <Eye color={theme.gold} size={15} />}
+                      <Text style={styles.productVisibilityButtonText}>
+                        {productStatusUpdatingId === p.id ? 'Saving...' : p.status === 'active' ? 'Hide' : 'Show'}
+                      </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.reminderButton} onPress={() => sendDrawReminder(p)}>
                       <Bell color="white" size={17} />
                     </TouchableOpacity>
@@ -4919,7 +4937,7 @@ function createStyles(theme: AdminTheme) {
   revenue: { color: theme.muted, fontSize: 12, marginBottom: 8 },
   winner: { color: theme.gold, fontSize: 13, fontWeight: 'bold', marginBottom: 8 },
   inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  actionRow: { flexDirection: 'row', gap: 8 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   paymentCard: { backgroundColor: theme.surface, borderRadius: 15, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: theme.gold },
   paymentCardSelected: { borderColor: theme.primary, borderWidth: 2 },
   bulkActionBar: { backgroundColor: theme.surfaceAlt, borderRadius: 12, borderWidth: 1, borderColor: theme.border, padding: 12, marginBottom: 14, gap: 10 },
@@ -4940,6 +4958,8 @@ function createStyles(theme: AdminTheme) {
   editButtonText: { color: theme.info, fontWeight: 'bold', fontSize: 13 },
   drawButton: { flex: 1, backgroundColor: theme.gold, padding: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 5 },
   drawButtonText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
+  productVisibilityButton: { flex: 1, minWidth: 82, backgroundColor: theme.goldSoft, padding: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.gold, flexDirection: 'row', gap: 5 },
+  productVisibilityButtonText: { color: theme.gold, fontWeight: 'bold', fontSize: 13 },
   reminderButton: { backgroundColor: theme.primary, padding: 10, borderRadius: 8, alignItems: 'center', width: 42 },
   reminderButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
   deleteButton: { backgroundColor: theme.dangerSoft, padding: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.danger, width: 42 },
